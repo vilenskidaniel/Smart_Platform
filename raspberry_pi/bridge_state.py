@@ -386,11 +386,11 @@ class BridgeState:
         with self._lock:
             return self._platform_log.snapshot(limit=limit)
 
-    def build_reports(self, limit: int = 60) -> dict[str, Any]:
+    def build_reports(self, limit: int = 60, *, filters: dict[str, Any] | None = None) -> dict[str, Any]:
         with self._lock:
             if self._report_archive is not None:
-                return self._report_archive.snapshot(limit=limit)
-            return build_reports_snapshot(self._platform_log.snapshot(limit=limit), limit=limit)
+                return self._report_archive.snapshot(limit=limit, filters=filters)
+            return build_reports_snapshot(self._platform_log.snapshot(limit=limit), limit=limit, filters=filters)
 
     def build_laboratory_readiness(self) -> dict[str, Any]:
         with self._lock:
@@ -440,6 +440,36 @@ class BridgeState:
             board=normalized_board,
             test_result=normalized_result,
             note=note.strip(),
+            active_mode=self._active_mode,
+        )
+        return normalize_report_entry(entry)
+
+    def record_operator_note(
+        self,
+        *,
+        note: str,
+        module_id: str,
+        board: str = "",
+        case_id: str = "",
+    ) -> dict[str, Any]:
+        note = note.strip()
+        module_id = module_id.strip()
+        case_id = case_id.strip()
+        if not note:
+            raise ValueError("note is required")
+        if not module_id:
+            raise ValueError("module_id is required")
+
+        normalized_board = board.strip() or str(self._local_node.get("node_type", "unknown"))
+        entry = self._platform_log.add(
+            "testcase_capture",
+            "info",
+            "operator_note",
+            note,
+            case_id=case_id,
+            module_id=module_id,
+            board=normalized_board,
+            note=note,
             active_mode=self._active_mode,
         )
         return normalize_report_entry(entry)

@@ -63,8 +63,34 @@
       padding: 14px;
       background: linear-gradient(180deg, rgba(255,255,255,.82), rgba(243,247,240,.94));
     }
+    .module h3 { margin: 0; }
     .module p, .module ul { margin: 8px 0 0; color: var(--muted); line-height: 1.5; }
     .module ul { padding-left: 18px; }
+    .capture-form, .field { display: grid; gap: 10px; }
+    .form-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+    .field label { font-size: 13px; color: var(--muted); font-weight: 600; }
+    .field input, .field select, .field textarea {
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: #f8fbf6;
+      color: var(--ink);
+      font: inherit;
+      padding: 11px 12px;
+    }
+    .field textarea { min-height: 92px; resize: vertical; }
+    .form-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .action-button {
+      appearance: none;
+      border: 1px solid rgba(55, 95, 69, 0.18);
+      background: rgba(55, 95, 69, 0.08);
+      color: var(--ink);
+      border-radius: 999px;
+      padding: 10px 16px;
+      font: inherit;
+      cursor: pointer;
+    }
+    .action-button:disabled { opacity: 0.6; cursor: wait; }
     .report-feed { display: grid; gap: 12px; }
     .report-card {
       border: 1px solid var(--line);
@@ -98,9 +124,13 @@
       line-height: 1.2;
     }
     .param { font-family: var(--mono); }
+    .report-note { margin: 0; color: var(--muted); line-height: 1.5; }
     .chip.result-accepted, .chip.result-completed, .chip.result-recorded { background: var(--ok-bg); color: var(--ok-ink); border-color: rgba(37, 86, 60, 0.16); }
+    .chip.result-pass { background: var(--ok-bg); color: var(--ok-ink); border-color: rgba(37, 86, 60, 0.16); }
     .chip.result-rejected, .chip.result-failed { background: var(--error-bg); color: var(--error-ink); border-color: rgba(138, 52, 38, 0.16); }
+    .chip.result-fail { background: var(--error-bg); color: var(--error-ink); border-color: rgba(138, 52, 38, 0.16); }
     .chip.result-attention, .chip.result-completed_with_warnings, .chip.severity-warning, .chip.severity-warn { background: var(--warn-bg); color: var(--warn-ink); border-color: rgba(125, 90, 12, 0.16); }
+    .chip.result-warn { background: var(--warn-bg); color: var(--warn-ink); border-color: rgba(125, 90, 12, 0.16); }
     .chip.severity-error { background: var(--error-bg); color: var(--error-ink); border-color: rgba(138, 52, 38, 0.16); }
     .chip.severity-info { background: #e6eef8; color: #31567d; border-color: rgba(49, 86, 125, 0.16); }
     [hidden] { display: none !important; }
@@ -184,11 +214,142 @@
           <span class="meta">Chronological activity entry point</span>
         </div>
         <div id="reports-summary" class="module"></div>
+        <div class="module" style="margin-top: 14px;">
+          <div class="section-title">
+            <h3>Filters</h3>
+            <span class="meta" id="filter-status">Showing all entries.</span>
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label for="filter-surface">Surface</label>
+              <select id="filter-surface">
+                <option value="all">All</option>
+                <option value="laboratory">Laboratory</option>
+                <option value="turret">Turret</option>
+                <option value="irrigation">Irrigation</option>
+                <option value="system">System</option>
+                <option value="unknown">Unknown</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="filter-entry-type">Entry Type</label>
+              <select id="filter-entry-type">
+                <option value="all">All</option>
+                <option value="testcase">Testcase</option>
+                <option value="operator_note">Operator Note</option>
+                <option value="scenario">Scenario</option>
+                <option value="action">Action</option>
+                <option value="sync">Sync</option>
+                <option value="mode_change">Mode Change</option>
+                <option value="interlock">Interlock</option>
+                <option value="event">Event</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="filter-severity">Severity</label>
+              <select id="filter-severity">
+                <option value="all">All</option>
+                <option value="info">Info</option>
+                <option value="warning">Warning</option>
+                <option value="error">Error</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="filter-origin-node">Origin Node</label>
+              <select id="filter-origin-node">
+                <option value="all">All</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-actions" style="margin-top: 12px;">
+            <button id="filters-reset" class="action-button" type="button">Clear Filters</button>
+          </div>
+        </div>
+      </article>
+      <article class="card">
+        <div class="section-title">
+          <h2>Record Testcase</h2>
+          <span class="meta">Minimal pass/fail/warn capture for current bench work</span>
+        </div>
+        <form id="testcase-form" class="capture-form">
+          <div class="form-grid">
+            <div class="field">
+              <label for="case-id">Case Id</label>
+              <input id="case-id" name="case_id" type="text" maxlength="48" required placeholder="esp32-shell-smoke">
+            </div>
+            <div class="field">
+              <label for="case-board">Board</label>
+              <select id="case-board" name="board">
+                <option value="esp32">ESP32</option>
+                <option value="raspberry_pi">Raspberry Pi</option>
+                <option value="shared">Shared</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="case-module">Module</label>
+              <select id="case-module" name="module_id" required>
+                <option value="">Loading modules...</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="case-result">Result</label>
+              <select id="case-result" name="result">
+                <option value="pass">Pass</option>
+                <option value="warn">Warn</option>
+                <option value="fail">Fail</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label for="case-note">Short Note</label>
+            <textarea id="case-note" name="note" maxlength="120" placeholder="What was unclear, blocked, or worth keeping for the next pass?"></textarea>
+          </div>
+          <div class="form-actions">
+            <button id="testcase-submit" class="action-button" type="submit">Record Result</button>
+            <span id="testcase-status" class="meta">This writes a typed entry into Gallery &gt; Reports.</span>
+          </div>
+        </form>
+        <div class="module" style="margin-top: 14px;">
+          <div class="section-title">
+            <h3>Record Operator Note</h3>
+            <span class="meta">Short human context for the current case or module</span>
+          </div>
+          <form id="note-form" class="capture-form">
+            <div class="form-grid">
+              <div class="field">
+                <label for="note-case-id">Case Id</label>
+                <input id="note-case-id" name="case_id" type="text" maxlength="48" placeholder="optional link to testcase">
+              </div>
+              <div class="field">
+                <label for="note-board">Board</label>
+                <select id="note-board" name="board">
+                  <option value="esp32">ESP32</option>
+                  <option value="raspberry_pi">Raspberry Pi</option>
+                  <option value="shared">Shared</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="note-module">Module</label>
+                <select id="note-module" name="module_id" required>
+                  <option value="">Loading modules...</option>
+                </select>
+              </div>
+            </div>
+            <div class="field">
+              <label for="note-text">Note</label>
+              <textarea id="note-text" name="note" maxlength="160" required placeholder="Example: peer handoff is clear, but the status chips still feel too dense on a narrow phone."></textarea>
+            </div>
+            <div class="form-actions">
+              <button id="note-submit" class="action-button" type="submit">Record Note</button>
+              <span id="note-status" class="meta">This stays in the same chronological Reports feed.</span>
+            </div>
+          </form>
+        </div>
       </article>
       <article class="card">
         <div class="section-title">
           <h2>Recent Report Feed</h2>
-          <span class="meta">Baseline feed mapped from platform log</span>
+          <span class="meta">Baseline feed with quick testcase capture</span>
         </div>
         <div id="reports-feed" class="report-feed">
           <div class="module">
@@ -201,6 +362,11 @@
 
   <script>
     const VALID_TABS = ['plants', 'media', 'reports'];
+    const state = {
+      snapshot: null,
+      manualTestcaseBoardSelection: false,
+      manualNoteBoardSelection: false
+    };
 
     function esc(value) {
       return String(value ?? '')
@@ -241,6 +407,112 @@
       window.history.replaceState({}, '', url);
     }
 
+    function boardFromNodeId(nodeId, fallback = 'shared') {
+      const text = String(nodeId || '').toLowerCase();
+      if (text.includes('esp32')) {
+        return 'esp32';
+      }
+      if (text.includes('rpi') || text.includes('raspberry')) {
+        return 'raspberry_pi';
+      }
+      return fallback;
+    }
+
+    function currentBoardValue(snapshot) {
+      return boardFromNodeId((((snapshot || {}).nodes || {}).current || {}).node_id, 'shared');
+    }
+
+    function selectableModules(snapshot) {
+      return ((snapshot || {}).module_cards || []).filter((module) => (
+        module && module.id && !['system_shell', 'sync_core', 'settings', 'diagnostics', 'logs', 'service_mode'].includes(module.id)
+      ));
+    }
+
+    function populateModuleSelect(selectId, snapshot) {
+      const select = document.getElementById(selectId);
+      const modules = selectableModules(snapshot);
+      const previous = select.value;
+      select.innerHTML = `
+        <option value="">Select module</option>
+        ${modules.map((module) => `<option value="${esc(module.id)}">${esc(module.title || module.id)} / ${esc(module.owner_node_id || 'shared')}</option>`).join('')}
+      `;
+
+      const currentNodeId = ((((snapshot || {}).nodes || {}).current || {}).node_id || '');
+      const preferred = modules.find((module) => module.id === previous)
+        || modules.find((module) => module.owner_node_id === currentNodeId)
+        || modules[0];
+      select.value = preferred ? preferred.id : '';
+    }
+
+    function syncBoardSelection(snapshot, moduleSelectId, boardSelectId, manualFlag) {
+      const boardSelect = document.getElementById(boardSelectId);
+      if (state[manualFlag] && boardSelect.value) {
+        return;
+      }
+
+      const moduleSelect = document.getElementById(moduleSelectId);
+      const selectedModule = selectableModules(snapshot).find((module) => module.id === moduleSelect.value);
+      boardSelect.value = selectedModule
+        ? boardFromNodeId(selectedModule.owner_node_id, currentBoardValue(snapshot))
+        : currentBoardValue(snapshot);
+    }
+
+    function populateOriginNodeOptions(snapshot) {
+      const select = document.getElementById('filter-origin-node');
+      const previous = select.value || 'all';
+      const currentNode = (((snapshot || {}).nodes || {}).current || {}).node_id || '';
+      const peerNode = (((snapshot || {}).nodes || {}).peer || {}).node_id || '';
+      const options = ['all'];
+      if (currentNode) {
+        options.push(currentNode);
+      }
+      if (peerNode && peerNode !== currentNode) {
+        options.push(peerNode);
+      }
+
+      select.innerHTML = options.map((value) => `
+        <option value="${esc(value)}">${esc(value === 'all' ? 'All' : value)}</option>
+      `).join('');
+      select.value = options.includes(previous) ? previous : 'all';
+    }
+
+    function currentReportFilters() {
+      return {
+        surface: document.getElementById('filter-surface').value,
+        entry_type: document.getElementById('filter-entry-type').value,
+        severity: document.getElementById('filter-severity').value,
+        origin_node: document.getElementById('filter-origin-node').value
+      };
+    }
+
+    function buildReportQuery() {
+      const params = new URLSearchParams({ limit: '20' });
+      for (const [key, value] of Object.entries(currentReportFilters())) {
+        if (value && value !== 'all') {
+          params.set(key, value);
+        }
+      }
+      return params.toString();
+    }
+
+    function resetFilters() {
+      document.getElementById('filter-surface').value = 'all';
+      document.getElementById('filter-entry-type').value = 'all';
+      document.getElementById('filter-severity').value = 'all';
+      document.getElementById('filter-origin-node').value = 'all';
+      refresh().catch(() => {});
+    }
+
+    function renderFilterStatus(reportsSnapshot) {
+      const filters = reportsSnapshot.filters || {};
+      const entries = (reportsSnapshot.entries || []).length;
+      const matched = reportsSnapshot.count || 0;
+      const active = Object.entries(filters).map(([key, value]) => `${key}: ${value}`);
+      document.getElementById('filter-status').textContent = active.length
+        ? `Showing ${entries} visible / ${matched} matched. ${active.join(' / ')}`
+        : `Showing ${entries} visible entries without filters.`;
+    }
+
     function activateTab(tab) {
       writeTab(tab);
       for (const button of document.querySelectorAll('[data-tab]')) {
@@ -278,6 +550,9 @@
         const severity = String(entry.severity || 'info').toLowerCase();
         const result = String(entry.result || 'recorded').toLowerCase();
         const mirroredLabel = entry.mirrored ? 'mirrored' : 'local';
+        const parameters = entry.parameters || {};
+        const caseId = parameters.case_id || '';
+        const note = parameters.note || '';
 
         return `
           <article class="report-card">
@@ -289,6 +564,7 @@
               <div class="report-chips">
                 <span class="chip">${esc(entry.source_surface || 'unknown')}</span>
                 <span class="chip">${esc(entry.entry_type || 'event')}</span>
+                ${caseId ? `<span class="chip">${esc(caseId)}</span>` : ''}
                 <span class="chip result-${esc(result)}">${esc(entry.result || 'recorded')}</span>
                 <span class="chip severity-${esc(severity)}">${esc(entry.severity || 'info')}</span>
               </div>
@@ -297,9 +573,11 @@
               <span>time: ${esc(entry.timestamp_ms)} ms</span>
               <span>origin: ${esc(entry.origin_node || 'unknown')} (${mirroredLabel})</span>
               <span>module: ${esc(entry.module_id || 'unknown')}</span>
+              <span>board: ${esc(parameters.board || '-')}</span>
               <span>mode: ${esc(entry.source_mode || 'unknown')}</span>
               <span>type: ${esc(entry.raw_type || entry.entry_type || 'event')}</span>
             </div>
+            ${note ? `<p class="report-note">note: ${esc(note)}</p>` : ''}
             ${buildParameterRow(entry.parameters)}
           </article>
         `;
@@ -384,23 +662,91 @@
         <p>error_count: ${esc(reportSummary.error_count || 0)}</p>
         <p>surfaces: ${esc(formatCountMap(reportSummary.surfaces))}</p>
         <p>entry_types: ${esc(formatCountMap(reportSummary.entry_types))}</p>
+        <p>origin_nodes: ${esc(formatCountMap(reportSummary.origin_nodes))}</p>
         <p>source_kind: ${esc(reportsSnapshot.source_kind || 'unknown')}</p>
-        <p>operator notes will join this feed later as typed report entries.</p>
+        <p>Quick testcase capture is now available here; richer operator notes can grow on top of the same feed.</p>
       `;
 
       document.getElementById('reports-feed').innerHTML = buildReportFeed(reportsSnapshot);
+      renderFilterStatus(reportsSnapshot);
+    }
+
+    async function submitTestcase(event) {
+      event.preventDefault();
+      const form = document.getElementById('testcase-form');
+      const submitButton = document.getElementById('testcase-submit');
+      const status = document.getElementById('testcase-status');
+      const formData = new FormData(form);
+      const params = new URLSearchParams();
+      for (const [key, value] of formData.entries()) {
+        params.set(key, String(value || '').trim());
+      }
+
+      submitButton.disabled = true;
+      status.textContent = 'Recording testcase result...';
+      try {
+        const response = await fetch(`/api/v1/reports/testcase?${params.toString()}`, { method: 'POST' });
+        const payload = await response.json();
+        if (!payload.accepted) {
+          throw new Error(payload.message || 'testcase result was not accepted');
+        }
+
+        status.textContent = 'Testcase result recorded in Gallery > Reports.';
+        document.getElementById('case-id').value = '';
+        document.getElementById('case-note').value = '';
+        document.getElementById('case-result').value = 'pass';
+        await refresh();
+        activateTab('reports');
+      } catch (error) {
+        status.textContent = `Record failed: ${error}`;
+      } finally {
+        submitButton.disabled = false;
+      }
+    }
+
+    async function submitOperatorNote(event) {
+      event.preventDefault();
+      const form = document.getElementById('note-form');
+      const submitButton = document.getElementById('note-submit');
+      const status = document.getElementById('note-status');
+      const formData = new FormData(form);
+      const params = new URLSearchParams();
+      for (const [key, value] of formData.entries()) {
+        params.set(key, String(value || '').trim());
+      }
+
+      submitButton.disabled = true;
+      status.textContent = 'Recording operator note...';
+      try {
+        const response = await fetch(`/api/v1/reports/note?${params.toString()}`, { method: 'POST' });
+        const payload = await response.json();
+        if (!payload.accepted) {
+          throw new Error(payload.message || 'operator note was not accepted');
+        }
+
+        status.textContent = 'Operator note recorded in Gallery > Reports.';
+        document.getElementById('note-case-id').value = '';
+        document.getElementById('note-text').value = '';
+        await refresh();
+        activateTab('reports');
+      } catch (error) {
+        status.textContent = `Record failed: ${error}`;
+      } finally {
+        submitButton.disabled = false;
+      }
     }
 
     async function refresh() {
       const [snapshotResponse, contentResponse, reportsResponse] = await Promise.all([
         fetch('/api/v1/shell/snapshot'),
         fetch('/api/v1/content/status'),
-        fetch('/api/v1/reports?limit=20')
+        fetch(`/api/v1/reports?${buildReportQuery()}`)
       ]);
 
       const snapshot = await snapshotResponse.json();
       const contentStatus = await contentResponse.json();
       const reportsSnapshot = await reportsResponse.json();
+      state.snapshot = snapshot;
       const current = ((snapshot.nodes || {}).current || {});
       const peer = ((snapshot.nodes || {}).peer || {});
       const defaultTab = (((snapshot.navigation || {}).gallery || {}).default_tab || 'reports');
@@ -410,12 +756,37 @@
 
       renderSummary(snapshot, contentStatus);
       renderPanels(snapshot, contentStatus, reportsSnapshot);
+      populateModuleSelect('case-module', snapshot);
+      populateModuleSelect('note-module', snapshot);
+      populateOriginNodeOptions(snapshot);
+      syncBoardSelection(snapshot, 'case-module', 'case-board', 'manualTestcaseBoardSelection');
+      syncBoardSelection(snapshot, 'note-module', 'note-board', 'manualNoteBoardSelection');
       activateTab(readTab(defaultTab));
     }
 
     for (const button of document.querySelectorAll('[data-tab]')) {
       button.addEventListener('click', () => activateTab(button.dataset.tab));
     }
+    for (const id of ['filter-surface', 'filter-entry-type', 'filter-severity', 'filter-origin-node']) {
+      document.getElementById(id).addEventListener('change', () => {
+        refresh().catch(() => {});
+      });
+    }
+    document.getElementById('filters-reset').addEventListener('click', resetFilters);
+    document.getElementById('case-board').addEventListener('change', () => {
+      state.manualTestcaseBoardSelection = true;
+    });
+    document.getElementById('case-module').addEventListener('change', () => {
+      syncBoardSelection(state.snapshot, 'case-module', 'case-board', 'manualTestcaseBoardSelection');
+    });
+    document.getElementById('note-board').addEventListener('change', () => {
+      state.manualNoteBoardSelection = true;
+    });
+    document.getElementById('note-module').addEventListener('change', () => {
+      syncBoardSelection(state.snapshot, 'note-module', 'note-board', 'manualNoteBoardSelection');
+    });
+    document.getElementById('testcase-form').addEventListener('submit', submitTestcase);
+    document.getElementById('note-form').addEventListener('submit', submitOperatorNote);
 
     refresh().catch((error) => {
       document.getElementById('reports-feed').innerHTML = `

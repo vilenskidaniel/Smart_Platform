@@ -51,7 +51,7 @@ class ReportArchive:
                     handle.write("\n")
         return deepcopy(normalized)
 
-    def snapshot(self, limit: int = 60) -> dict[str, Any]:
+    def snapshot(self, limit: int = 60, *, filters: dict[str, Any] | None = None) -> dict[str, Any]:
         with self._lock:
             newest_first = [deepcopy(item) for item in reversed(self._entries)]
         return build_reports_snapshot_from_entries(
@@ -59,6 +59,7 @@ class ReportArchive:
             count=len(newest_first),
             limit=limit,
             source_kind="report_archive_v1",
+            filters=filters,
         )
 
     def _load_from_disk(self) -> None:

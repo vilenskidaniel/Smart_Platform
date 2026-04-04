@@ -191,6 +191,17 @@ String extractDetailValue(const char* details, const char* key) {
     return extractKeyValueValue(detailText, key);
 }
 
+String extractAliasedDetailValue(const char* details, const char* primaryKey, const char* alternateKey) {
+    const String primary = extractDetailValue(details, primaryKey);
+    if (primary.length() > 0) {
+        return primary;
+    }
+    if (alternateKey == nullptr || alternateKey[0] == '\0') {
+        return "";
+    }
+    return extractDetailValue(details, alternateKey);
+}
+
 bool extractDetailBool(const char* details, const char* key, bool& outValue) {
     const String value = extractDetailValue(details, key);
     if (value.length() == 0) {
@@ -255,10 +266,19 @@ String buildParametersJson(const char* details) {
             continue;
         }
 
+        String canonicalKey = key;
+        if (canonicalKey == "case") {
+            canonicalKey = "case_id";
+        } else if (canonicalKey == "module") {
+            canonicalKey = "module_id";
+        } else if (canonicalKey == "result") {
+            canonicalKey = "test_result";
+        }
+
         if (appended) {
             json += ",";
         }
-        appendQuotedJson(json, key);
+        appendQuotedJson(json, canonicalKey);
         json += ":";
         appendScalarJson(json, value);
         appended = true;
@@ -322,7 +342,11 @@ String inferSourceMode(const char* surface, const char* details) {
     return inferDefaultMode(surface);
 }
 
-const char* inferModuleId(const char* source) {
+String inferModuleId(const char* source, const char* details) {
+    const String explicitModule = extractAliasedDetailValue(details, "module_id", "module");
+    if (explicitModule.length() > 0) {
+        return explicitModule;
+    }
     if (textEquals(source, "turret_runtime") || textEquals(source, "turret_scenarios") ||
         textEquals(source, "turret_driver_layer") || textEquals(source, "turret_bridge")) {
         return "turret_bridge";
@@ -331,12 +355,17 @@ const char* inferModuleId(const char* source) {
         textEquals(source, "irrigation") || textEquals(source, "irrigation_service") ||
         textEquals(source, "system_shell") || textEquals(source, "sync_core") ||
         textEquals(source, "service_mode")) {
-        return source;
+        return String(source);
     }
-    return (source != nullptr && source[0] != '\0') ? source : "unknown";
+    return (source != nullptr && source[0] != '\0') ? String(source) : String("unknown");
 }
 
-const char* inferEntryType(const char* source, const char* rawType) {
+const char* inferEntryType(const char* source, const char* rawType, const char* details) {
+    if ((rawType != nullptr && strncmp(rawType, "testcase_", 9) == 0) ||
+        (extractAliasedDetailValue(details, "case_id", "case").length() > 0 &&
+         extractAliasedDetailValue(details, "test_result", "result").length() > 0)) {
+        return "testcase";
+    }
     if (textEquals(rawType, "operator_note")) {
         return "operator_note";
     }
@@ -372,6 +401,17 @@ bool failedStepsPresent(const char* details) {
 }
 
 const char* inferResult(const PlatformLogEntry& entry) {
+    const String testcaseResult = extractAliasedDetailValue(entry.details, "test_result", "result");
+    if (testcaseResult.equalsIgnoreCase("pass")) {
+        return "pass";
+    }
+    if (testcaseResult.equalsIgnoreCase("fail")) {
+        return "fail";
+    }
+    if (testcaseResult.equalsIgnoreCase("warn")) {
+        return "warn";
+    }
+
     bool accepted = false;
     if (extractDetailBool(entry.details, "accepted", accepted)) {
         return accepted ? "accepted" : "rejected";
@@ -400,10 +440,17 @@ bool inferDurationMs(const char* details, long& outValue) {
            extractDetailLong(details, "active_time_ms", outValue);
 }
 
-String humanizeType(const char* rawType) {
+String humanizeType(const char* rawType, const char* details) {
     String text = rawType != nullptr ? rawType : "";
     if (text.length() == 0) {
         return "Event";
+    }
+    if (text == "testcase_result_recorded") {
+        const String caseId = extractAliasedDetailValue(details, "case_id", "case");
+        if (caseId.length() > 0) {
+            return String("Testcase ") + caseId;
+        }
+        return "Testcase Result";
     }
 
     String result;
@@ -433,6 +480,19 @@ void appendSummaryCount(String& json, const char* key, size_t value, bool& first
     json += ":";
     json += String(value);
     first = false;
+}
+
+String normalizeFilterValue(const char* value) {
+    String text = trimCopy(String(value != nullptr ? value : ""));
+    text.toLowerCase();
+    if (text == "all") {
+        return "";
+    }
+    return text;
+}
+
+bool matchesFilterValue(const String& actual, const String& filter) {
+    return filter.length() == 0 || actual.equalsIgnoreCase(filter);
 }
 
 }  // namespace
@@ -575,9 +635,16 @@ String PlatformEventLog::buildSnapshotJson(size_t limit) const {
     return json;
 }
 
-String PlatformEventLog::buildReportsJson(size_t limit) const {
+String PlatformEventLog::buildReportsJson(size_t limit,
+                                          const char* surfaceFilter,
+                                          const char* entryTypeFilter,
+                                          const char* severityFilter,
+                                          const char* originNodeFilter) const {
     const size_t clampedLimit = limit == 0 ? 1 : limit;
-    const size_t actualCount = count_ < clampedLimit ? count_ : clampedLimit;
+    const String normalizedSurfaceFilter = normalizeFilterValue(surfaceFilter);
+    const String normalizedEntryTypeFilter = normalizeFilterValue(entryTypeFilter);
+    const String normalizedSeverityFilter = normalizeFilterValue(severityFilter);
+    const String normalizedOriginNodeFilter = normalizeFilterValue(originNodeFilter);
 
     size_t warningCount = 0;
     size_t errorCount = 0;
@@ -587,35 +654,86 @@ String PlatformEventLog::buildReportsJson(size_t limit) const {
     size_t surfaceSystem = 0;
     size_t surfaceUnknown = 0;
     size_t typeOperatorNote = 0;
+    size_t typeTestcase = 0;
     size_t typeScenario = 0;
     size_t typeInterlock = 0;
     size_t typeModeChange = 0;
     size_t typeSync = 0;
     size_t typeAction = 0;
     size_t typeEvent = 0;
+    size_t originLocal = 0;
+    size_t originPeer = 0;
+    size_t originOther = 0;
+    size_t matchedCount = 0;
+    size_t visibleCount = 0;
 
     String json;
     json.reserve(4096);
     json += "{";
     json += "\"schema_version\":\"reports-feed.v1\",";
     json += "\"source_kind\":\"platform_log_baseline\",";
-    json += "\"count\":";
-    json += String(count_);
+    json += "\"count\":0";
     json += ",\"limit\":";
     json += String(clampedLimit);
+    json += ",\"filters\":{";
+    bool firstFilter = true;
+    if (normalizedSurfaceFilter.length() > 0) {
+        appendQuotedJson(json, "surface");
+        json += ":";
+        appendQuotedJson(json, normalizedSurfaceFilter);
+        firstFilter = false;
+    }
+    if (normalizedEntryTypeFilter.length() > 0) {
+        if (!firstFilter) {
+            json += ",";
+        }
+        appendQuotedJson(json, "entry_type");
+        json += ":";
+        appendQuotedJson(json, normalizedEntryTypeFilter);
+        firstFilter = false;
+    }
+    if (normalizedSeverityFilter.length() > 0) {
+        if (!firstFilter) {
+            json += ",";
+        }
+        appendQuotedJson(json, "severity");
+        json += ":";
+        appendQuotedJson(json, normalizedSeverityFilter);
+        firstFilter = false;
+    }
+    if (normalizedOriginNodeFilter.length() > 0) {
+        if (!firstFilter) {
+            json += ",";
+        }
+        appendQuotedJson(json, "origin_node");
+        json += ":";
+        appendQuotedJson(json, normalizedOriginNodeFilter);
+    }
+    json += "}";
     json += ",\"entries\":[";
 
     bool firstEntry = true;
-    for (size_t offset = 0; offset < actualCount; ++offset) {
+    for (size_t offset = 0; offset < count_; ++offset) {
         const size_t logicalIndex = (head_ + kPlatformLogEntryCount - 1 - offset) % kPlatformLogEntryCount;
         const PlatformLogEntry& entry = entries_[logicalIndex];
         const char* surface = inferSurface(entry.source);
-        const char* moduleId = inferModuleId(entry.source);
-        const char* entryType = inferEntryType(entry.source, entry.type);
+        const String moduleId = inferModuleId(entry.source, entry.details);
+        const char* entryType = inferEntryType(entry.source, entry.type, entry.details);
         const char* result = inferResult(entry);
         const String sourceMode = inferSourceMode(surface, entry.details);
         const String parametersJson = buildParametersJson(entry.details);
-        const String title = humanizeType(entry.type);
+        const String title = humanizeType(entry.type, entry.details);
+        if (!matchesFilterValue(String(surface), normalizedSurfaceFilter) ||
+            !matchesFilterValue(String(entryType), normalizedEntryTypeFilter) ||
+            !matchesFilterValue(String(entry.level), normalizedSeverityFilter) ||
+            !matchesFilterValue(String(entry.originNode), normalizedOriginNodeFilter)) {
+            continue;
+        }
+
+        matchedCount += 1;
+        if (visibleCount >= clampedLimit) {
+            continue;
+        }
 
         if (!firstEntry) {
             json += ",";
@@ -665,6 +783,7 @@ String PlatformEventLog::buildReportsJson(size_t limit) const {
         appendQuotedJson(json, entry.type);
         json += "}";
         firstEntry = false;
+        visibleCount += 1;
 
         if (textEquals(entry.level, "warning") || textEquals(entry.level, "warn")) {
             ++warningCount;
@@ -686,6 +805,8 @@ String PlatformEventLog::buildReportsJson(size_t limit) const {
 
         if (textEquals(entryType, "operator_note")) {
             ++typeOperatorNote;
+        } else if (textEquals(entryType, "testcase")) {
+            ++typeTestcase;
         } else if (textEquals(entryType, "scenario")) {
             ++typeScenario;
         } else if (textEquals(entryType, "interlock")) {
@@ -698,6 +819,14 @@ String PlatformEventLog::buildReportsJson(size_t limit) const {
             ++typeAction;
         } else {
             ++typeEvent;
+        }
+
+        if (textEquals(entry.originNode, localNodeId_)) {
+            ++originLocal;
+        } else if (textEquals(entry.originNode, "rpi-turret") || textEquals(entry.originNode, "esp32-main")) {
+            ++originPeer;
+        } else {
+            ++originOther;
         }
     }
 
@@ -716,14 +845,27 @@ String PlatformEventLog::buildReportsJson(size_t limit) const {
     json += "},\"entry_types\":{";
     bool firstEntryType = true;
     appendSummaryCount(json, "operator_note", typeOperatorNote, firstEntryType);
+    appendSummaryCount(json, "testcase", typeTestcase, firstEntryType);
     appendSummaryCount(json, "scenario", typeScenario, firstEntryType);
     appendSummaryCount(json, "interlock", typeInterlock, firstEntryType);
     appendSummaryCount(json, "mode_change", typeModeChange, firstEntryType);
     appendSummaryCount(json, "sync", typeSync, firstEntryType);
     appendSummaryCount(json, "action", typeAction, firstEntryType);
     appendSummaryCount(json, "event", typeEvent, firstEntryType);
+    json += "},\"origin_nodes\":{";
+    bool firstOrigin = true;
+    appendSummaryCount(json, localNodeId_, originLocal, firstOrigin);
+    appendSummaryCount(json, "peer", originPeer, firstOrigin);
+    appendSummaryCount(json, "other", originOther, firstOrigin);
     json += "}}";
     json += "}";
+
+    const String countPattern = "\"count\":0";
+    const int countIndex = json.indexOf(countPattern);
+    if (countIndex >= 0) {
+        json.remove(countIndex, static_cast<unsigned int>(countPattern.length()));
+        json = json.substring(0, countIndex) + "\"count\":" + String(matchedCount) + json.substring(countIndex);
+    }
     return json;
 }
 

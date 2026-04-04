@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from typing import Any
 
 
@@ -14,9 +15,15 @@ _TURRET_SOURCES = {"turret_runtime", "turret_driver_layer", "turret_bridge", "st
 _IRRIGATION_SOURCES = {"irrigation"}
 _SYSTEM_SOURCES = {"system_shell", "sync_core"}
 _TESTCASE_RESULTS = {"pass", "fail", "warn"}
+_FILTER_KEYS = ("surface", "entry_type", "severity", "origin_node")
 
 
-def build_reports_snapshot(platform_log: dict[str, Any], limit: int = 60) -> dict[str, Any]:
+def build_reports_snapshot(
+    platform_log: dict[str, Any],
+    limit: int = 60,
+    *,
+    filters: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     clamped_limit = max(1, limit)
     raw_entries = list(platform_log.get("entries", []))[:clamped_limit]
     entries = [normalize_report_entry(entry) for entry in raw_entries]
@@ -25,6 +32,7 @@ def build_reports_snapshot(platform_log: dict[str, Any], limit: int = 60) -> dic
         count=int(platform_log.get("count", len(entries))),
         limit=clamped_limit,
         source_kind="platform_log_baseline",
+        filters=filters,
     )
 
 
@@ -34,14 +42,18 @@ def build_reports_snapshot_from_entries(
     count: int | None = None,
     limit: int = 60,
     source_kind: str = "platform_log_baseline",
+    filters: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     clamped_limit = max(1, limit)
-    visible_entries = list(entries)[:clamped_limit]
+    normalized_filters = _normalize_filters(filters)
+    filtered_entries = [entry for entry in entries if _matches_filters(entry, normalized_filters)]
+    visible_entries = list(filtered_entries)[:clamped_limit]
     return {
         "schema_version": "reports-feed.v1",
         "source_kind": source_kind,
-        "count": int(count if count is not None else len(visible_entries)),
+        "count": int(len(filtered_entries) if normalized_filters else (count if count is not None else len(visible_entries))),
         "limit": clamped_limit,
+        "filters": normalized_filters,
         "summary": _build_summary(visible_entries),
         "entries": visible_entries,
     }
@@ -79,7 +91,84 @@ def _normalize_parameters(details: Any) -> dict[str, Any]:
         return details
     if details in {"", None}:
         return {}
+    if isinstance(details, str):
+        text = details.strip()
+        if not text:
+            return {}
+        if text.startswith("{") and text.endswith("}"):
+            try:
+                payload = json.loads(text)
+            except json.JSONDecodeError:
+                return {"raw": details}
+            if isinstance(payload, dict):
+                return {str(_canonical_parameter_key(str(key))): value for key, value in payload.items()}
+            return {"raw": details}
+
+        parsed = _parse_key_value_details(text)
+        if parsed:
+            return parsed
     return {"raw": details}
+
+
+def _parse_key_value_details(text: str) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for chunk in text.split(","):
+        piece = chunk.strip()
+        if not piece or "=" not in piece:
+            return {}
+        key, raw_value = piece.split("=", 1)
+        key = _canonical_parameter_key(key.strip())
+        if not key:
+            return {}
+        value = raw_value.strip()
+        lowered = value.lower()
+        if lowered in {"true", "false"}:
+            result[key] = lowered == "true"
+        else:
+            try:
+                result[key] = int(value)
+            except ValueError:
+                result[key] = value
+    return result
+
+
+def _canonical_parameter_key(key: str) -> str:
+    aliases = {
+        "case": "case_id",
+        "module": "module_id",
+        "result": "test_result",
+    }
+    return aliases.get(key, key)
+
+
+def _normalize_filters(filters: dict[str, Any] | None) -> dict[str, str]:
+    if not filters:
+        return {}
+    normalized: dict[str, str] = {}
+    for key in _FILTER_KEYS:
+        value = filters.get(key)
+        if value is None:
+            continue
+        text = str(value).strip().lower()
+        if text and text != "all":
+            normalized[key] = text
+    return normalized
+
+
+def _matches_filters(entry: dict[str, Any], filters: dict[str, str]) -> bool:
+    if not filters:
+        return True
+
+    mapping = {
+        "surface": str(entry.get("source_surface", "")).lower(),
+        "entry_type": str(entry.get("entry_type", "")).lower(),
+        "severity": str(entry.get("severity", "")).lower(),
+        "origin_node": str(entry.get("origin_node", "")).lower(),
+    }
+    for key, expected in filters.items():
+        if mapping.get(key, "") != expected:
+            return False
+    return True
 
 
 def _infer_surface(source: str) -> str:
@@ -106,10 +195,6 @@ def _infer_source_mode(source_surface: str, parameters: dict[str, Any]) -> str:
     if source_surface == "system":
         return "system"
     return "unknown"
-
-
-def _infer_module_id(source: str) -> str:
-    return _infer_module_id_from_parameters(source, {})
 
 
 def _infer_module_id_from_parameters(source: str, parameters: dict[str, Any]) -> str:
@@ -197,19 +282,27 @@ def _humanize_type(raw_type: str, parameters: dict[str, Any]) -> str:
         if isinstance(case_id, str) and case_id:
             return f"Testcase {case_id}"
         return "Testcase Result"
+    if raw_type == "operator_note":
+        case_id = parameters.get("case_id")
+        if isinstance(case_id, str) and case_id:
+            return f"Operator Note / {case_id}"
+        return "Operator Note"
     return " ".join(part.capitalize() for part in raw_type.split("_"))
 
 
 def _build_summary(entries: list[dict[str, Any]]) -> dict[str, Any]:
     surfaces: dict[str, int] = {}
     entry_types: dict[str, int] = {}
+    origin_nodes: dict[str, int] = {}
     warning_count = 0
     error_count = 0
     for entry in entries:
         surface = str(entry.get("source_surface", "unknown"))
         entry_type = str(entry.get("entry_type", "event"))
+        origin_node = str(entry.get("origin_node", "unknown"))
         surfaces[surface] = surfaces.get(surface, 0) + 1
         entry_types[entry_type] = entry_types.get(entry_type, 0) + 1
+        origin_nodes[origin_node] = origin_nodes.get(origin_node, 0) + 1
         severity = entry.get("severity")
         if severity == "warning":
             warning_count += 1
@@ -220,4 +313,5 @@ def _build_summary(entries: list[dict[str, Any]]) -> dict[str, Any]:
         "error_count": error_count,
         "surfaces": surfaces,
         "entry_types": entry_types,
+        "origin_nodes": origin_nodes,
     }

@@ -45,6 +45,8 @@ private:
     void handleFederatedRouteInfo();
     void handleLogs();
     void handleReports();
+    void handleTestcaseReport();
+    void handleNoteReport();
     void handleDiagnostics();
     void handleContentStatus();
     void handleSyncState();
@@ -83,7 +85,11 @@ private:
     String buildModulesJson() const;
     String buildFederatedRouteInfoJson(const char* moduleId) const;
     String buildLogsJson(size_t limit) const;
-    String buildReportsJson(size_t limit) const;
+    String buildReportsJson(size_t limit,
+                            const String& surfaceFilter = "",
+                            const String& entryTypeFilter = "",
+                            const String& severityFilter = "",
+                            const String& originNodeFilter = "") const;
     String buildDiagnosticsJson() const;
     String buildSyncStateJson() const;
     String buildSyncCommandResponseJson(const char* command,

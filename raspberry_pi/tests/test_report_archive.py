@@ -103,6 +103,56 @@ class ReportArchiveTests(unittest.TestCase):
             self.assertEqual("report_archive_v1", reports["source_kind"])
             self.assertTrue(any(entry["entry_type"] == "scenario" for entry in reports["entries"]))
 
+    def test_bridge_state_records_testcase_results_into_reports_archive(self) -> None:
+        with self._temporary_dir() as temp_dir:
+            content_root = temp_dir / "content"
+            state = BridgeState(
+                node_id="rpi-turret",
+                shell_version="0.1.0",
+                local_shell_base_url="http://raspberrypi.local:8080",
+                peer_shell_base_url="http://192.168.4.1",
+                content_root=str(content_root),
+            )
+
+            entry = state.record_testcase_result(
+                case_id="rpi-shell-smoke",
+                module_id="turret_bridge",
+                result="pass",
+                note="top bar and laboratory path are clear",
+                board="raspberry_pi",
+            )
+
+            reports = state.build_reports(limit=10)
+            self.assertEqual("testcase", entry["entry_type"])
+            self.assertEqual("pass", entry["result"])
+            self.assertEqual("report_archive_v1", reports["source_kind"])
+            self.assertEqual("testcase", reports["entries"][0]["entry_type"])
+            self.assertEqual("rpi-shell-smoke", reports["entries"][0]["parameters"]["case_id"])
+
+    def test_bridge_state_records_operator_note_and_filters_reports(self) -> None:
+        with self._temporary_dir() as temp_dir:
+            content_root = temp_dir / "content"
+            state = BridgeState(
+                node_id="rpi-turret",
+                shell_version="0.1.0",
+                local_shell_base_url="http://raspberrypi.local:8080",
+                peer_shell_base_url="http://192.168.4.1",
+                content_root=str(content_root),
+            )
+
+            state.record_operator_note(
+                note="toolbar still feels crowded on a narrow phone",
+                module_id="turret_bridge",
+                board="raspberry_pi",
+                case_id="rpi-home-lab",
+            )
+            reports = state.build_reports(limit=10, filters={"entry_type": "operator_note"})
+
+            self.assertEqual(1, reports["count"])
+            self.assertEqual("operator_note", reports["entries"][0]["entry_type"])
+            self.assertEqual("rpi-home-lab", reports["entries"][0]["parameters"]["case_id"])
+            self.assertEqual("report_archive_v1", reports["source_kind"])
+
 
 if __name__ == "__main__":
     unittest.main()

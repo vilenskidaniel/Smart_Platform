@@ -164,7 +164,13 @@ def build_server(config: BridgeConfig, state: BridgeState, sync_client: SyncClie
                 return
             if parsed.path == "/api/v1/reports":
                 limit = self._int_param(params, "limit", 60)
-                self._json_response(state.build_reports(limit=limit))
+                filters = {
+                    "surface": self._param(params, "surface"),
+                    "entry_type": self._param(params, "entry_type"),
+                    "severity": self._param(params, "severity"),
+                    "origin_node": self._param(params, "origin_node"),
+                }
+                self._json_response(state.build_reports(limit=limit, filters=filters))
                 return
             if parsed.path == "/api/v1/laboratory/readiness":
                 self._json_response(state.build_laboratory_readiness())
@@ -267,6 +273,74 @@ def build_server(config: BridgeConfig, state: BridgeState, sync_client: SyncClie
                         "command": "sync_refresh",
                         "accepted": True,
                         "sync_status": state.build_sync_status(),
+                    }
+                )
+                return
+
+            if parsed.path == "/api/v1/reports/testcase":
+                case_id = self._param(params, "case_id").strip()
+                module_id = self._param(params, "module_id").strip()
+                result = self._param(params, "result").strip().lower()
+                note = self._param(params, "note")
+                board = self._param(params, "board")
+
+                if not case_id or not module_id or result not in {"pass", "fail", "warn"}:
+                    self._json_response(
+                        {
+                            "command": "reports_testcase",
+                            "accepted": False,
+                            "message": "case_id, module_id, and result=pass|fail|warn are required",
+                        }
+                    )
+                    return
+
+                report_entry = state.record_testcase_result(
+                    case_id=case_id,
+                    module_id=module_id,
+                    result=result,
+                    note=note,
+                    board=board,
+                )
+                self._json_response(
+                    {
+                        "command": "reports_testcase",
+                        "accepted": True,
+                        "message": "testcase result recorded",
+                        "report_entry": report_entry,
+                        "reports_source_kind": state.build_reports(limit=1).get("source_kind", "unknown"),
+                    }
+                )
+                return
+
+            if parsed.path == "/api/v1/reports/note":
+                note = self._param(params, "note")
+                module_id = self._param(params, "module_id").strip()
+                board = self._param(params, "board")
+                case_id = self._param(params, "case_id")
+
+                if not note.strip() or not module_id:
+                    self._json_response(
+                        {
+                            "command": "reports_note",
+                            "accepted": False,
+                            "message": "note and module_id are required",
+                        }
+                    )
+                    return
+
+                report_entry = state.record_operator_note(
+                    note=note,
+                    module_id=module_id,
+                    board=board,
+                    case_id=case_id,
+                )
+                self._json_response(
+                    {
+                        "command": "reports_note",
+                        "accepted": True,
+                        "message": "operator note recorded",
+                        "report_entry": report_entry,
+                        "reports_source_kind": state.build_reports(limit=1).get("source_kind", "unknown"),
                     }
                 )
                 return

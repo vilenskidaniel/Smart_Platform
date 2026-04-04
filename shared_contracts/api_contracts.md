@@ -131,6 +131,8 @@
 - `/api/v1/modules/{id}/command`
 - `/api/v1/logs`
 - `/api/v1/reports`
+- `/api/v1/reports/testcase`
+- `/api/v1/reports/note`
 - `/api/v1/content/status`
 - `/api/v1/settings`
 - `/api/v1/sync/heartbeat`
@@ -362,12 +364,22 @@ It is not yet the final persistent reports model. For now it is a normalized fee
 built on top of the shared platform log so the shell and gallery can move to the
 canonical `Reports` vocabulary before the richer storage layer is finished.
 
+Current query filters:
+
+- `surface`
+- `entry_type`
+- `severity`
+- `origin_node`
+
 ```json
 {
   "schema_version": "reports-feed.v1",
   "source_kind": "platform_log_baseline",
   "count": 18,
   "limit": 20,
+  "filters": {
+    "surface": "laboratory"
+  },
   "summary": {
     "warning_count": 1,
     "error_count": 0,
@@ -379,6 +391,9 @@ canonical `Reports` vocabulary before the richer storage layer is finished.
       "scenario": 2,
       "sync": 1,
       "action": 5
+    },
+    "origin_nodes": {
+      "rpi-turret": 6
     }
   },
   "entries": [
@@ -406,6 +421,83 @@ canonical `Reports` vocabulary before the richer storage layer is finished.
   ]
 }
 ```
+
+## Testcase Report Capture
+
+- `POST /api/v1/reports/testcase`
+
+This is the current minimal write path for hardware bring-up evidence.
+It does not create a separate testcase subsystem yet.
+It writes one typed entry into the same `Gallery > Reports` feed.
+
+Required query parameters:
+
+- `case_id`
+- `module_id`
+- `result=pass|fail|warn`
+
+Optional query parameters:
+
+- `board`
+- `note`
+
+Minimal response:
+
+```json
+{
+  "command": "reports_testcase",
+  "accepted": true,
+  "message": "testcase result recorded"
+}
+```
+
+Recorded entries currently appear in the reports feed as:
+
+- `entry_type = testcase`
+- `source_surface = laboratory`
+- `raw_type = testcase_result_recorded`
+
+and carry typed parameters such as:
+
+- `case_id`
+- `module_id`
+- `board`
+- `test_result`
+- `note`
+
+## Operator Note Capture
+
+- `POST /api/v1/reports/note`
+
+This is the minimal typed note path for bring-up sessions.
+It keeps operator remarks in the same chronological feed instead of creating a
+separate notes surface.
+
+Required query parameters:
+
+- `note`
+- `module_id`
+
+Optional query parameters:
+
+- `board`
+- `case_id`
+
+Minimal response:
+
+```json
+{
+  "command": "reports_note",
+  "accepted": true,
+  "message": "operator note recorded"
+}
+```
+
+Recorded entries currently appear in the reports feed as:
+
+- `entry_type = operator_note`
+- `source_surface = laboratory`
+- `raw_type = operator_note`
 
 ## Laboratory Readiness Snapshot
 

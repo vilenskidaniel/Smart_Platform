@@ -176,17 +176,12 @@ Use this exact order for the first physical browser passes.
 
 ## Still Missing After This Step
 
-- typed testcase result recording into `Gallery > Reports`;
-- operator notes attached to a specific testcase or action;
-- richer filters for `Reports`;
 - equivalent readiness summary on direct `ESP32` shell when Raspberry Pi is absent.
+- richer review helpers on top of the current feed, for example saved filter presets or quick bundle summaries.
 
 ## Recommended Next Focus
 
-The next most useful step before real bench testing is a minimal test-result capture flow:
+The next most useful step after baseline testcase capture, operator notes, and first filters is the review layer directly above them:
 
-- testcase id;
-- board/module under test;
-- pass/fail/warning result;
-- short operator note;
-- automatic appearance in `Gallery > Reports`.
+- quick review of recent pass/fail/warn entries between hardware bundles;
+- later, export-oriented report bundles without replacing the current feed model.

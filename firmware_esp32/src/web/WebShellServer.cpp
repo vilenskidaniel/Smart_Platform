@@ -446,6 +446,76 @@ core::ActiveMode parseActiveModeValue(const String& value) {
     return core::ActiveMode::Manual;
 }
 
+String sanitizeTestcaseField(String value, size_t maxLength) {
+    value.replace('\r', ' ');
+    value.replace('\n', ' ');
+    value.replace(',', '/');
+    value.replace('=', '-');
+    value.trim();
+    if (value.length() > maxLength) {
+        value = value.substring(0, maxLength);
+    }
+    return value;
+}
+
+bool parseTestcaseResultValue(const String& value, String& normalizedResult, const char*& level) {
+    if (value == "pass") {
+        normalizedResult = "pass";
+        level = "info";
+        return true;
+    }
+    if (value == "warn") {
+        normalizedResult = "warn";
+        level = "warning";
+        return true;
+    }
+    if (value == "fail") {
+        normalizedResult = "fail";
+        level = "error";
+        return true;
+    }
+    return false;
+}
+
+String buildTestcaseDetails(const String& caseId,
+                            const String& moduleId,
+                            const String& board,
+                            const String& result,
+                            const String& note) {
+    String details;
+    details.reserve(124);
+    details += "case=";
+    details += sanitizeTestcaseField(caseId, 24);
+    details += ",module=";
+    details += sanitizeTestcaseField(moduleId, 20);
+    details += ",board=";
+    details += sanitizeTestcaseField(board, 16);
+    details += ",result=";
+    details += sanitizeTestcaseField(result, 8);
+    if (note.length() > 0) {
+        details += ",note=";
+        details += sanitizeTestcaseField(note, 20);
+    }
+    return details;
+}
+
+String buildOperatorNoteDetails(const String& caseId,
+                                const String& moduleId,
+                                const String& board,
+                                const String& note) {
+    String details;
+    details.reserve(124);
+    details += "case=";
+    details += sanitizeTestcaseField(caseId, 24);
+    details += ",module=";
+    details += sanitizeTestcaseField(moduleId, 20);
+    details += ",board=";
+    details += sanitizeTestcaseField(board, 16);
+    details += ",note=";
+    details += sanitizeTestcaseField(note, 40);
+    return details;
+}
+
 bool parseModuleStateValue(const String& value, core::ModuleState& outState) {
     if (value == "online") {
         outState = core::ModuleState::Online;
@@ -562,6 +632,8 @@ void WebShellServer::registerRoutes() {
     server_.on("/api/v1/federation/route", HTTP_GET, [this]() { handleFederatedRouteInfo(); });
     server_.on("/api/v1/logs", HTTP_GET, [this]() { handleLogs(); });
     server_.on("/api/v1/reports", HTTP_GET, [this]() { handleReports(); });
+    server_.on("/api/v1/reports/testcase", HTTP_POST, [this]() { handleTestcaseReport(); });
+    server_.on("/api/v1/reports/note", HTTP_POST, [this]() { handleNoteReport(); });
     server_.on("/api/v1/diagnostics", HTTP_GET, [this]() { handleDiagnostics(); });
     server_.on("/api/v1/content/status", HTTP_GET, [this]() { handleContentStatus(); });
     server_.on("/api/v1/sync/state", HTTP_GET, [this]() { handleSyncState(); });
@@ -682,7 +754,82 @@ void WebShellServer::handleReports() {
             limit = static_cast<size_t>(value);
         }
     }
-    server_.send(200, "application/json; charset=utf-8", buildReportsJson(limit));
+    server_.send(200,
+                 "application/json; charset=utf-8",
+                 buildReportsJson(limit,
+                                  server_.arg("surface"),
+                                  server_.arg("entry_type"),
+                                  server_.arg("severity"),
+                                  server_.arg("origin_node")));
+}
+
+void WebShellServer::handleTestcaseReport() {
+    const String caseId = server_.arg("case_id");
+    const String moduleId = server_.arg("module_id");
+    String board = server_.arg("board");
+    const String note = server_.arg("note");
+    const String rawResult = server_.arg("result");
+
+    String normalizedResult;
+    const char* level = "info";
+    if (caseId.length() == 0 || moduleId.length() == 0 || !parseTestcaseResultValue(rawResult, normalizedResult, level)) {
+        server_.send(200,
+                     "application/json; charset=utf-8",
+                     "{\"command\":\"reports_testcase\",\"accepted\":false,"
+                     "\"message\":\"case_id, module_id, and result=pass|fail|warn are required\"}");
+        return;
+    }
+
+    if (board.length() == 0) {
+        board = core::nodeTypeToString(systemCore_.localNode().nodeType);
+    }
+
+    const String details = buildTestcaseDetails(caseId, moduleId, board, normalizedResult, note);
+    String message = String("testcase ") + sanitizeTestcaseField(caseId, 24) +
+                     " recorded for " + sanitizeTestcaseField(moduleId, 20) +
+                     " as " + normalizedResult;
+    if (message.length() > 79) {
+        message = message.substring(0, 79);
+    }
+
+    platformLog_.addLocal("testcase_capture",
+                          level,
+                          "testcase_result_recorded",
+                          message.c_str(),
+                          details.c_str());
+    server_.send(200,
+                 "application/json; charset=utf-8",
+                 "{\"command\":\"reports_testcase\",\"accepted\":true,\"message\":\"testcase result recorded\"}");
+}
+
+void WebShellServer::handleNoteReport() {
+    const String note = server_.arg("note");
+    const String moduleId = server_.arg("module_id");
+    const String caseId = server_.arg("case_id");
+    String board = server_.arg("board");
+
+    if (note.length() == 0 || moduleId.length() == 0) {
+        server_.send(200,
+                     "application/json; charset=utf-8",
+                     "{\"command\":\"reports_note\",\"accepted\":false,"
+                     "\"message\":\"note and module_id are required\"}");
+        return;
+    }
+
+    if (board.length() == 0) {
+        board = core::nodeTypeToString(systemCore_.localNode().nodeType);
+    }
+
+    const String sanitizedMessage = sanitizeTestcaseField(note, 79);
+    const String details = buildOperatorNoteDetails(caseId, moduleId, board, note);
+    platformLog_.addLocal("testcase_capture",
+                          "info",
+                          "operator_note",
+                          sanitizedMessage.c_str(),
+                          details.c_str());
+    server_.send(200,
+                 "application/json; charset=utf-8",
+                 "{\"command\":\"reports_note\",\"accepted\":true,\"message\":\"operator note recorded\"}");
 }
 
 void WebShellServer::handleDiagnostics() {
@@ -1257,8 +1404,16 @@ String WebShellServer::buildLogsJson(size_t limit) const {
     return platformLog_.buildSnapshotJson(limit);
 }
 
-String WebShellServer::buildReportsJson(size_t limit) const {
-    return platformLog_.buildReportsJson(limit);
+String WebShellServer::buildReportsJson(size_t limit,
+                                        const String& surfaceFilter,
+                                        const String& entryTypeFilter,
+                                        const String& severityFilter,
+                                        const String& originNodeFilter) const {
+    return platformLog_.buildReportsJson(limit,
+                                         surfaceFilter.c_str(),
+                                         entryTypeFilter.c_str(),
+                                         severityFilter.c_str(),
+                                         originNodeFilter.c_str());
 }
 
 String WebShellServer::buildDiagnosticsJson() const {
