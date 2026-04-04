@@ -49,6 +49,9 @@
     "title": "ESP32",
     "reachable": true,
     "health": "online",
+    "wifi_ready": true,
+    "shell_ready": true,
+    "sync_ready": true,
     "summary": "Irrigation owner available"
   },
   "peer": {
@@ -56,6 +59,8 @@
     "title": "Raspberry Pi",
     "reachable": true,
     "health": "online",
+    "wifi_ready": true,
+    "shell_ready": true,
     "sync_ready": true,
     "reported_mode": "manual",
     "shell_base_url": "http://raspberrypi.local:8080",

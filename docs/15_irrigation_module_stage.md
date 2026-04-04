@@ -6,7 +6,7 @@
 
 - этот документ описывает bootstrap-этап `Irrigation`;
 - software-level фиксация `Irrigation v1` вынесена отдельно в
-  [35_irrigation_v1_software_stage.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/ESP32_COB_Strobe_Bench/Smart_Platform/docs/35_irrigation_v1_software_stage.md).
+  [35_irrigation_v1_software_stage.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/docs/35_irrigation_v1_software_stage.md).
 
 ## Что сделано
 

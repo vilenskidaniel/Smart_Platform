@@ -6,10 +6,10 @@
 
 - это исторический runtime-bootstrap документ;
 - он не является главным источником истины по текущему product UX;
-- software-level фиксация `Turret v1` вынесена в [36_turret_v1_software_stage.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/ESP32_COB_Strobe_Bench/Smart_Platform/docs/36_turret_v1_software_stage.md);
+- software-level фиксация `Turret v1` вынесена в [36_turret_v1_software_stage.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/docs/36_turret_v1_software_stage.md);
 - актуальная продуктовая картина turret UX вынесена в:
-  - [37_turret_product_context_map.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/ESP32_COB_Strobe_Bench/Smart_Platform/docs/37_turret_product_context_map.md)
-  - [39_design_decisions_and_screen_map.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/ESP32_COB_Strobe_Bench/Smart_Platform/docs/39_design_decisions_and_screen_map.md)
+  - [37_turret_product_context_map.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/docs/37_turret_product_context_map.md)
+  - [39_design_decisions_and_screen_map.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/docs/39_design_decisions_and_screen_map.md)
 
 ## Что было сделано на этом этапе
 

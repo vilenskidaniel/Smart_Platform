@@ -21,8 +21,8 @@
 
 ## Какие файлы теперь являются источником shell
 
-- [index.html](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/ESP32_COB_Strobe_Bench/Smart_Platform/firmware_esp32/data/index.html)
-- [strobe.html](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/ESP32_COB_Strobe_Bench/Smart_Platform/firmware_esp32/data/service/strobe.html)
+- [index.html](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/firmware_esp32/data/index.html)
+- [strobe.html](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/firmware_esp32/data/service/strobe.html)
 
 ## Что осталось в прошивке
 

@@ -329,7 +329,7 @@
 
 Отдельный briefing для этого направления:
 
-- [38_turret_audio_briefing.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/ESP32_COB_Strobe_Bench/Smart_Platform/docs/38_turret_audio_briefing.md)
+- [38_turret_audio_briefing.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/docs/38_turret_audio_briefing.md)
 
 ## 6. Тонкие места и риски
 

@@ -53,7 +53,7 @@
 
 Главная сводка нового контекста вынесена отдельно:
 
-- [37_turret_product_context_map.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/ESP32_COB_Strobe_Bench/Smart_Platform/docs/37_turret_product_context_map.md)
+- [37_turret_product_context_map.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/docs/37_turret_product_context_map.md)
 
 Дополнительная фиксация по action layers:
 
@@ -62,7 +62,7 @@
   - как отдельный laboratory slice в `Service/Test`
 - `audio` сейчас не углубляется вместе со `strobe`;
 - для `audio` сначала нужен отдельный briefing по hardware, mounting и power:
-  - [38_turret_audio_briefing.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/ESP32_COB_Strobe_Bench/Smart_Platform/docs/38_turret_audio_briefing.md)
+  - [38_turret_audio_briefing.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/docs/38_turret_audio_briefing.md)
 
 ## Что модуль не должен делать
 

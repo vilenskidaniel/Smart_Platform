@@ -13,6 +13,12 @@
       --line: #c9d5c6;
       --accent: #375f45;
       --active: #295f94;
+      --warn-bg: #fff5da;
+      --warn-ink: #7d5a0c;
+      --error-bg: #fde4dd;
+      --error-ink: #8a3426;
+      --ok-bg: #e3f3e7;
+      --ok-ink: #25563c;
       --shadow: 0 14px 40px rgba(30, 48, 33, 0.08);
       --radius: 22px;
       --mono: "Consolas", "SFMono-Regular", monospace;
@@ -59,17 +65,44 @@
     }
     .module p, .module ul { margin: 8px 0 0; color: var(--muted); line-height: 1.5; }
     .module ul { padding-left: 18px; }
-    .mono {
-      font-family: var(--mono);
-      font-size: 12px;
-      white-space: pre-wrap;
-      background: #17221a;
-      color: #e8f5e8;
+    .report-feed { display: grid; gap: 12px; }
+    .report-card {
+      border: 1px solid var(--line);
       border-radius: 18px;
       padding: 14px;
-      overflow: auto;
-      min-height: 220px;
+      background: linear-gradient(180deg, rgba(255,255,255,.88), rgba(241,246,238,.96));
+      display: grid;
+      gap: 12px;
     }
+    .report-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+    .report-head h3 { margin: 0; font-size: 18px; }
+    .report-message { margin: 6px 0 0; line-height: 1.5; color: var(--ink); }
+    .report-chips, .report-meta, .param-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .report-meta { color: var(--muted); font-size: 13px; }
+    .chip, .param {
+      border-radius: 999px;
+      padding: 6px 10px;
+      border: 1px solid var(--line);
+      background: #f5f8f3;
+      font-size: 12px;
+      line-height: 1.2;
+    }
+    .param { font-family: var(--mono); }
+    .chip.result-accepted, .chip.result-completed, .chip.result-recorded { background: var(--ok-bg); color: var(--ok-ink); border-color: rgba(37, 86, 60, 0.16); }
+    .chip.result-rejected, .chip.result-failed { background: var(--error-bg); color: var(--error-ink); border-color: rgba(138, 52, 38, 0.16); }
+    .chip.result-attention, .chip.result-completed_with_warnings, .chip.severity-warning, .chip.severity-warn { background: var(--warn-bg); color: var(--warn-ink); border-color: rgba(125, 90, 12, 0.16); }
+    .chip.severity-error { background: var(--error-bg); color: var(--error-ink); border-color: rgba(138, 52, 38, 0.16); }
+    .chip.severity-info { background: #e6eef8; color: #31567d; border-color: rgba(49, 86, 125, 0.16); }
     [hidden] { display: none !important; }
     .section-title { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; flex-wrap: wrap; margin-bottom: 12px; }
     .meta { color: var(--muted); font-size: 13px; }
@@ -154,17 +187,20 @@
       </article>
       <article class="card">
         <div class="section-title">
-          <h2>Recent Feed Preview</h2>
-          <span class="meta">Current baseline still uses platform log as source</span>
+          <h2>Recent Report Feed</h2>
+          <span class="meta">Baseline feed mapped from platform log</span>
         </div>
-        <div id="reports-log" class="mono">Loading reports preview...</div>
+        <div id="reports-feed" class="report-feed">
+          <div class="module">
+            <p>Loading report feed...</p>
+          </div>
+        </div>
       </article>
     </section>
   </div>
 
   <script>
     const VALID_TABS = ['plants', 'media', 'reports'];
-    let currentTab = 'reports';
 
     function esc(value) {
       return String(value ?? '')
@@ -173,6 +209,24 @@
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
+    }
+
+    function valueText(value) {
+      if (value === null || value === undefined) {
+        return '-';
+      }
+      if (typeof value === 'object') {
+        return JSON.stringify(value);
+      }
+      return String(value);
+    }
+
+    function formatCountMap(counts) {
+      const entries = Object.entries(counts || {});
+      if (!entries.length) {
+        return 'none';
+      }
+      return entries.map(([key, value]) => `${key}: ${value}`).join(', ');
     }
 
     function readTab(defaultTab) {
@@ -187,24 +241,7 @@
       window.history.replaceState({}, '', url);
     }
 
-    function buildLogPreview(logSnapshot) {
-      const entries = (logSnapshot.entries || []).slice(0, 12);
-      if (!entries.length) {
-        return 'No report entries yet.';
-      }
-
-      return entries.map((entry) => {
-        const origin = entry.origin_node || 'unknown';
-        const mirrored = entry.mirrored ? ' mirrored' : '';
-        const details = entry.details && Object.keys(entry.details).length
-          ? ` ${JSON.stringify(entry.details)}`
-          : '';
-        return `[${entry.timestamp_ms} ms] ${origin}${mirrored} ${entry.source} ${String(entry.level || '').toUpperCase()} ${entry.type}: ${entry.message}${details}`;
-      }).join('\n');
-    }
-
     function activateTab(tab) {
-      currentTab = tab;
       writeTab(tab);
       for (const button of document.querySelectorAll('[data-tab]')) {
         button.classList.toggle('active', button.dataset.tab === tab);
@@ -212,6 +249,61 @@
       document.getElementById('plants-panel').hidden = tab !== 'plants';
       document.getElementById('media-panel').hidden = tab !== 'media';
       document.getElementById('reports-panel').hidden = tab !== 'reports';
+    }
+
+    function buildParameterRow(parameters) {
+      const entries = Object.entries(parameters || {}).slice(0, 6);
+      if (!entries.length) {
+        return '';
+      }
+      return `
+        <div class="param-row">
+          ${entries.map(([key, value]) => `<span class="param">${esc(key)}=${esc(valueText(value))}</span>`).join('')}
+        </div>
+      `;
+    }
+
+    function buildReportFeed(reportsSnapshot) {
+      const entries = (reportsSnapshot.entries || []).slice(0, 12);
+      if (!entries.length) {
+        return `
+          <div class="module">
+            <p>No report entries yet.</p>
+            <p class="meta">Reports will appear here once Laboratory or runtime surfaces emit activity.</p>
+          </div>
+        `;
+      }
+
+      return entries.map((entry) => {
+        const severity = String(entry.severity || 'info').toLowerCase();
+        const result = String(entry.result || 'recorded').toLowerCase();
+        const mirroredLabel = entry.mirrored ? 'mirrored' : 'local';
+
+        return `
+          <article class="report-card">
+            <div class="report-head">
+              <div>
+                <h3>${esc(entry.title || 'Event')}</h3>
+                <p class="report-message">${esc(entry.message || 'No message')}</p>
+              </div>
+              <div class="report-chips">
+                <span class="chip">${esc(entry.source_surface || 'unknown')}</span>
+                <span class="chip">${esc(entry.entry_type || 'event')}</span>
+                <span class="chip result-${esc(result)}">${esc(entry.result || 'recorded')}</span>
+                <span class="chip severity-${esc(severity)}">${esc(entry.severity || 'info')}</span>
+              </div>
+            </div>
+            <div class="report-meta">
+              <span>time: ${esc(entry.timestamp_ms)} ms</span>
+              <span>origin: ${esc(entry.origin_node || 'unknown')} (${mirroredLabel})</span>
+              <span>module: ${esc(entry.module_id || 'unknown')}</span>
+              <span>mode: ${esc(entry.source_mode || 'unknown')}</span>
+              <span>type: ${esc(entry.raw_type || entry.entry_type || 'event')}</span>
+            </div>
+            ${buildParameterRow(entry.parameters)}
+          </article>
+        `;
+      }).join('');
     }
 
     function renderSummary(snapshot, contentStatus) {
@@ -267,9 +359,10 @@
       `).join('');
     }
 
-    function renderPanels(snapshot, contentStatus, logSnapshot) {
+    function renderPanels(snapshot, contentStatus, reportsSnapshot) {
       const content = ((snapshot.summaries || {}).content || {});
-      const activity = ((snapshot.summaries || {}).activity || {});
+      const reportSummary = reportsSnapshot.summary || {};
+      const visibleEntries = (reportsSnapshot.entries || []).length;
 
       document.getElementById('plants-summary').innerHTML = `
         <p>libraries_ready: ${esc(content.libraries_ready)}</p>
@@ -285,26 +378,29 @@
       `;
 
       document.getElementById('reports-summary').innerHTML = `
-        <p>recent_visible: ${esc(activity.recent_visible || 0)}</p>
-        <p>total_visible: ${esc(activity.total_visible || 0)}</p>
-        <p>warning_count: ${esc(activity.warning_count || 0)}</p>
-        <p>error_count: ${esc(activity.error_count || 0)}</p>
+        <p>visible_entries: ${esc(visibleEntries)}</p>
+        <p>total_entries: ${esc(reportsSnapshot.count || visibleEntries)}</p>
+        <p>warning_count: ${esc(reportSummary.warning_count || 0)}</p>
+        <p>error_count: ${esc(reportSummary.error_count || 0)}</p>
+        <p>surfaces: ${esc(formatCountMap(reportSummary.surfaces))}</p>
+        <p>entry_types: ${esc(formatCountMap(reportSummary.entry_types))}</p>
+        <p>source_kind: ${esc(reportsSnapshot.source_kind || 'unknown')}</p>
         <p>operator notes will join this feed later as typed report entries.</p>
       `;
 
-      document.getElementById('reports-log').textContent = buildLogPreview(logSnapshot);
+      document.getElementById('reports-feed').innerHTML = buildReportFeed(reportsSnapshot);
     }
 
     async function refresh() {
-      const [snapshotResponse, contentResponse, logResponse] = await Promise.all([
+      const [snapshotResponse, contentResponse, reportsResponse] = await Promise.all([
         fetch('/api/v1/shell/snapshot'),
         fetch('/api/v1/content/status'),
-        fetch('/api/v1/logs?limit=20')
+        fetch('/api/v1/reports?limit=20')
       ]);
 
       const snapshot = await snapshotResponse.json();
       const contentStatus = await contentResponse.json();
-      const logSnapshot = await logResponse.json();
+      const reportsSnapshot = await reportsResponse.json();
       const current = ((snapshot.nodes || {}).current || {});
       const peer = ((snapshot.nodes || {}).peer || {});
       const defaultTab = (((snapshot.navigation || {}).gallery || {}).default_tab || 'reports');
@@ -313,7 +409,7 @@
       document.getElementById('peer-pill').textContent = `peer: ${peer.health || 'unknown'}`;
 
       renderSummary(snapshot, contentStatus);
-      renderPanels(snapshot, contentStatus, logSnapshot);
+      renderPanels(snapshot, contentStatus, reportsSnapshot);
       activateTab(readTab(defaultTab));
     }
 
@@ -322,7 +418,11 @@
     }
 
     refresh().catch((error) => {
-      document.getElementById('reports-log').textContent = `Gallery load error: ${error}`;
+      document.getElementById('reports-feed').innerHTML = `
+        <div class="module">
+          <p>Gallery load error: ${esc(error)}</p>
+        </div>
+      `;
     });
     setInterval(() => refresh().catch(() => {}), 2500);
   </script>

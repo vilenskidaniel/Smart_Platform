@@ -140,9 +140,9 @@
 
 Skeleton-файлы для этого этапа:
 
-- [esp32_blueprint.h](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/ESP32_COB_Strobe_Bench/Smart_Platform/skeletons/esp32_blueprint.h)
-- [raspberry_pi_blueprint.py](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/ESP32_COB_Strobe_Bench/Smart_Platform/skeletons/raspberry_pi_blueprint.py)
-- [README.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/ESP32_COB_Strobe_Bench/Smart_Platform/skeletons/README.md)
+- [esp32_blueprint.h](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/skeletons/esp32_blueprint.h)
+- [raspberry_pi_blueprint.py](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/skeletons/raspberry_pi_blueprint.py)
+- [README.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/skeletons/README.md)
 
 ## 9. Следующий правильный ход
 
@@ -156,6 +156,6 @@ Skeleton-файлы для этого этапа:
 
 Для `System Shell v1` следующий уровень детализации уже вынесен отдельно:
 
-- [31_system_shell_class_map.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/ESP32_COB_Strobe_Bench/Smart_Platform/docs/31_system_shell_class_map.md)
-- [system_shell_esp32_blueprint.h](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/ESP32_COB_Strobe_Bench/Smart_Platform/skeletons/system_shell_esp32_blueprint.h)
-- [system_shell_raspberry_pi_blueprint.py](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/ESP32_COB_Strobe_Bench/Smart_Platform/skeletons/system_shell_raspberry_pi_blueprint.py)
+- [31_system_shell_class_map.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/docs/31_system_shell_class_map.md)
+- [system_shell_esp32_blueprint.h](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/skeletons/system_shell_esp32_blueprint.h)
+- [system_shell_raspberry_pi_blueprint.py](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/skeletons/system_shell_raspberry_pi_blueprint.py)

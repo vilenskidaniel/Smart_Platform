@@ -10,9 +10,9 @@
 
 - прямые donor-файлы вне текущего workspace сейчас недоступны;
 - источником истины здесь считаем:
-  - [26_v1_product_spec.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/ESP32_COB_Strobe_Bench/Smart_Platform/docs/26_v1_product_spec.md)
-  - [05_ui_shell_and_navigation.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/ESP32_COB_Strobe_Bench/Smart_Platform/docs/05_ui_shell_and_navigation.md)
-  - [39_design_decisions_and_screen_map.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/ESP32_COB_Strobe_Bench/Smart_Platform/docs/39_design_decisions_and_screen_map.md)
+  - [26_v1_product_spec.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/docs/26_v1_product_spec.md)
+  - [05_ui_shell_and_navigation.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/docs/05_ui_shell_and_navigation.md)
+  - [39_design_decisions_and_screen_map.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/docs/39_design_decisions_and_screen_map.md)
   - текущий turret runtime/UI в `Smart_Platform/raspberry_pi`
   - новые ответы пользователя из этого чата
 

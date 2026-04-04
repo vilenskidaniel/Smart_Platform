@@ -13,6 +13,7 @@ def main() -> None:
         shell_version=config.shell_version,
         local_shell_base_url=config.public_base_url,
         peer_shell_base_url=config.esp32_base_url,
+        content_root=config.content_root,
     )
     sync_client = SyncClient(config=config, state=state)
     server = build_server(config=config, state=state, sync_client=sync_client)

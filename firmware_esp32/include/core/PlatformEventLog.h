@@ -50,6 +50,7 @@ public:
     size_t count() const;
     size_t countLevel(const char* level) const;
     String buildSnapshotJson(size_t limit) const;
+    String buildReportsJson(size_t limit) const;
 
 private:
     void writeEntry(const PlatformLogEntry& entry);

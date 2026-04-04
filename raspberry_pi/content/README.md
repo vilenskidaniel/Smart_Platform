@@ -29,3 +29,11 @@ Reference libraries, которые уже добавлены на этом эт
 - `libraries/plant_profiles.v1.json`
 - `libraries/plant_state_rules.v1.json`
 - `libraries/care_scenarios.v1.json`
+
+Current `Gallery > Reports` baseline archive on `Raspberry Pi`:
+
+- `gallery/reports/report_feed.jsonl`
+
+This is the current persistent archive of normalized report entries.
+It keeps the user-facing `Reports` feed alive across restarts before richer
+report bundles and export packages are introduced.

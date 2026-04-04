@@ -6,8 +6,8 @@
 
 - это не документ уровня продукта;
 - состав API не равен списку пользовательских модулей `v1`;
-- для продуктового scope сначала читать [26_v1_product_spec.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/ESP32_COB_Strobe_Bench/Smart_Platform/docs/26_v1_product_spec.md).
-- для shell-level snapshot читать отдельный [shell_snapshot_contract.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/ESP32_COB_Strobe_Bench/Smart_Platform/shared_contracts/shell_snapshot_contract.md).
+- для продуктового scope сначала читать [26_v1_product_spec.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/docs/26_v1_product_spec.md).
+- для shell-level snapshot читать отдельный [shell_snapshot_contract.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/shared_contracts/shell_snapshot_contract.md).
 
 Это черновой, но уже рабочий словарь сущностей для новой платформы.
 
@@ -130,6 +130,7 @@
 - `/api/v1/modules/{id}/status`
 - `/api/v1/modules/{id}/command`
 - `/api/v1/logs`
+- `/api/v1/reports`
 - `/api/v1/content/status`
 - `/api/v1/settings`
 - `/api/v1/sync/heartbeat`
@@ -347,6 +348,105 @@
         "peer": "rpi-turret",
         "sync_ready": true
       }
+    }
+  ]
+}
+```
+
+## Reports Feed Snapshot
+
+- `GET /api/v1/reports`
+
+This endpoint is the current user-facing baseline for `Gallery > Reports`.
+It is not yet the final persistent reports model. For now it is a normalized feed
+built on top of the shared platform log so the shell and gallery can move to the
+canonical `Reports` vocabulary before the richer storage layer is finished.
+
+```json
+{
+  "schema_version": "reports-feed.v1",
+  "source_kind": "platform_log_baseline",
+  "count": 18,
+  "limit": 20,
+  "summary": {
+    "warning_count": 1,
+    "error_count": 0,
+    "surfaces": {
+      "laboratory": 6,
+      "system": 2
+    },
+    "entry_types": {
+      "scenario": 2,
+      "sync": 1,
+      "action": 5
+    }
+  },
+  "entries": [
+    {
+      "report_id": "report-platform-00018",
+      "event_id": "platform-00018",
+      "timestamp_ms": 812,
+      "origin_node": "rpi-turret",
+      "mirrored": true,
+      "source": "turret_runtime",
+      "entry_type": "mode_change",
+      "source_surface": "turret",
+      "source_mode": "service_test",
+      "module_id": "turret_bridge",
+      "title": "Runtime Mode Changed",
+      "message": "turret runtime mode updated",
+      "severity": "info",
+      "result": "recorded",
+      "duration_ms": null,
+      "parameters": {
+        "active_mode": "service_test"
+      },
+      "raw_type": "runtime_mode_changed"
+    }
+  ]
+}
+```
+
+## Laboratory Readiness Snapshot
+
+- `GET /api/v1/laboratory/readiness`
+
+This endpoint is the current coordination baseline for sequential hardware bring-up.
+It does not replace testcase execution or final reports. It answers a smaller question:
+is the shell in a sane state for the next board/module step, and what should happen next?
+
+```json
+{
+  "schema_version": "laboratory-readiness.v1",
+  "overall_status": "attention",
+  "summary": "Testing can continue with caution. Attention is required for: Persistent reports history is available, Peer owner link is ready for ESP32-owned tests",
+  "active_mode": "manual",
+  "reports_source_kind": "platform_log_baseline",
+  "next_action": {
+    "kind": "preflight",
+    "id": "reports_archive",
+    "title": "Persistent reports history is available",
+    "status": "attention",
+    "action": "Use Raspberry Pi with content storage enabled so each test pass survives restart."
+  },
+  "preflight": [
+    {
+      "id": "local_shell_ready",
+      "title": "Coordinator shell is reachable",
+      "status": "ready",
+      "summary": "Local shell is ready for the next test step.",
+      "action": "Open the current shell and confirm the local node is reachable before wiring the next board."
+    }
+  ],
+  "bringup_sequence": [
+    {
+      "id": "esp32_strobe_bench",
+      "title": "ESP32 / Strobe Bench",
+      "owner_scope": "esp32",
+      "route": "/service?tool=strobe_bench",
+      "status": "blocked",
+      "summary": "Short pulse and preset bring-up for the bench strobe should happen before integrated turret tests.",
+      "action": "Begin with the lowest-energy pulse testcase and keep the hardware emergency chain available."
     }
   ]
 }

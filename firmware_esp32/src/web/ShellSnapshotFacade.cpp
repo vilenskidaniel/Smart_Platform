@@ -93,6 +93,12 @@ String ShellSnapshotFacade::buildNodesJson() const {
     json += ",\"reachable\":true";
     json += ",\"health\":";
     appendJsonEscaped(json, nodeHealth(localNode));
+    json += ",\"wifi_ready\":";
+    json += localNode.wifiReady ? "true" : "false";
+    json += ",\"shell_ready\":";
+    json += localNode.shellReady ? "true" : "false";
+    json += ",\"sync_ready\":";
+    json += localNode.syncReady ? "true" : "false";
     json += ",\"summary\":\"Local shell is active\"";
     json += "},";
     json += "\"peer\":{";
@@ -104,6 +110,10 @@ String ShellSnapshotFacade::buildNodesJson() const {
     json += peerNode.reachable ? "true" : "false";
     json += ",\"health\":";
     appendJsonEscaped(json, nodeHealth(peerNode));
+    json += ",\"wifi_ready\":";
+    json += peerNode.wifiReady ? "true" : "false";
+    json += ",\"shell_ready\":";
+    json += peerNode.shellReady ? "true" : "false";
     json += ",\"sync_ready\":";
     json += peerNode.syncReady ? "true" : "false";
     json += ",\"reported_mode\":";

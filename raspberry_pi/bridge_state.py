@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from pathlib import Path
 from threading import RLock
 from time import monotonic
 from typing import Any
 
+from laboratory_readiness import build_laboratory_readiness
 from platform_event_log import PlatformEventLog
+from report_archive import ReportArchive
+from report_feed import build_reports_snapshot, normalize_report_entry
 from turret_driver_layer import TurretDriverLayer
 from turret_event_log import TurretEventLog
 from turret_runtime import TurretRuntime
@@ -19,13 +23,20 @@ class BridgeState:
         shell_version: str,
         local_shell_base_url: str,
         peer_shell_base_url: str,
+        content_root: str | None = None,
     ) -> None:
         self._lock = RLock()
         self._boot_time = monotonic()
         self._shell_version = shell_version
         self._active_mode = "manual"
         self._global_block_reason = "none"
-        self._platform_log = PlatformEventLog(node_id)
+        self._report_archive = (
+            ReportArchive(Path(content_root) / "gallery" / "reports") if content_root else None
+        )
+        self._platform_log = PlatformEventLog(
+            node_id,
+            forward_sink=self._archive_platform_entry if self._report_archive is not None else None,
+        )
         self._turret_event_log = TurretEventLog(forward_sink=self._forward_turret_event)
         self._turret_driver_layer = TurretDriverLayer(self._turret_event_log)
         self._turret_runtime = TurretRuntime(self._turret_event_log, self._turret_driver_layer)
@@ -87,6 +98,10 @@ class BridgeState:
             turret_event_id=entry.get("event_id"),
             **entry.get("details", {}),
         )
+
+    def _archive_platform_entry(self, entry: dict[str, Any]) -> None:
+        if self._report_archive is not None:
+            self._report_archive.append_platform_entry(entry)
 
     def _uptime_ms(self) -> int:
         return int((monotonic() - self._boot_time) * 1000)
@@ -370,6 +385,64 @@ class BridgeState:
     def build_platform_log(self, limit: int = 60) -> dict[str, Any]:
         with self._lock:
             return self._platform_log.snapshot(limit=limit)
+
+    def build_reports(self, limit: int = 60) -> dict[str, Any]:
+        with self._lock:
+            if self._report_archive is not None:
+                return self._report_archive.snapshot(limit=limit)
+            return build_reports_snapshot(self._platform_log.snapshot(limit=limit), limit=limit)
+
+    def build_laboratory_readiness(self) -> dict[str, Any]:
+        with self._lock:
+            reports_source_kind = "report_archive_v1" if self._report_archive is not None else "platform_log_baseline"
+            return build_laboratory_readiness(
+                current_node=deepcopy(self._local_node),
+                peer_node=deepcopy(self._peer_node),
+                active_mode=self._active_mode,
+                runtime=self._turret_runtime.snapshot(),
+                reports_source_kind=reports_source_kind,
+            )
+
+    def record_testcase_result(
+        self,
+        *,
+        case_id: str,
+        module_id: str,
+        result: str,
+        note: str = "",
+        board: str = "",
+    ) -> dict[str, Any]:
+        normalized_result = result.strip().lower()
+        if normalized_result not in {"pass", "fail", "warn"}:
+            raise ValueError("result must be pass, fail, or warn")
+
+        case_id = case_id.strip()
+        module_id = module_id.strip()
+        if not case_id:
+            raise ValueError("case_id is required")
+        if not module_id:
+            raise ValueError("module_id is required")
+
+        normalized_board = board.strip() or str(self._local_node.get("node_type", "unknown"))
+        severity = "info"
+        if normalized_result == "warn":
+            severity = "warning"
+        elif normalized_result == "fail":
+            severity = "error"
+
+        entry = self._platform_log.add(
+            "testcase_capture",
+            severity,
+            "testcase_result_recorded",
+            f"testcase {case_id} recorded for {module_id} as {normalized_result}",
+            case_id=case_id,
+            module_id=module_id,
+            board=normalized_board,
+            test_result=normalized_result,
+            note=note.strip(),
+            active_mode=self._active_mode,
+        )
+        return normalize_report_entry(entry)
 
     def build_module_route_info(self, module_id: str) -> dict[str, Any]:
         with self._lock:

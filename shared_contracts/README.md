@@ -11,4 +11,4 @@
 
 Первый обязательный файл:
 
-- [api_contracts.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/ESP32_COB_Strobe_Bench/Smart_Platform/shared_contracts/api_contracts.md)
+- [api_contracts.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/shared_contracts/api_contracts.md)

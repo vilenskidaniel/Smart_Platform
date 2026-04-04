@@ -142,7 +142,7 @@ Storage-модель должна поддерживать ее вкладочн
 - `ESP32` отдает shell из `LittleFS`, а heavy-content ищет на `SD`;
 - `Raspberry Pi` отдает heavy-content из локального `content_root`;
 - обе стороны должны уметь отвечать на `GET /api/v1/content/status`;
-- reference-схема библиотек зафиксирована в [content_library_contract.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/ESP32_COB_Strobe_Bench/Smart_Platform/shared_contracts/content_library_contract.md).
+- reference-схема библиотек зафиксирована в [content_library_contract.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/shared_contracts/content_library_contract.md).
 
 Важно:
 

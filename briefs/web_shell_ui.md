@@ -57,4 +57,4 @@
 
 Если работа идет в отдельном чате, следующий документ для этого блока:
 
-- [27_system_shell_v1_spec.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/ESP32_COB_Strobe_Bench/Smart_Platform/docs/27_system_shell_v1_spec.md)
+- [27_system_shell_v1_spec.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/docs/27_system_shell_v1_spec.md)

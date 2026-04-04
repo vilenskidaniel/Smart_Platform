@@ -4,7 +4,7 @@ from collections import deque
 from copy import deepcopy
 from threading import RLock
 from time import monotonic
-from typing import Any
+from typing import Any, Callable
 
 
 class PlatformEventLog:
@@ -18,7 +18,12 @@ class PlatformEventLog:
     - зеркалированные записи peer-узла.
     """
 
-    def __init__(self, local_node_id: str, max_entries: int = 400) -> None:
+    def __init__(
+        self,
+        local_node_id: str,
+        max_entries: int = 400,
+        forward_sink: Callable[[dict[str, Any]], None] | None = None,
+    ) -> None:
         self._lock = RLock()
         self._boot_time = monotonic()
         self._local_node_id = local_node_id
@@ -26,6 +31,7 @@ class PlatformEventLog:
         self._next_id = 1
         self._entries: deque[dict[str, Any]] = deque()
         self._seen_remote_keys: set[tuple[str, str]] = set()
+        self._forward_sink = forward_sink
 
     def _timestamp_ms(self) -> int:
         return int((monotonic() - self._boot_time) * 1000)
@@ -43,7 +49,7 @@ class PlatformEventLog:
         with self._lock:
             event_id = f"platform-{self._next_id:05d}"
             self._next_id += 1
-            return self._append_entry(
+            entry = self._append_entry(
                 {
                     "event_id": event_id,
                     "origin_node": self._local_node_id,
@@ -57,6 +63,9 @@ class PlatformEventLog:
                     "details": details,
                 }
             )
+        if self._forward_sink is not None:
+            self._forward_sink(deepcopy(entry))
+        return entry
 
     def add_remote(
         self,
@@ -76,7 +85,7 @@ class PlatformEventLog:
             event_id = f"platform-{self._next_id:05d}"
             self._next_id += 1
             self._seen_remote_keys.add(remote_key)
-            return self._append_entry(
+            entry = self._append_entry(
                 {
                     "event_id": event_id,
                     "origin_node": origin_node,
@@ -90,6 +99,9 @@ class PlatformEventLog:
                     "details": details,
                 }
             )
+        if self._forward_sink is not None:
+            self._forward_sink(deepcopy(entry))
+        return entry
 
     def snapshot(self, limit: int = 60) -> dict[str, Any]:
         with self._lock:

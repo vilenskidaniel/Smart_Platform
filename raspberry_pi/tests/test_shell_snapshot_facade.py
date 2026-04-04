@@ -41,6 +41,9 @@ class ShellSnapshotFacadeTests(unittest.TestCase):
         self.assertEqual("/service", snapshot["navigation"]["service"])
         self.assertEqual("/service", snapshot["navigation"]["service_test"]["path"])
         self.assertEqual("gallery.reports", snapshot["summaries"]["activity"]["primary_viewer"])
+        self.assertTrue(snapshot["nodes"]["current"]["shell_ready"])
+        self.assertTrue(snapshot["nodes"]["current"]["wifi_ready"])
+        self.assertTrue(snapshot["nodes"]["current"]["sync_ready"])
 
     def test_irrigation_card_is_blocked_without_peer_owner(self) -> None:
         snapshot = self.facade.build_snapshot()
@@ -52,6 +55,8 @@ class ShellSnapshotFacadeTests(unittest.TestCase):
         self.assertEqual("blocked", irrigation_service["route_mode"])
         self.assertFalse(irrigation_service["owner_available"])
         self.assertEqual("service_test", irrigation_service["product_block"])
+        self.assertFalse(snapshot["nodes"]["peer"]["shell_ready"])
+        self.assertFalse(snapshot["nodes"]["peer"]["wifi_ready"])
 
     def test_irrigation_card_switches_to_handoff_when_peer_is_ready(self) -> None:
         self.state.apply_esp32_snapshot(
@@ -81,6 +86,9 @@ class ShellSnapshotFacadeTests(unittest.TestCase):
         self.assertEqual("handoff", irrigation_service["route_mode"])
         self.assertTrue(irrigation_service["owner_available"])
         self.assertEqual("http://192.168.4.1/service/irrigation", irrigation_service["canonical_url"])
+        self.assertTrue(snapshot["nodes"]["peer"]["shell_ready"])
+        self.assertTrue(snapshot["nodes"]["peer"]["wifi_ready"])
+        self.assertTrue(snapshot["nodes"]["peer"]["sync_ready"])
 
 
 if __name__ == "__main__":

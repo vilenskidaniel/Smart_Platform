@@ -162,6 +162,13 @@ def build_server(config: BridgeConfig, state: BridgeState, sync_client: SyncClie
                 limit = self._int_param(params, "limit", 60)
                 self._json_response(state.build_platform_log(limit=limit))
                 return
+            if parsed.path == "/api/v1/reports":
+                limit = self._int_param(params, "limit", 60)
+                self._json_response(state.build_reports(limit=limit))
+                return
+            if parsed.path == "/api/v1/laboratory/readiness":
+                self._json_response(state.build_laboratory_readiness())
+                return
             if parsed.path == "/api/v1/content/status":
                 self._json_response(build_content_status(content_root))
                 return

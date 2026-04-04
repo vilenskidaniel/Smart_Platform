@@ -66,6 +66,33 @@
       background: rgba(255,255,255,0.1);
     }
 
+    .device-ribbon {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+
+    .device-chip {
+      border-radius: 22px;
+      border: 1px solid rgba(255,255,255,0.16);
+      padding: 14px 16px;
+      background: rgba(255,255,255,0.1);
+      display: grid;
+      gap: 8px;
+    }
+
+    .device-chip strong {
+      font-size: 15px;
+      line-height: 1.2;
+    }
+
+    .device-chip p {
+      margin: 0;
+      color: rgba(246, 249, 243, 0.84);
+      line-height: 1.45;
+      font-size: 13px;
+    }
+
     .nav, .actions { display: flex; gap: 10px; flex-wrap: wrap; }
 
     .nav a,
@@ -162,6 +189,16 @@
     .notice { border-left: 4px solid var(--warn); padding-left: 12px; color: var(--muted); }
     .card-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 14px; }
     .footer-note { margin-top: 4px; color: var(--muted); font-size: 13px; }
+
+    @media (max-width: 720px) {
+      .shell { padding: 16px 12px 28px; }
+      .hero { padding: 18px; border-radius: 24px; }
+      .hero-top { align-items: flex-start; }
+      .nav { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 2px; }
+      .nav a { white-space: nowrap; }
+      .cards, .grid-two, .device-ribbon { grid-template-columns: 1fr; }
+      .card { padding: 16px; }
+    }
   </style>
 </head>
 <body>
@@ -175,6 +212,7 @@
         </div>
         <div class="status-pill" id="hero-network">Shell bootstrap...</div>
       </div>
+      <div class="device-ribbon" id="device-ribbon">Loading device status...</div>
       <nav class="nav">
         <a href="#system">System</a>
         <a href="#irrigation">Irrigation</a>
@@ -270,6 +308,20 @@
 
     function badgeClass(state) { return `badge state-${state || 'offline'}`; }
 
+    function statusBadgeClass(state) {
+      const normalized = String(state || 'offline').toLowerCase();
+      if (normalized === 'ready' || normalized === 'healthy') {
+        return 'badge state-online';
+      }
+      if (normalized === 'attention' || normalized === 'warning') {
+        return 'badge state-degraded';
+      }
+      if (normalized === 'blocked') {
+        return 'badge state-locked';
+      }
+      return badgeClass(normalized);
+    }
+
     function pickValue(primary, fallback) {
       return primary === undefined ? fallback : primary;
     }
@@ -281,6 +333,90 @@
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
+    }
+
+    function nodeLabel(node) {
+      const type = String(node.node_type || '').toLowerCase();
+      if (type === 'esp32') {
+        return 'ESP32';
+      }
+      if (type === 'raspberry_pi') {
+        return 'Raspberry Pi';
+      }
+
+      const title = String(node.title || node.node_id || 'Unknown Node');
+      if (/esp32/i.test(title)) {
+        return 'ESP32';
+      }
+      if (/raspberry/i.test(title)) {
+        return 'Raspberry Pi';
+      }
+      return title;
+    }
+
+    function nodeHealth(node) {
+      if (node && node.health) {
+        return String(node.health).toLowerCase();
+      }
+      if (node && node.reachable === false) {
+        return 'offline';
+      }
+      return 'online';
+    }
+
+    function connectedBoardCount(current, peer) {
+      let count = current ? 1 : 0;
+      if (peer && peer.reachable) {
+        count += 1;
+      }
+      return count;
+    }
+
+    function renderDeviceRibbon(snapshot) {
+      const shell = snapshot.current_shell || {};
+      const nodes = snapshot.nodes || {};
+      const current = nodes.current || {};
+      const peer = nodes.peer || {};
+      const count = connectedBoardCount(current, peer);
+      const clusterState = count === 2 ? 'ready' : 'attention';
+      const clusterSummary = count === 2
+        ? 'Both boards are visible from this shell and owner handoff can proceed.'
+        : `Single-board view is active. ${nodeLabel(peer)} is not connected yet.`;
+
+      document.getElementById('hero-state').textContent = `${count} / 2 boards connected`;
+      document.getElementById('hero-network').textContent = count === 2
+        ? 'Owner handoff is ready across both shells'
+        : `Current shell: ${nodeLabel(current)} / peer handoff pending`;
+
+      document.getElementById('device-ribbon').innerHTML = `
+        <article class="device-chip">
+          <div class="module-top">
+            <strong>This Shell: ${esc(nodeLabel(current))}</strong>
+            <span class="${statusBadgeClass(nodeHealth(current))}">${esc(nodeHealth(current))}</span>
+          </div>
+          <p>mode: ${esc(shell.active_mode || current.reported_mode || 'unknown')}</p>
+          <p>wifi: ${esc(current.wifi_ready)} / shell: ${esc(current.shell_ready)} / sync: ${esc(current.sync_ready)}</p>
+          <p>node_id: ${esc(shell.node_id || current.node_id || 'unknown')}</p>
+          <p>base_url: ${esc(shell.shell_base_url || current.shell_base_url || '-')}</p>
+        </article>
+        <article class="device-chip">
+          <div class="module-top">
+            <strong>Peer Board: ${esc(nodeLabel(peer))}</strong>
+            <span class="${statusBadgeClass(nodeHealth(peer))}">${esc(nodeHealth(peer))}</span>
+          </div>
+          <p>reachable: ${esc(peer.reachable)}</p>
+          <p>wifi: ${esc(peer.wifi_ready)} / shell: ${esc(peer.shell_ready)} / sync: ${esc(peer.sync_ready)}</p>
+          <p>reported_mode: ${esc(peer.reported_mode || 'unknown')}</p>
+        </article>
+        <article class="device-chip">
+          <div class="module-top">
+            <strong>Connection Summary</strong>
+            <span class="${statusBadgeClass(clusterState)}">${esc(clusterState)}</span>
+          </div>
+          <p>${esc(clusterSummary)}</p>
+          <p>Use Home for status visibility, then continue to Laboratory for board-by-board bring-up.</p>
+        </article>
+      `;
     }
 
     function buildContentLines(summary, contentStatus) {
@@ -374,9 +510,7 @@
           <p>${card.lines.map(esc).join('<br>')}</p>
         </article>
       `).join('');
-
-      document.getElementById('hero-state').textContent = `${current.title || 'Current shell'} / mode: ${shell.active_mode || 'unknown'} / peer: ${peer.health || 'offline'}`;
-      document.getElementById('hero-network').textContent = shell.shell_base_url || 'Shell base URL is not ready yet';
+      renderDeviceRibbon(snapshot);
     }
 
     function buildModuleLink(module) {

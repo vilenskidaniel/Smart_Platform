@@ -46,6 +46,9 @@ class ShellSnapshotFacade:
                     "title": self._node_title(local_node),
                     "reachable": True,
                     "health": self._node_health(local_node, is_local=True),
+                    "wifi_ready": local_node.get("wifi_ready", False),
+                    "shell_ready": local_node.get("shell_ready", False),
+                    "sync_ready": local_node.get("sync_ready", False),
                     "summary": "Local shell is active",
                 },
                 "peer": {
@@ -53,6 +56,8 @@ class ShellSnapshotFacade:
                     "title": self._node_title(peer_node),
                     "reachable": peer_node.get("reachable", False),
                     "health": self._node_health(peer_node, is_local=False),
+                    "wifi_ready": peer_node.get("wifi_ready", False),
+                    "shell_ready": peer_node.get("shell_ready", False),
                     "sync_ready": peer_node.get("sync_ready", False),
                     "reported_mode": peer_node.get("reported_mode", "manual"),
                     "shell_base_url": peer_node.get("shell_base_url", ""),

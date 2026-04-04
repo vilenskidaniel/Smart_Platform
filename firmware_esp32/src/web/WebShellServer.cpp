@@ -233,6 +233,7 @@ const char kFallbackGalleryHtml[] PROGMEM = R"HTML(
 /gallery?tab=media
 /gallery?tab=reports
 /api/v1/shell/snapshot
+/api/v1/reports
 /api/v1/logs</pre>
       <p><a href="/">Return to shell</a></p>
     </div>
@@ -560,6 +561,7 @@ void WebShellServer::registerRoutes() {
     server_.on("/api/v1/modules", HTTP_GET, [this]() { handleModules(); });
     server_.on("/api/v1/federation/route", HTTP_GET, [this]() { handleFederatedRouteInfo(); });
     server_.on("/api/v1/logs", HTTP_GET, [this]() { handleLogs(); });
+    server_.on("/api/v1/reports", HTTP_GET, [this]() { handleReports(); });
     server_.on("/api/v1/diagnostics", HTTP_GET, [this]() { handleDiagnostics(); });
     server_.on("/api/v1/content/status", HTTP_GET, [this]() { handleContentStatus(); });
     server_.on("/api/v1/sync/state", HTTP_GET, [this]() { handleSyncState(); });
@@ -670,6 +672,17 @@ void WebShellServer::handleLogs() {
         }
     }
     server_.send(200, "application/json; charset=utf-8", buildLogsJson(limit));
+}
+
+void WebShellServer::handleReports() {
+    size_t limit = 20;
+    if (server_.hasArg("limit")) {
+        const long value = server_.arg("limit").toInt();
+        if (value > 0) {
+            limit = static_cast<size_t>(value);
+        }
+    }
+    server_.send(200, "application/json; charset=utf-8", buildReportsJson(limit));
 }
 
 void WebShellServer::handleDiagnostics() {
@@ -1242,6 +1255,10 @@ String WebShellServer::buildFederatedRouteInfoJson(const char* moduleId) const {
 
 String WebShellServer::buildLogsJson(size_t limit) const {
     return platformLog_.buildSnapshotJson(limit);
+}
+
+String WebShellServer::buildReportsJson(size_t limit) const {
+    return platformLog_.buildReportsJson(limit);
 }
 
 String WebShellServer::buildDiagnosticsJson() const {
