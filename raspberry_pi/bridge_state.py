@@ -1,0 +1,604 @@
+from __future__ import annotations
+
+from copy import deepcopy
+from threading import RLock
+from time import monotonic
+from typing import Any
+
+from platform_event_log import PlatformEventLog
+from turret_driver_layer import TurretDriverLayer
+from turret_event_log import TurretEventLog
+from turret_runtime import TurretRuntime
+from turret_service_scenarios import TurretServiceScenarioRunner
+
+
+class BridgeState:
+    def __init__(
+        self,
+        node_id: str,
+        shell_version: str,
+        local_shell_base_url: str,
+        peer_shell_base_url: str,
+    ) -> None:
+        self._lock = RLock()
+        self._boot_time = monotonic()
+        self._shell_version = shell_version
+        self._active_mode = "manual"
+        self._global_block_reason = "none"
+        self._platform_log = PlatformEventLog(node_id)
+        self._turret_event_log = TurretEventLog(forward_sink=self._forward_turret_event)
+        self._turret_driver_layer = TurretDriverLayer(self._turret_event_log)
+        self._turret_runtime = TurretRuntime(self._turret_event_log, self._turret_driver_layer)
+        self._turret_scenarios = TurretServiceScenarioRunner(self._turret_runtime, self._platform_log)
+
+        self._local_node: dict[str, Any] = {
+            "node_id": node_id,
+            "shell_base_url": local_shell_base_url,
+            "node_type": "raspberry_pi",
+            "is_local": True,
+            "reachable": True,
+            "shell_ready": True,
+            "wifi_ready": True,
+            "sync_ready": True,
+            "reported_mode": self._active_mode,
+            "last_seen_ms": 0,
+            "uptime_ms": 0,
+        }
+
+        self._peer_node: dict[str, Any] = {
+            "node_id": "esp32-main",
+            "shell_base_url": peer_shell_base_url,
+            "node_type": "esp32",
+            "is_local": False,
+            "reachable": False,
+            "shell_ready": False,
+            "wifi_ready": False,
+            "sync_ready": False,
+            "reported_mode": "manual",
+            "last_seen_ms": 0,
+            "uptime_ms": 0,
+        }
+
+        self._sync_status: dict[str, Any] = {
+            "enabled": True,
+            "last_push_ok": False,
+            "last_sync_ms": 0,
+            "last_error": "",
+        }
+
+        self._modules: dict[str, dict[str, Any]] = {}
+        self._seed_default_modules()
+        self._refresh_runtime_state()
+        self._platform_log.add(
+            "system_shell",
+            "info",
+            "bridge_state_ready",
+            "raspberry pi bridge state initialized",
+            node_id=node_id,
+            shell_version=shell_version,
+        )
+
+    def _forward_turret_event(self, entry: dict[str, Any]) -> None:
+        self._platform_log.add(
+            "turret_runtime",
+            entry.get("level", "info"),
+            entry.get("type", "turret_event"),
+            entry.get("message", "turret event mirrored to platform log"),
+            turret_event_id=entry.get("event_id"),
+            **entry.get("details", {}),
+        )
+
+    def _uptime_ms(self) -> int:
+        return int((monotonic() - self._boot_time) * 1000)
+
+    def _seed_default_modules(self) -> None:
+        # Каркас модулей должен повторять общую карту платформы.
+        # Даже если часть логики здесь пока остается заглушкой, shell обязан видеть
+        # те же сущности, что и на ESP32.
+        self._modules = {
+            "system_shell": self._module(
+                "system_shell",
+                "System Shell",
+                "shared",
+                "core",
+                "system",
+                "online",
+                "none",
+                ["status_page", "diagnostics", "logs"],
+                True,
+                True,
+                True,
+            ),
+            "sync_core": self._module(
+                "sync_core",
+                "Sync Core",
+                "shared",
+                "core",
+                "system",
+                "degraded",
+                "owner_unavailable",
+                ["status_page", "diagnostics", "logs"],
+                True,
+                False,
+                True,
+            ),
+            "irrigation": self._module(
+                "irrigation",
+                "Irrigation",
+                "esp32",
+                "plant_care",
+                "irrigation",
+                "locked",
+                "owner_unavailable",
+                ["status_page", "manual_page", "service_page", "logs", "commandable", "diagnostics"],
+                True,
+                True,
+                True,
+            ),
+            "turret_bridge": self._module(
+                "turret_bridge",
+                "Turret",
+                "rpi",
+                "turret",
+                "turret",
+                "online",
+                "none",
+                ["status_page", "manual_page", "service_page", "diagnostics", "commandable", "logs"],
+                True,
+                True,
+                True,
+            ),
+            "strobe": self._module(
+                "strobe",
+                "Strobe",
+                "rpi",
+                "turret",
+                "turret",
+                "online",
+                "none",
+                ["status_page", "manual_page", "service_page", "commandable", "diagnostics", "logs"],
+                True,
+                True,
+                True,
+            ),
+            "strobe_bench": self._module(
+                "strobe_bench",
+                "Strobe Bench",
+                "esp32",
+                "bench_service",
+                "service",
+                "locked",
+                "owner_unavailable",
+                ["status_page", "manual_page", "service_page", "commandable", "diagnostics", "logs"],
+                True,
+                True,
+                True,
+            ),
+            "irrigation_service": self._module(
+                "irrigation_service",
+                "Irrigation Service",
+                "esp32",
+                "plant_care",
+                "service",
+                "locked",
+                "owner_unavailable",
+                ["status_page", "manual_page", "service_page", "commandable", "diagnostics", "logs"],
+                True,
+                True,
+                True,
+            ),
+            "logs": self._module(
+                "logs",
+                "Logs",
+                "shared",
+                "core",
+                "logs",
+                "online",
+                "none",
+                ["status_page", "logs", "diagnostics"],
+                True,
+                False,
+                True,
+            ),
+            "settings": self._module(
+                "settings",
+                "Settings",
+                "shared",
+                "core",
+                "settings",
+                "online",
+                "none",
+                ["status_page", "manual_page", "diagnostics"],
+                True,
+                True,
+                False,
+            ),
+            "diagnostics": self._module(
+                "diagnostics",
+                "Diagnostics",
+                "shared",
+                "core",
+                "system",
+                "online",
+                "none",
+                ["status_page", "diagnostics", "logs"],
+                True,
+                False,
+                True,
+            ),
+            "service_mode": self._module(
+                "service_mode",
+                "Service Mode",
+                "shared",
+                "core",
+                "service",
+                "online",
+                "none",
+                ["status_page", "service_page", "diagnostics", "logs"],
+                True,
+                False,
+                True,
+            ),
+        }
+
+    def _module(
+        self,
+        module_id: str,
+        title: str,
+        owner: str,
+        profile: str,
+        ui_group: str,
+        state: str,
+        block_reason: str,
+        capabilities: list[str],
+        visible: bool,
+        manual_page: bool,
+        service_page: bool,
+    ) -> dict[str, Any]:
+        return {
+            "id": module_id,
+            "title": title,
+            "owner": owner,
+            "profile": profile,
+            "ui_group": ui_group,
+            "state": state,
+            "block_reason": block_reason,
+            "visible": visible,
+            "manual_page": manual_page,
+            "service_page": service_page,
+            "capabilities": capabilities,
+        }
+
+    def _canonical_path(self, module_id: str) -> str:
+        routes = {
+            "irrigation": "/irrigation",
+            "turret_bridge": "/turret",
+            "strobe": "/turret#strobe",
+            "strobe_bench": "/service/strobe",
+            "irrigation_service": "/service/irrigation",
+            "logs": "/gallery?tab=reports",
+            "settings": "/settings",
+            "diagnostics": "/settings#diagnostics",
+            "service_mode": "/service",
+        }
+        return routes.get(module_id, "/")
+
+    def _owner_available(self, module: dict[str, Any]) -> bool:
+        if module["owner"] == "esp32":
+            return bool(
+                self._peer_node["reachable"]
+                and self._peer_node["shell_ready"]
+                and self._peer_node["sync_ready"]
+                and self._peer_node.get("shell_base_url")
+            )
+        return True
+
+    def _owner_node_id(self, module: dict[str, Any]) -> str:
+        if module["owner"] == "esp32":
+            return str(self._peer_node["node_id"])
+        return str(self._local_node["node_id"])
+
+    def _canonical_url(self, module: dict[str, Any]) -> str:
+        path = self._canonical_path(module["id"])
+        if module["owner"] == "esp32":
+            if not self._owner_available(module):
+                return ""
+            return f"{self._peer_node['shell_base_url']}{path}"
+        base_url = str(self._local_node.get("shell_base_url", "")).rstrip("/")
+        return f"{base_url}{path}" if base_url else path
+
+    def _federated_access(self, module: dict[str, Any]) -> str:
+        if module["owner"] == "esp32":
+            return "peer_owner_available" if self._owner_available(module) else "peer_owner_missing"
+        if module["owner"] == "shared":
+            return "shared_local"
+        return "local_owner"
+
+    def _enriched_module(self, module: dict[str, Any]) -> dict[str, Any]:
+        snapshot = deepcopy(module)
+        snapshot["owner_node_id"] = self._owner_node_id(module)
+        snapshot["owner_available"] = self._owner_available(module)
+        snapshot["canonical_path"] = self._canonical_path(module["id"])
+        snapshot["canonical_url"] = self._canonical_url(module)
+        snapshot["federated_access"] = self._federated_access(module)
+        return snapshot
+
+    def _refresh_runtime_state(self) -> None:
+        self._active_mode = self._turret_runtime.active_mode
+        self._local_node["reported_mode"] = self._active_mode
+
+        if self._active_mode == "emergency":
+            self._global_block_reason = "emergency_state"
+        elif self._active_mode == "fault":
+            self._global_block_reason = "module_fault"
+        elif self._active_mode == "service_test":
+            self._global_block_reason = "service_session_active"
+        else:
+            self._global_block_reason = "none"
+
+        exported = self._turret_runtime.export_module_states()
+        for module_id, module_state in exported.items():
+            self._modules[module_id]["state"] = module_state["state"]
+            self._modules[module_id]["block_reason"] = module_state["block_reason"]
+
+        if self._active_mode == "service_test":
+            self._modules["service_mode"]["state"] = "service"
+            self._modules["service_mode"]["block_reason"] = "none"
+        elif self._active_mode == "emergency":
+            self._modules["service_mode"]["state"] = "locked"
+            self._modules["service_mode"]["block_reason"] = "emergency_state"
+        elif self._active_mode == "fault":
+            self._modules["service_mode"]["state"] = "locked"
+            self._modules["service_mode"]["block_reason"] = "module_fault"
+        else:
+            self._modules["service_mode"]["state"] = "online"
+            self._modules["service_mode"]["block_reason"] = "none"
+
+    def build_system_snapshot(self) -> dict[str, Any]:
+        with self._lock:
+            self._local_node["uptime_ms"] = self._uptime_ms()
+            self._local_node["reported_mode"] = self._active_mode
+            return {
+                "ui_shell_version": self._shell_version,
+                "active_mode": self._active_mode,
+                "global_block_reason": self._global_block_reason,
+                "local_node": deepcopy(self._local_node),
+                "peer_node": deepcopy(self._peer_node),
+                "modules": [self._enriched_module(module) for module in self._modules.values()],
+            }
+
+    def build_platform_log(self, limit: int = 60) -> dict[str, Any]:
+        with self._lock:
+            return self._platform_log.snapshot(limit=limit)
+
+    def build_module_route_info(self, module_id: str) -> dict[str, Any]:
+        with self._lock:
+            module = self._modules.get(module_id)
+            if module is None:
+                return {
+                    "module_id": module_id,
+                    "module_found": False,
+                }
+
+            enriched = self._enriched_module(module)
+            return {
+                "module_id": module_id,
+                "module_found": True,
+                "title": enriched["title"],
+                "owner": enriched["owner"],
+                "owner_node_id": enriched["owner_node_id"],
+                "owner_available": enriched["owner_available"],
+                "state": enriched["state"],
+                "block_reason": enriched["block_reason"],
+                "canonical_path": enriched["canonical_path"],
+                "canonical_url": enriched["canonical_url"],
+                "federated_access": enriched["federated_access"],
+                "current_shell_node_id": self._local_node["node_id"],
+                "current_shell_base_url": self._local_node["shell_base_url"],
+            }
+
+    def build_log_sync_payload(self, limit: int = 12) -> dict[str, Any]:
+        with self._lock:
+            return self._platform_log.export_local_entries(limit=limit)
+
+    def build_turret_status(self) -> dict[str, Any]:
+        with self._lock:
+            return {
+                "active_mode": self._active_mode,
+                "bridge": deepcopy(self._modules["turret_bridge"]),
+                "strobe": deepcopy(self._modules["strobe"]),
+                "runtime": self._turret_runtime.snapshot(),
+                "drivers": self._turret_driver_layer.describe_bindings(),
+                "event_log": self._turret_event_log.snapshot(),
+                "platform_log": self._platform_log.snapshot(limit=20),
+                "peer_node": deepcopy(self._peer_node),
+                "sync_status": deepcopy(self._sync_status),
+            }
+
+    def build_turret_runtime(self) -> dict[str, Any]:
+        with self._lock:
+            return self._turret_runtime.snapshot()
+
+    def build_turret_events(self, limit: int = 40) -> dict[str, Any]:
+        with self._lock:
+            return self._turret_event_log.snapshot(limit=limit)
+
+    def build_turret_drivers(self) -> dict[str, Any]:
+        with self._lock:
+            return self._turret_driver_layer.describe_bindings()
+
+    def build_turret_scenarios(self) -> dict[str, Any]:
+        with self._lock:
+            return self._turret_scenarios.list_scenarios()
+
+    def run_turret_scenario(self, scenario_id: str) -> dict[str, Any]:
+        with self._lock:
+            result = self._turret_scenarios.run(scenario_id)
+            self._refresh_runtime_state()
+            return result
+
+    def build_sync_status(self) -> dict[str, Any]:
+        with self._lock:
+            return deepcopy(self._sync_status)
+
+    def set_sync_enabled(self, enabled: bool) -> None:
+        with self._lock:
+            self._sync_status["enabled"] = enabled
+            self._platform_log.add(
+                "sync_core",
+                "info",
+                "sync_enabled_changed",
+                "background sync flag updated",
+                enabled=enabled,
+            )
+
+    def set_active_mode(self, mode: str) -> bool:
+        accepted, _ = self.update_turret_mode(mode)
+        return accepted
+
+    def update_turret_mode(self, mode: str) -> tuple[bool, str]:
+        with self._lock:
+            accepted, message = self._turret_runtime.set_mode(mode)
+            if accepted:
+                self._refresh_runtime_state()
+            return accepted, message
+
+    def update_turret_interlock(self, value: str) -> tuple[bool, str]:
+        with self._lock:
+            accepted, message = self._turret_runtime.set_interlock(value)
+            if accepted:
+                self._refresh_runtime_state()
+            return accepted, message
+
+    def update_turret_flag(self, name: str, value: bool) -> tuple[bool, str]:
+        with self._lock:
+            accepted, message = self._turret_runtime.set_flag(name, value)
+            if accepted:
+                self._refresh_runtime_state()
+            return accepted, message
+
+    def update_turret_subsystem(self, subsystem_id: str, enabled: bool) -> tuple[bool, str]:
+        with self._lock:
+            accepted, message = self._turret_runtime.set_subsystem_enabled(subsystem_id, enabled)
+            if accepted:
+                self._refresh_runtime_state()
+            return accepted, message
+
+    def build_sync_payload(self) -> dict[str, Any]:
+        with self._lock:
+            return {
+                "heartbeat": {
+                    "node_id": self._local_node["node_id"],
+                    "shell_base_url": self._local_node["shell_base_url"],
+                    "wifi_ready": "1" if self._local_node["wifi_ready"] else "0",
+                    "shell_ready": "1" if self._local_node["shell_ready"] else "0",
+                    "sync_ready": "1",
+                    "reported_mode": self._active_mode,
+                },
+                "modules": [
+                    {
+                        "id": "turret_bridge",
+                        "state": self._modules["turret_bridge"]["state"],
+                        "block_reason": self._modules["turret_bridge"]["block_reason"],
+                    },
+                    {
+                        "id": "strobe",
+                        "state": self._modules["strobe"]["state"],
+                        "block_reason": self._modules["strobe"]["block_reason"],
+                    },
+                ],
+            }
+
+    def apply_esp32_logs(self, snapshot: dict[str, Any]) -> None:
+        with self._lock:
+            for entry in snapshot.get("entries", []):
+                self._platform_log.add_remote(
+                    entry.get("origin_node", "esp32-main"),
+                    entry.get("origin_event_id", entry.get("event_id", "")),
+                    entry.get("source", "esp32"),
+                    entry.get("level", "info"),
+                    entry.get("type", "remote_log"),
+                    entry.get("message", ""),
+                    entry.get("details", ""),
+                )
+
+    def apply_esp32_snapshot(self, snapshot: dict[str, Any]) -> None:
+        with self._lock:
+            now_ms = self._uptime_ms()
+            local = snapshot.get("local_node", {})
+            if local:
+                self._peer_node["node_id"] = local.get("node_id", self._peer_node["node_id"])
+                self._peer_node["shell_base_url"] = local.get("shell_base_url", self._peer_node["shell_base_url"])
+                self._peer_node["node_type"] = local.get("node_type", self._peer_node["node_type"])
+                self._peer_node["reachable"] = bool(local.get("reachable", True))
+                self._peer_node["shell_ready"] = bool(local.get("shell_ready", False))
+                self._peer_node["wifi_ready"] = bool(local.get("wifi_ready", False))
+                self._peer_node["sync_ready"] = bool(local.get("sync_ready", True))
+                self._peer_node["reported_mode"] = local.get("reported_mode", "manual")
+                self._peer_node["last_seen_ms"] = now_ms
+                self._peer_node["uptime_ms"] = int(local.get("uptime_ms", 0))
+
+            modules = snapshot.get("modules", [])
+            for remote_module in modules:
+                module_id = remote_module.get("id")
+                if not module_id or module_id not in self._modules:
+                    continue
+
+                # Принимаем только peer-owned модули. Локальный runtime турели нельзя
+                # перетирать внешним snapshot, иначе мы потеряем owner-модель.
+                if self._modules[module_id]["owner"] == "rpi":
+                    continue
+
+                self._modules[module_id]["state"] = remote_module.get("state", self._modules[module_id]["state"])
+                self._modules[module_id]["block_reason"] = remote_module.get(
+                    "block_reason", self._modules[module_id]["block_reason"]
+                )
+
+            self._sync_status["last_push_ok"] = True
+            self._sync_status["last_sync_ms"] = now_ms
+            self._sync_status["last_error"] = ""
+
+            if self._peer_node["reachable"] and self._peer_node["sync_ready"]:
+                self._modules["sync_core"]["state"] = "online"
+                self._modules["sync_core"]["block_reason"] = "none"
+            else:
+                self._modules["sync_core"]["state"] = "degraded"
+                self._modules["sync_core"]["block_reason"] = "peer_sync_pending"
+
+            self._platform_log.add(
+                "sync_core",
+                "info",
+                "peer_snapshot_applied",
+                "ESP32 snapshot applied on Raspberry Pi bridge",
+                peer_node_id=self._peer_node["node_id"],
+                peer_sync_ready=self._peer_node["sync_ready"],
+            )
+            self._refresh_runtime_state()
+
+    def mark_peer_unreachable(self, error_text: str) -> None:
+        with self._lock:
+            self._peer_node["reachable"] = False
+            self._peer_node["shell_ready"] = False
+            self._peer_node["wifi_ready"] = False
+            self._peer_node["sync_ready"] = False
+            self._peer_node["reported_mode"] = "manual"
+            self._sync_status["last_push_ok"] = False
+            self._sync_status["last_error"] = error_text
+            self._sync_status["last_sync_ms"] = self._uptime_ms()
+            self._modules["sync_core"]["state"] = "degraded"
+            self._modules["sync_core"]["block_reason"] = "owner_unavailable"
+
+            # Пока нет живого snapshot от ESP32, ее модули должны честно уходить в блокировку.
+            for module in self._modules.values():
+                if module["owner"] == "esp32":
+                    module["state"] = "locked"
+                    module["block_reason"] = "owner_unavailable"
+
+            self._platform_log.add(
+                "sync_core",
+                "warn",
+                "peer_unreachable",
+                "ESP32 peer marked as unreachable",
+                error_text=error_text,
+            )
+            self._refresh_runtime_state()

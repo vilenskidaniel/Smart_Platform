@@ -1,0 +1,403 @@
+# API Contracts
+
+Этот документ описывает технические API-контракты между узлами и модулями.
+
+Важно:
+
+- это не документ уровня продукта;
+- состав API не равен списку пользовательских модулей `v1`;
+- для продуктового scope сначала читать [26_v1_product_spec.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/ESP32_COB_Strobe_Bench/Smart_Platform/docs/26_v1_product_spec.md).
+- для shell-level snapshot читать отдельный [shell_snapshot_contract.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/ESP32_COB_Strobe_Bench/Smart_Platform/shared_contracts/shell_snapshot_contract.md).
+
+Это черновой, но уже рабочий словарь сущностей для новой платформы.
+
+`TODO(stage-contracts-v1)`
+
+Когда начнется перенос кода, этот файл нужно будет превратить в формальный контракт версий `v1`.
+
+## System Snapshot
+
+Каждый узел должен уметь отдавать снимок системы в одном и том же виде.
+
+```json
+{
+  "node_id": "esp32-main",
+  "node_type": "esp32",
+  "ui_shell_version": "0.1.0",
+  "active_mode": "manual",
+  "service_mode": false,
+  "emergency_state": false,
+  "peer": {
+    "reachable": true,
+    "node_id": "rpi-turret",
+    "last_seen_ms": 820
+  },
+  "modules": [
+    {
+      "id": "irrigation",
+      "owner": "esp32",
+      "state": "online",
+      "locked_reason": ""
+    },
+    {
+      "id": "turret",
+      "owner": "rpi",
+      "state": "locked",
+      "locked_reason": "owner_unavailable"
+    }
+  ]
+}
+```
+
+## Module Descriptor
+
+```json
+{
+  "id": "strobe",
+  "title": "Strobe",
+  "owner": "rpi",
+  "owner_node_id": "rpi-turret",
+  "owner_available": true,
+  "profile": "turret",
+  "state": "online",
+  "canonical_path": "/turret#strobe",
+  "canonical_url": "http://raspberrypi.local:8080/turret#strobe",
+  "federated_access": "peer_owner_available",
+  "capabilities": ["arm", "abort", "preset_run", "service_page"],
+  "locked_reason": "",
+  "service_available": true
+}
+```
+
+## Общие состояния модуля
+
+- `online`
+- `degraded`
+- `locked`
+- `fault`
+- `service`
+- `offline`
+
+## Общая команда
+
+```json
+{
+  "command_id": "cmd-0001",
+  "target_module": "strobe",
+  "action": "preset_run",
+  "params": {
+    "preset_id": "bench_safe"
+  },
+  "source_node": "rpi",
+  "requested_mode": "service"
+}
+```
+
+## Общий ответ
+
+```json
+{
+  "command_id": "cmd-0001",
+  "accepted": true,
+  "executed_by": "rpi",
+  "target_module": "strobe",
+  "result_state": "running",
+  "message": "preset started"
+}
+```
+
+## Общий event log формат
+
+```json
+{
+  "event_id": "evt-0001",
+  "timestamp_ms": 123456,
+  "source_node": "esp32",
+  "module": "irrigation",
+  "level": "info",
+  "type": "manual_command",
+  "message": "zone 1 started",
+  "sync_status": "local_only"
+}
+```
+
+## Первые обязательные endpoint-группы
+
+- `/api/v1/system`
+- `/api/v1/shell/snapshot`
+- `/api/v1/modules`
+- `/api/v1/federation/route`
+- `/api/v1/modules/{id}/status`
+- `/api/v1/modules/{id}/command`
+- `/api/v1/logs`
+- `/api/v1/content/status`
+- `/api/v1/settings`
+- `/api/v1/sync/heartbeat`
+- `/api/v1/sync/state`
+- `/api/v1/sync/modules/push`
+
+## Content Status Snapshot
+
+Оба узла должны уметь честно сообщать, готов ли их локальный слой хранения heavy-content.
+
+```json
+{
+  "storage": "sd",
+  "sd_ready": true,
+  "assets_ready": true,
+  "audio_ready": false,
+  "animations_ready": false,
+  "libraries_ready": true
+}
+```
+
+Для `Raspberry Pi` вместо `sd_ready` может использоваться:
+
+```json
+{
+  "storage": "filesystem",
+  "content_root": "/opt/smart-platform/content",
+  "content_root_exists": true,
+  "assets_ready": true,
+  "audio_ready": true,
+  "animations_ready": true,
+  "libraries_ready": true
+}
+```
+
+## Turret Runtime Snapshot
+
+На стороне `Raspberry Pi` турельный UI и sync теперь работают не с прямыми флагами модулей,
+а через отдельный runtime-слой.
+
+```json
+{
+  "active_mode": "automatic",
+  "automation_ready": true,
+  "target_locked": false,
+  "vision_tracking": false,
+  "service_session_active": false,
+  "interlocks": {
+    "emergency_latched": false,
+    "fault_latched": false,
+    "fault_reason": "none"
+  },
+  "subsystems": [
+    {
+      "id": "motion",
+      "title": "Motion",
+      "kind": "actuator",
+      "enabled": false,
+      "state": "online",
+      "block_reason": "none"
+    },
+    {
+      "id": "vision",
+      "title": "Vision Pipeline",
+      "kind": "sensor",
+      "enabled": true,
+      "state": "online",
+      "block_reason": "none"
+    }
+  ]
+}
+```
+
+## Turret Runtime Endpoints
+
+- `GET /api/v1/turret/status`
+- `GET /api/v1/turret/runtime`
+- `GET /api/v1/turret/events`
+- `GET /api/v1/turret/drivers`
+- `GET /api/v1/turret/scenarios`
+- `POST /api/v1/turret/runtime/mode`
+- `POST /api/v1/turret/runtime/subsystem`
+- `POST /api/v1/turret/runtime/flag`
+- `POST /api/v1/turret/runtime/interlock`
+- `POST /api/v1/turret/scenarios/run`
+
+## Platform Log Snapshot
+
+```json
+{
+  "count": 14,
+  "limit": 18,
+  "entries": [
+    {
+      "event_id": "platform-00014",
+      "timestamp_ms": 312,
+      "source": "turret_scenarios",
+      "level": "info",
+      "type": "scenario_finished",
+      "message": "turret service scenario finished",
+      "details": {
+        "scenario_id": "service_safe_idle",
+        "accepted": true,
+        "failed_steps": []
+      }
+    }
+  ]
+}
+```
+
+## Turret Event Log Snapshot
+
+```json
+{
+  "count": 3,
+  "limit": 40,
+  "entries": [
+    {
+      "event_id": "turret-00003",
+      "timestamp_ms": 84,
+      "level": "info",
+      "type": "runtime_subsystem_changed",
+      "message": "subsystem state updated",
+      "details": {
+        "subsystem_id": "vision",
+        "enabled": true
+      }
+    }
+  ]
+}
+```
+
+## Turret Driver Bindings Snapshot
+
+```json
+{
+  "count": 5,
+  "bindings": [
+    {
+      "id": "strobe",
+      "title": "Strobe",
+      "driver_kind": "stub",
+      "binding_state": "unbound",
+      "hardware_ready": false,
+      "last_apply_ms": 120,
+      "last_enabled": false,
+      "last_runtime_state": "online",
+      "last_result": "deferred",
+      "note": "awaiting turret strobe wiring"
+    }
+  ]
+}
+```
+
+## Turret Scenario Catalog Snapshot
+
+```json
+{
+  "count": 3,
+  "scenarios": [
+    {
+      "id": "service_safe_idle",
+      "title": "Service Safe Idle",
+      "category": "service",
+      "description": "Переводит turret runtime в безопасный сервисный idle и очищает interlock."
+    }
+  ]
+}
+```
+
+## Shared Log Sync Endpoints
+
+- `GET /api/v1/logs`
+- `POST /api/v1/sync/logs/push`
+
+`GET /api/v1/logs` теперь считается общим endpoint узла. Он должен возвращать как локальные записи,
+так и зеркалированные записи peer-узла, если они уже приняты через sync-контур.
+
+`POST /api/v1/sync/logs/push` используется для мягкого зеркалирования событий между узлами.
+Запрос обязан нести идентификатор исходного узла и исходного события, чтобы принимающая сторона
+могла дедуплицировать повторные push-записи.
+
+## Shared Platform Log Snapshot
+
+```json
+{
+  "count": 18,
+  "limit": 18,
+  "entries": [
+    {
+      "event_id": "platform-00018",
+      "origin_node": "rpi-turret",
+      "origin_event_id": "platform-00007",
+      "mirrored": true,
+      "timestamp_ms": 812,
+      "source": "turret_runtime",
+      "level": "info",
+      "type": "runtime_mode_changed",
+      "message": "turret runtime mode updated",
+      "details": {
+        "active_mode": "service_test"
+      }
+    },
+    {
+      "event_id": "platform-00019",
+      "origin_node": "esp32-main",
+      "origin_event_id": "platform-00019",
+      "mirrored": false,
+      "timestamp_ms": 845,
+      "source": "sync_core",
+      "level": "info",
+      "type": "peer_heartbeat",
+      "message": "peer heartbeat accepted",
+      "details": {
+        "peer": "rpi-turret",
+        "sync_ready": true
+      }
+    }
+  ]
+}
+```
+
+## Federated Shell Heartbeat Fields
+
+В heartbeat узла теперь допускается поле:
+
+- `shell_base_url`
+
+Пример:
+
+```json
+{
+  "node_id": "rpi-turret",
+  "shell_base_url": "http://raspberrypi.local:8080",
+  "wifi_ready": "1",
+  "shell_ready": "1",
+  "sync_ready": "1",
+  "reported_mode": "manual"
+}
+```
+
+## Federated Route Info
+
+`GET /api/v1/federation/route?module_id=strobe`
+
+Минимальный ответ:
+
+```json
+{
+  "module_id": "strobe",
+  "module_found": true,
+  "owner": "rpi",
+  "owner_node_id": "rpi-turret",
+  "owner_available": true,
+  "state": "online",
+  "block_reason": "none",
+  "canonical_path": "/turret#strobe",
+  "canonical_url": "http://raspberrypi.local:8080/turret#strobe",
+  "federated_access": "peer_owner_available",
+  "current_shell_node_id": "esp32-main",
+  "current_shell_base_url": "http://192.168.4.1"
+}
+```
+
+Это endpoint мягкого handoff-этапа.
+На нем shell еще не делает полный reverse-proxy, но уже умеет:
+
+- понять, найден ли модуль;
+- проверить, доступен ли owner;
+- показать canonical owner page;
+- безопасно увести пользователя к владельцу peer-owned модуля.

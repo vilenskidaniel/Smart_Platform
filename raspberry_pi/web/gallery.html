@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Smart Platform / Gallery</title>
+  <style>
+    :root {
+      --bg: #eef3ea;
+      --panel: #fbfcf7;
+      --ink: #213127;
+      --muted: #647467;
+      --line: #c9d5c6;
+      --accent: #375f45;
+      --active: #295f94;
+      --shadow: 0 14px 40px rgba(30, 48, 33, 0.08);
+      --radius: 22px;
+      --mono: "Consolas", "SFMono-Regular", monospace;
+      --sans: "Segoe UI", "Trebuchet MS", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--sans);
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(82, 128, 92, 0.16), transparent 36%),
+        linear-gradient(180deg, #f4f8ef 0%, var(--bg) 100%);
+      min-height: 100vh;
+    }
+    .page { max-width: 1180px; margin: 0 auto; padding: 28px 18px 48px; display: grid; gap: 18px; }
+    .hero, .card { background: var(--panel); border-radius: 24px; box-shadow: var(--shadow); border: 1px solid rgba(55, 95, 69, 0.08); }
+    .hero { padding: 22px; background: linear-gradient(135deg, rgba(55, 95, 69, 0.98), rgba(80, 118, 90, 0.9)); color: #f6f9f3; display: grid; gap: 16px; }
+    .hero-top { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; align-items: center; }
+    .hero h1 { margin: 0; font-size: clamp(28px, 5vw, 42px); }
+    .hero p { margin: 8px 0 0; max-width: 760px; color: rgba(246, 249, 243, 0.84); }
+    .pill { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; padding: 9px 13px; border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.1); font-size: 13px; }
+    .tab-row, .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .tab-row button, .actions a {
+      appearance: none;
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.08);
+      color: inherit;
+      border-radius: 999px;
+      padding: 10px 14px;
+      font: inherit;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .tab-row button.active { background: rgba(255,255,255,.18); border-color: rgba(255,255,255,.28); }
+    .card { padding: 18px; }
+    .cards { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+    .grid-two { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+    .module {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 14px;
+      background: linear-gradient(180deg, rgba(255,255,255,.82), rgba(243,247,240,.94));
+    }
+    .module p, .module ul { margin: 8px 0 0; color: var(--muted); line-height: 1.5; }
+    .module ul { padding-left: 18px; }
+    .mono {
+      font-family: var(--mono);
+      font-size: 12px;
+      white-space: pre-wrap;
+      background: #17221a;
+      color: #e8f5e8;
+      border-radius: 18px;
+      padding: 14px;
+      overflow: auto;
+      min-height: 220px;
+    }
+    [hidden] { display: none !important; }
+    .section-title { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; flex-wrap: wrap; margin-bottom: 12px; }
+    .meta { color: var(--muted); font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="hero">
+      <div class="hero-top">
+        <div>
+          <div class="pill" id="node-pill">node: loading</div>
+          <h1>Gallery</h1>
+          <p>Shared virtual explorer for <code>Plants</code>, <code>Media</code>, and <code>Reports</code>. Even when one peer owner is missing, this page stays available and shows the local slice without pretending that peer-owned content exists.</p>
+        </div>
+        <div class="pill" id="peer-pill">peer: loading</div>
+      </div>
+      <div class="tab-row" id="tab-row">
+        <button type="button" data-tab="plants">Plants</button>
+        <button type="button" data-tab="media">Media</button>
+        <button type="button" data-tab="reports">Reports</button>
+      </div>
+      <div class="actions">
+        <a href="/">Back To Shell</a>
+        <a href="/service">Laboratory</a>
+        <a href="/settings">Settings</a>
+      </div>
+    </section>
+
+    <section id="summary-grid" class="cards"></section>
+
+    <section id="plants-panel" class="grid-two">
+      <article class="card">
+        <div class="section-title">
+          <h2>Plants</h2>
+          <span class="meta">Reference libraries and future plant slices</span>
+        </div>
+        <div id="plants-summary" class="module"></div>
+      </article>
+      <article class="card">
+        <div class="section-title">
+          <h2>Plant Libraries</h2>
+          <span class="meta">Current baseline source set</span>
+        </div>
+        <div class="module">
+          <ul>
+            <li><a href="/libraries/plant_profiles.v1.json">plant_profiles.v1.json</a></li>
+            <li><a href="/libraries/plant_state_rules.v1.json">plant_state_rules.v1.json</a></li>
+            <li><a href="/libraries/care_scenarios.v1.json">care_scenarios.v1.json</a></li>
+          </ul>
+        </div>
+      </article>
+    </section>
+
+    <section id="media-panel" class="grid-two" hidden>
+      <article class="card">
+        <div class="section-title">
+          <h2>Media</h2>
+          <span class="meta">Assets, audio, and animation readiness</span>
+        </div>
+        <div id="media-summary" class="module"></div>
+      </article>
+      <article class="card">
+        <div class="section-title">
+          <h2>Current Baseline</h2>
+          <span class="meta">Media shell is present before full media viewer</span>
+        </div>
+        <div class="module">
+          <p>Gallery now owns the user-facing media entry point.</p>
+          <p>Raw directory inspection stays in <a href="/content">Storage Diagnostics</a>.</p>
+          <p>Future richer viewer can grow here without putting storage concerns back into the top shell.</p>
+        </div>
+      </article>
+    </section>
+
+    <section id="reports-panel" class="grid-two" hidden>
+      <article class="card">
+        <div class="section-title">
+          <h2>Reports</h2>
+          <span class="meta">Chronological activity entry point</span>
+        </div>
+        <div id="reports-summary" class="module"></div>
+      </article>
+      <article class="card">
+        <div class="section-title">
+          <h2>Recent Feed Preview</h2>
+          <span class="meta">Current baseline still uses platform log as source</span>
+        </div>
+        <div id="reports-log" class="mono">Loading reports preview...</div>
+      </article>
+    </section>
+  </div>
+
+  <script>
+    const VALID_TABS = ['plants', 'media', 'reports'];
+    let currentTab = 'reports';
+
+    function esc(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function readTab(defaultTab) {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get('tab') || defaultTab;
+      return VALID_TABS.includes(tab) ? tab : defaultTab;
+    }
+
+    function writeTab(tab) {
+      const url = new URL(window.location.href);
+      url.searchParams.set('tab', tab);
+      window.history.replaceState({}, '', url);
+    }
+
+    function buildLogPreview(logSnapshot) {
+      const entries = (logSnapshot.entries || []).slice(0, 12);
+      if (!entries.length) {
+        return 'No report entries yet.';
+      }
+
+      return entries.map((entry) => {
+        const origin = entry.origin_node || 'unknown';
+        const mirrored = entry.mirrored ? ' mirrored' : '';
+        const details = entry.details && Object.keys(entry.details).length
+          ? ` ${JSON.stringify(entry.details)}`
+          : '';
+        return `[${entry.timestamp_ms} ms] ${origin}${mirrored} ${entry.source} ${String(entry.level || '').toUpperCase()} ${entry.type}: ${entry.message}${details}`;
+      }).join('\n');
+    }
+
+    function activateTab(tab) {
+      currentTab = tab;
+      writeTab(tab);
+      for (const button of document.querySelectorAll('[data-tab]')) {
+        button.classList.toggle('active', button.dataset.tab === tab);
+      }
+      document.getElementById('plants-panel').hidden = tab !== 'plants';
+      document.getElementById('media-panel').hidden = tab !== 'media';
+      document.getElementById('reports-panel').hidden = tab !== 'reports';
+    }
+
+    function renderSummary(snapshot, contentStatus) {
+      const gallery = ((snapshot.navigation || {}).gallery || {});
+      const peer = ((snapshot.nodes || {}).peer || {});
+      const content = ((snapshot.summaries || {}).content || {});
+      const activity = ((snapshot.summaries || {}).activity || {});
+      const cards = [
+        {
+          title: 'Gallery Contract',
+          lines: [
+            `path: ${gallery.path || '/gallery'}`,
+            `owner_scope: ${gallery.owner_scope || 'shared'}`,
+            `default_tab: ${gallery.default_tab || 'reports'}`,
+            `tabs: ${(gallery.tabs || []).join(', ') || 'plants, media, reports'}`
+          ]
+        },
+        {
+          title: 'Shared Content',
+          lines: [
+            `storage: ${contentStatus.storage || content.storage_kind || 'unknown'}`,
+            `ready: ${content.ready}`,
+            `libraries_ready: ${content.libraries_ready}`,
+            `assets_ready: ${content.assets_ready}`,
+            `audio_ready: ${content.audio_ready}`,
+            `animations_ready: ${content.animations_ready}`
+          ]
+        },
+        {
+          title: 'Reports Entry',
+          lines: [
+            `recent_visible: ${activity.recent_visible || 0}`,
+            `warning_count: ${activity.warning_count || 0}`,
+            `error_count: ${activity.error_count || 0}`,
+            `primary_viewer: ${activity.primary_viewer || 'gallery.reports'}`
+          ]
+        },
+        {
+          title: 'Peer Availability',
+          lines: [
+            `peer_health: ${peer.health || 'unknown'}`,
+            `peer_sync_ready: ${peer.sync_ready}`,
+            `peer_summary: ${peer.summary || '-'}`
+          ]
+        }
+      ];
+
+      document.getElementById('summary-grid').innerHTML = cards.map((card) => `
+        <article class="card">
+          <h2>${card.title}</h2>
+          <p class="meta">${card.lines.map(esc).join('<br>')}</p>
+        </article>
+      `).join('');
+    }
+
+    function renderPanels(snapshot, contentStatus, logSnapshot) {
+      const content = ((snapshot.summaries || {}).content || {});
+      const activity = ((snapshot.summaries || {}).activity || {});
+
+      document.getElementById('plants-summary').innerHTML = `
+        <p>libraries_ready: ${esc(content.libraries_ready)}</p>
+        <p>content_root_exists: ${esc(contentStatus.content_root_exists ?? contentStatus.sd_ready)}</p>
+        <p>Plants stays the canonical user-facing entry for plant reference libraries once richer browsing arrives.</p>
+      `;
+
+      document.getElementById('media-summary').innerHTML = `
+        <p>assets_ready: ${esc(content.assets_ready)}</p>
+        <p>audio_ready: ${esc(content.audio_ready)}</p>
+        <p>animations_ready: ${esc(content.animations_ready)}</p>
+        <p>Media is already separated from raw storage inspection even before the richer viewer is implemented.</p>
+      `;
+
+      document.getElementById('reports-summary').innerHTML = `
+        <p>recent_visible: ${esc(activity.recent_visible || 0)}</p>
+        <p>total_visible: ${esc(activity.total_visible || 0)}</p>
+        <p>warning_count: ${esc(activity.warning_count || 0)}</p>
+        <p>error_count: ${esc(activity.error_count || 0)}</p>
+        <p>operator notes will join this feed later as typed report entries.</p>
+      `;
+
+      document.getElementById('reports-log').textContent = buildLogPreview(logSnapshot);
+    }
+
+    async function refresh() {
+      const [snapshotResponse, contentResponse, logResponse] = await Promise.all([
+        fetch('/api/v1/shell/snapshot'),
+        fetch('/api/v1/content/status'),
+        fetch('/api/v1/logs?limit=20')
+      ]);
+
+      const snapshot = await snapshotResponse.json();
+      const contentStatus = await contentResponse.json();
+      const logSnapshot = await logResponse.json();
+      const current = ((snapshot.nodes || {}).current || {});
+      const peer = ((snapshot.nodes || {}).peer || {});
+      const defaultTab = (((snapshot.navigation || {}).gallery || {}).default_tab || 'reports');
+
+      document.getElementById('node-pill').textContent = `node: ${current.title || 'unknown'}`;
+      document.getElementById('peer-pill').textContent = `peer: ${peer.health || 'unknown'}`;
+
+      renderSummary(snapshot, contentStatus);
+      renderPanels(snapshot, contentStatus, logSnapshot);
+      activateTab(readTab(defaultTab));
+    }
+
+    for (const button of document.querySelectorAll('[data-tab]')) {
+      button.addEventListener('click', () => activateTab(button.dataset.tab));
+    }
+
+    refresh().catch((error) => {
+      document.getElementById('reports-log').textContent = `Gallery load error: ${error}`;
+    });
+    setInterval(() => refresh().catch(() => {}), 2500);
+  </script>
+</body>
+</html>

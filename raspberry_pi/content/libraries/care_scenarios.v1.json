@@ -1,0 +1,47 @@
+{
+  "schema_version": "1.0",
+  "library_type": "care_scenarios",
+  "entries": [
+    {
+      "scenario_id": "tomato_daily_care",
+      "title": "Tomato Daily Care",
+      "manual_allowed": true,
+      "automatic_allowed": true,
+      "steps": [
+        {
+          "action": "water_zone",
+          "owner_module": "irrigation",
+          "zone_binding": "zone_1",
+          "duration_ms": 12000
+        },
+        {
+          "action": "spray_burst",
+          "owner_module": "turret",
+          "duration_ms": 350,
+          "requires_peer_owner": true
+        }
+      ]
+    },
+    {
+      "scenario_id": "pepper_daily_care",
+      "title": "Pepper Daily Care",
+      "manual_allowed": true,
+      "automatic_allowed": true,
+      "steps": [
+        {
+          "action": "water_zone",
+          "owner_module": "irrigation",
+          "zone_binding": "zone_2",
+          "duration_ms": 10000
+        }
+      ]
+    },
+    {
+      "scenario_id": "pause_and_monitor",
+      "title": "Pause And Monitor",
+      "manual_allowed": false,
+      "automatic_allowed": true,
+      "steps": []
+    }
+  ]
+}

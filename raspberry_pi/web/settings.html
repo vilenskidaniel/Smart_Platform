@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Smart Platform / Settings</title>
+  <style>
+    :root {
+      --bg: #eef3ea;
+      --panel: #fbfcf7;
+      --ink: #213127;
+      --muted: #647467;
+      --line: #c9d5c6;
+      --accent: #375f45;
+      --shadow: 0 14px 40px rgba(30, 48, 33, 0.08);
+      --radius: 22px;
+      --mono: "Consolas", "SFMono-Regular", monospace;
+      --sans: "Segoe UI", "Trebuchet MS", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--sans);
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(82, 128, 92, 0.16), transparent 36%),
+        linear-gradient(180deg, #f4f8ef 0%, var(--bg) 100%);
+      min-height: 100vh;
+    }
+    .page { max-width: 1180px; margin: 0 auto; padding: 28px 18px 48px; display: grid; gap: 18px; }
+    .hero, .card { background: var(--panel); border-radius: 24px; box-shadow: var(--shadow); border: 1px solid rgba(55, 95, 69, 0.08); }
+    .hero { padding: 22px; background: linear-gradient(135deg, rgba(55, 95, 69, 0.98), rgba(80, 118, 90, 0.9)); color: #f6f9f3; display: grid; gap: 16px; }
+    .hero-top { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; align-items: center; }
+    .hero h1 { margin: 0; font-size: clamp(28px, 5vw, 42px); }
+    .hero p { margin: 8px 0 0; max-width: 760px; color: rgba(246, 249, 243, 0.84); }
+    .pill { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; padding: 9px 13px; border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.1); font-size: 13px; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .actions a { color: inherit; text-decoration: none; padding: 10px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.08); }
+    .cards, .grid-two { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+    .card { padding: 18px; }
+    .module {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 14px;
+      background: linear-gradient(180deg, rgba(255,255,255,.82), rgba(243,247,240,.94));
+    }
+    .module p { margin: 8px 0 0; color: var(--muted); line-height: 1.5; }
+    .section-title { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; flex-wrap: wrap; margin-bottom: 12px; }
+    .meta { color: var(--muted); font-size: 13px; }
+    .mono {
+      font-family: var(--mono);
+      font-size: 12px;
+      white-space: pre-wrap;
+      background: #17221a;
+      color: #e8f5e8;
+      border-radius: 18px;
+      padding: 14px;
+      overflow: auto;
+      min-height: 220px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="hero">
+      <div class="hero-top">
+        <div>
+          <div class="pill" id="node-pill">node: loading</div>
+          <h1>Settings</h1>
+          <p>Persistent surface for system, sync, interface, and shell-policy choices. Laboratory keeps live experiments and engineering tabs, while Settings keeps the stable configuration layer and internal diagnostics access.</p>
+        </div>
+        <div class="pill" id="peer-pill">peer: loading</div>
+      </div>
+      <div class="actions">
+        <a href="/">Back To Shell</a>
+        <a href="/gallery">Gallery</a>
+        <a href="/service">Laboratory</a>
+      </div>
+    </section>
+
+    <section id="summary-grid" class="cards"></section>
+
+    <section class="grid-two">
+      <article class="card" id="diagnostics">
+        <div class="section-title">
+          <h2>Diagnostics</h2>
+          <span class="meta">Internal diagnostics surface now lives inside Settings</span>
+        </div>
+        <div id="diagnostics-summary" class="module"></div>
+        <div id="diagnostics-json" class="mono">Loading shell snapshot...</div>
+      </article>
+
+      <article class="card" id="storage-sync">
+        <div class="section-title">
+          <h2>Storage & Sync</h2>
+          <span class="meta">Current baseline routing and readiness</span>
+        </div>
+        <div id="storage-summary" class="module"></div>
+        <div id="content-json" class="mono">Loading content status...</div>
+      </article>
+    </section>
+  </div>
+
+  <script>
+    function esc(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function renderSummary(snapshot, contentStatus) {
+      const shell = snapshot.current_shell || {};
+      const current = ((snapshot.nodes || {}).current || {});
+      const peer = ((snapshot.nodes || {}).peer || {});
+      const navigation = snapshot.navigation || {};
+      const activity = ((snapshot.summaries || {}).activity || {});
+      const cards = [
+        {
+          title: 'Shell Identity',
+          lines: [
+            `node_id: ${shell.node_id || 'unknown'}`,
+            `node_type: ${shell.node_type || 'unknown'}`,
+            `active_mode: ${shell.active_mode || 'unknown'}`,
+            `service_mode: ${shell.service_mode}`
+          ]
+        },
+        {
+          title: 'Navigation Contract',
+          lines: [
+            `home: ${navigation.home || '/'}`,
+            `gallery: ${(navigation.gallery || {}).path || '/gallery'}`,
+            `laboratory: ${(navigation.laboratory || {}).path || '/service'}`,
+            `settings: ${navigation.settings || '/settings'}`
+          ]
+        },
+        {
+          title: 'Compatibility Layer',
+          lines: [
+            `service alias: ${navigation.service || '/service'}`,
+            `content diagnostics: ${navigation.content || '/content'}`,
+            `logs pointer: ${navigation.logs || '/gallery?tab=reports'}`,
+            `diagnostics pointer: ${navigation.diagnostics || '/settings#diagnostics'}`
+          ]
+        },
+        {
+          title: 'Current Baseline',
+          lines: [
+            `current_health: ${current.health || 'unknown'}`,
+            `peer_health: ${peer.health || 'unknown'}`,
+            `peer_sync_ready: ${peer.sync_ready}`,
+            `activity_viewer: ${activity.primary_viewer || 'gallery.reports'}`
+          ]
+        }
+      ];
+
+      document.getElementById('summary-grid').innerHTML = cards.map((card) => `
+        <article class="card">
+          <h2>${card.title}</h2>
+          <p class="meta">${card.lines.map(esc).join('<br>')}</p>
+        </article>
+      `).join('');
+      document.getElementById('node-pill').textContent = `node: ${current.title || 'unknown'}`;
+      document.getElementById('peer-pill').textContent = `peer: ${peer.health || 'unknown'}`;
+
+      document.getElementById('diagnostics-summary').innerHTML = `
+        <p>sync_state: ${esc(((snapshot.summaries || {}).diagnostics || {}).sync_state || 'unknown')}</p>
+        <p>ownership_summary: ${esc(((snapshot.summaries || {}).diagnostics || {}).ownership_summary || '-')}</p>
+        <p>content_ready: ${esc(((snapshot.summaries || {}).diagnostics || {}).content_ready)}</p>
+        <p>Top-level Diagnostics page is deprecated; this section keeps the internal diagnostic role without competing with Gallery or Laboratory.</p>
+      `;
+
+      document.getElementById('storage-summary').innerHTML = `
+        <p>storage: ${esc(contentStatus.storage || ((snapshot.summaries || {}).content || {}).storage_kind || 'unknown')}</p>
+        <p>content_ready: ${esc(((snapshot.summaries || {}).content || {}).ready)}</p>
+        <p>libraries_ready: ${esc(((snapshot.summaries || {}).content || {}).libraries_ready)}</p>
+        <p><a href="/content">Open Storage Diagnostics</a></p>
+        <p><a href="/gallery">Return to Gallery</a></p>
+      `;
+    }
+
+    async function refresh() {
+      const [snapshotResponse, contentResponse] = await Promise.all([
+        fetch('/api/v1/shell/snapshot'),
+        fetch('/api/v1/content/status')
+      ]);
+
+      const snapshot = await snapshotResponse.json();
+      const contentStatus = await contentResponse.json();
+      renderSummary(snapshot, contentStatus);
+      document.getElementById('diagnostics-json').textContent = JSON.stringify(snapshot, null, 2);
+      document.getElementById('content-json').textContent = JSON.stringify(contentStatus, null, 2);
+    }
+
+    refresh().catch((error) => {
+      document.getElementById('diagnostics-json').textContent = `Settings load error: ${error}`;
+    });
+    setInterval(() => refresh().catch(() => {}), 2500);
+  </script>
+</body>
+</html>

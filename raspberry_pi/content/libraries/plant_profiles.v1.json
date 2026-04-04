@@ -1,0 +1,32 @@
+{
+  "schema_version": "1.0",
+  "library_type": "plant_profiles",
+  "entries": [
+    {
+      "plant_id": "tomato_balcony",
+      "title": "Tomato / Balcony",
+      "zone_binding": "zone_1",
+      "soil_target_percent": 62,
+      "soil_warning_low_percent": 45,
+      "soil_warning_high_percent": 78,
+      "air_temp_min_c": 16,
+      "air_temp_max_c": 29,
+      "light_target_lux": 22000,
+      "default_state_rule_id": "tomato_standard_rules",
+      "default_care_scenario_id": "tomato_daily_care"
+    },
+    {
+      "plant_id": "pepper_greenhouse",
+      "title": "Pepper / Greenhouse",
+      "zone_binding": "zone_2",
+      "soil_target_percent": 58,
+      "soil_warning_low_percent": 42,
+      "soil_warning_high_percent": 74,
+      "air_temp_min_c": 18,
+      "air_temp_max_c": 30,
+      "light_target_lux": 24000,
+      "default_state_rule_id": "pepper_standard_rules",
+      "default_care_scenario_id": "pepper_daily_care"
+    }
+  ]
+}

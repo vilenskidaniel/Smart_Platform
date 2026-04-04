@@ -1,0 +1,48 @@
+{
+  "schema_version": "1.0",
+  "library_type": "plant_state_rules",
+  "entries": [
+    {
+      "rule_id": "tomato_standard_rules",
+      "title": "Tomato Standard Rules",
+      "states": [
+        {
+          "state_id": "dry",
+          "soil_below_percent": 46,
+          "priority": 90,
+          "recommended_care_scenario_id": "tomato_daily_care"
+        },
+        {
+          "state_id": "healthy",
+          "soil_min_percent": 46,
+          "soil_max_percent": 74,
+          "priority": 20
+        },
+        {
+          "state_id": "overwatered",
+          "soil_above_percent": 78,
+          "priority": 80,
+          "recommended_care_scenario_id": "pause_and_monitor"
+        }
+      ]
+    },
+    {
+      "rule_id": "pepper_standard_rules",
+      "title": "Pepper Standard Rules",
+      "states": [
+        {
+          "state_id": "dry",
+          "soil_below_percent": 43,
+          "priority": 90,
+          "recommended_care_scenario_id": "pepper_daily_care"
+        },
+        {
+          "state_id": "healthy",
+          "soil_min_percent": 43,
+          "soil_max_percent": 70,
+          "priority": 20
+        }
+      ]
+    }
+  ]
+}

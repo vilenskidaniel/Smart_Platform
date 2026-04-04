@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Smart Platform Shell</title>
+  <style>
+    :root {
+      --bg: #eef3ea;
+      --panel: #fbfcf7;
+      --ink: #213127;
+      --muted: #647467;
+      --line: #c9d5c6;
+      --accent: #375f45;
+      --warn: #a56a1b;
+      --fault: #9b2f2f;
+      --locked: #6d7277;
+      --ok: #2f7d4d;
+      --shadow: 0 14px 40px rgba(30, 48, 33, 0.08);
+      --radius: 22px;
+      --mono: "Consolas", "SFMono-Regular", monospace;
+      --sans: "Segoe UI", "Trebuchet MS", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: var(--sans);
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(82, 128, 92, 0.16), transparent 36%),
+        linear-gradient(180deg, #f4f8ef 0%, var(--bg) 100%);
+      min-height: 100vh;
+    }
+
+    .shell { max-width: 1180px; margin: 0 auto; padding: 28px 18px 48px; }
+
+    .hero {
+      background: linear-gradient(135deg, rgba(55, 95, 69, 0.98), rgba(80, 118, 90, 0.9));
+      color: #f6f9f3;
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      padding: 24px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .hero-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .hero h1 { margin: 0; font-size: clamp(30px, 5vw, 46px); line-height: 1; letter-spacing: 0.02em; }
+    .hero p { margin: 6px 0 0; max-width: 760px; color: rgba(246, 249, 243, 0.82); }
+
+    .status-pill {
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.16);
+      padding: 10px 14px;
+      font-size: 13px;
+      backdrop-filter: blur(8px);
+      background: rgba(255,255,255,0.1);
+    }
+
+    .nav, .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    .nav a,
+    .actions a {
+      color: inherit;
+      text-decoration: none;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(255,255,255,0.08);
+      font-size: 14px;
+    }
+
+    .card-actions a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .layout { display: grid; gap: 18px; margin-top: 20px; }
+    .cards { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+    .grid-two { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 18px; }
+    .module-list { display: grid; gap: 12px; }
+
+    .card {
+      background: var(--panel);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      border: 1px solid rgba(55, 95, 69, 0.08);
+    }
+
+    .card h2 { margin: 0 0 10px; line-height: 1.1; }
+    .meta { color: var(--muted); font-size: 13px; margin-bottom: 12px; }
+
+    .module {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 14px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.82), rgba(243, 247, 240, 0.94));
+    }
+
+    .module-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 7px 11px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      border: 1px solid transparent;
+    }
+
+    .state-online { background: rgba(47, 125, 77, 0.12); color: var(--ok); border-color: rgba(47, 125, 77, 0.18); }
+    .state-degraded { background: rgba(165, 106, 27, 0.12); color: var(--warn); border-color: rgba(165, 106, 27, 0.18); }
+    .state-locked, .state-offline { background: rgba(109, 114, 119, 0.12); color: var(--locked); border-color: rgba(109, 114, 119, 0.18); }
+    .state-fault { background: rgba(155, 47, 47, 0.12); color: var(--fault); border-color: rgba(155, 47, 47, 0.18); }
+    .state-service { background: rgba(55, 95, 69, 0.12); color: var(--accent); border-color: rgba(55, 95, 69, 0.18); }
+
+    .module p { margin: 0; color: var(--muted); line-height: 1.45; }
+
+    .section-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: baseline;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .mono {
+      font-family: var(--mono);
+      font-size: 12px;
+      white-space: pre-wrap;
+      background: #17221a;
+      color: #e8f5e8;
+      border-radius: 18px;
+      padding: 14px;
+      overflow: auto;
+      min-height: 180px;
+    }
+
+    .notice { border-left: 4px solid var(--warn); padding-left: 12px; color: var(--muted); }
+    .card-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 14px; }
+    .footer-note { margin-top: 4px; color: var(--muted); font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <section class="hero">
+      <div class="hero-top">
+        <div>
+          <div class="status-pill" id="hero-state">Smart Platform Shell</div>
+          <h1>System Shell</h1>
+          <p>Owner-aware launcher for irrigation, turret, gallery, laboratory, and settings. The shell stays concise: it shows availability, ownership, and recent activity, then sends you into the correct product surface instead of pretending everything lives on one page.</p>
+        </div>
+        <div class="status-pill" id="hero-network">Shell bootstrap...</div>
+      </div>
+      <nav class="nav">
+        <a href="#system">System</a>
+        <a href="#irrigation">Irrigation</a>
+        <a href="#turret">Turret</a>
+        <a href="/gallery">Gallery</a>
+        <a href="/gallery?tab=reports">Reports</a>
+        <a href="/service">Laboratory</a>
+        <a href="/settings">Settings</a>
+      </nav>
+    </section>
+
+    <div class="layout">
+      <section id="system" class="cards"></section>
+
+      <section class="grid-two">
+        <div class="card" id="irrigation">
+          <div class="section-title">
+            <h2>Irrigation</h2>
+            <span class="meta">Product owner: ESP32</span>
+          </div>
+          <div id="irrigation-modules" class="module-list"></div>
+        </div>
+
+        <div class="card" id="turret">
+          <div class="section-title">
+            <h2>Turret</h2>
+            <span class="meta">Product owner: Raspberry Pi</span>
+          </div>
+          <div id="turret-modules" class="module-list"></div>
+        </div>
+      </section>
+
+      <section class="grid-two">
+        <div class="card" id="gallery">
+          <div class="section-title">
+            <h2>Gallery</h2>
+            <span class="meta">Shared virtual explorer</span>
+          </div>
+          <div id="gallery-summary" class="module-list">Waiting for gallery summary...</div>
+        </div>
+
+        <div class="card" id="laboratory">
+          <div class="section-title">
+            <h2>Laboratory</h2>
+            <span class="meta">Isolated module testing workspace</span>
+          </div>
+          <div id="laboratory-modules" class="module-list"></div>
+        </div>
+      </section>
+
+      <section class="grid-two">
+        <div class="card" id="activity">
+          <div class="section-title">
+            <h2>Recent Activity</h2>
+            <span class="meta">Quick summary only, full history opens in Gallery &gt; Reports</span>
+          </div>
+          <div id="activity-summary" class="module-list"></div>
+          <div id="activity-log" class="mono">Waiting for activity feed...</div>
+          <div class="card-actions">
+            <a href="/gallery?tab=reports">Open Reports</a>
+            <a href="/service">Open Laboratory</a>
+          </div>
+        </div>
+
+        <div class="card" id="settings-summary">
+          <div class="section-title">
+            <h2>Settings</h2>
+            <span class="meta">Persistent system, sync, interface, and policy surface</span>
+          </div>
+          <div id="settings-summary-grid" class="module-list">Waiting for settings summary...</div>
+        </div>
+      </section>
+
+      <p class="footer-note">Internal storage inspection still exists as <a href="/content">Storage Diagnostics</a>, but user-facing content entry now stays inside <a href="/gallery">Gallery</a>.</p>
+    </div>
+  </div>
+
+  <script>
+    const LEGACY_HASH_REDIRECTS = {
+      '#logs': '/gallery?tab=reports',
+      '#diagnostics': '/settings#diagnostics',
+      '#settings': '/settings'
+    };
+
+    function redirectLegacyHash() {
+      const target = LEGACY_HASH_REDIRECTS[window.location.hash];
+      if (!target) {
+        return false;
+      }
+      window.location.replace(target);
+      return true;
+    }
+
+    function badgeClass(state) { return `badge state-${state || 'offline'}`; }
+
+    function pickValue(primary, fallback) {
+      return primary === undefined ? fallback : primary;
+    }
+
+    function esc(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function buildContentLines(summary, contentStatus) {
+      return [
+        `storage: ${contentStatus.storage || summary.storage_kind || 'unknown'}`,
+        `ready: ${pickValue(summary.ready, false)}`,
+        `libraries_ready: ${pickValue(summary.libraries_ready, false)}`,
+        `assets_ready: ${pickValue(summary.assets_ready, contentStatus.assets_ready)}`,
+        `audio_ready: ${pickValue(summary.audio_ready, contentStatus.audio_ready)}`,
+        `animations_ready: ${pickValue(summary.animations_ready, contentStatus.animations_ready)}`
+      ];
+    }
+
+    function buildLogPreview(logSnapshot) {
+      const entries = (logSnapshot.entries || []).slice(0, 8);
+      if (!entries.length) {
+        return 'No activity entries yet.';
+      }
+
+      return entries.map((entry) => {
+        const origin = entry.origin_node || 'unknown';
+        const mirrored = entry.mirrored ? ' mirrored' : '';
+        const details = entry.details && Object.keys(entry.details).length
+          ? ` ${JSON.stringify(entry.details)}`
+          : '';
+        return `[${entry.timestamp_ms} ms] ${origin}${mirrored} ${entry.source} ${String(entry.level || '').toUpperCase()} ${entry.type}: ${entry.message}${details}`;
+      }).join('\n');
+    }
+
+    function renderNodeCards(snapshot, contentStatus) {
+      const system = document.getElementById('system');
+      const shell = snapshot.current_shell || {};
+      const nodes = snapshot.nodes || {};
+      const current = nodes.current || {};
+      const peer = nodes.peer || {};
+      const summaries = snapshot.summaries || {};
+      const faults = summaries.faults || {};
+      const diagnostics = summaries.diagnostics || {};
+      const content = summaries.content || {};
+      const activity = summaries.activity || {};
+      const cards = [
+        {
+          title: 'Current Shell',
+          subtitle: `${current.title || 'Node'} / ${shell.node_id || 'unknown'}`,
+          lines: [
+            `health: ${current.health || 'unknown'}`,
+            `mode: ${shell.active_mode || 'unknown'}`,
+            `service_mode: ${shell.service_mode}`,
+            `shell_base_url: ${shell.shell_base_url || '-'}`,
+            `ui_shell_version: ${shell.ui_shell_version || '-'}`
+          ]
+        },
+        {
+          title: 'Peer Node',
+          subtitle: `${peer.title || 'Peer'} / ${peer.node_id || 'unknown'}`,
+          lines: [
+            `health: ${peer.health || 'unknown'}`,
+            `reachable: ${peer.reachable}`,
+            `sync_ready: ${peer.sync_ready}`,
+            `reported_mode: ${peer.reported_mode || '-'}`,
+            `shell_base_url: ${peer.shell_base_url || '-'}`,
+            `summary: ${peer.summary || '-'}`
+          ]
+        },
+        {
+          title: 'Shell Summary',
+          subtitle: faults.message || 'System shell summary',
+          lines: [
+            `has_fault: ${faults.has_fault}`,
+            `has_degraded: ${faults.has_degraded}`,
+            `sync_state: ${diagnostics.sync_state || 'unknown'}`,
+            `ownership: ${diagnostics.ownership_summary || '-'}`
+          ]
+        },
+        {
+          title: 'Reports Entry',
+          subtitle: 'Quick pointer into Gallery > Reports',
+          lines: [
+            `recent_visible: ${activity.recent_visible || 0}`,
+            `warning_count: ${activity.warning_count || 0}`,
+            `error_count: ${activity.error_count || 0}`,
+            `primary_viewer: ${activity.primary_viewer || 'gallery.reports'}`
+          ]
+        }
+      ];
+
+      system.innerHTML = cards.map((card) => `
+        <article class="card">
+          <h2>${card.title}</h2>
+          <div class="meta">${card.subtitle}</div>
+          <p>${card.lines.map(esc).join('<br>')}</p>
+        </article>
+      `).join('');
+
+      document.getElementById('hero-state').textContent = `${current.title || 'Current shell'} / mode: ${shell.active_mode || 'unknown'} / peer: ${peer.health || 'offline'}`;
+      document.getElementById('hero-network').textContent = shell.shell_base_url || 'Shell base URL is not ready yet';
+    }
+
+    function buildModuleLink(module) {
+      if (module.route_mode === 'handoff') {
+        return `<p style="margin-top:10px;"><a href="/federated/handoff?module_id=${encodeURIComponent(module.id)}">Open owner handoff</a></p>`;
+      }
+
+      if (module.route_mode === 'local' && module.canonical_url) {
+        return `<p style="margin-top:10px;"><a href="${module.canonical_url}">Open local page</a></p>`;
+      }
+
+      if (module.route_mode === 'blocked') {
+        return '<p class="meta" style="margin-top:10px;">Owner handoff is unavailable while the module is blocked.</p>';
+      }
+
+      return '';
+    }
+
+    function renderModuleList(targetId, modules) {
+      const target = document.getElementById(targetId);
+      target.innerHTML = modules.map((module) => {
+        const pageLink = buildModuleLink(module);
+        return `
+          <article class="module">
+            <div class="module-top">
+              <div>
+                <strong>${esc(module.title)}</strong><br>
+                <span class="meta">${esc(module.id)} / owner node: ${esc(module.owner_node_id || 'unknown')}</span>
+              </div>
+              <span class="${badgeClass(module.state)}">${esc(module.state)}</span>
+            </div>
+            <p>Route mode: ${esc(module.route_mode || 'unknown')}</p>
+            <p>${esc(module.summary || 'No summary provided.')}</p>
+            <p>Block reason: ${esc(module.block_reason || 'none')}</p>
+            ${pageLink}
+          </article>
+        `;
+      }).join('') || '<p class="meta">No modules in this group yet.</p>';
+    }
+
+    function renderModules(snapshot) {
+      const modules = snapshot.module_cards || [];
+      renderModuleList('irrigation-modules', modules.filter((module) => module.product_block === 'irrigation'));
+      renderModuleList('turret-modules', modules.filter((module) => module.product_block === 'turret'));
+      renderModuleList('laboratory-modules', modules.filter((module) => module.product_block === 'service_test'));
+    }
+
+    function renderGallery(snapshot, contentStatus) {
+      const navigation = snapshot.navigation || {};
+      const gallery = navigation.gallery || {};
+      const peer = ((snapshot.nodes || {}).peer || {});
+      const content = ((snapshot.summaries || {}).content || {});
+      const lines = [
+        {
+          title: 'Gallery Contract',
+          lines: [
+            `path: ${gallery.path || '/gallery'}`,
+            `owner_scope: ${gallery.owner_scope || 'shared'}`,
+            `default_tab: ${gallery.default_tab || 'reports'}`,
+            `tabs: ${(gallery.tabs || []).join(', ') || 'plants, media, reports'}`
+          ]
+        },
+        {
+          title: 'Shared Content',
+          lines: buildContentLines(content, contentStatus)
+        },
+        {
+          title: 'Peer Slice',
+          lines: [
+            `peer_health: ${peer.health || 'unknown'}`,
+            `peer_sync_ready: ${peer.sync_ready}`,
+            `peer_summary: ${peer.summary || '-'}`
+          ]
+        }
+      ];
+
+      document.getElementById('gallery-summary').innerHTML = lines.map((card) => `
+        <article class="module">
+          <strong>${card.title}</strong>
+          <p>${card.lines.map(esc).join('<br>')}</p>
+        </article>
+      `).join('') + `
+        <div class="card-actions">
+          <a href="/gallery">Open Gallery</a>
+          <a href="/gallery?tab=reports">Open Reports</a>
+          <a href="/content">Storage Diagnostics</a>
+        </div>
+      `;
+    }
+
+    function renderSettingsSummary(snapshot, contentStatus) {
+      const shell = snapshot.current_shell || {};
+      const navigation = snapshot.navigation || {};
+      const peer = ((snapshot.nodes || {}).peer || {});
+      const content = ((snapshot.summaries || {}).content || {});
+      const cards = [
+        {
+          title: 'Shell Identity',
+          lines: [
+            `node_id: ${shell.node_id || 'unknown'}`,
+            `node_type: ${shell.node_type || 'unknown'}`,
+            `service_mode: ${shell.service_mode}`,
+            `settings_path: ${navigation.settings || '/settings'}`
+          ]
+        },
+        {
+          title: 'Storage & Sync',
+          lines: [
+            `content_ready: ${pickValue(content.ready, contentStatus.content_root_exists ?? contentStatus.sd_ready)}`,
+            `peer_health: ${peer.health || 'unknown'}`,
+            `peer_sync_ready: ${peer.sync_ready}`,
+            `internal_storage_surface: ${navigation.content || '/content'}`
+          ]
+        },
+        {
+          title: 'Current Baseline',
+          lines: [
+            'Settings page exists as product-level shell surface',
+            'Language/theme persistence is not wired yet',
+            'Diagnostics stay inside Settings, not in top navigation',
+            'Reports stay inside Gallery'
+          ]
+        }
+      ];
+
+      document.getElementById('settings-summary-grid').innerHTML = cards.map((card) => `
+        <article class="module">
+          <strong>${card.title}</strong>
+          <p>${card.lines.map(esc).join('<br>')}</p>
+        </article>
+      `).join('') + `
+        <div class="card-actions">
+          <a href="/settings">Open Settings</a>
+          <a href="/settings#diagnostics">Open Diagnostics In Settings</a>
+        </div>
+      `;
+    }
+
+    function renderActivity(snapshot, logSnapshot) {
+      const activity = ((snapshot.summaries || {}).activity || {});
+      const cards = [
+        {
+          title: 'Activity Summary',
+          lines: [
+            `recent_visible: ${activity.recent_visible || 0}`,
+            `total_visible: ${activity.total_visible || 0}`,
+            `warning_count: ${activity.warning_count || 0}`,
+            `error_count: ${activity.error_count || 0}`
+          ]
+        },
+        {
+          title: 'Viewer',
+          lines: [
+            `primary_viewer: ${activity.primary_viewer || 'gallery.reports'}`,
+            'top-level Logs page is deprecated',
+            'home shell keeps only a short preview'
+          ]
+        }
+      ];
+
+      document.getElementById('activity-summary').innerHTML = cards.map((card) => `
+        <article class="module">
+          <strong>${card.title}</strong>
+          <p>${card.lines.map(esc).join('<br>')}</p>
+        </article>
+      `).join('');
+
+      document.getElementById('activity-log').textContent = buildLogPreview(logSnapshot);
+    }
+
+    async function refresh() {
+      const [snapshotResponse, logResponse, contentResponse] = await Promise.all([
+        fetch('/api/v1/shell/snapshot'),
+        fetch('/api/v1/logs?limit=12'),
+        fetch('/api/v1/content/status')
+      ]);
+
+      const snapshot = await snapshotResponse.json();
+      const logSnapshot = await logResponse.json();
+      const contentStatus = await contentResponse.json();
+
+      renderNodeCards(snapshot, contentStatus);
+      renderModules(snapshot);
+      renderGallery(snapshot, contentStatus);
+      renderSettingsSummary(snapshot, contentStatus);
+      renderActivity(snapshot, logSnapshot);
+    }
+
+    if (!redirectLegacyHash()) {
+      refresh().catch((error) => {
+        document.getElementById('activity-log').textContent = `Shell load error: ${error}`;
+      });
+      setInterval(() => refresh().catch(() => {}), 2000);
+    }
+  </script>
+</body>
+</html>

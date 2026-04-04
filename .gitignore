@@ -1,0 +1,10 @@
+.pio/
+__pycache__/
+.pytest_cache/
+.venv/
+.vscode/
+*.pyc
+*.pyo
+*.tmp
+Thumbs.db
+.DS_Store

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Smart Platform / Irrigation</title>
+  <style>
+    :root {
+      --bg: #eef4ec;
+      --panel: #fbfcf8;
+      --ink: #203127;
+      --muted: #687568;
+      --line: #cad5c8;
+      --accent: #356247;
+      --ok: #2f7d4d;
+      --warn: #a76c1e;
+      --fault: #a13136;
+      --locked: #6f7670;
+      --radius: 22px;
+      --shadow: 0 16px 36px rgba(24, 38, 29, 0.08);
+      --mono: "Consolas", monospace;
+      --sans: "Segoe UI", "Trebuchet MS", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--sans);
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(64, 109, 79, 0.14), transparent 34%),
+        linear-gradient(180deg, #f7faf4 0%, var(--bg) 100%);
+      min-height: 100vh;
+    }
+    .page { max-width: 1180px; margin: 0 auto; padding: 24px 16px 48px; display: grid; gap: 18px; }
+    .hero, .card { background: var(--panel); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid rgba(53, 98, 71, 0.08); }
+    .hero {
+      padding: 22px;
+      background: linear-gradient(135deg, rgba(53, 98, 71, 0.98), rgba(87, 126, 95, 0.90));
+      color: #f6fbf6;
+    }
+    .hero h1 { margin: 0; font-size: clamp(28px, 5vw, 42px); }
+    .hero p { margin: 8px 0 0; color: rgba(246, 251, 246, 0.84); max-width: 780px; }
+    .hero-actions { margin-top: 16px; display: flex; gap: 10px; flex-wrap: wrap; }
+    a, button {
+      appearance: none;
+      border: 0;
+      border-radius: 16px;
+      padding: 12px 16px;
+      cursor: pointer;
+      font: inherit;
+    }
+    .ghost-link {
+      display: inline-flex;
+      text-decoration: none;
+      background: rgba(255,255,255,0.12);
+      color: inherit;
+      border: 1px solid rgba(255,255,255,0.16);
+    }
+    .primary { background: var(--accent); color: #f7fbf8; }
+    .secondary { background: rgba(53,98,71,0.08); color: var(--ink); }
+    .danger { background: var(--fault); color: #fff7f7; }
+    .warn { background: var(--warn); color: #fffaf4; }
+    .card { padding: 18px; }
+    .card h2 { margin: 0 0 12px; line-height: 1.1; }
+    .meta { color: var(--muted); font-size: 13px; }
+    .layout { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+    .status-grid, .env-grid { display: grid; gap: 8px; }
+    .zone-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+    .zone {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 14px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(243,248,241,0.96));
+      display: grid;
+      gap: 8px;
+    }
+    .zone h3 { margin: 0; }
+    .zone p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.4; }
+    .badge {
+      display: inline-flex;
+      border-radius: 999px;
+      padding: 7px 11px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .state-idle { background: rgba(53,98,71,0.10); color: var(--accent); }
+    .state-watering { background: rgba(47,125,77,0.12); color: var(--ok); }
+    .state-fault { background: rgba(161,49,54,0.12); color: var(--fault); }
+    .state-disabled { background: rgba(112,118,122,0.12); color: var(--locked); }
+    .controls { display: grid; gap: 12px; }
+    .field { display: grid; gap: 8px; }
+    input {
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      padding: 12px 14px;
+      font: inherit;
+      background: #ffffff;
+      color: var(--ink);
+    }
+    .row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .note {
+      border-left: 4px solid var(--warn);
+      padding-left: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .log {
+      font-family: var(--mono);
+      font-size: 12px;
+      white-space: pre-wrap;
+      background: #18221b;
+      color: #e5f3e8;
+      border-radius: 18px;
+      padding: 14px;
+      min-height: 180px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="hero">
+      <h1>Irrigation</h1>
+      <p>Product contour for plant zones, soil state, manual watering and the first automatic baseline on ESP32. Real outputs still stay in <code>dry-run</code> by default, but the module now thinks in zones, sensors and service/test checks instead of just pump and valves.</p>
+      <div class="hero-actions">
+        <a class="ghost-link" href="/">Вернуться в общий shell</a>
+        <a class="ghost-link" href="/service/irrigation">Открыть Irrigation Service</a>
+        <button class="primary" id="auto-on-btn">Включить auto</button>
+        <button class="secondary" id="auto-off-btn">Выключить auto</button>
+        <button class="danger" id="stop-btn">Остановить всё</button>
+      </div>
+    </section>
+
+    <section class="layout">
+      <article class="card">
+        <h2>Статус модуля</h2>
+        <div id="status-summary" class="status-grid meta">Ожидание статуса...</div>
+      </article>
+
+      <article class="card">
+        <h2>Environment</h2>
+        <div id="environment-summary" class="env-grid meta">Ожидание environment-снимка...</div>
+      </article>
+
+      <article class="card">
+        <h2>Ручной запуск зоны</h2>
+        <div class="controls">
+          <label class="field">
+            <span class="meta">Длительность полива, мс</span>
+            <input id="duration-ms" type="number" min="1000" max="120000" value="15000">
+          </label>
+          <div class="note">
+            Auto-mode использует те же зоны и датчики, но сервисные проверки датчиков и fault-инъекции вынесены на отдельную страницу <code>Irrigation Service</code>, чтобы продуктовый экран не превращался в инженерный backend.
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="card">
+      <h2>Зоны</h2>
+      <div id="zone-grid" class="zone-grid"></div>
+    </section>
+
+    <section class="layout">
+      <article class="card">
+        <h2>Irrigation Log</h2>
+        <div id="module-log" class="log">Ожидание логов...</div>
+      </article>
+
+      <article class="card">
+        <h2>Живой статус / JSON</h2>
+        <div id="status-json" class="log">Ожидание данных...</div>
+      </article>
+    </section>
+  </div>
+
+  <script>
+    async function fetchJson(url, options) {
+      const response = await fetch(url, options);
+      return response.json();
+    }
+
+    function zoneBadgeClass(state) {
+      return `badge state-${state || 'disabled'}`;
+    }
+
+    function renderStatus(status) {
+      document.getElementById('status-summary').innerHTML = [
+        `state: ${status.state}`,
+        `dry_run: ${status.dry_run}`,
+        `automatic_mode_enabled: ${status.automatic_mode_enabled}`,
+        `service_mode_active: ${status.service_mode_active}`,
+        `sensor_fault_present: ${status.sensor_fault_present}`,
+        `active_zone_index: ${status.active_zone_index}`,
+        `active_zone_remaining_ms: ${status.active_zone_remaining_ms}`,
+        `active_run_source: ${status.active_run_source}`,
+        `completed_cycles: ${status.completed_cycles}`,
+        `driest_zone_index: ${status.driest_zone_index}`,
+        `driest_moisture_percent: ${status.driest_moisture_percent}`
+      ].join('<br>');
+
+      const env = status.environment || {};
+      document.getElementById('environment-summary').innerHTML = [
+        `air_temperature_c: ${env.air_temperature_c}`,
+        `air_humidity_percent: ${env.air_humidity_percent}`,
+        `water_reserve_percent: ${env.water_reserve_percent}`,
+        `simulated: ${env.simulated}`
+      ].join('<br>');
+
+      document.getElementById('status-json').textContent = JSON.stringify(status, null, 2);
+    }
+
+    function renderZones(zones) {
+      const target = document.getElementById('zone-grid');
+      target.innerHTML = zones.map(zone => `
+        <article class="zone">
+          <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;">
+            <h3>${zone.title}</h3>
+            <span class="${zoneBadgeClass(zone.state)}">${zone.state}</span>
+          </div>
+          <p>soil_moisture_percent: ${zone.soil_moisture_percent}</p>
+          <p>target_moisture_percent: ${zone.target_moisture_percent}</p>
+          <p>remaining_ms: ${zone.remaining_ms}</p>
+          <p>auto_enabled: ${zone.auto_enabled}</p>
+          <p>sensor_fault: ${zone.sensor_fault}</p>
+          <p>sensor_simulated: ${zone.sensor_simulated}</p>
+          <p>last_reading_ms: ${zone.last_reading_ms}</p>
+          <div class="row">
+            <button class="primary" data-zone="${zone.index}" ${zone.enabled ? '' : 'disabled'}>Запустить ${zone.id}</button>
+            <a class="ghost-link" href="/service/irrigation">Sensor / service</a>
+          </div>
+        </article>
+      `).join('');
+
+      for (const button of target.querySelectorAll('button[data-zone]')) {
+        button.addEventListener('click', () => {
+          const duration = Number(document.getElementById('duration-ms').value || 0);
+          postAndRefresh(`/api/v1/irrigation/start?zone=${button.dataset.zone}&duration_ms=${duration}`);
+        });
+      }
+    }
+
+    function renderModuleLog(snapshot) {
+      const entries = (snapshot.entries || []).filter(entry => entry.source === 'irrigation');
+      if (!entries.length) {
+        document.getElementById('module-log').textContent = 'No irrigation entries yet.';
+        return;
+      }
+
+      document.getElementById('module-log').textContent = entries.map(entry => {
+        return `[${entry.timestamp_ms} ms] ${String(entry.level || '').toUpperCase()} ${entry.type}: ${entry.message}${entry.details ? ` / ${entry.details}` : ''}`;
+      }).join('\n');
+    }
+
+    async function refresh() {
+      const [status, zones, logSnapshot] = await Promise.all([
+        fetchJson('/api/v1/irrigation/status'),
+        fetchJson('/api/v1/irrigation/zones'),
+        fetchJson('/api/v1/logs?limit=24')
+      ]);
+      renderStatus(status);
+      renderZones(zones);
+      renderModuleLog(logSnapshot);
+    }
+
+    async function postAndRefresh(url) {
+      const result = await fetchJson(url, { method: 'POST' });
+      document.getElementById('status-json').textContent = JSON.stringify(result, null, 2);
+      await refresh();
+    }
+
+    document.getElementById('auto-on-btn').addEventListener('click', () => {
+      postAndRefresh('/api/v1/irrigation/automatic?enabled=1');
+    });
+    document.getElementById('auto-off-btn').addEventListener('click', () => {
+      postAndRefresh('/api/v1/irrigation/automatic?enabled=0');
+    });
+    document.getElementById('stop-btn').addEventListener('click', () => {
+      postAndRefresh('/api/v1/irrigation/stop');
+    });
+
+    refresh().catch(err => {
+      document.getElementById('status-json').textContent = `Ошибка загрузки: ${err}`;
+    });
+
+    setInterval(() => {
+      refresh().catch(() => {});
+    }, 2000);
+  </script>
+</body>
+</html>

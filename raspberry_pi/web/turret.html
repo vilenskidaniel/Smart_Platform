@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Smart Platform / Turret</title>
+  <style>
+    :root {
+      --bg: #eef3ea;
+      --panel: #fcfdf8;
+      --ink: #1e2a22;
+      --muted: #677567;
+      --line: #cdd7cc;
+      --accent: #345e46;
+      --ok: #2f7d4d;
+      --warn: #a36b1f;
+      --fault: #9c3136;
+      --locked: #6f7678;
+      --active: #255f97;
+      --radius: 22px;
+      --shadow: 0 16px 36px rgba(28, 43, 32, 0.08);
+      --mono: "Consolas", monospace;
+      --sans: "Segoe UI", "Trebuchet MS", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--sans);
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top right, rgba(66, 106, 77, 0.14), transparent 34%),
+        linear-gradient(180deg, #f6faf4 0%, var(--bg) 100%);
+    }
+    .page { max-width: 1180px; margin: 0 auto; padding: 24px 16px 48px; display: grid; gap: 18px; }
+    .hero, .card { background: var(--panel); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid rgba(52, 94, 70, 0.08); }
+    .hero { padding: 22px; background: linear-gradient(135deg, rgba(52, 94, 70, 0.98), rgba(79, 121, 92, 0.9)); color: #f5fbf6; }
+    .hero h1 { margin: 0; font-size: clamp(30px, 5vw, 44px); }
+    .hero p { margin: 8px 0 0; color: rgba(245, 251, 246, 0.84); max-width: 820px; }
+    .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .hero-actions { margin-top: 16px; }
+    .layout { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .card { padding: 18px; }
+    .card h2 { margin: 0 0 12px; line-height: 1.1; }
+    .meta { color: var(--muted); font-size: 13px; }
+    .note { border-left: 4px solid var(--warn); padding-left: 12px; color: var(--muted); line-height: 1.5; }
+    .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+    .tile {
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      padding: 14px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(244, 248, 242, 0.96));
+    }
+    .tile p { margin: 6px 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
+    .badge { display: inline-flex; border-radius: 999px; padding: 8px 12px; font-size: 12px; font-weight: 600; text-transform: uppercase; }
+    .state-online { background: rgba(47,125,77,0.12); color: var(--ok); }
+    .state-service { background: rgba(52,94,70,0.12); color: var(--accent); }
+    .state-locked { background: rgba(111,118,120,0.12); color: var(--locked); }
+    .state-fault { background: rgba(156,49,54,0.12); color: var(--fault); }
+    .state-degraded { background: rgba(163,107,31,0.12); color: var(--warn); }
+    .state-active { background: rgba(37,95,151,0.12); color: var(--active); }
+    .primary, .secondary, .warn, .danger, .ghost-link {
+      appearance: none;
+      border: 0;
+      border-radius: 16px;
+      padding: 12px 16px;
+      cursor: pointer;
+      font: inherit;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+    }
+    .primary { background: var(--accent); color: #f7fbf8; }
+    .secondary { background: rgba(52,94,70,0.08); color: var(--ink); }
+    .warn { background: var(--warn); color: #fffaf3; }
+    .danger { background: var(--fault); color: #fff7f7; }
+    .ghost-link { background: rgba(255,255,255,0.12); color: inherit; border: 1px solid rgba(255,255,255,0.16); }
+    .log {
+      font-family: var(--mono);
+      font-size: 12px;
+      white-space: pre-wrap;
+      background: #18221b;
+      color: #e6f3e8;
+      border-radius: 18px;
+      padding: 14px;
+      min-height: 220px;
+      overflow: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="hero">
+      <div class="badge state-service" id="mode-badge">mode: loading</div>
+      <h1>Turret</h1>
+      <p>Продуктовый контур турели на стороне <code>Raspberry Pi</code>. Здесь видны manual/automatic/service состояния, camera and range availability, action channels и безопасные dry-run сигналы автоматического контура. Глубокая диагностика и service/test сценарии вынесены в отдельную страницу, чтобы основной экран оставался модульным, а не backend-подобным.</p>
+      <div class="row hero-actions">
+        <a class="ghost-link" href="/">Вернуться в shell</a>
+        <a class="ghost-link" href="/service/turret">Laboratory Page</a>
+        <button class="secondary" id="sync-now-btn">Принудительный sync</button>
+      </div>
+    </section>
+
+    <section class="layout" id="overview-grid"></section>
+
+    <section class="layout">
+      <article class="card">
+        <h2>Mode And Safety</h2>
+        <div class="row">
+          <button class="primary" data-mode="manual">Manual</button>
+          <button class="secondary" data-mode="automatic">Automatic</button>
+        </div>
+        <div class="row" style="margin-top:10px;">
+          <button class="danger" data-interlock="emergency">Emergency</button>
+          <button class="warn" data-interlock="fault">Fault</button>
+          <button class="secondary" data-interlock="clear">Clear Interlock</button>
+        </div>
+        <div class="note" id="interlock-summary" style="margin-top:12px;">Ожидание interlock-статуса...</div>
+      </article>
+
+      <article class="card">
+        <h2>Automatic Dry-Run Signals</h2>
+        <div id="engagement-grid" class="grid"></div>
+      </article>
+    </section>
+
+    <section class="card">
+      <h2>Sensing Availability</h2>
+      <div class="note">Камера и дальномер уже представлены в продуктовой модели, но пока работают как simulated software-level profiles. Это позволяет честно собирать UX, правила и shell-связность до реальных hardware-binding'ов.</div>
+      <div id="sensing-grid" class="grid" style="margin-top:12px;"></div>
+    </section>
+
+    <section class="card">
+      <h2>Action Channels</h2>
+      <div class="note">Кнопки ниже управляют только runtime-состоянием владельца турели. Реальных actuator-driver'ов здесь пока нет, поэтому изменения отражают owner logic и service safety, а не физическое движение железа.</div>
+      <div id="actions-grid" class="grid" style="margin-top:12px;"></div>
+    </section>
+
+    <section class="card">
+      <h2>Recent Turret Events</h2>
+      <div id="event-log" class="log">Ожидание событий...</div>
+    </section>
+  </div>
+
+  <script>
+    async function fetchJson(url, options) {
+      const response = await fetch(url, options);
+      return response.json();
+    }
+
+    function badgeClass(state) {
+      if (state === 'active') return 'badge state-active';
+      if (state === 'online') return 'badge state-online';
+      if (state === 'degraded') return 'badge state-degraded';
+      if (state === 'fault') return 'badge state-fault';
+      if (state === 'service') return 'badge state-service';
+      return 'badge state-locked';
+    }
+
+    function boolLabel(value) {
+      return value ? 'true' : 'false';
+    }
+
+    function setModeBadge(mode) {
+      const badge = document.getElementById('mode-badge');
+      const cls = mode === 'automatic'
+        ? 'state-active'
+        : mode === 'service_test'
+        ? 'state-service'
+        : mode === 'fault' || mode === 'emergency'
+        ? 'state-fault'
+        : 'state-online';
+      badge.className = `badge ${cls}`;
+      badge.textContent = `mode: ${mode}`;
+    }
+
+    function renderOverview(productView) {
+      const cards = [
+        { title: 'Turret State', payload: productView.overview || {} },
+        { title: 'Manual Console', payload: productView.manual_console || {} },
+        { title: 'Automatic Defense', payload: productView.automatic_defense || {} },
+        { title: 'Service Lane', payload: productView.service_lane || {} }
+      ];
+
+      document.getElementById('overview-grid').innerHTML = cards.map(card => `
+        <article class="card">
+          <div class="row" style="justify-content:space-between;">
+            <h2 style="margin:0;">${card.title}</h2>
+            <span class="${badgeClass(card.payload.state || 'locked')}">${card.payload.state || 'unknown'}</span>
+          </div>
+          <p class="meta" style="margin-top:10px;">${card.payload.summary || 'No summary yet.'}</p>
+          <p class="meta">block_reason: ${card.payload.block_reason || 'none'}</p>
+        </article>
+      `).join('');
+    }
+
+    function renderEngagement(productView) {
+      const engagement = productView.engagement || {};
+      const automatic = productView.automatic_defense || {};
+      const cards = [
+        {
+          id: 'automation_ready',
+          title: 'Automation Ready',
+          value: engagement.automation_ready,
+          text: automatic.summary || 'Arms the automatic defense baseline.',
+        },
+        {
+          id: 'target_locked',
+          title: 'Target Locked',
+          value: engagement.target_locked,
+          text: 'Dry-run target acquisition gate for strobe / water / audio in automatic.',
+        },
+        {
+          id: 'vision_tracking',
+          title: 'Vision Tracking',
+          value: engagement.vision_tracking,
+          text: 'Tracking signal coming from the simulated vision path.',
+        }
+      ];
+
+      document.getElementById('engagement-grid').innerHTML = cards.map(card => `
+        <article class="tile">
+          <div class="row" style="justify-content:space-between;">
+            <strong>${card.title}</strong>
+            <span class="${badgeClass(card.value ? 'active' : 'locked')}">${boolLabel(card.value)}</span>
+          </div>
+          <p>${card.text}</p>
+          <div class="row" style="margin-top:10px;">
+            <button class="secondary" data-flag="${card.id}" data-value="1">Enable</button>
+            <button class="secondary" data-flag="${card.id}" data-value="0">Disable</button>
+          </div>
+        </article>
+      `).join('');
+
+      for (const button of document.querySelectorAll('button[data-flag]')) {
+        button.addEventListener('click', () => {
+          postAndRefresh(`/api/v1/turret/runtime/flag?name=${button.dataset.flag}&value=${button.dataset.value}`);
+        });
+      }
+    }
+
+    function renderSensing(productView) {
+      const sensing = productView.sensing || [];
+      document.getElementById('sensing-grid').innerHTML = sensing.map(item => `
+        <article class="tile">
+          <div class="row" style="justify-content:space-between;">
+            <strong>${item.title}</strong>
+            <span class="${badgeClass(item.state)}">${item.state}</span>
+          </div>
+          <p>enabled: ${boolLabel(item.enabled)}</p>
+          <p>profile: ${item.profile_label || '-'}</p>
+          <p>simulated: ${boolLabel(item.simulated)}</p>
+          <p>${item.summary || ''}</p>
+          ${item.reading_mm !== undefined ? `<p>reading_mm: ${item.reading_mm === null ? '-' : item.reading_mm}</p>` : ''}
+        </article>
+      `).join('');
+    }
+
+    function renderActions(productView) {
+      const actions = productView.actions || [];
+      document.getElementById('actions-grid').innerHTML = actions.map(action => `
+        <article class="tile">
+          <div class="row" style="justify-content:space-between;">
+            <strong>${action.title}</strong>
+            <span class="${badgeClass(action.state)}">${action.state}</span>
+          </div>
+          <p>enabled: ${boolLabel(action.enabled)}</p>
+          <p>ready: ${boolLabel(action.ready)}</p>
+          <p>block_reason: ${action.block_reason || 'none'}</p>
+          <p>${action.summary || ''}</p>
+          <div class="row" style="margin-top:10px;">
+            <button class="secondary" data-action="${action.id}" data-enabled="1">Enable</button>
+            <button class="secondary" data-action="${action.id}" data-enabled="0">Disable</button>
+          </div>
+        </article>
+      `).join('');
+
+      for (const button of document.querySelectorAll('button[data-action]')) {
+        button.addEventListener('click', () => {
+          postAndRefresh(`/api/v1/turret/runtime/subsystem?id=${button.dataset.action}&enabled=${button.dataset.enabled}`);
+        });
+      }
+    }
+
+    function renderEvents(eventLog) {
+      const entries = eventLog.entries || [];
+      if (!entries.length) {
+        document.getElementById('event-log').textContent = 'Событий пока нет.';
+        return;
+      }
+
+      document.getElementById('event-log').textContent = entries.map(entry => {
+        const details = entry.details && Object.keys(entry.details).length
+          ? ` ${JSON.stringify(entry.details)}`
+          : '';
+        return `[${entry.timestamp_ms} ms] ${String(entry.level || '').toUpperCase()} ${entry.type}: ${entry.message}${details}`;
+      }).join('\n');
+    }
+
+    function renderStatus(status) {
+      const runtime = status.runtime || {};
+      const productView = runtime.product_view || {};
+
+      setModeBadge(status.active_mode || 'manual');
+      document.getElementById('interlock-summary').innerHTML = [
+        `emergency_latched: ${runtime.interlocks?.emergency_latched}`,
+        `fault_latched: ${runtime.interlocks?.fault_latched}`,
+        `fault_reason: ${runtime.interlocks?.fault_reason || 'none'}`,
+        `peer_reachable: ${status.peer_node?.reachable}`,
+        `last_sync_ms: ${status.sync_status?.last_sync_ms}`
+      ].join('<br>');
+
+      renderOverview(productView);
+      renderEngagement(productView);
+      renderSensing(productView);
+      renderActions(productView);
+      renderEvents(status.event_log || {});
+    }
+
+    async function refresh() {
+      const status = await fetchJson('/api/v1/turret/status');
+      renderStatus(status);
+    }
+
+    async function postAndRefresh(url) {
+      await fetchJson(url, { method: 'POST' });
+      await refresh();
+    }
+
+    for (const button of document.querySelectorAll('button[data-mode]')) {
+      button.addEventListener('click', () => {
+        postAndRefresh(`/api/v1/turret/runtime/mode?value=${button.dataset.mode}`);
+      });
+    }
+
+    for (const button of document.querySelectorAll('button[data-interlock]')) {
+      button.addEventListener('click', () => {
+        postAndRefresh(`/api/v1/turret/runtime/interlock?value=${button.dataset.interlock}`);
+      });
+    }
+
+    document.getElementById('sync-now-btn').addEventListener('click', () => {
+      postAndRefresh('/api/v1/sync/refresh');
+    });
+
+    refresh().catch(err => {
+      document.getElementById('event-log').textContent = `Ошибка загрузки: ${err}`;
+    });
+    setInterval(() => refresh().catch(() => {}), 2500);
+  </script>
+</body>
+</html>

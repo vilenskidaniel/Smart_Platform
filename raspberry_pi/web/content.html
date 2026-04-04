@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Smart Platform / Storage Diagnostics</title>
+  <style>
+    :root {
+      --bg: #eef3ea;
+      --panel: #fbfcf7;
+      --ink: #213127;
+      --muted: #647467;
+      --line: #c9d5c6;
+      --accent: #375f45;
+      --shadow: 0 14px 40px rgba(30, 48, 33, 0.08);
+      --radius: 22px;
+      --mono: "Consolas", "SFMono-Regular", monospace;
+      --sans: "Segoe UI", "Trebuchet MS", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--sans);
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(82, 128, 92, 0.16), transparent 36%),
+        linear-gradient(180deg, #f4f8ef 0%, var(--bg) 100%);
+      min-height: 100vh;
+    }
+    .page { max-width: 1100px; margin: 0 auto; padding: 28px 18px 48px; display: grid; gap: 18px; }
+    .hero, .card { background: var(--panel); border-radius: 24px; box-shadow: var(--shadow); border: 1px solid rgba(55, 95, 69, 0.08); }
+    .hero { padding: 22px; background: linear-gradient(135deg, rgba(55, 95, 69, 0.98), rgba(80, 118, 90, 0.9)); color: #f6f9f3; }
+    .hero h1 { margin: 0; font-size: clamp(28px, 5vw, 42px); }
+    .hero p { margin: 8px 0 0; max-width: 760px; color: rgba(246, 249, 243, 0.84); }
+    .hero a { color: inherit; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+    .actions a { color: inherit; text-decoration: none; padding: 10px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.08); }
+    .card { padding: 18px; }
+    .grid { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+    .mono {
+      font-family: var(--mono);
+      font-size: 12px;
+      white-space: pre-wrap;
+      background: #17221a;
+      color: #e8f5e8;
+      border-radius: 18px;
+      padding: 14px;
+      overflow: auto;
+      min-height: 160px;
+    }
+    .list { display: grid; gap: 10px; }
+    .list a { color: var(--accent); text-decoration: none; }
+    .meta { color: var(--muted); font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="hero">
+      <h1>Storage Diagnostics</h1>
+      <p>This is an internal storage inspection surface. User-facing content should open through <code>Gallery</code>, while this page stays focused on raw readiness, mirrored libraries, and low-level content diagnostics.</p>
+      <div class="actions">
+        <a href="/">System Shell</a>
+        <a href="/gallery">Gallery</a>
+        <a href="/settings">Settings</a>
+      </div>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <h2>Storage Status</h2>
+        <div id="content-status" class="mono">Loading storage status...</div>
+      </article>
+
+      <article class="card">
+        <h2>Reference Libraries</h2>
+        <div class="list">
+          <a href="/libraries/plant_profiles.v1.json">plant_profiles.v1.json</a>
+          <a href="/libraries/plant_state_rules.v1.json">plant_state_rules.v1.json</a>
+          <a href="/libraries/care_scenarios.v1.json">care_scenarios.v1.json</a>
+        </div>
+        <p class="meta">These files are part of the shared content baseline behind <code>Gallery &gt; Plants</code>.</p>
+      </article>
+
+      <article class="card">
+        <h2>Current Role</h2>
+        <div class="list">
+          <span>Inspect raw storage readiness.</span>
+          <span>Verify mirrored libraries and media directories.</span>
+          <span>Keep content diagnostics available without promoting them to top-level shell navigation.</span>
+        </div>
+      </article>
+    </section>
+  </div>
+
+  <script>
+    async function refresh() {
+      const response = await fetch('/api/v1/content/status');
+      const status = await response.json();
+      document.getElementById('content-status').textContent = JSON.stringify(status, null, 2);
+    }
+
+    refresh().catch((error) => {
+      document.getElementById('content-status').textContent = `Load error: ${error}`;
+    });
+  </script>
+</body>
+</html>
