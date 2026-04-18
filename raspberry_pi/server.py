@@ -178,6 +178,9 @@ def build_server(config: BridgeConfig, state: BridgeState, sync_client: SyncClie
             if parsed.path == "/api/v1/laboratory/readiness":
                 self._json_response(state.build_laboratory_readiness())
                 return
+            if parsed.path == "/api/v1/laboratory/session":
+                self._json_response(state.build_laboratory_session())
+                return
             if parsed.path == "/api/v1/content/status":
                 self._json_response(build_content_status(content_root))
                 return
@@ -280,6 +283,146 @@ def build_server(config: BridgeConfig, state: BridgeState, sync_client: SyncClie
                 )
                 return
 
+            if parsed.path == "/api/v1/laboratory/session/context":
+                session = state.update_laboratory_context(
+                    power_context=self._param(params, "power_context"),
+                    view_mode=self._param(params, "view_mode"),
+                    active_tool=self._param(params, "active_tool"),
+                    module_id=self._param(params, "module_id"),
+                )
+                self._json_response(
+                    {
+                        "command": "laboratory_session_context",
+                        "accepted": True,
+                        "message": "laboratory context updated",
+                        "session": session,
+                    }
+                )
+                return
+
+            if parsed.path == "/api/v1/laboratory/session/start":
+                try:
+                    result = state.start_laboratory_session(
+                        operator=self._param(params, "operator"),
+                        objective=self._param(params, "objective"),
+                        hardware_profile=self._param(params, "hardware_profile"),
+                        external_module=self._param(params, "external_module"),
+                        power_context=self._param(params, "power_context"),
+                        view_mode=self._param(params, "view_mode"),
+                        active_tool=self._param(params, "active_tool"),
+                        module_id=self._param(params, "module_id"),
+                    )
+                except ValueError as error:
+                    self._json_response(
+                        {
+                            "command": "laboratory_session_start",
+                            "accepted": False,
+                            "message": str(error),
+                            "session": state.build_laboratory_session(),
+                        }
+                    )
+                    return
+
+                self._json_response(
+                    {
+                        "command": "laboratory_session_start",
+                        "accepted": True,
+                        "message": "laboratory session started",
+                        "session": result["session"],
+                        "report_entry": result["report_entry"],
+                    }
+                )
+                return
+
+            if parsed.path == "/api/v1/laboratory/session/update":
+                try:
+                    session = state.update_laboratory_session(
+                        operator=self._param(params, "operator"),
+                        objective=self._param(params, "objective"),
+                        hardware_profile=self._param(params, "hardware_profile"),
+                        external_module=self._param(params, "external_module"),
+                    )
+                except ValueError as error:
+                    self._json_response(
+                        {
+                            "command": "laboratory_session_update",
+                            "accepted": False,
+                            "message": str(error),
+                            "session": state.build_laboratory_session(),
+                        }
+                    )
+                    return
+
+                self._json_response(
+                    {
+                        "command": "laboratory_session_update",
+                        "accepted": True,
+                        "message": "laboratory session updated",
+                        "session": session,
+                    }
+                )
+                return
+
+            if parsed.path == "/api/v1/laboratory/session/finish":
+                try:
+                    result = state.finish_laboratory_session(
+                        summary_note=self._param(params, "summary_note"),
+                    )
+                except ValueError as error:
+                    self._json_response(
+                        {
+                            "command": "laboratory_session_finish",
+                            "accepted": False,
+                            "message": str(error),
+                            "session": state.build_laboratory_session(),
+                        }
+                    )
+                    return
+
+                self._json_response(
+                    {
+                        "command": "laboratory_session_finish",
+                        "accepted": True,
+                        "message": "laboratory session finished",
+                        "session": result["session"],
+                        "finished_session": result["finished_session"],
+                        "report_entry": result["report_entry"],
+                    }
+                )
+                return
+
+            if parsed.path == "/api/v1/laboratory/event":
+                try:
+                    report_entry = state.record_laboratory_event(
+                        module_id=self._param(params, "module_id"),
+                        event_type=self._slug_param(params, "event_type", "laboratory_event_recorded"),
+                        message=self._param(params, "message"),
+                        case_id=self._param(params, "case_id"),
+                        note=self._param(params, "note"),
+                        value=self._param(params, "value"),
+                        severity=self._param(params, "severity", "info"),
+                        laboratory_metadata=self._laboratory_metadata(params),
+                    )
+                except ValueError as error:
+                    self._json_response(
+                        {
+                            "command": "laboratory_event",
+                            "accepted": False,
+                            "message": str(error),
+                        }
+                    )
+                    return
+
+                self._json_response(
+                    {
+                        "command": "laboratory_event",
+                        "accepted": True,
+                        "message": "laboratory event recorded",
+                        "report_entry": report_entry,
+                    }
+                )
+                return
+
             if parsed.path == "/api/v1/reports/testcase":
                 case_id = self._param(params, "case_id").strip()
                 module_id = self._param(params, "module_id").strip()
@@ -303,6 +446,7 @@ def build_server(config: BridgeConfig, state: BridgeState, sync_client: SyncClie
                     result=result,
                     note=note,
                     board=board,
+                    laboratory_metadata=self._laboratory_metadata(params),
                 )
                 self._json_response(
                     {
@@ -336,6 +480,7 @@ def build_server(config: BridgeConfig, state: BridgeState, sync_client: SyncClie
                     module_id=module_id,
                     board=board,
                     case_id=case_id,
+                    laboratory_metadata=self._laboratory_metadata(params),
                 )
                 self._json_response(
                     {
@@ -386,6 +531,33 @@ def build_server(config: BridgeConfig, state: BridgeState, sync_client: SyncClie
             if not values:
                 return default
             return values[0]
+
+        def _slug_param(self, params: dict[str, list[str]], name: str, default: str = "") -> str:
+            raw = self._param(params, name, default).strip().lower().replace("-", "_")
+            normalized = "".join(ch for ch in raw if ch.isalnum() or ch == "_")
+            return normalized or default
+
+        def _laboratory_metadata(self, params: dict[str, list[str]]) -> dict[str, str]:
+            keys = (
+                "lab_session_id",
+                "lab_session_status",
+                "lab_operator",
+                "lab_objective",
+                "lab_hardware_profile",
+                "lab_external_module",
+                "lab_power_context",
+                "lab_view_mode",
+                "lab_active_tool",
+                "lab_context_module",
+                "lab_owner_node_id",
+                "lab_owner_node_type",
+            )
+            metadata: dict[str, str] = {}
+            for key in keys:
+                value = self._param(params, key).strip()
+                if value:
+                    metadata[key] = value
+            return metadata
 
         def _bool_param(self, params: dict[str, list[str]], name: str, default: bool) -> bool:
             raw = self._param(params, name, "1" if default else "0").strip().lower()

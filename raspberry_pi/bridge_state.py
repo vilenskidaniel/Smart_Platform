@@ -6,6 +6,7 @@ from threading import RLock
 from time import monotonic
 from typing import Any
 
+from laboratory_session import LaboratorySessionState
 from laboratory_readiness import build_laboratory_readiness
 from platform_event_log import PlatformEventLog
 from report_archive import ReportArchive
@@ -76,6 +77,10 @@ class BridgeState:
             "last_sync_ms": 0,
             "last_error": "",
         }
+        self._laboratory_session = LaboratorySessionState(
+            node_id=self._local_node["node_id"],
+            node_type=self._local_node["node_type"],
+        )
 
         self._modules: dict[str, dict[str, Any]] = {}
         self._seed_default_modules()
@@ -102,6 +107,17 @@ class BridgeState:
     def _archive_platform_entry(self, entry: dict[str, Any]) -> None:
         if self._report_archive is not None:
             self._report_archive.append_platform_entry(entry)
+
+    def _merged_laboratory_metadata(self, laboratory_metadata: dict[str, Any] | None = None) -> dict[str, Any]:
+        merged = self._laboratory_session.report_metadata()
+        if not laboratory_metadata:
+            return merged
+
+        for key, value in laboratory_metadata.items():
+            text = str(value).strip()
+            if text:
+                merged[str(key)] = text
+        return merged
 
     def _uptime_ms(self) -> int:
         return int((monotonic() - self._boot_time) * 1000)
@@ -403,6 +419,113 @@ class BridgeState:
                 reports_source_kind=reports_source_kind,
             )
 
+    def build_laboratory_session(self) -> dict[str, Any]:
+        with self._lock:
+            return self._laboratory_session.snapshot(self._uptime_ms())
+
+    def update_laboratory_context(
+        self,
+        *,
+        power_context: str = "",
+        view_mode: str = "",
+        active_tool: str = "",
+        module_id: str = "",
+    ) -> dict[str, Any]:
+        with self._lock:
+            return self._laboratory_session.update_context(
+                now_ms=self._uptime_ms(),
+                power_context=power_context,
+                view_mode=view_mode,
+                active_tool=active_tool,
+                module_id=module_id,
+            )
+
+    def start_laboratory_session(
+        self,
+        *,
+        operator: str = "",
+        objective: str = "",
+        hardware_profile: str = "",
+        external_module: str = "",
+        power_context: str = "",
+        view_mode: str = "",
+        active_tool: str = "",
+        module_id: str = "",
+    ) -> dict[str, Any]:
+        with self._lock:
+            active_session = self._laboratory_session.start_session(
+                now_ms=self._uptime_ms(),
+                operator=operator,
+                objective=objective,
+                hardware_profile=hardware_profile,
+                external_module=external_module,
+                power_context=power_context,
+                view_mode=view_mode,
+                active_tool=active_tool,
+                module_id=module_id,
+            )
+            report_entry = self._platform_log.add(
+                "laboratory_session",
+                "info",
+                "laboratory_session_started",
+                f"laboratory session {active_session['session_id']} started",
+                active_mode=self._active_mode,
+                **self._merged_laboratory_metadata(),
+            )
+            return {
+                "session": self._laboratory_session.snapshot(self._uptime_ms()),
+                "report_entry": normalize_report_entry(report_entry),
+            }
+
+    def update_laboratory_session(
+        self,
+        *,
+        operator: str = "",
+        objective: str = "",
+        hardware_profile: str = "",
+        external_module: str = "",
+    ) -> dict[str, Any]:
+        with self._lock:
+            self._laboratory_session.update_session(
+                now_ms=self._uptime_ms(),
+                operator=operator,
+                objective=objective,
+                hardware_profile=hardware_profile,
+                external_module=external_module,
+            )
+            return self._laboratory_session.snapshot(self._uptime_ms())
+
+    def finish_laboratory_session(self, *, summary_note: str = "") -> dict[str, Any]:
+        with self._lock:
+            finished = self._laboratory_session.finish_session(
+                now_ms=self._uptime_ms(),
+                summary_note=summary_note,
+            )
+            report_entry = self._platform_log.add(
+                "laboratory_session",
+                "info",
+                "laboratory_session_finished",
+                f"laboratory session {finished['session_id']} finished",
+                duration_ms=finished.get("duration_ms", 0),
+                summary_note=finished.get("summary_note", ""),
+                active_mode=self._active_mode,
+                **self._merged_laboratory_metadata(
+                    {
+                        "lab_session_id": finished.get("session_id", ""),
+                        "lab_operator": finished.get("operator", ""),
+                        "lab_objective": finished.get("objective", ""),
+                        "lab_hardware_profile": finished.get("hardware_profile", ""),
+                        "lab_external_module": finished.get("external_module", ""),
+                        "lab_session_status": finished.get("status", "completed"),
+                    }
+                ),
+            )
+            return {
+                "session": self._laboratory_session.snapshot(self._uptime_ms()),
+                "finished_session": deepcopy(finished),
+                "report_entry": normalize_report_entry(report_entry),
+            }
+
     def record_testcase_result(
         self,
         *,
@@ -411,6 +534,7 @@ class BridgeState:
         result: str,
         note: str = "",
         board: str = "",
+        laboratory_metadata: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         normalized_result = result.strip().lower()
         if normalized_result not in {"pass", "fail", "warn"}:
@@ -441,6 +565,7 @@ class BridgeState:
             test_result=normalized_result,
             note=note.strip(),
             active_mode=self._active_mode,
+            **self._merged_laboratory_metadata(laboratory_metadata),
         )
         return normalize_report_entry(entry)
 
@@ -451,6 +576,7 @@ class BridgeState:
         module_id: str,
         board: str = "",
         case_id: str = "",
+        laboratory_metadata: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         note = note.strip()
         module_id = module_id.strip()
@@ -471,6 +597,45 @@ class BridgeState:
             board=normalized_board,
             note=note,
             active_mode=self._active_mode,
+            **self._merged_laboratory_metadata(laboratory_metadata),
+        )
+        return normalize_report_entry(entry)
+
+    def record_laboratory_event(
+        self,
+        *,
+        module_id: str,
+        event_type: str,
+        message: str,
+        case_id: str = "",
+        note: str = "",
+        value: str = "",
+        severity: str = "info",
+        laboratory_metadata: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        module_id = module_id.strip()
+        event_type = event_type.strip().lower() or "laboratory_event_recorded"
+        message = message.strip()
+        if not module_id:
+            raise ValueError("module_id is required")
+        if not message:
+            raise ValueError("message is required")
+
+        normalized_severity = severity.strip().lower()
+        if normalized_severity not in {"info", "warning", "error"}:
+            normalized_severity = "info"
+
+        entry = self._platform_log.add(
+            "laboratory_session",
+            normalized_severity,
+            event_type,
+            message,
+            case_id=case_id.strip(),
+            module_id=module_id,
+            note=note.strip(),
+            value=value.strip(),
+            active_mode=self._active_mode,
+            **self._merged_laboratory_metadata(laboratory_metadata),
         )
         return normalize_report_entry(entry)
 

@@ -110,6 +110,8 @@
 | `ACC-LAB-05` | laboratory power context guard | bench-sensitive slice | operator selected `Bench PSU` or `LiFePO4 battery` before opening the slice | voltage-dependent calibration flow stays advisory or blocked when battery context is selected | laboratory power warning or pass report |
 | `ACC-LAB-06` | display slice owner truth | `ESP32` only or `Raspberry Pi` only | `Laboratory / Displays` opened | `ESP32`-only session shows the display slice as blocked; `Raspberry Pi` session opens color-pattern and touch-grid checks without leaving owner-aware context | display lab smoke report |
 | `ACC-LAB-07` | phone plus owner-display physical pass | phone browser + `Raspberry Pi` display | `Raspberry Pi` shell reachable, `Laboratory / Displays` opens, operator can use browser and fullscreen modes | phone shell keeps board context readable, `Displays` runs pattern checks and `12-zone` touch pass, and both view modes stay practically usable | physical display checklist report with `pass / warn / fail` result |
+| `ACC-LAB-08` | laboratory session backbone | one or both boards | `Laboratory` opened, operator fills session context | hub shows session status, objective, hardware profile, and finish controls without breaking owner-aware flow | session-start and session-finish evidence in `Gallery > Reports` |
+| `ACC-LAB-09` | laboratory evidence metadata continuity | one or both boards | active slice records `pass`, `warn`, `fail`, or note | report entry keeps active slice, power context, view mode, and session metadata instead of only freeform note text | report entry with laboratory metadata fields |
 | `ACC-SAFE-01` | interlock reflection | turret-sensitive branch + interlock | interlock engaged | shell and owner module show locked state with explicit reason | safety report |
 | `ACC-SAFE-02` | service collision handling | service session active | product command attempted | product command blocked with explicit reason | collision report |
 
@@ -120,6 +122,8 @@
 - кто запускал кейс;
 - на каком узле выполнялась проверка;
 - какие hardware families были подключены;
+- какой был session context: objective, hardware profile, external module при наличии;
+- какой power context и какой view mode были активны в момент записи evidence;
 - какой был итог: pass, fail или warn;
 - где смотреть артефакт в `Gallery > Reports` или service-history.
 

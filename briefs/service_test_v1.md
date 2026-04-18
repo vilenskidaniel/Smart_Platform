@@ -111,9 +111,17 @@
 
 - проверять отдельные подсистемы;
 - подбирать тайминги, частоты, уровни и сценарии;
+- начинать и завершать явную engineering-session с оператором, целью, hardware profile и optional external module;
 - явно видеть power context для bench-sensitive модулей;
 - видеть реакцию системы в расширенном текстовом окне;
+- фиксировать `pass`, `warn`, `fail` и operator notes прямо из активного slice в `Gallery > Reports`;
 - затем сохранять рабочие параметры.
+
+Дополнительное правило для mixed-shell режима:
+
+- `Raspberry Pi` shell хранит canonical laboratory session backend и синхронизирует его через `/api/v1/laboratory/session*`;
+- mirrored shells, например `ESP32`, могут держать draft session локально, но explicit report actions все равно должны нести тот же laboratory context в payload;
+- это нужно, чтобы внутренний инженерный контур оставался единым даже при временном участии сторонних модулей или owner-side handoff.
 
 Следующая обязательная стадия:
 

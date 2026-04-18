@@ -494,6 +494,45 @@ String sanitizeTestcaseField(String value, size_t maxLength) {
     return value;
 }
 
+void appendDetailField(String& details, const char* key, const String& value, size_t maxLength) {
+    if (value.length() == 0) {
+        return;
+    }
+    details += ",";
+    details += key;
+    details += "=";
+    details += sanitizeTestcaseField(value, maxLength);
+}
+
+String buildLaboratoryMetadataDetails(const String& sessionId,
+                                      const String& sessionStatus,
+                                      const String& operatorName,
+                                      const String& objective,
+                                      const String& hardwareProfile,
+                                      const String& externalModule,
+                                      const String& powerContext,
+                                      const String& viewMode,
+                                      const String& activeTool,
+                                      const String& contextModule,
+                                      const String& ownerNodeId,
+                                      const String& ownerNodeType) {
+    String details;
+    details.reserve(220);
+    appendDetailField(details, "lab_session_id", sessionId, 32);
+    appendDetailField(details, "lab_session_status", sessionStatus, 16);
+    appendDetailField(details, "lab_operator", operatorName, 40);
+    appendDetailField(details, "lab_objective", objective, 40);
+    appendDetailField(details, "lab_hardware_profile", hardwareProfile, 40);
+    appendDetailField(details, "lab_external_module", externalModule, 40);
+    appendDetailField(details, "lab_power_context", powerContext, 20);
+    appendDetailField(details, "lab_view_mode", viewMode, 20);
+    appendDetailField(details, "lab_active_tool", activeTool, 32);
+    appendDetailField(details, "lab_context_module", contextModule, 32);
+    appendDetailField(details, "lab_owner_node_id", ownerNodeId, 32);
+    appendDetailField(details, "lab_owner_node_type", ownerNodeType, 20);
+    return details;
+}
+
 bool parseTestcaseResultValue(const String& value, String& normalizedResult, const char*& level) {
     if (value == "pass") {
         normalizedResult = "pass";
@@ -517,9 +556,10 @@ String buildTestcaseDetails(const String& caseId,
                             const String& moduleId,
                             const String& board,
                             const String& result,
-                            const String& note) {
+                            const String& note,
+                            const String& laboratoryMetadata) {
     String details;
-    details.reserve(124);
+    details.reserve(320);
     details += "case=";
     details += sanitizeTestcaseField(caseId, 24);
     details += ",module=";
@@ -532,15 +572,17 @@ String buildTestcaseDetails(const String& caseId,
         details += ",note=";
         details += sanitizeTestcaseField(note, 20);
     }
+    details += laboratoryMetadata;
     return details;
 }
 
 String buildOperatorNoteDetails(const String& caseId,
                                 const String& moduleId,
                                 const String& board,
-                                const String& note) {
+                                const String& note,
+                                const String& laboratoryMetadata) {
     String details;
-    details.reserve(124);
+    details.reserve(320);
     details += "case=";
     details += sanitizeTestcaseField(caseId, 24);
     details += ",module=";
@@ -549,6 +591,7 @@ String buildOperatorNoteDetails(const String& caseId,
     details += sanitizeTestcaseField(board, 16);
     details += ",note=";
     details += sanitizeTestcaseField(note, 40);
+    details += laboratoryMetadata;
     return details;
 }
 
@@ -808,6 +851,18 @@ void WebShellServer::handleTestcaseReport() {
     String board = server_.arg("board");
     const String note = server_.arg("note");
     const String rawResult = server_.arg("result");
+    const String laboratoryMetadata = buildLaboratoryMetadataDetails(server_.arg("lab_session_id"),
+                                                                     server_.arg("lab_session_status"),
+                                                                     server_.arg("lab_operator"),
+                                                                     server_.arg("lab_objective"),
+                                                                     server_.arg("lab_hardware_profile"),
+                                                                     server_.arg("lab_external_module"),
+                                                                     server_.arg("lab_power_context"),
+                                                                     server_.arg("lab_view_mode"),
+                                                                     server_.arg("lab_active_tool"),
+                                                                     server_.arg("lab_context_module"),
+                                                                     server_.arg("lab_owner_node_id"),
+                                                                     server_.arg("lab_owner_node_type"));
 
     String normalizedResult;
     const char* level = "info";
@@ -823,7 +878,7 @@ void WebShellServer::handleTestcaseReport() {
         board = core::nodeTypeToString(systemCore_.localNode().nodeType);
     }
 
-    const String details = buildTestcaseDetails(caseId, moduleId, board, normalizedResult, note);
+    const String details = buildTestcaseDetails(caseId, moduleId, board, normalizedResult, note, laboratoryMetadata);
     String message = String("testcase ") + sanitizeTestcaseField(caseId, 24) +
                      " recorded for " + sanitizeTestcaseField(moduleId, 20) +
                      " as " + normalizedResult;
@@ -846,6 +901,18 @@ void WebShellServer::handleNoteReport() {
     const String moduleId = server_.arg("module_id");
     const String caseId = server_.arg("case_id");
     String board = server_.arg("board");
+    const String laboratoryMetadata = buildLaboratoryMetadataDetails(server_.arg("lab_session_id"),
+                                                                     server_.arg("lab_session_status"),
+                                                                     server_.arg("lab_operator"),
+                                                                     server_.arg("lab_objective"),
+                                                                     server_.arg("lab_hardware_profile"),
+                                                                     server_.arg("lab_external_module"),
+                                                                     server_.arg("lab_power_context"),
+                                                                     server_.arg("lab_view_mode"),
+                                                                     server_.arg("lab_active_tool"),
+                                                                     server_.arg("lab_context_module"),
+                                                                     server_.arg("lab_owner_node_id"),
+                                                                     server_.arg("lab_owner_node_type"));
 
     if (note.length() == 0 || moduleId.length() == 0) {
         server_.send(200,
@@ -860,7 +927,7 @@ void WebShellServer::handleNoteReport() {
     }
 
     const String sanitizedMessage = sanitizeTestcaseField(note, 79);
-    const String details = buildOperatorNoteDetails(caseId, moduleId, board, note);
+    const String details = buildOperatorNoteDetails(caseId, moduleId, board, note, laboratoryMetadata);
     platformLog_.addLocal("testcase_capture",
                           "info",
                           "operator_note",

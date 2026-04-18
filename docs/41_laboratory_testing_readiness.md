@@ -141,6 +141,21 @@ This order is intentionally board-aware:
   - next recommended action.
 - the bring-up sequence now includes a direct `Raspberry Pi / Displays` step with deep link to `Laboratory / Displays`.
 
+## Session And Evidence Baseline Added In This Step
+
+- Raspberry Pi now exposes a small laboratory session contract:
+  - `GET /api/v1/laboratory/session`
+  - `POST /api/v1/laboratory/session/context`
+  - `POST /api/v1/laboratory/session/start`
+  - `POST /api/v1/laboratory/session/update`
+  - `POST /api/v1/laboratory/session/finish`
+  - `POST /api/v1/laboratory/event`
+- shared `Laboratory` hub now includes a visible `Session Backbone` block above the category rail flow;
+- the operator can record `pass`, `warn`, `fail`, and note entries from the active slice without leaving the hub;
+- the display page now records explicit display-lab evidence instead of keeping everything only in a local page log;
+- report entries now carry laboratory context fields such as session id, operator, objective, hardware profile, external module, power context, view mode, and active slice;
+- mirrored shells can keep a local draft session if Raspberry Pi backend session API is not available, but explicit report actions still forward the same laboratory metadata.
+
 ## Smartphone Smoke Checklist
 
 Use this exact order for the first physical browser passes.
@@ -185,10 +200,15 @@ Use this exact order for the first physical browser passes.
 
 - which board was connected;
 - which shell URL was opened;
+- who the operator was for this pass;
+- what the current objective and hardware profile were;
+- whether an external or third-party module participated in the pass;
 - what the top ribbon showed;
 - whether `Home -> Laboratory` preserved board context;
 - which power context was selected for the session;
 - whether browser and fullscreen modes changed density without losing context;
+- which slice or deep page produced the evidence;
+- which case id was used for the explicit report action;
 - which controls felt missing, redundant, or too dense for the phone;
 - which step felt confusing enough that we should later turn it into explicit UI guidance.
 
@@ -256,6 +276,8 @@ Capture at least these facts:
 - which board state was active: `ESP32 only`, `Raspberry Pi only`, or dual-board;
 - phone model and browser;
 - whether the pass used browser mode only or both browser and fullscreen;
+- active laboratory session id if one was started;
+- objective, hardware profile, and external module label if they mattered for the bench setup;
 - selected power context;
 - result for phone pass: `pass`, `warn`, or `fail`;
 - result for display pass: `pass`, `warn`, or `fail`;
@@ -300,7 +322,8 @@ The next useful improvements should focus on operator clarity beyond that, not o
 
 ## Still Missing After This Step
 
-- equivalent readiness summary on direct `ESP32` shell when Raspberry Pi is absent.
+- equivalent backend session contract on direct `ESP32` shell instead of local-draft fallback only;
+- UI-level regression tests for shared `Laboratory` hub and dedicated display page behavior;
 - richer review helpers on top of the current feed, for example saved filter presets or quick bundle summaries.
 
 ## Recommended Next Focus

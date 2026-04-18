@@ -255,6 +255,43 @@
       min-height: 240px;
     }
 
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .field label {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+    }
+
+    .field input,
+    .field textarea {
+      width: 100%;
+      border: 1px solid rgba(39, 69, 53, 0.14);
+      border-radius: 14px;
+      padding: 11px 12px;
+      font: inherit;
+      color: var(--ink);
+      background: rgba(255, 255, 255, 0.92);
+    }
+
+    .field textarea {
+      min-height: 92px;
+      resize: vertical;
+    }
+
+    .status-note {
+      min-height: 18px;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
     @media (max-width: 700px) {
       .page { padding: 18px 12px 32px; }
       .touch-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -305,6 +342,41 @@
         <strong id="shell-title">Loading shell identity...</strong>
         <p class="meta" id="shell-summary">Waiting for shell snapshot...</p>
       </article>
+    </section>
+
+    <section class="card">
+      <div class="row" style="justify-content: space-between; align-items: flex-start;">
+        <div>
+          <span class="label">Session Backbone</span>
+          <strong id="session-title">Loading laboratory session...</strong>
+          <p class="meta" id="session-summary">Display evidence should carry current power mode, view mode, operator, and optional third-party hardware profile.</p>
+        </div>
+        <div class="chips" id="session-badges"></div>
+      </div>
+      <div class="grid-two" style="margin-top: 16px;">
+        <article class="mini-card">
+          <strong>Current Context</strong>
+          <p class="meta" id="session-context-lines">Loading session context...</p>
+        </article>
+        <article class="mini-card">
+          <strong>Quick Evidence</strong>
+          <div class="field" style="margin-top: 12px;">
+            <label for="display-case-id">Case ID</label>
+            <input id="display-case-id" type="text" value="rpi-touch-display-smoke">
+          </div>
+          <div class="field" style="margin-top: 12px;">
+            <label for="display-note">Operator Note</label>
+            <textarea id="display-note" placeholder="dead pixels / edge misses / fullscreen scaling / touch drift / shell density"></textarea>
+          </div>
+          <div class="actions hero-actions" style="margin-top: 12px;">
+            <button class="button secondary" id="display-pass-btn" type="button">Record Pass</button>
+            <button class="button secondary" id="display-warn-btn" type="button">Record Warn</button>
+            <button class="button secondary" id="display-fail-btn" type="button">Record Fail</button>
+            <button class="button secondary" id="display-note-btn" type="button">Save Note</button>
+          </div>
+          <div class="status-note" id="display-evidence-feedback"></div>
+        </article>
+      </div>
     </section>
 
     <section class="card">
@@ -384,6 +456,7 @@
   </div>
 
   <script>
+    const LAB_SESSION_STORAGE_KEY = "smart-platform.laboratory.session.v1";
     const PATTERNS = [
       { id: "white", label: "White", note: "Look for dark pixels, dust, and uneven brightness." },
       { id: "black", label: "Black", note: "Check backlight bleed, glow, and edge flare." },
@@ -399,6 +472,8 @@
     const touchState = new Set();
     let activePattern = "white";
     const eventLines = [];
+    let sessionState = readLocalSession();
+    let sessionApiAvailable = false;
 
     function esc(value) {
       return String(value ?? "")
@@ -412,6 +487,253 @@
     function pushEvent(text) {
       eventLines.unshift(`[${new Date().toLocaleTimeString()}] ${text}`);
       document.getElementById("event-log").textContent = eventLines.slice(0, 18).join("\n");
+    }
+
+    function defaultLocalSession() {
+      return {
+        status: "idle",
+        sessionId: "",
+        operator: "",
+        objective: "",
+        hardwareProfile: "",
+        externalModule: "",
+        powerContext: readPowerContext(),
+        viewMode: document.fullscreenElement ? "fullscreen" : "browser",
+        activeTool: "rpi_touch_display",
+        moduleId: "rpi_touch_display"
+      };
+    }
+
+    function readLocalSession() {
+      try {
+        const raw = localStorage.getItem(LAB_SESSION_STORAGE_KEY);
+        if (!raw) return defaultLocalSession();
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== "object") return defaultLocalSession();
+        return { ...defaultLocalSession(), ...parsed };
+      } catch (_error) {
+        return defaultLocalSession();
+      }
+    }
+
+    function writeLocalSession() {
+      try {
+        localStorage.setItem(LAB_SESSION_STORAGE_KEY, JSON.stringify(sessionState));
+      } catch (_error) {
+      }
+    }
+
+    function readPowerContext() {
+      try {
+        return localStorage.getItem("smart-platform.laboratory.power") || "bench_psu";
+      } catch (_error) {
+        return "bench_psu";
+      }
+    }
+
+    function currentViewMode() {
+      return document.fullscreenElement ? "fullscreen" : "browser";
+    }
+
+    function buildLaboratoryMetadata() {
+      return {
+        lab_session_id: sessionState.sessionId || "",
+        lab_session_status: sessionState.status || "idle",
+        lab_operator: sessionState.operator || "",
+        lab_objective: sessionState.objective || "",
+        lab_hardware_profile: sessionState.hardwareProfile || "",
+        lab_external_module: sessionState.externalModule || "",
+        lab_power_context: readPowerContext(),
+        lab_view_mode: currentViewMode(),
+        lab_active_tool: "rpi_touch_display",
+        lab_context_module: "rpi_touch_display"
+      };
+    }
+
+    async function postCommand(path, payload) {
+      const url = new URL(path, window.location.origin);
+      Object.entries(payload || {}).forEach(([key, value]) => {
+        if (value === undefined || value === null) return;
+        const text = String(value);
+        if (!text && text !== "0") return;
+        url.searchParams.set(key, text);
+      });
+      const response = await fetch(url, { method: "POST" });
+      if (!response.ok) throw new Error(`status ${response.status}`);
+      return await response.json();
+    }
+
+    function applyBackendSession(payload) {
+      if (!payload || typeof payload !== "object") return;
+      const context = payload.context || {};
+      const active = payload.active_session || null;
+      const completed = payload.last_completed_session || null;
+      if (active) {
+        sessionState = {
+          ...defaultLocalSession(),
+          ...sessionState,
+          status: "active",
+          sessionId: active.session_id || sessionState.sessionId,
+          operator: active.operator || "",
+          objective: active.objective || "",
+          hardwareProfile: active.hardware_profile || "",
+          externalModule: active.external_module || "",
+          powerContext: context.power_context || readPowerContext(),
+          viewMode: context.view_mode || currentViewMode(),
+          activeTool: "rpi_touch_display",
+          moduleId: "rpi_touch_display"
+        };
+      } else if (completed) {
+        sessionState = {
+          ...defaultLocalSession(),
+          ...sessionState,
+          status: "idle",
+          sessionId: "",
+          operator: completed.operator || sessionState.operator,
+          objective: completed.objective || sessionState.objective,
+          hardwareProfile: completed.hardware_profile || sessionState.hardwareProfile,
+          externalModule: completed.external_module || sessionState.externalModule,
+          powerContext: context.power_context || readPowerContext(),
+          viewMode: context.view_mode || currentViewMode(),
+          activeTool: "rpi_touch_display",
+          moduleId: "rpi_touch_display"
+        };
+      }
+      writeLocalSession();
+    }
+
+    async function loadLaboratorySession() {
+      try {
+        const response = await fetch("/api/v1/laboratory/session");
+        if (!response.ok) throw new Error(`status ${response.status}`);
+        const payload = await response.json();
+        sessionApiAvailable = true;
+        applyBackendSession(payload);
+        renderSessionPanel(payload);
+        return payload;
+      } catch (_error) {
+        sessionApiAvailable = false;
+        renderSessionPanel(null);
+        return null;
+      }
+    }
+
+    async function syncLaboratoryContext() {
+      sessionState = {
+        ...defaultLocalSession(),
+        ...sessionState,
+        powerContext: readPowerContext(),
+        viewMode: currentViewMode(),
+        activeTool: "rpi_touch_display",
+        moduleId: "rpi_touch_display"
+      };
+      writeLocalSession();
+      try {
+        const payload = await postCommand("/api/v1/laboratory/session/context", {
+          power_context: readPowerContext(),
+          view_mode: currentViewMode(),
+          active_tool: "rpi_touch_display",
+          module_id: "rpi_touch_display"
+        });
+        if (payload.session) {
+          sessionApiAvailable = true;
+          applyBackendSession(payload.session);
+          renderSessionPanel(payload.session);
+        }
+      } catch (_error) {
+        renderSessionPanel(null);
+      }
+    }
+
+    function renderSessionPanel(payload) {
+      const snapshot = payload || {};
+      const context = snapshot.context || {};
+      const active = snapshot.active_session || null;
+      const completed = snapshot.last_completed_session || null;
+      const statusLabel = active ? "session active" : "session idle";
+      const modeLabel = sessionApiAvailable ? "backend sync ready" : "local fallback";
+      const objective = active ? active.objective : completed ? completed.objective : sessionState.objective;
+      const operator = active ? active.operator : completed ? completed.operator : sessionState.operator;
+      document.getElementById("session-title").textContent = active
+        ? `Session ${active.session_id || "active"}`
+        : "No active backend session";
+      document.getElementById("session-summary").textContent = active
+        ? `Operator: ${operator || "local-operator"} / objective: ${objective || "display qualification"}`
+        : sessionApiAvailable
+          ? "Display page is ready to record evidence even if the broader laboratory session is idle."
+          : "Backend session endpoint is not available, so the page falls back to local session draft state.";
+      document.getElementById("session-badges").innerHTML = `
+        <span class="badge ${active ? "state-active" : "state-service"}">${esc(statusLabel)}</span>
+        <span class="badge ${sessionApiAvailable ? "state-online" : "state-warn"}">${esc(modeLabel)}</span>
+        <span class="badge state-active">${esc(currentViewMode())}</span>
+        <span class="badge state-active">${esc(readPowerContext())}</span>
+      `;
+      const hardwareProfile = active ? active.hardware_profile : completed ? completed.hardware_profile : sessionState.hardwareProfile;
+      const externalModule = active ? active.external_module : completed ? completed.external_module : sessionState.externalModule;
+      document.getElementById("session-context-lines").textContent = [
+        `operator: ${operator || "local-operator"}`,
+        `objective: ${objective || "display qualification"}`,
+        `hardware_profile: ${hardwareProfile || "not specified"}`,
+        `external_module: ${externalModule || "none"}`,
+        `power_context: ${context.power_context || readPowerContext()}`,
+        `view_mode: ${context.view_mode || currentViewMode()}`
+      ].join(" / ");
+    }
+
+    async function recordDisplayEvent(eventType, message, value) {
+      try {
+        await postCommand("/api/v1/laboratory/event", {
+          module_id: "rpi_touch_display",
+          event_type: eventType,
+          message,
+          value,
+          ...buildLaboratoryMetadata()
+        });
+      } catch (_error) {
+      }
+    }
+
+    async function recordDisplayEvidence(kind) {
+      const caseId = document.getElementById("display-case-id").value.trim();
+      const note = document.getElementById("display-note").value.trim();
+      const feedback = document.getElementById("display-evidence-feedback");
+      const metadata = buildLaboratoryMetadata();
+
+      if (kind !== "note" && !caseId) {
+        feedback.textContent = "case_id is required for pass / warn / fail";
+        return;
+      }
+      if (kind === "note" && !note) {
+        feedback.textContent = "note is required for note-only evidence";
+        return;
+      }
+
+      try {
+        let payload;
+        if (kind === "note") {
+          payload = await postCommand("/api/v1/reports/note", {
+            note,
+            module_id: "rpi_touch_display",
+            board: "raspberry_pi",
+            case_id: caseId,
+            ...metadata
+          });
+        } else {
+          payload = await postCommand("/api/v1/reports/testcase", {
+            case_id: caseId,
+            module_id: "rpi_touch_display",
+            result: kind,
+            note,
+            board: "raspberry_pi",
+            ...metadata
+          });
+        }
+        feedback.textContent = payload.message || "display evidence recorded";
+        pushEvent(`report_recorded -> ${kind}`);
+        document.getElementById("display-note").value = "";
+      } catch (error) {
+        feedback.textContent = `display evidence failed: ${String(error)}`;
+      }
     }
 
     function syncViewBadge() {
@@ -438,6 +760,7 @@
       document.getElementById("pattern-note").textContent = `Pattern: ${pattern.label} / ${pattern.note}`;
       renderPatternButtons();
       pushEvent(`pattern_changed -> ${pattern.label}`);
+      recordDisplayEvent("display_pattern_changed", `display pattern changed to ${pattern.label}`, pattern.id).catch(() => {});
     }
 
     function renderTouchGrid() {
@@ -461,6 +784,7 @@
       if (!touchState.has(cell)) {
         touchState.add(cell);
         pushEvent(`touch_zone_hit -> zone_${cell}`);
+        recordDisplayEvent("display_touch_zone_hit", `display touch zone ${cell} hit`, `zone_${cell}`).catch(() => {});
       }
       renderTouchGrid();
     }
@@ -469,6 +793,7 @@
       touchState.clear();
       renderTouchGrid();
       pushEvent("touch_grid_reset");
+      recordDisplayEvent("display_touch_grid_reset", "display touch grid reset", "touch_grid").catch(() => {});
     }
 
     async function toggleFullscreen() {
@@ -503,14 +828,33 @@
       toggleFullscreen().catch(() => {});
     });
     document.getElementById("reset-touch-btn").addEventListener("click", resetTouchGrid);
-    document.addEventListener("fullscreenchange", syncViewBadge);
+    document.getElementById("display-pass-btn").addEventListener("click", () => {
+      recordDisplayEvidence("pass").catch(() => {});
+    });
+    document.getElementById("display-warn-btn").addEventListener("click", () => {
+      recordDisplayEvidence("warn").catch(() => {});
+    });
+    document.getElementById("display-fail-btn").addEventListener("click", () => {
+      recordDisplayEvidence("fail").catch(() => {});
+    });
+    document.getElementById("display-note-btn").addEventListener("click", () => {
+      recordDisplayEvidence("note").catch(() => {});
+    });
+    document.addEventListener("fullscreenchange", () => {
+      syncViewBadge();
+      syncLaboratoryContext().catch(() => {});
+      recordDisplayEvent("display_view_mode_changed", `display page switched to ${currentViewMode()}`, currentViewMode()).catch(() => {});
+    });
 
     syncViewBadge();
     renderPatternButtons();
     renderTouchGrid();
     setPattern(activePattern);
     loadShellContext().catch(() => {});
+    loadLaboratorySession().catch(() => {});
+    syncLaboratoryContext().catch(() => {});
     pushEvent("display_lab_ready -> start with white, black, grayscale, checker, then touch grid");
+    recordDisplayEvent("display_lab_ready", "display lab ready", "ready").catch(() => {});
   </script>
 </body>
 </html>

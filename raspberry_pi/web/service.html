@@ -319,6 +319,49 @@
       line-height: 1.5;
     }
 
+    .field-grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .field label {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .field input,
+    .field textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 11px 12px;
+      font: inherit;
+      color: var(--ink);
+      background: rgba(255, 255, 255, 0.9);
+    }
+
+    .field textarea {
+      min-height: 92px;
+      resize: vertical;
+    }
+
+    .status-note {
+      min-height: 18px;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
     .disabled-link { pointer-events: none; opacity: 0.56; }
 
     body.fullscreen-app .shell {
@@ -416,6 +459,75 @@
       <div class="summary-grid" id="summary-grid"></div>
     </section>
 
+    <section class="card">
+      <div class="tool-top">
+        <div>
+          <h2>Session Backbone</h2>
+          <p class="meta" id="session-shell-summary">Laboratory session context is loading...</p>
+        </div>
+        <div class="row" id="session-shell-badges"></div>
+      </div>
+      <div class="detail-grid" style="margin-top: 16px;">
+        <article class="box">
+          <strong>Session Context</strong>
+          <p class="meta">These fields define what this engineering pass is actually testing. On Raspberry Pi they sync into backend session state. On mirrored shells they stay local but still travel with explicit report actions.</p>
+          <div class="field-grid" style="margin-top: 14px;">
+            <div class="field">
+              <label for="session-operator">Operator</label>
+              <input id="session-operator" type="text" placeholder="local-operator">
+            </div>
+            <div class="field">
+              <label for="session-objective">Objective</label>
+              <input id="session-objective" type="text" placeholder="display qualification / owner handoff / smoke pass">
+            </div>
+            <div class="field">
+              <label for="session-hardware">Hardware Profile</label>
+              <input id="session-hardware" type="text" placeholder="rpi5 + 8-inch HDMI touch / bench PSU / phone model">
+            </div>
+            <div class="field">
+              <label for="session-external-module">External Module</label>
+              <input id="session-external-module" type="text" placeholder="optional third-party add-on or bench adapter">
+            </div>
+          </div>
+          <div class="field" style="margin-top: 12px;">
+            <label for="session-finish-note">Finish Note</label>
+            <input id="session-finish-note" type="text" placeholder="short summary when closing the current pass">
+          </div>
+          <div class="row" style="margin-top: 12px; justify-content: flex-start;">
+            <button class="secondary" id="session-start-btn" type="button">Start Session</button>
+            <button class="secondary" id="session-update-btn" type="button">Update Session</button>
+            <button class="secondary" id="session-finish-btn" type="button">Finish Session</button>
+          </div>
+          <div class="status-note" id="session-shell-feedback"></div>
+        </article>
+        <article class="box">
+          <strong>Evidence Capture</strong>
+          <p class="meta" id="evidence-summary">Active slice evidence will be recorded into Gallery &gt; Reports with current power, view, and session context.</p>
+          <div class="field-grid" style="margin-top: 14px;">
+            <div class="field">
+              <label for="evidence-case-id">Case ID</label>
+              <input id="evidence-case-id" type="text" placeholder="module-smoke">
+            </div>
+            <div class="field">
+              <label for="evidence-module">Current Slice</label>
+              <input id="evidence-module" type="text" readonly>
+            </div>
+          </div>
+          <div class="field" style="margin-top: 12px;">
+            <label for="evidence-note">Operator Note</label>
+            <textarea id="evidence-note" placeholder="what was actually observed on the phone / screen / owner handoff / control density"></textarea>
+          </div>
+          <div class="row" style="margin-top: 12px; justify-content: flex-start;">
+            <button class="secondary" id="evidence-pass-btn" type="button">Record Pass</button>
+            <button class="secondary" id="evidence-warn-btn" type="button">Record Warn</button>
+            <button class="secondary" id="evidence-fail-btn" type="button">Record Fail</button>
+            <button class="secondary" id="evidence-note-btn" type="button">Save Note</button>
+          </div>
+          <div class="status-note" id="evidence-feedback"></div>
+        </article>
+      </div>
+    </section>
+
     <section class="category-shell">
       <div class="category-head">
         <div>
@@ -453,6 +565,7 @@
   </div>
 
   <script>
+    const LAB_SESSION_STORAGE_KEY = "smart-platform.laboratory.session.v1";
     const POWER_CONTEXTS = {
       bench_psu: {
         id: "bench_psu",
@@ -944,11 +1057,18 @@
       modules: [],
       log: null,
       readiness: null,
+      sessionBackend: null,
+      sessionApiAvailable: false,
       activeCategory: "overview",
       activeModule: "overview",
       powerContext: readPowerContext(),
       fullscreen: false,
-      workspaceSignature: ""
+      workspaceSignature: "",
+      localSession: readLocalSession(),
+      sessionFeedback: "",
+      evidenceFeedback: "",
+      contextSyncSignature: "",
+      sessionControlsBound: false
     };
 
     function esc(value) {
@@ -1004,6 +1124,42 @@
       return count;
     }
 
+    function defaultLocalSession() {
+      return {
+        status: "idle",
+        sessionId: "",
+        operator: "",
+        objective: "",
+        hardwareProfile: "",
+        externalModule: "",
+        powerContext: "bench_psu",
+        viewMode: "browser",
+        activeTool: "overview",
+        moduleId: "overview",
+        startedAtMs: 0,
+        backendSynced: false
+      };
+    }
+
+    function readLocalSession() {
+      try {
+        const raw = localStorage.getItem(LAB_SESSION_STORAGE_KEY);
+        if (!raw) return defaultLocalSession();
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== "object") return defaultLocalSession();
+        return { ...defaultLocalSession(), ...parsed };
+      } catch (_error) {
+        return defaultLocalSession();
+      }
+    }
+
+    function writeLocalSession() {
+      try {
+        localStorage.setItem(LAB_SESSION_STORAGE_KEY, JSON.stringify(state.localSession));
+      } catch (_error) {
+      }
+    }
+
     function readTool() {
       const params = new URLSearchParams(window.location.search);
       return params.get("tool");
@@ -1028,6 +1184,398 @@
         localStorage.setItem("smart-platform.laboratory.power", value);
       } catch (_error) {
       }
+    }
+
+    function currentViewMode() {
+      return state.fullscreen ? "fullscreen" : "browser";
+    }
+
+    function syncLocalSessionContext() {
+      state.localSession = {
+        ...defaultLocalSession(),
+        ...state.localSession,
+        powerContext: state.powerContext,
+        viewMode: currentViewMode(),
+        activeTool: state.activeModule,
+        moduleId: state.activeModule
+      };
+      writeLocalSession();
+    }
+
+    function fillSessionInputs(force = false) {
+      const bindings = [
+        ["session-operator", "operator"],
+        ["session-objective", "objective"],
+        ["session-hardware", "hardwareProfile"],
+        ["session-external-module", "externalModule"]
+      ];
+      for (const [id, key] of bindings) {
+        const input = document.getElementById(id);
+        if (!input) continue;
+        if (force || (!input.value && document.activeElement !== input)) {
+          input.value = state.localSession[key] || "";
+        }
+      }
+    }
+
+    function readSessionForm() {
+      return {
+        operator: document.getElementById("session-operator").value.trim(),
+        objective: document.getElementById("session-objective").value.trim(),
+        hardwareProfile: document.getElementById("session-hardware").value.trim(),
+        externalModule: document.getElementById("session-external-module").value.trim(),
+        finishNote: document.getElementById("session-finish-note").value.trim()
+      };
+    }
+
+    function currentShellNode() {
+      const snapshot = state.snapshot || {};
+      const nodes = snapshot.nodes || {};
+      return nodes.current || {};
+    }
+
+    function buildLaboratoryMetadataParams() {
+      const form = readSessionForm();
+      const currentNode = currentShellNode();
+      const payload = {
+        lab_session_status: state.localSession.status || "idle",
+        lab_operator: form.operator || state.localSession.operator || "",
+        lab_objective: form.objective || state.localSession.objective || "",
+        lab_hardware_profile: form.hardwareProfile || state.localSession.hardwareProfile || "",
+        lab_external_module: form.externalModule || state.localSession.externalModule || "",
+        lab_power_context: state.powerContext,
+        lab_view_mode: currentViewMode(),
+        lab_active_tool: state.activeModule,
+        lab_context_module: state.activeModule,
+        lab_owner_node_id: currentNode.node_id || "",
+        lab_owner_node_type: currentShellType() || String(currentNode.node_type || "")
+      };
+      if (state.localSession.sessionId) payload.lab_session_id = state.localSession.sessionId;
+      return payload;
+    }
+
+    function defaultCaseIdForModule(moduleId) {
+      if (!moduleId || moduleId === "overview") return "laboratory-overview-smoke";
+      return `${moduleId}-smoke`;
+    }
+
+    function syncEvidenceCaseId(force = false) {
+      const input = document.getElementById("evidence-case-id");
+      if (!input) return;
+      const nextDefault = defaultCaseIdForModule(state.activeModule);
+      if (force || !input.value || input.dataset.auto === "1") {
+        input.value = nextDefault;
+        input.dataset.auto = "1";
+      }
+      document.getElementById("evidence-module").value = moduleById(state.activeModule).title;
+    }
+
+    function sessionStatusLine() {
+      if (state.localSession.status === "active") {
+        const objective = state.localSession.objective ? ` / ${state.localSession.objective}` : "";
+        return `Active session ${state.localSession.sessionId || "(local draft)"} / ${state.localSession.operator || "local-operator"}${objective}`;
+      }
+      return "No active laboratory session. You can keep fields as a draft or start a tracked pass now.";
+    }
+
+    function backendSyncLine() {
+      if (state.sessionApiAvailable) return "Raspberry Pi backend session sync is available on this shell.";
+      if (currentShellType() === "raspberry_pi") return "Raspberry Pi backend session sync is currently unavailable, so the page falls back to local draft state.";
+      return "This mirrored shell keeps the session draft locally. Explicit report actions still carry the session fields.";
+    }
+
+    function applyBackendSessionSnapshot(payload) {
+      if (!payload || typeof payload !== "object") return;
+      const context = payload.context || {};
+      const active = payload.active_session || null;
+      const completed = payload.last_completed_session || null;
+      if (active) {
+        state.localSession = {
+          ...defaultLocalSession(),
+          ...state.localSession,
+          status: "active",
+          sessionId: active.session_id || state.localSession.sessionId,
+          operator: active.operator || "",
+          objective: active.objective || "",
+          hardwareProfile: active.hardware_profile || "",
+          externalModule: active.external_module || "",
+          powerContext: context.power_context || state.powerContext,
+          viewMode: context.view_mode || currentViewMode(),
+          activeTool: context.active_tool || state.activeModule,
+          moduleId: context.module_id || state.activeModule,
+          startedAtMs: Number(active.started_at_ms || 0),
+          backendSynced: true
+        };
+      } else if (completed) {
+        state.localSession = {
+          ...defaultLocalSession(),
+          ...state.localSession,
+          status: "idle",
+          sessionId: "",
+          operator: completed.operator || state.localSession.operator,
+          objective: completed.objective || state.localSession.objective,
+          hardwareProfile: completed.hardware_profile || state.localSession.hardwareProfile,
+          externalModule: completed.external_module || state.localSession.externalModule,
+          powerContext: context.power_context || state.powerContext,
+          viewMode: context.view_mode || currentViewMode(),
+          activeTool: context.active_tool || state.activeModule,
+          moduleId: context.module_id || state.activeModule,
+          startedAtMs: 0,
+          backendSynced: true
+        };
+      }
+      writeLocalSession();
+      fillSessionInputs(true);
+    }
+
+    async function postCommand(path, payload) {
+      const url = new URL(path, window.location.origin);
+      Object.entries(payload || {}).forEach(([key, value]) => {
+        if (value === undefined || value === null) return;
+        const text = String(value);
+        if (!text && text !== "0") return;
+        url.searchParams.set(key, text);
+      });
+      const response = await fetch(url, { method: "POST" });
+      if (!response.ok) throw new Error(`status ${response.status}`);
+      return await response.json();
+    }
+
+    async function loadLaboratorySessionBackend() {
+      if (currentShellType() !== "raspberry_pi") {
+        state.sessionApiAvailable = false;
+        state.sessionBackend = null;
+        return null;
+      }
+
+      try {
+        const response = await fetch("/api/v1/laboratory/session");
+        if (!response.ok) throw new Error(`status ${response.status}`);
+        const payload = await response.json();
+        state.sessionApiAvailable = true;
+        state.sessionBackend = payload;
+        applyBackendSessionSnapshot(payload);
+        return payload;
+      } catch (_error) {
+        state.sessionApiAvailable = false;
+        state.sessionBackend = null;
+        return null;
+      }
+    }
+
+    async function syncContextToBackend(force = false) {
+      syncLocalSessionContext();
+      const signature = [state.powerContext, currentViewMode(), state.activeModule, currentShellType()].join("|");
+      if (!force && signature === state.contextSyncSignature) return;
+      state.contextSyncSignature = signature;
+      if (currentShellType() !== "raspberry_pi") return;
+
+      try {
+        const payload = await postCommand("/api/v1/laboratory/session/context", {
+          power_context: state.powerContext,
+          view_mode: currentViewMode(),
+          active_tool: state.activeModule,
+          module_id: state.activeModule
+        });
+        if (payload.session) {
+          state.sessionApiAvailable = true;
+          state.sessionBackend = payload.session;
+          applyBackendSessionSnapshot(payload.session);
+        }
+      } catch (_error) {
+        state.sessionApiAvailable = false;
+      }
+    }
+
+    async function handleSessionStart() {
+      const form = readSessionForm();
+      if (currentShellType() === "raspberry_pi") {
+        try {
+          const payload = await postCommand("/api/v1/laboratory/session/start", {
+            operator: form.operator,
+            objective: form.objective,
+            hardware_profile: form.hardwareProfile,
+            external_module: form.externalModule,
+            power_context: state.powerContext,
+            view_mode: currentViewMode(),
+            active_tool: state.activeModule,
+            module_id: state.activeModule
+          });
+          state.sessionFeedback = payload.message || "laboratory session started";
+          if (payload.accepted && payload.session) {
+            state.sessionApiAvailable = true;
+            state.sessionBackend = payload.session;
+            applyBackendSessionSnapshot(payload.session);
+          }
+        } catch (error) {
+          state.sessionFeedback = `session start failed: ${String(error)}`;
+        }
+      } else {
+        state.localSession = {
+          ...state.localSession,
+          status: "active",
+          sessionId: state.localSession.sessionId || `local-${Date.now()}`,
+          operator: form.operator || "local-operator",
+          objective: form.objective,
+          hardwareProfile: form.hardwareProfile,
+          externalModule: form.externalModule,
+          powerContext: state.powerContext,
+          viewMode: currentViewMode(),
+          activeTool: state.activeModule,
+          moduleId: state.activeModule,
+          startedAtMs: Date.now(),
+          backendSynced: false
+        };
+        writeLocalSession();
+        state.sessionFeedback = "local-only session started for this mirrored shell";
+      }
+      renderSessionShell();
+      refresh().catch(() => {});
+    }
+
+    async function handleSessionUpdate() {
+      const form = readSessionForm();
+      if (currentShellType() === "raspberry_pi" && state.localSession.status === "active") {
+        try {
+          const payload = await postCommand("/api/v1/laboratory/session/update", {
+            operator: form.operator,
+            objective: form.objective,
+            hardware_profile: form.hardwareProfile,
+            external_module: form.externalModule
+          });
+          state.sessionFeedback = payload.message || "laboratory session updated";
+          if (payload.accepted && payload.session) {
+            state.sessionBackend = payload.session;
+            state.sessionApiAvailable = true;
+            applyBackendSessionSnapshot(payload.session);
+          }
+        } catch (error) {
+          state.sessionFeedback = `session update failed: ${String(error)}`;
+        }
+      } else {
+        state.localSession = {
+          ...state.localSession,
+          operator: form.operator,
+          objective: form.objective,
+          hardwareProfile: form.hardwareProfile,
+          externalModule: form.externalModule,
+          powerContext: state.powerContext,
+          viewMode: currentViewMode(),
+          activeTool: state.activeModule,
+          moduleId: state.activeModule
+        };
+        writeLocalSession();
+        state.sessionFeedback = state.localSession.status === "active" ? "local session details updated" : "draft session fields saved locally";
+      }
+      renderSessionShell();
+    }
+
+    async function handleSessionFinish() {
+      const finishNote = readSessionForm().finishNote;
+      if (currentShellType() === "raspberry_pi" && state.localSession.status === "active") {
+        try {
+          const payload = await postCommand("/api/v1/laboratory/session/finish", {
+            summary_note: finishNote
+          });
+          state.sessionFeedback = payload.message || "laboratory session finished";
+          if (payload.accepted && payload.session) {
+            state.sessionBackend = payload.session;
+            state.sessionApiAvailable = true;
+            applyBackendSessionSnapshot(payload.session);
+          }
+        } catch (error) {
+          state.sessionFeedback = `session finish failed: ${String(error)}`;
+        }
+      } else {
+        state.localSession = {
+          ...state.localSession,
+          status: "idle",
+          sessionId: "",
+          startedAtMs: 0,
+          backendSynced: false
+        };
+        writeLocalSession();
+        state.sessionFeedback = finishNote ? `local session closed: ${finishNote}` : "local session closed";
+      }
+      document.getElementById("session-finish-note").value = "";
+      renderSessionShell();
+      refresh().catch(() => {});
+    }
+
+    async function handleEvidenceCapture(kind) {
+      const caseId = document.getElementById("evidence-case-id").value.trim();
+      const note = document.getElementById("evidence-note").value.trim();
+      const moduleId = state.activeModule;
+      const board = currentShellType() || String(currentShellNode().node_type || "unknown");
+      const metadata = buildLaboratoryMetadataParams();
+
+      if (kind !== "note" && !caseId) {
+        state.evidenceFeedback = "case_id is required for pass / warn / fail";
+        renderSessionShell();
+        return;
+      }
+      if (kind === "note" && !note) {
+        state.evidenceFeedback = "note is required for note-only evidence";
+        renderSessionShell();
+        return;
+      }
+
+      try {
+        let payload;
+        if (kind === "note") {
+          payload = await postCommand("/api/v1/reports/note", {
+            note,
+            module_id: moduleId,
+            board,
+            case_id: caseId,
+            ...metadata
+          });
+        } else {
+          payload = await postCommand("/api/v1/reports/testcase", {
+            case_id: caseId,
+            module_id: moduleId,
+            result: kind,
+            note,
+            board,
+            ...metadata
+          });
+        }
+        state.evidenceFeedback = payload.message || "evidence recorded";
+        document.getElementById("evidence-note").value = "";
+        refresh().catch(() => {});
+      } catch (error) {
+        state.evidenceFeedback = `evidence recording failed: ${String(error)}`;
+      }
+      renderSessionShell();
+    }
+
+    function bindSessionControls() {
+      if (state.sessionControlsBound) return;
+      state.sessionControlsBound = true;
+      document.getElementById("session-start-btn").addEventListener("click", () => {
+        handleSessionStart().catch(() => {});
+      });
+      document.getElementById("session-update-btn").addEventListener("click", () => {
+        handleSessionUpdate().catch(() => {});
+      });
+      document.getElementById("session-finish-btn").addEventListener("click", () => {
+        handleSessionFinish().catch(() => {});
+      });
+      document.getElementById("evidence-pass-btn").addEventListener("click", () => {
+        handleEvidenceCapture("pass").catch(() => {});
+      });
+      document.getElementById("evidence-warn-btn").addEventListener("click", () => {
+        handleEvidenceCapture("warn").catch(() => {});
+      });
+      document.getElementById("evidence-fail-btn").addEventListener("click", () => {
+        handleEvidenceCapture("fail").catch(() => {});
+      });
+      document.getElementById("evidence-note-btn").addEventListener("click", () => {
+        handleEvidenceCapture("note").catch(() => {});
+      });
+      document.getElementById("evidence-case-id").addEventListener("input", (event) => {
+        event.target.dataset.auto = event.target.value.trim() ? "0" : "1";
+      });
     }
 
     function currentShellType() {
@@ -1206,6 +1754,10 @@
       renderCategoryRail();
       renderModuleRail();
       renderWorkspace();
+      syncEvidenceCaseId();
+      syncLocalSessionContext();
+      renderSessionShell();
+      syncContextToBackend().catch(() => {});
     }
 
     function setActiveModule(moduleId) {
@@ -1216,6 +1768,10 @@
       renderCategoryRail();
       renderModuleRail();
       renderWorkspace();
+      syncEvidenceCaseId();
+      syncLocalSessionContext();
+      renderSessionShell();
+      syncContextToBackend().catch(() => {});
     }
 
     function renderPowerContext() {
@@ -1234,8 +1790,28 @@
           renderCategoryRail();
           renderModuleRail();
           renderWorkspace();
+          syncLocalSessionContext();
+          renderSessionShell();
+          syncContextToBackend().catch(() => {});
         });
       }
+    }
+
+    function renderSessionShell() {
+      syncLocalSessionContext();
+      fillSessionInputs();
+      syncEvidenceCaseId();
+      const badges = [
+        `<span class="${state.localSession.status === "active" ? "badge state-active" : "badge state-service"}">${esc(state.localSession.status === "active" ? "session active" : "session idle")}</span>`,
+        `<span class="${state.sessionApiAvailable ? "badge state-online" : "badge state-degraded"}">${esc(state.sessionApiAvailable ? "backend sync ready" : "local draft mode")}</span>`,
+        `<span class="badge state-service">${esc(POWER_CONTEXTS[state.powerContext].title)}</span>`,
+        `<span class="badge state-service">${esc(currentViewMode())}</span>`
+      ];
+      document.getElementById("session-shell-badges").innerHTML = badges.join("");
+      document.getElementById("session-shell-summary").textContent = `${sessionStatusLine()} ${backendSyncLine()}`;
+      document.getElementById("session-shell-feedback").textContent = state.sessionFeedback;
+      document.getElementById("evidence-summary").textContent = `Current slice: ${moduleById(state.activeModule).title} / board: ${nodeLabel(currentShellNode())} / power: ${POWER_CONTEXTS[state.powerContext].title} / view: ${currentViewMode()}`;
+      document.getElementById("evidence-feedback").textContent = state.evidenceFeedback;
     }
 
     function renderDeviceRibbon() {
@@ -1668,13 +2244,16 @@
       state.modules = state.snapshot.module_cards || [];
       state.log = await logResponse.json();
       state.readiness = await loadReadiness();
+      await loadLaboratorySessionBackend();
       renderPowerContext();
       renderDeviceRibbon();
       renderSummary();
+      renderSessionShell();
       renderCategoryRail();
       renderModuleRail();
       renderWorkspace();
       renderLog();
+      syncContextToBackend().catch(() => {});
     }
 
     document.getElementById("fullscreen-btn").addEventListener("click", () => {
@@ -1685,10 +2264,18 @@
       state.workspaceSignature = "";
       syncFullscreenState();
       renderWorkspace();
+      syncLocalSessionContext();
+      renderSessionShell();
+      syncContextToBackend().catch(() => {});
     });
 
     initSelection();
     syncFullscreenState();
+    bindSessionControls();
+    fillSessionInputs(true);
+    syncEvidenceCaseId(true);
+    syncLocalSessionContext();
+    renderSessionShell();
     refresh().catch((error) => {
       document.getElementById("workspace-surface").innerHTML = `
         <div class="notice">

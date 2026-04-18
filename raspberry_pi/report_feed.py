@@ -10,6 +10,7 @@ _LABORATORY_SOURCES = {
     "irrigation_service",
     "service_mode",
     "testcase_capture",
+    "laboratory_session",
 }
 _TURRET_SOURCES = {"turret_runtime", "turret_driver_layer", "turret_bridge", "strobe"}
 _IRRIGATION_SOURCES = {"irrigation"}
@@ -221,6 +222,8 @@ def _infer_entry_type(source: str, raw_type: str, parameters: dict[str, Any]) ->
         isinstance(parameters.get("case_id"), str) and isinstance(parameters.get("test_result"), str)
     ):
         return "testcase"
+    if raw_type.startswith("laboratory_session_"):
+        return "session"
     if raw_type == "operator_note":
         return "operator_note"
     if raw_type.startswith("scenario_"):
