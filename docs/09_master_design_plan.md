@@ -61,6 +61,22 @@
 - [29_shared_content_and_sd_strategy.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/docs/29_shared_content_and_sd_strategy.md)
 - [content_library_contract.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/shared_contracts/content_library_contract.md)
 
+## 2.1. Docs Completeness Gate
+
+До глубокой реализации следующих продуктовых блоков нужно закрыть еще один document-level gap:
+
+- выжать полезные знания из legacy `ТЗ`;
+- разложить их по текущим owner-aware документам;
+- не оставлять старый `.docx` скрытым обязательным приложением к проекту.
+
+Это нужно не ради бумажной чистоты, а ради того, чтобы `docs/` сами стали достаточным входом для следующего implementation-чата и большого `megaprompt`-старта.
+
+Артефакт этого шага:
+
+- [42_docs_completeness_migration_plan.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/docs/42_docs_completeness_migration_plan.md)
+
+После этого шага legacy `ТЗ` должен остаться только временным reference-файлом до финального удаления.
+
 ## 3. Этап 2. `System Shell v1`
 
 Цель:

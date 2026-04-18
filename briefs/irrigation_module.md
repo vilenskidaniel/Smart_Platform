@@ -49,7 +49,12 @@
 
 Основной донор:
 
-- [IrrigationSystemESP32](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/IrrigationSystemESP32)
+- `IrrigationSystemESP32` как historical donor-repository для сценариев, UX и отдельных моделей.
+
+Важно:
+
+- donor-репозиторий не должен оставаться обязательной runtime-опорой текущего проекта;
+- после подтвержденной выборочной миграции его лучше убрать из активного workspace.
 
 ## Следующие Задачи
 

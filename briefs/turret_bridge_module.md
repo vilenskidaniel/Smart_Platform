@@ -98,7 +98,12 @@
 
 Частичный референс:
 
-- [TurretManager.cpp](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/IrrigationSystemESP32/src/TurretManager.cpp)
+- `TurretManager.cpp` из `IrrigationSystemESP32` только как historical UX/reference stub.
+
+Важно:
+
+- этот donor-file не должен оставаться обязательной опорой для нового turret-owner контракта;
+- после переноса нужных UX-наблюдений donor-layer лучше убрать из активного workspace.
 
 ## Следующие Задачи
 
