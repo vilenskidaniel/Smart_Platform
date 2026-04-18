@@ -44,6 +44,37 @@
   - ultrasonic / piezo
   - `sprayer`
 
+## Уже закрыто 2026-04-18
+
+- единственная камера в наличии и `v1 primary camera`: `IMX219 130°`;
+- `OV5647` убираем из активных hardware-планов;
+- range-модель первого шага используем двойную:
+  - `TFmini Plus` как owner-side профиль турели
+  - `HC-SR04` / improved analog как дополнительный laboratory-профиль после закупки;
+- `SD card module` физически относится к `ESP32`;
+- роль `SD card module`:
+  - расширение хранения для тяжелых файлов
+  - резервный прием turret-файлов при синхронизации;
+- `SEAFLO 12V` фиксируется как turret water path на `Raspberry Pi`;
+- turret water scenario:
+  - отпугивание птиц распылением ближе примерно `2 m`
+  - опрыскивание растений через ту же форсунку;
+- irrigation water path фиксируется отдельно:
+  - малый peristaltic pump на `ESP32`
+  - клапаны растений;
+- рабочий turret motion baseline:
+  - `MG996R`
+  - `PCA9685`;
+- шаговые моторы остаются только в `Laboratory` и не участвуют в turret motion;
+- `Soundcore Motion 300` физически в наличии;
+- `ultrasonic_pair` и `horn_pair` фиксируются как пары по `2` штуки каждая;
+- bench-источник для bring-up:
+  - `NICE-POWER dual 30V 10A`;
+- автономный силовой baseline:
+  - `LiFePO4 12V 100Ah with BMS`;
+- боевой `strobe` - часть turret defense-line `v1`, а не отдельный поздний профиль;
+- flyback-диоды закуплены, но их номиналы и placement еще нужно верифицировать по реальным нагрузкам.
+
 ## Сеть и доступ
 
 - Как будут называться `SSID` и hostname для `ESP32` и `Raspberry Pi`?
@@ -81,11 +112,8 @@
 
 ## Hardware Inventory
 
-- Какая камера становится `v1 primary camera`: `OV5647` или `IMX219 130°`?
-- Нужна ли поддержка обеих камер в первом релизе или только одного camera-profile?
-- Какой дальномер считаем основным для `v1`: `HC-SR04` или `TFmini Plus`?
 - Какой именно тип датчика влажности почвы используется в первом прототипе?
-- Где физически живет `SD card module`: на `ESP32`, на `Raspberry Pi` или как опциональный узел?
+- Какой `HC-SR04`-class модуль берем для закупки: классический `HC-SR04` или улучшенный аналог?
 
 ## Electrical And Power
 
@@ -93,10 +121,13 @@
 - Какой power-module становится основным в `v1`: `MP1584`, `LM2596`, `MT3608` или комбинация с четкими ролями?
 - Нужен ли отдельный power interlock для турели и для полива?
 - Как именно электрически читается и публикуется состояние physical emergency power interlock в UI и логах?
+- Хватает ли закупленных flyback-диодов по току, `VRRM` и тепловому запасу для:
+  - `SEAFLO`
+  - peristaltic pump
+  - solenoid valve?
 
 ## Turret Hardware
 
-- `MG996R` — это только prototype motion actuator или временно основной привод?
 - Какой motion sensor становится `v1` wake-profile для турели?
 - Какой усилитель используется для `horn_pair`?
 - Нужен ли отдельный усилитель для `voice_fx`, или Bluetooth speaker path полностью закрывает этот контур?
@@ -104,7 +135,6 @@
 - Какое рабочее напряжение и допустимая мощность у:
   - `horn_pair`
   - `ultrasonic_pair`
-- Какой water-path относится к турели: `Seaflo`, `peristaltic`, `solenoid + nozzle` или комбинация?
 - Должен ли боевой `strobe` физически сидеть на отдельном драйверном канале относительно `strobe_bench`?
 
 ## Irrigation Hardware

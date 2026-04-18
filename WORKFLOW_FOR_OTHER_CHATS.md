@@ -7,16 +7,17 @@
 Перед любыми изменениями нужно открыть:
 
 1. [README.md](README.md)
-2. [docs/26_v1_product_spec.md](docs/26_v1_product_spec.md)
-3. [docs/01_product_decisions.md](docs/01_product_decisions.md)
-4. [docs/02_system_architecture.md](docs/02_system_architecture.md)
-5. [docs/05_ui_shell_and_navigation.md](docs/05_ui_shell_and_navigation.md)
-6. [docs/39_design_decisions_and_screen_map.md](docs/39_design_decisions_and_screen_map.md)
-7. [docs/40_system_shell_navigation_alignment.md](docs/40_system_shell_navigation_alignment.md)
-8. [docs/09_master_design_plan.md](docs/09_master_design_plan.md)
-9. [docs/34_modular_chat_transition_plan.md](docs/34_modular_chat_transition_plan.md)
-10. [briefs/README.md](briefs/README.md)
-11. только после этого нужный brief-файл
+2. [docs/smart_platform_workshop_inventory.xlsx](docs/smart_platform_workshop_inventory.xlsx)
+3. [docs/26_v1_product_spec.md](docs/26_v1_product_spec.md)
+4. [docs/01_product_decisions.md](docs/01_product_decisions.md)
+5. [docs/02_system_architecture.md](docs/02_system_architecture.md)
+6. [docs/05_ui_shell_and_navigation.md](docs/05_ui_shell_and_navigation.md)
+7. [docs/39_design_decisions_and_screen_map.md](docs/39_design_decisions_and_screen_map.md)
+8. [docs/40_system_shell_navigation_alignment.md](docs/40_system_shell_navigation_alignment.md)
+9. [docs/09_master_design_plan.md](docs/09_master_design_plan.md)
+10. [docs/34_modular_chat_transition_plan.md](docs/34_modular_chat_transition_plan.md)
+11. [briefs/README.md](briefs/README.md)
+12. только после этого нужный brief-файл
 
 ## Главные правила
 
@@ -28,6 +29,7 @@
 - Legacy bench/donor-репозитории использовать только как источник идей и выборочной миграции, а не как основной рабочий корень.
 - Не склеивать старые проекты напрямую.
 - Не переносить код без понимания его владельца и зоны ответственности.
+- Аппаратный источник истины по наличию, ownership и power baseline - `docs/smart_platform_workshop_inventory.xlsx`.
 - Не ломать правило одинакового дизайна на `ESP32` и `Raspberry Pi`.
 - Не прятать недоступные разделы полностью: лучше показывать их как серые, но кликабельные с объяснением.
 - User-facing имя инженерного контура — `Laboratory`.

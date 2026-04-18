@@ -30,6 +30,7 @@ into ad-hoc operator memory.
 3. Honest visibility for blocked peer-owned slices.
 4. Persistent session evidence in `Gallery > Reports`.
 5. A way to grow into testcase pass/fail recording without rebuilding the shell again.
+6. A stable path for experimental modules such as `HC-SR04`-class range sensors and stepper drives.
 
 ## Minimum Bring-Up Order
 
@@ -38,7 +39,8 @@ into ad-hoc operator memory.
 3. `ESP32 / Strobe Bench`.
 4. `ESP32 / Irrigation Service`.
 5. `Raspberry Pi / Turret Service`.
-6. `Gallery > Reports` review before the next testcase bundle.
+6. `Laboratory / Experimental Profiles` (`HC-SR04`-class range, stepper drives).
+7. `Gallery > Reports` review before the next testcase bundle.
 
 ## Smartphone Entry Flow
 
@@ -60,6 +62,7 @@ Before deeper hardware testing begins, the phone browser path should already be 
 - entering `Laboratory` should preserve board visibility from the shell header;
 - the operator should still know which board currently owns the active slice;
 - the screen should show what can be tested now and what is still waiting for the second board;
+- experimental slices such as `HC-SR04`-class ranging and stepper drives should stay visible as `Laboratory`-only, not pretend to be product-ready turret controls;
 - this is where interface pain points and desired control density can be collected during real bring-up.
 
 ## Device Entry Baseline Today

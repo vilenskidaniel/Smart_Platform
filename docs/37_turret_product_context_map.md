@@ -296,6 +296,26 @@ Alias-имена той же сущности:
 - wake-path должен поднимать turret contour из `warm standby` при обнаружении движения объекта в радиусе до примерно `20 m`;
 - сценарий должен работать и днем, и ночью, с учетом будущего hardware profile.
 
+## 10.1 Current Hardware Baseline
+
+- primary camera baseline:
+  - `IMX219 130°`
+- range profiles:
+  - `TFmini Plus` как owner-side turret profile
+  - `HC-SR04` / improved analog как laboratory-profile после закупки
+- turret motion baseline:
+  - `MG996R`
+  - `PCA9685`
+- шаговые моторы остаются только laboratory-веткой и не участвуют в turret motion;
+- turret water baseline:
+  - `SEAFLO 12V`
+  - сценарии: отпугивание птиц ближе примерно `2 m` и опрыскивание растений через общую форсунку;
+- strobe остается частью turret defense-line `v1`, а не отдельным поздним профилем;
+- audio stock baseline:
+  - `ultrasonic_pair` = `2`
+  - `horn_pair` = `2`
+  - `Soundcore Motion 300` физически в наличии.
+
 ## 11. Action Model
 
 Полная action-family модель:
@@ -308,9 +328,15 @@ Alias-имена той же сущности:
 Приоритет первой живой аппаратной интеграции:
 
 1. `strobe`
-2. затем `audio`
+2. `water`
+3. затем `audio`
 
 Сейчас углубляем только `strobe`.
+
+Важно:
+
+- это не означает, что `SEAFLO` и другие defense-channels считаются второстепенными на product-level;
+- это означает только то, что текущая углубленная software-проработка в этом слое идет через `strobe` как первый live channel.
 
 `Audio` идет отдельным hardware/product briefing-треком.
 

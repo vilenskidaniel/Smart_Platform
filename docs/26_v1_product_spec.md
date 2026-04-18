@@ -70,6 +70,7 @@
 - зоны полива;
 - датчики почвы;
 - датчики среды;
+- малый peristaltic pump через клапанный каскад растений;
 - ручной запуск;
 - базовый авто-режим;
 - service/test проверка зон и датчиков;
@@ -86,12 +87,17 @@
 - `Manual FPV`
 - базовый `Automatic`
 - live FPV entry point
+- `IMX219 130°` как primary camera baseline;
 - camera / range / vision readiness model
+- `TFmini Plus` как owner-side range profile;
+- `HC-SR04`-class profile как laboratory/bench-дополнение, а не замена owner-side дальномеру;
 - action-family:
   - motion
   - strobe
   - sound / piezo
   - water
+- `SEAFLO 12V` как turret-owned water path;
+- `MG996R + PCA9685` как рабочий motion baseline;
 - rules/policy switches в `Settings`
 - `silent observation`
 - owner-aware открытие из любого shell
@@ -115,6 +121,7 @@
 - `Strobe`
 - `Ultrasonic`
 - `Servos`
+- `Stepper Motor / Drives`
 - `Sprayer / Water`
 - `Audio`
 - `Air Temperature / Humidity`
@@ -135,8 +142,12 @@
 - внутреннее stage-name может оставаться `Service/Test v1`;
 - user-facing имя страницы фиксируется как `Laboratory`.
 - это первая страница для поочередного тестирования отдельных модулей;
+- вкладка `Servos` строится вокруг рабочего turret-baseline `MG996R + PCA9685`;
+- шаговые моторы остаются laboratory-only и не подменяют turret motion layer;
+- вкладка `Lidar` должна уметь тестировать и `TFmini Plus`, и `HC-SR04`-class профиль;
 - вкладка `Motion Sensor` может быть зарезервирована заранее, даже если конкретный датчик еще не выбран;
 - целевой сценарий для `Motion Sensor`: wake-testing turret-контура при обнаружении движения объекта в радиусе до примерно `20 m` днем или ночью;
+- `Laboratory` должна уметь принимать и внеплановые / неизвестные модули без слома общей структуры;
 - параметры экспериментов из `Laboratory` не должны автоматически становиться глобальными настройками системы.
 
 ### `Gallery`

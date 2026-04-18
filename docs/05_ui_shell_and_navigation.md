@@ -219,6 +219,7 @@ User-facing имя:
 - `Strobe`
 - `Ultrasonic`
 - `Servos`
+- `Stepper Motor / Drives`
 - `Sprayer / Water`
 - `Audio`
 - `Air Temperature / Humidity`
@@ -232,6 +233,10 @@ User-facing имя:
 
 - `Motion Sensor` может оставаться зарезервированной вкладкой, даже если конкретный датчик еще не выбран;
 - вкладка `Motion Sensor` должна сразу проектироваться под wake-testing turret-контура при обнаружении движения объекта в радиусе до примерно `20 m` днем или ночью;
+- вкладка `Servos` фиксируется вокруг рабочего turret-baseline `MG996R + PCA9685`;
+- вкладка `Stepper Motor / Drives` существует только для `Laboratory` и не считается частью turret motion UX;
+- вкладка `Lidar` должна уметь тестировать как `TFmini Plus`, так и `HC-SR04`-class laboratory-профиль;
+- `Laboratory` должна уметь принимать и внеплановые / неизвестные модули, не ломая общую tab-based структуру;
 - вкладки строятся по hardware/function groups;
 - peer-owned вкладки остаются видимыми и объясняют блокировку через owner/status.
 

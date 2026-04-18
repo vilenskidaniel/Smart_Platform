@@ -9,6 +9,7 @@
 Главное правило:
 
 - не путать эти уровни между собой.
+- аппаратную правду по наличию и закупкам держать в `docs/smart_platform_workshop_inventory.xlsx`.
 
 ## 1. Продуктовый уровень
 
@@ -62,7 +63,8 @@
 
 - `Irrigation`
 - локальные датчики среды и почвы;
-- SD storage;
+- peristaltic irrigation path и клапанный каскад;
+- SD storage как расширение памяти и приемник резервных turret-sync копий;
 - часть service/power диагностики;
 - fallback shell;
 - `strobe_bench` как bench/service профиль;
@@ -74,11 +76,11 @@
 Локальная зона `Raspberry Pi`:
 
 - `Turret`
-- camera;
-- range sensing;
+- primary camera `IMX219 130°`;
+- range sensing с `TFmini Plus` как owner-side профилем и `HC-SR04`-class как laboratory-профилем;
 - combat `strobe`;
-- turret motion;
-- turret water;
+- turret motion `MG996R` через `PCA9685` baseline;
+- turret water `SEAFLO 12V`;
 - audio;
 - vision and targeting;
 - live media ownership.
@@ -103,6 +105,11 @@
 Для `Raspberry Pi` в turret-контуре базовой считаем модель:
 
 - `warm standby`
+
+Подтвержденный power baseline текущего шага:
+
+- лабораторный bring-up ведем от `NICE-POWER dual 30V 10A`;
+- автономную силовую шину строим вокруг `LiFePO4 12V 100Ah with BMS`.
 
 ## 6. Federated Shell
 
