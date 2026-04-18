@@ -87,6 +87,7 @@
 3. Emergency interlock сильнее software intent.
 4. `Laboratory` не должен автоматически превращать service-tuned параметры в product defaults.
 5. Любой опасный или неясный случай должен попадать в report/evidence path.
+6. Manual power context for bench-sensitive laboratory slices must stay explicit; software must not pretend it knows adjustable supply capabilities when the operator declared battery-only power.
 
 ## 6. Базовая Failure Matrix Для `v1`
 
@@ -94,6 +95,7 @@
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | `SAF-PWR-01` | turret power | emergency interlock active | `Raspberry Pi` | `locked` | `safety_interlock` | observation-only shell | проверить interlock и силовую группу | report-card + event |
 | `SAF-PWR-02` | storage/power | storage unavailable or unstable power causes unsafe writes | local owner | `degraded` | `module_fault` | local read-only or reduced logging | проверить питание и storage path | warning report |
+| `SAF-PWR-03` | laboratory bench power | operator selected battery context or adjustable PSU is unavailable for a voltage-sensitive slice | active laboratory owner | `degraded` or `locked` | `power_profile_guard` | keep hint/status view or low-risk non-calibration checks only | выбрать правильный power context или вернуться к bench PSU | laboratory power warning report |
 | `SAF-WTR-01` | irrigation water path | pump runs but moisture does not rise | `ESP32` | `fault` for zone | `module_fault` | stop irrigation for affected zone | проверить dry-run, leak, sensor validity | irrigation failure report |
 | `SAF-WTR-02` | turret water path | turret water actuator unavailable or unsafe | `Raspberry Pi` | `degraded` or `locked` | `module_fault` | sound/light only defense set | проверить `SEAFLO`, pressure path, interlock | turret action report |
 | `SAF-STB-01` | strobe | product strobe requested in forbidden mode or without readiness | `Raspberry Pi` | `locked` | `service_mode_required` or `module_fault` | no strobe action | проверить mode, owner readiness, interlock | blocked-action report |

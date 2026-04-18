@@ -19,6 +19,7 @@ def build_laboratory_readiness(
 ) -> dict[str, Any]:
     interlocks = runtime.get("interlocks", {})
     summary = runtime.get("summary", {})
+    local_shell_ready = bool(current_node.get("shell_ready", True))
     emergency_latched = bool(interlocks.get("emergency_latched", False))
     fault_latched = bool(interlocks.get("fault_latched", False))
     peer_ready = _peer_ready(peer_node)
@@ -30,69 +31,78 @@ def build_laboratory_readiness(
     preflight = [
         _item(
             "local_shell_ready",
-            "Coordinator shell is reachable",
-            _READY if bool(current_node.get("shell_ready", True)) else _BLOCKED,
-            "Local shell is ready for the next test step."
-            if bool(current_node.get("shell_ready", True))
-            else "Current shell is not ready for coordinated testing yet.",
-            "Open the current shell and confirm the local node is reachable before wiring the next board.",
+            "Local shell is open",
+            _READY if local_shell_ready else _BLOCKED,
+            "This shell is open and ready for the next check."
+            if local_shell_ready
+            else "Open the current shell before starting the next test.",
+            "Stay on the local shell and confirm the page is reachable before touching more hardware.",
         ),
         _item(
             "reports_archive",
-            "Persistent reports history is available",
+            "Reports can be saved",
             _READY if reports_persistent else _ATTENTION,
-            "Gallery > Reports already writes to persistent archive storage."
+            "Gallery > Reports already saves to persistent storage."
             if reports_persistent
-            else "Reports still fall back to volatile platform-log baseline on this node.",
-            "Use Raspberry Pi with content storage enabled so each test pass survives restart.",
+            else "Reports still use a temporary local log on this node.",
+            "You can continue, but move to Raspberry Pi persistent storage if the results must survive restart.",
         ),
         _item(
             "safe_start_mode",
-            "System starts from safe mode",
+            "System starts safely",
             _status_for_mode(active_mode, emergency_latched, fault_latched),
             _mode_summary(active_mode, emergency_latched, fault_latched),
             _mode_action(active_mode, emergency_latched, fault_latched),
         ),
         _item(
             "actuators_idle",
-            "Sensitive channels are idle before reconnect",
+            "Sensitive outputs are idle",
             _BLOCKED if emergency_latched or fault_latched else (_ATTENTION if active_actuators else _READY),
-            "All sensitive turret channels are idle."
+            "Motion, strobe, water, and audio are idle."
             if not active_actuators and not emergency_latched and not fault_latched
-            else "Some turret channels are still active: " + ", ".join(active_actuators)
+            else "Some sensitive channels are still active: " + ", ".join(active_actuators)
             if active_actuators
-            else "Emergency or fault interlock is latched, so the session is not in clean bring-up state.",
-            "Return the runtime to manual safe idle and make sure motion, strobe, water, and audio are inactive.",
+            else "Emergency or fault is still latched, so the session is not in a clean start state.",
+            "Return to safe idle and make sure motion, strobe, water, and audio are all inactive.",
         ),
         _item(
             "peer_owner_link",
-            "Peer owner link is ready for ESP32-owned tests",
+            "ESP32 link is ready",
             _READY if peer_ready else _ATTENTION,
-            "ESP32 peer is reachable and owner handoff can open peer-owned laboratory slices."
+            "ESP32 is reachable, so peer-owned laboratory slices can open through owner handoff."
             if peer_ready
-            else "ESP32 peer is not ready yet, so only local Raspberry Pi slices can be tested right now.",
-            "Power the ESP32 node, wait for shell+sync readiness, then continue with strobe bench and irrigation.",
+            else "ESP32 is not ready yet, so stay on local Raspberry Pi slices for now.",
+            "You can keep testing local Raspberry Pi slices now. Bring ESP32 online before strobe bench or irrigation checks.",
         ),
     ]
 
     bringup_sequence = [
         _step(
             "shell_smoke",
-            "Shell And Reports Smoke",
+            "Open shell and reports",
             "shared",
             "/",
             preflight[0]["status"],
-            "Confirm shell load, Gallery > Reports availability, and local activity summaries before hardware work.",
-            "Start every physical session by verifying the shell, Laboratory entry, and report archive path.",
+            "Check that the shell opens, Laboratory is reachable, and Reports can be reviewed.",
+            "Start every physical session by confirming the shell path before deeper hardware work.",
+        ),
+        _step(
+            "rpi_display_checks",
+            "Raspberry Pi / Displays",
+            "rpi",
+            "/service?tool=rpi_touch_display",
+            _READY if local_shell_ready else _BLOCKED,
+            "Run the owner-side screen pass: color patterns, fullscreen check, and touch grid.",
+            "Use this step for the local display pass before or between deeper module checks.",
         ),
         _step(
             "peer_link_smoke",
-            "Peer Link And Owner Handoff",
+            "Check peer link",
             "shared",
             "/service",
             _READY if peer_ready else _ATTENTION,
-            "Verify peer heartbeat, sync readiness, and owner-aware handoff before touching ESP32-owned modules.",
-            "Use this step to confirm the ESP32 owner shows as reachable from the coordinator shell.",
+            "Verify heartbeat, sync, and owner-aware handoff before opening ESP32-owned slices.",
+            "Use this step to confirm ESP32 really appears as the owner from the current shell.",
         ),
         _step(
             "esp32_strobe_bench",
@@ -100,8 +110,8 @@ def build_laboratory_readiness(
             "esp32",
             "/service?tool=strobe_bench",
             _READY if peer_ready else _BLOCKED,
-            "Short pulse and preset bring-up for the bench strobe should happen before integrated turret tests.",
-            "Begin with the lowest-energy pulse testcase and keep the hardware emergency chain available.",
+            "Run the short pulse and preset pass before integrated turret tests.",
+            "Start with the lowest-energy pulse and keep the emergency chain available.",
         ),
         _step(
             "esp32_irrigation_service",
@@ -109,8 +119,8 @@ def build_laboratory_readiness(
             "esp32",
             "/service?tool=irrigation_service",
             _READY if peer_ready else _BLOCKED,
-            "Validate zone service commands, sensor simulation, and owner handoff without Raspberry Pi pretending to own irrigation.",
-            "Run dry and short-duration testcases first, then move to water-path checks only after service control is stable.",
+            "Check zone commands, sensor simulation, and owner handoff without fake local irrigation ownership.",
+            "Run dry and short-duration cases first, then move to water-path checks after service control looks stable.",
         ),
         _step(
             "turret_service_lane",
@@ -118,17 +128,17 @@ def build_laboratory_readiness(
             "rpi",
             "/service?tool=turret_service",
             _status_for_turret_lane(active_mode, emergency_latched, fault_latched),
-            "Validate local turret runtime, interlock visibility, and service scenarios from the Raspberry Pi owner shell.",
-            "Confirm emergency visibility, safe idle scenario, and owner-side action gating before integrated turret IO tests.",
+            "Check local turret runtime, interlock visibility, and service scenarios from the Raspberry Pi owner shell.",
+            "Confirm emergency visibility, safe idle, and owner-side action gating before integrated turret IO tests.",
         ),
         _step(
             "reports_review",
-            "Gallery > Reports Review",
+            "Review reports",
             "shared",
             "/gallery?tab=reports",
             _READY if reports_persistent else _ATTENTION,
-            "Review chronological evidence after each board/module step before moving to the next testcase bundle.",
-            "Use Reports as the canonical session history instead of relying on transient live-log text alone.",
+            "Review the saved evidence before moving to the next bundle of checks.",
+            "Use Reports as the session history instead of relying only on the live log.",
         ),
     ]
 
@@ -167,26 +177,26 @@ def _status_for_mode(active_mode: str, emergency_latched: bool, fault_latched: b
 
 def _mode_summary(active_mode: str, emergency_latched: bool, fault_latched: bool) -> str:
     if emergency_latched or active_mode == "emergency":
-        return "Emergency interlock is latched. Physical bring-up must stop until the chain is cleared."
+        return "Emergency is latched. Stop physical bring-up until it is cleared."
     if fault_latched or active_mode == "fault":
-        return "Fault interlock is latched. Resolve the fault before the next hardware testcase."
+        return "Fault is latched. Clear it before the next hardware test."
     if active_mode == "automatic":
-        return "Automatic mode is active. Sequential hardware bring-up should return to manual or service-safe state first."
+        return "Automatic mode is active. Return to manual or service-safe mode first."
     if active_mode == "service_test":
-        return "Service/test mode is active and already suitable for isolated module bring-up."
-    return "Runtime starts from manual baseline, which is appropriate for sequential hardware testing."
+        return "Service/test mode is active and suitable for isolated module checks."
+    return "Manual mode is active, which is a good baseline for step-by-step testing."
 
 
 def _mode_action(active_mode: str, emergency_latched: bool, fault_latched: bool) -> str:
     if emergency_latched or active_mode == "emergency":
-        return "Clear the hardware/software emergency state before reconnecting any sensitive branch."
+        return "Clear the emergency state before reconnecting any sensitive branch."
     if fault_latched or active_mode == "fault":
-        return "Resolve the active fault, then clear the interlock and return to manual."
+        return "Resolve the fault, clear the latch, and return to manual."
     if active_mode == "automatic":
-        return "Switch back to manual before continuing with isolated module tests."
+        return "Switch back to manual before continuing with isolated tests."
     if active_mode == "service_test":
-        return "Stay in service/test while running isolated module slices."
-    return "Manual baseline is fine for shell smoke and controlled bring-up."
+        return "Stay in service/test while you run isolated module slices."
+    return "Stay in manual while you work through the bring-up order."
 
 
 def _status_for_turret_lane(active_mode: str, emergency_latched: bool, fault_latched: bool) -> str:
@@ -209,12 +219,12 @@ def _combine_statuses(statuses: list[str]) -> str:
 
 def _overall_summary(overall_status: str, preflight: list[dict[str, Any]]) -> str:
     if overall_status == _READY:
-        return "Testing readiness is green. The next board/module can be connected in the suggested bring-up order."
+        return "Readiness looks good. Follow the bring-up order below."
     if overall_status == _BLOCKED:
         blockers = [item["title"] for item in preflight if item["status"] == _BLOCKED]
-        return "Testing is blocked until these items are cleared: " + ", ".join(blockers)
+        return "Testing is blocked. Clear these items first: " + ", ".join(blockers)
     warnings = [item["title"] for item in preflight if item["status"] == _ATTENTION]
-    return "Testing can continue with caution. Attention is required for: " + ", ".join(warnings)
+    return "You can continue, but watch these items: " + ", ".join(warnings)
 
 
 def _next_action(preflight: list[dict[str, Any]], bringup_sequence: list[dict[str, Any]]) -> dict[str, Any]:

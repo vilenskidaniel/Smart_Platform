@@ -146,6 +146,9 @@ def build_server(config: BridgeConfig, state: BridgeState, sync_client: SyncClie
             if parsed.path == "/service/turret":
                 self._serve_file(web_root / "service_turret.html", "text/html; charset=utf-8")
                 return
+            if parsed.path == "/service/displays":
+                self._serve_file(web_root / "service_displays.html", "text/html; charset=utf-8")
+                return
             if parsed.path == "/api/v1/system":
                 self._json_response(state.build_system_snapshot())
                 return

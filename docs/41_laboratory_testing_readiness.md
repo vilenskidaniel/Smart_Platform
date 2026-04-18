@@ -31,6 +31,8 @@ into ad-hoc operator memory.
 4. Persistent session evidence in `Gallery > Reports`.
 5. A way to grow into testcase pass/fail recording without rebuilding the shell again.
 6. A stable path for experimental modules such as `HC-SR04`-class range sensors and stepper drives.
+7. A visible manual power context for bench-sensitive slices such as strobe qualification.
+8. Usable behavior both in normal phone-browser mode and in fullscreen app-like mode.
 
 ## Minimum Bring-Up Order
 
@@ -62,7 +64,11 @@ Before deeper hardware testing begins, the phone browser path should already be 
 - entering `Laboratory` should preserve board visibility from the shell header;
 - the operator should still know which board currently owns the active slice;
 - the screen should show what can be tested now and what is still waiting for the second board;
+- category-first navigation should keep the phone IA readable even when the second-level slices stay technical;
 - experimental slices such as `HC-SR04`-class ranging and stepper drives should stay visible as `Laboratory`-only, not pretend to be product-ready turret controls;
+- Raspberry Pi display testing should live in its own `Displays` slice and stay visibly blocked from `ESP32`-only sessions until the owner board is present;
+- the operator should be able to declare whether the current session uses `Bench PSU` or `LiFePO4 battery` before voltage-sensitive bring-up;
+- browser mode and fullscreen mode should both preserve owner/status visibility while changing layout density;
 - this is where interface pain points and desired control density can be collected during real bring-up.
 
 ## Device Entry Baseline Today
@@ -133,6 +139,7 @@ This order is intentionally board-aware:
   - preflight checklist;
   - bring-up sequence with current status;
   - next recommended action.
+- the bring-up sequence now includes a direct `Raspberry Pi / Displays` step with deep link to `Laboratory / Displays`.
 
 ## Smartphone Smoke Checklist
 
@@ -145,8 +152,11 @@ Use this exact order for the first physical browser passes.
 - Confirm the top ribbon shows `ESP32` as current shell and `Raspberry Pi` as missing peer.
 - Confirm the ribbon exposes `wifi / shell / sync` values instead of only a generic online badge.
 - Enter `Laboratory`.
+- Set the visible power context before opening a bench-sensitive slice.
 - Confirm `ESP32` local slices remain available.
 - Confirm peer-owned slices stay visibly blocked instead of failing after tap.
+- Confirm the `Displays` slice stays blocked because `Raspberry Pi` is absent.
+- Switch between browser mode and fullscreen mode and confirm the category/module navigation still stays readable.
 - Record every unclear label, missing status, or mobile layout pain point into the session notes.
 
 ### Pass 2. `Raspberry Pi` only
@@ -157,6 +167,8 @@ Use this exact order for the first physical browser passes.
 - Enter `Laboratory`.
 - Confirm readiness explains what can be tested now and what still waits for the peer board.
 - Confirm local turret-side pages stay reachable without pretending `ESP32` ownership.
+- Open `Displays` and run at least one color pattern plus touch-grid pass on the Raspberry Pi screen.
+- Switch between browser mode and fullscreen mode and confirm shell status, category rail, and active slice remain visible.
 - Record missing explanations, crowded controls, and any status that feels too engineering-heavy for the phone shell.
 
 ### Pass 3. both boards connected
@@ -166,6 +178,7 @@ Use this exact order for the first physical browser passes.
 - Confirm peer-owned routes now switch from blocked to owner-aware handoff.
 - Enter `Laboratory` and confirm the same board visibility is preserved.
 - Open at least one peer-owned slice through the shell contract and confirm the handoff feels intentional rather than browser-like.
+- Confirm browser mode and fullscreen mode both preserve the same owner and power context semantics.
 - End the pass by opening `Gallery > Reports` and checking that the session evidence is visible for review.
 
 ### Evidence To Capture During Each Pass
@@ -174,8 +187,116 @@ Use this exact order for the first physical browser passes.
 - which shell URL was opened;
 - what the top ribbon showed;
 - whether `Home -> Laboratory` preserved board context;
+- which power context was selected for the session;
+- whether browser and fullscreen modes changed density without losing context;
 - which controls felt missing, redundant, or too dense for the phone;
 - which step felt confusing enough that we should later turn it into explicit UI guidance.
+
+## Practical Hardware Checklist For The First Real Pass
+
+This section is intentionally more concrete than the higher-level smoke list above.
+
+Use it when a real phone and a real `8-inch` Raspberry Pi panel are already on the bench.
+
+### Card A. Phone Browser Pass
+
+Before starting:
+
+- note the phone model;
+- note the browser and version if it matters;
+- note portrait or landscape orientation;
+- note whether the pass begins from `ESP32`, `Raspberry Pi`, or dual-board state.
+
+Run this order:
+
+1. open the current shell URL on the phone;
+2. confirm the top ribbon is readable without zooming;
+3. confirm the current board and missing peer are understandable at a glance;
+4. open `Home -> Laboratory` and confirm board context is preserved;
+5. switch one time between normal browser mode and fullscreen mode;
+6. open one available slice and one blocked slice;
+7. record whether the blocked slice explains itself clearly enough for a non-author operator.
+
+Mark the pass as:
+
+- `pass` if the shell stays readable, owner context is obvious, and blocked slices explain themselves;
+- `warn` if the path works but labels, chips, density, or fullscreen behavior feel confusing;
+- `fail` if the operator loses board context, cannot tell who owns the active slice, or blocked pages look broken instead of intentionally blocked.
+
+### Card B. `8-inch` Raspberry Pi Display Pass
+
+Preconditions:
+
+- `Raspberry Pi` is the current owner shell;
+- the panel is connected through `HDMI` and `USB touch`;
+- the operator can open `Laboratory / Displays`.
+
+Run this order:
+
+1. open `Laboratory -> Displays -> Raspberry Pi Touch Display`;
+2. verify the page opens without losing shell or owner context;
+3. run `white`, `black`, `red`, `green`, `blue`, and `grayscale` patterns;
+4. run `checker` and `grid` patterns for geometry and scaling;
+5. check the four edges and four corners for clipping, dead zones, or obvious distortion;
+6. complete the `12-zone` touch grid;
+7. repeat at least one visual pattern and one touch check in fullscreen mode;
+8. return to browser mode and note whether density, readability, or touch comfort changed.
+
+Mark the pass as:
+
+- `pass` if patterns look correct, touch reaches all zones, and fullscreen does not break the workflow;
+- `warn` if the page works but there is drift, edge discomfort, dense layout, or visible scaling compromise;
+- `fail` if touch misses zones, geometry is clearly wrong, or the operator loses practical control in one of the two view modes.
+
+### Card C. Evidence Bundle To Save Right After The Pass
+
+Capture at least these facts:
+
+- date and operator;
+- which board state was active: `ESP32 only`, `Raspberry Pi only`, or dual-board;
+- phone model and browser;
+- whether the pass used browser mode only or both browser and fullscreen;
+- selected power context;
+- result for phone pass: `pass`, `warn`, or `fail`;
+- result for display pass: `pass`, `warn`, or `fail`;
+- short list of concrete issues, not only general impressions.
+
+Recommended short wording for operator notes:
+
+- `context:` which board and which screen was used;
+- `worked:` what stayed clear and usable;
+- `friction:` what felt slow, unclear, too dense, or misleading;
+- `result:` `pass`, `warn`, or `fail`;
+- `next change:` one concrete UI or readiness improvement.
+
+## Near-Term Improvement Plan For `laboratory_readiness.py`
+
+The current readiness layer already gives honest system state.
+
+The most useful recent improvements are already in place:
+
+- readiness copy is now shorter and easier to scan on a phone;
+- readiness now has an explicit `Raspberry Pi / Displays` step.
+
+The next useful improvements should focus on operator clarity beyond that, not on adding more abstract status prose.
+
+### Step 1. Reflect phone/browser context in readiness output
+
+- add a lightweight notion of `browser` versus `fullscreen` pass state;
+- surface whether the operator already reviewed both modes;
+- keep this as session guidance, not as fake hardware truth.
+
+### Step 2. Add evidence-oriented next actions
+
+- let `next_action` point not only to the next route, but also to the expected evidence bundle;
+- make it easier to move from a completed pass into `Gallery > Reports` review;
+- keep the action phrasing short enough for in-UI chips or compact cards.
+
+### Step 3. Split local-only and dual-board operator guidance more cleanly
+
+- keep the current owner-aware logic;
+- make single-board advice explicitly different from dual-board advice;
+- avoid one generic text block trying to cover all three states at once.
 
 ## Still Missing After This Step
 

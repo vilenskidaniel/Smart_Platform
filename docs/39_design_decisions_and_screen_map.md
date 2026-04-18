@@ -188,11 +188,23 @@ Alias-имена той же сущности:
 
 Структура страницы:
 
-- в верхней левой части - первый уровень tab-bar по модулям;
+- в верхней левой части - первый уровень category bar;
+- под ним - второй уровень module rail по hardware/function slices выбранной категории;
 - сверху - системный status-bar с участием плат;
 - ниже - рабочая область выбранной вкладки.
 
-Базовый набор вкладок `v1`:
+Первый уровень категорий `v1`:
+
+- `Light`
+- `Drives`
+- `Water`
+- `Audio`
+- `Sensors`
+- `Camera`
+- `Displays`
+- `Experimental`
+
+Второй уровень module slices `v1`:
 
 - `Strobe`
 - `Ultrasonic`
@@ -206,14 +218,20 @@ Alias-имена той же сущности:
 - `Lidar`
 - `Camera`
 - `Motion Sensor`
+- `Raspberry Pi Touch Display`
 
 Важно:
 
+- `Ultrasonic` здесь означает tweeter / emitter laboratory slice;
+- `HC-SR04`-class range sensors живут внутри `Lidar` как experimental profile, а не как переименование `Ultrasonic`;
+- вкладка `Displays` держит owner-side `Raspberry Pi Touch Display` отдельно от `Camera` и остается visibly blocked в `ESP32`-only shell, пока `Raspberry Pi` не доступен;
 - вкладка `Motion Sensor` должна сразу проектироваться под wake-testing turret-контура при обнаружении движения объекта в радиусе до примерно `20 m` днем или ночью;
 - вкладка `Servos` фиксируется вокруг рабочего turret-baseline `MG996R + PCA9685`;
 - вкладка `Stepper Motor / Drives` существует только для `Laboratory` и не подменяет turret motion UX;
 - вкладка `Lidar` должна уметь тестировать как `TFmini Plus`, так и `HC-SR04`-class laboratory-профиль;
 - `Laboratory` должна уметь принимать и внеплановые / неизвестные модули без слома tab-based навигации;
+- browser mode и fullscreen mode должны иметь разную плотность chrome и controls, но одинаковую owner/status visibility;
+- bench-sensitive slices должны показывать явный power-context chip и честно блокировать PSU-dependent calibration flow при battery-context.
 
 Каждая вкладка должна содержать:
 
@@ -224,6 +242,7 @@ Alias-имена той же сущности:
   - чекбоксы
   - поля ввода
   - индикаторы
+- ожидаемый результат и краткую operator hint-зону;
 - окно текстовых отчетов и реакции системы;
 - расширенную terminal-like панель.
 
@@ -239,10 +258,16 @@ Alias-имена той же сущности:
 Каждая laboratory-вкладка должна визуально держать один и тот же каркас:
 
 - заголовок и owner/reason chips сверху;
+- power context и fullscreen/browser context chips в том же верхнем слое;
 - первый слой: structured status cards;
 - второй слой: controls и forms;
 - третий слой: terminal/report region;
 - optional graphs / additional evidence blocks ниже.
+
+Дополнительный contract на будущее:
+
+- laboratory presets могут позже повышаться до system-level settings только через явный review/apply flow;
+- до этого момента они остаются laboratory-local и не переписывают product surfaces автоматически.
 
 Это нужно, чтобы даже разные по смыслу вкладки ощущались одной системой, а не набором случайных utility pages.
 

@@ -317,25 +317,58 @@ const char kFallbackServiceHubHtml[] PROGMEM = R"HTML(
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Smart Platform / Laboratory</title>
   <style>
-    body { font-family: "Segoe UI", sans-serif; margin: 0; background: #f3f7f1; color: #1f2d23; }
-    .wrap { max-width: 980px; margin: 0 auto; padding: 32px 18px; }
-    .card { background: #ffffff; border-radius: 20px; padding: 22px; box-shadow: 0 12px 28px rgba(24, 38, 29, 0.08); }
-    h1 { margin-top: 0; }
-    a { color: #315d42; }
-    pre { background: #18221b; color: #e7f4e7; padding: 14px; border-radius: 16px; overflow: auto; }
+        body { font-family: "Segoe UI", sans-serif; margin: 0; background: #edf3ea; color: #1f2d23; }
+        .wrap { max-width: 1080px; margin: 0 auto; padding: 28px 16px 36px; }
+        .hero, .card { background: #ffffff; border-radius: 22px; padding: 22px; box-shadow: 0 12px 28px rgba(24, 38, 29, 0.08); }
+        .hero { margin-bottom: 16px; background: linear-gradient(135deg, #234934, #4a7252); color: #f3faf4; }
+        .hero p { color: rgba(243, 250, 244, 0.84); }
+        .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+        h1, h2 { margin-top: 0; }
+        a { color: #315d42; }
+        ul { margin: 10px 0 0; padding-left: 18px; }
+        li { margin-bottom: 6px; }
+        pre { background: #18221b; color: #e7f4e7; padding: 14px; border-radius: 16px; overflow: auto; }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="card">
+        <div class="hero">
       <h1>Laboratory</h1>
-      <p>Laboratory hub is not loaded from <code>LittleFS</code> yet, so the firmware fallback screen is shown.</p>
-      <pre>/service/strobe
+            <p>LittleFS did not provide the full mobile Laboratory workspace, so this fallback keeps the new category-first structure visible instead of dropping back to a flat service launcher.</p>
+            <p>Power context still matters: battery mode should avoid PSU-dependent bench calibration flows even when the full UI is missing.</p>
+        </div>
+        <div class="grid">
+            <div class="card">
+                <h2>Categories</h2>
+                <ul>
+                    <li>Light: Bench Strobe, Turret Strobe, LED Outputs</li>
+                    <li>Drives: Servos, Stepper Drives</li>
+                    <li>Water: Irrigation Chain, Sprayer / Turret Water</li>
+                    <li>Audio: Audible Audio, Ultrasonic Tweeters</li>
+                    <li>Sensors: Soil, Lidar, Air, Motion</li>
+                    <li>Camera: owner-aware preview and readiness checks</li>
+                    <li>Displays: Raspberry Pi touch-panel qualification stays owner-aware</li>
+                    <li>Experimental stays visible even when incomplete</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h2>Working Slices</h2>
+                <pre>/service/strobe
 /service/irrigation
-/api/v1/modules
-/api/v1/shell/snapshot</pre>
-      <p><a href="/">Вернуться в shell</a></p>
+/api/v1/shell/snapshot
+/api/v1/logs?limit=24</pre>
+            </div>
+            <div class="card">
+                <h2>Fallback Rules</h2>
+                <ul>
+                    <li>Keep blocked owner-owned slices visible.</li>
+                    <li>Do not pretend peer-owned controls are local.</li>
+                    <li>Keep Laboratory presets separate from product settings until explicit review.</li>
+                    <li>Use Gallery &gt; Reports and the platform log as the evidence path.</li>
+                </ul>
+            </div>
     </div>
+        <p><a href="/">Вернуться в shell</a></p>
   </div>
 </body>
 </html>

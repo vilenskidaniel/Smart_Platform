@@ -21,19 +21,22 @@
 
 Это одна отдельная страница с вкладками:
 
-- первый уровень вкладок строится по модулям;
-- вкладки располагаются в верхней левой части экрана;
+- первый уровень строится по понятным категориям для телефона;
+- второй уровень внутри категории строится по module slices;
+- category bar и module rail располагаются в верхней части экрана;
 - под ними меняется рабочая область;
 - в рабочей области всегда должны быть:
   - состояние
   - элементы взаимодействия
   - окно текстовых отчетов и реакции системы
+  - expected-result hints
 
 Визуальное направление для `v1`:
 
 - android-like UI language;
 - app-like навигация без полного reload всего экрана;
 - fullscreen-ready поведение;
+- разные layout-режимы для browser и fullscreen использования на телефоне;
 - полная видимость даже неподдерживаемых модулей и правил.
 
 ## Обязательная логика доступности
@@ -57,7 +60,18 @@
 
 ## Первая обязательная структура вкладок
 
-Первый уровень строится по hardware/function groups, а не по owner и не по крупным product-модулям:
+Первый уровень строится по крупным категориям, а не по owner:
+
+- `Light`
+- `Drives`
+- `Water`
+- `Audio`
+- `Sensors`
+- `Camera`
+- `Displays`
+- `Experimental`
+
+Второй уровень внутри категории строится по hardware/function groups:
 
 - `Strobe`
 - `Ultrasonic`
@@ -71,12 +85,16 @@
 - `Lidar`
 - `Camera`
 - `Motion Sensor`
+- `Raspberry Pi Touch Display`
 
 Важно:
 
+- `Ultrasonic` здесь означает tweeter / emitter laboratory slice;
+- `HC-SR04`-class profile остается experimental частью `Lidar`, а не подменяет `Ultrasonic`;
 - `Servos` фиксируются вокруг рабочего turret-baseline `MG996R + PCA9685`;
 - `Stepper Motor / Drives` - strictly laboratory-only ветка и не часть turret motion UX;
 - `Lidar` должен уметь тестировать owner-side `TFmini Plus` и `HC-SR04`-class laboratory-профили;
+- `Displays` держит owner-side `Raspberry Pi Touch Display` отдельно от `Camera` и остается visibly blocked в `ESP32`-only shell, пока `Raspberry Pi` не доступен;
 - `Laboratory` должна уметь принимать и внеплановые / неизвестные модули без слома общей структуры.
 
 Верхний статус-бар Laboratory должен показывать:
@@ -93,16 +111,32 @@
 
 - проверять отдельные подсистемы;
 - подбирать тайминги, частоты, уровни и сценарии;
+- явно видеть power context для bench-sensitive модулей;
 - видеть реакцию системы в расширенном текстовом окне;
 - затем сохранять рабочие параметры.
 
 Следующая обязательная стадия:
 
 - перейти от разовых значений к единому profile/preset contract платформы;
+- не применять эти значения глобально автоматически;
+- дать оператору явный review/apply flow для повышения laboratory profile до системной настройки;
 - применять сохраненные параметры в:
   - `automatic`
   - `manual FPV`
   - повторных laboratory-сценариях
+
+## Power Context Baseline
+
+Для slices, завязанных на adjustable bench supply, фиксируем явный ручной контекст:
+
+- `Bench PSU`
+- `LiFePO4 battery`
+
+Это нужно, чтобы:
+
+- не притворяться, что shell знает smart-features зарядки, когда питание идет от батареи;
+- честно блокировать или снижать scope voltage-sensitive calibration flow в battery-context;
+- оставлять operator-visible причину и путь возврата к полноценному bench режиму.
 
 ## Audio Baseline
 

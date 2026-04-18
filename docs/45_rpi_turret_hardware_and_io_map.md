@@ -22,6 +22,7 @@
 - `IMX219 130°` primary camera;
 - `TFmini Plus` owner-side range profile;
 - `MG996R + PCA9685` motion baseline;
+- owner-side display qualification for `8-inch Raspberry Pi 5 4 Monitor LCD`, `1280x800`, `16:10`, `HDMI + USB touch`;
 - turret `audio` family;
 - turret `strobe` action channel;
 - `SEAFLO 12V` turret water path;
@@ -31,6 +32,7 @@
 
 - camera interface;
 - servo / driver control path;
+- display output and touch input path;
 - range interface;
 - audio output path;
 - strobe control boundary;
@@ -103,6 +105,7 @@
 | `IMX219 130°` | primary camera | `Turret` / `Manual FPV` / `Automatic` | `CSI` camera path | local logic + camera rail | confirmed baseline |
 | `TFmini Plus` | owner-side range | `Turret` and `Laboratory / Lidar` | `UART` or equivalent range link | logic rail | confirmed baseline, exact wiring still open |
 | `MG996R + PCA9685` | motion baseline | `Turret` and `Laboratory / Servos` | `I2C` driver + servo PWM outputs | separate servo rail | confirmed baseline |
+| `8-inch Raspberry Pi 5 4 Monitor LCD` | owner-side display qualification | `Laboratory / Displays` | `HDMI` video + `USB` touch path | Raspberry Pi display power path | confirmed laboratory display baseline |
 | `SEAFLO 12V` | turret water path | `Turret` and `Laboratory / Sprayer` | protected switch / driver boundary | `12V` turret water rail | confirmed baseline |
 | Turret `strobe` | deterrence action | `Turret` and `Laboratory / Strobe` | protected switch / driver boundary | dedicated strobe power path | confirmed family, exact channel wiring open |
 | Turret `audio` | deterrence / voice / signal family | `Turret` and `Laboratory / Audio` | one dual-channel driver for `ultrasonic_pair` + `horn_pair`, plus Bluetooth path for `voice_fx` | separate audio path | family confirmed, stereo driver topology fixed, exact board wiring still open |

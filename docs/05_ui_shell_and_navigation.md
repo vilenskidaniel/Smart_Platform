@@ -248,14 +248,26 @@ User-facing имя:
 
 ### Общая структура
 
-- в верхней левой части экрана расположены вкладки;
-- первый уровень вкладок строится по тестируемым модулям, а не по владельцам;
+- в верхней левой части экрана расположен category bar;
+- первый уровень строится по понятным user-facing категориям, а не по владельцам;
+- второй уровень внутри категории строится по module slices и hardware families;
 - сверху всегда есть статус-бар системы;
 - статус-бар показывает, какие платы участвуют в системе;
 - неучаствующие модули видимы, но серые и блокируются так же, как в shell.
 - навигация внутри `Laboratory` должна быть tab-based и без полного reload.
 
-### Базовый набор вкладок `v1`
+### Первый уровень категорий `v1`
+
+- `Light`
+- `Drives`
+- `Water`
+- `Audio`
+- `Sensors`
+- `Camera`
+- `Displays`
+- `Experimental`
+
+### Второй уровень module slices `v1`
 
 - `Strobe`
 - `Ultrasonic`
@@ -269,11 +281,15 @@ User-facing имя:
 - `Lidar`
 - `Camera`
 - `Motion Sensor`
+- `Raspberry Pi Touch Display`
 
 Важно:
 
+- `Ultrasonic` в этом контуре означает laboratory slice для tweeter / emitter family;
+- range-oriented experimental profiles вроде `HC-SR04`-class остаются частью `Lidar`, а не переименовывают `Ultrasonic`;
 - `Motion Sensor` может оставаться зарезервированной вкладкой, даже если конкретный датчик еще не выбран;
 - вкладка `Motion Sensor` должна сразу проектироваться под wake-testing turret-контура при обнаружении движения объекта в радиусе до примерно `20 m` днем или ночью;
+- вкладка `Displays` держит owner-side screen qualification отдельно от `Camera`; `ESP32`-only shell должен показывать ее как blocked до появления `Raspberry Pi` owner-side узла;
 - вкладка `Servos` фиксируется вокруг рабочего turret-baseline `MG996R + PCA9685`;
 - вкладка `Stepper Motor / Drives` существует только для `Laboratory` и не считается частью turret motion UX;
 - вкладка `Lidar` должна уметь тестировать как `TFmini Plus`, так и `HC-SR04`-class laboratory-профиль;
@@ -295,6 +311,8 @@ User-facing имя:
   - ползунки
 - окно с текстовыми отчетами и реакцией системы;
 - расширенную terminal-like зону;
+- явную подсказку, что именно выбирает оператор и какой результат ожидается от тестируемого модуля;
+- power-context visibility для bench-sensitive модулей;
 - при необходимости графики и дополнительные отчеты.
 
 ### Принципы UX
@@ -303,6 +321,10 @@ User-facing имя:
 - навигация внутри `Laboratory` не должна требовать полного reload;
 - должен быть fullscreen workspace;
 - визуальный стиль надо держать ближе к Android UI-языку.
+- обычный browser mode и fullscreen mode считаются двумя разными layout-режимами одной страницы;
+- в browser mode интерфейс может оставлять больше explanatory cards и shell framing;
+- в fullscreen mode chrome уплотняется и ведет себя ближе к приложению, освобождая вертикальное пространство под controls, feedback и evidence;
+- важные owner/status/power chips не должны исчезать при переходе между browser и fullscreen режимами.
 
 ### Граница `Laboratory` и `Settings`
 
@@ -310,6 +332,7 @@ User-facing имя:
 - `Laboratory` не заменяет `Settings`, а дает изолированный контур экспериментов и bring-up;
 - product-level policies и user choices из `Settings` не должны скрывать или переписывать laboratory controls;
 - общие shell-токены языка и app chrome могут оставаться едиными, но лабораторные тестовые параметры не должны автоматически становиться системными настройками.
+- при этом laboratory profiles и presets должны проектироваться так, чтобы позже оператор мог явно повысить их до системных настроек через отдельный confirm/apply flow, а не через неявную синхронизацию.
 
 ## 9. `Gallery`
 

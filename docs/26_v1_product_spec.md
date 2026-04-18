@@ -118,37 +118,63 @@
 Что входит в `v1`:
 
 - `Laboratory`, `Diagnostics`, `Test Bench` и `Service/Test` считаем одной сущностью
-- `Strobe`
-- `Ultrasonic`
-- `Servos`
-- `Stepper Motor / Drives`
-- `Sprayer / Water`
-- `Audio`
-- `Air Temperature / Humidity`
-- `Soil Moisture + Valves + Peristaltic`
-- `LED`
-- `Lidar`
-- `Camera`
-- `Motion Sensor`
+- гибридная navigation model для телефона:
+  - первый уровень: category tabs
+  - второй уровень: module slices
+- первый уровень категорий:
+  - `Light`
+  - `Drives`
+  - `Water`
+  - `Audio`
+  - `Sensors`
+  - `Camera`
+  - `Displays`
+  - `Experimental`
+- второй уровень module slices:
+  - `Strobe`
+  - `Ultrasonic`
+  - `Servos`
+  - `Stepper Motor / Drives`
+  - `Sprayer / Water`
+  - `Audio`
+  - `Air Temperature / Humidity`
+  - `Soil Moisture + Valves + Peristaltic`
+  - `LED`
+  - `Lidar`
+  - `Camera`
+  - `Motion Sensor`
+  - `Raspberry Pi Touch Display`
 - structured status cards
+- explicit expected-result hints and operator guidance
 - логи, графики, отчеты и terminal-like окно
+- browser mode for normal phone use through Chrome
+- fullscreen app-like mode with denser control layout
 - fullscreen workspace
 - app-like навигация без полного reload
-- вкладочная структура по модулям
+- вкладочная структура по категориям и модульным срезам
 - изолированная среда для bring-up и экспериментов, не заменяющая `Settings`
 
 Важно:
 
 - внутреннее stage-name может оставаться `Service/Test v1`;
 - user-facing имя страницы фиксируется как `Laboratory`.
-- это первая страница для поочередного тестирования отдельных модулей;
+- это первая страница для поочередного тестирования отдельных модулей, но первый UX-уровень должен группировать их в понятные категории для телефона;
+- slice `Ultrasonic` означает laboratory-only tweeter / emitter family, а не range-sensing;
+- `HC-SR04`-class профиль остается experimental частью slice `Lidar`, а не переопределяет `Ultrasonic`;
+- вкладка `Displays` выделяется отдельно от `Camera` и сейчас в `v1` держит owner-side `Raspberry Pi Touch Display` для `8-inch`, `1280x800`, `HDMI + USB touch` панели;
 - вкладка `Servos` строится вокруг рабочего turret-baseline `MG996R + PCA9685`;
 - шаговые моторы остаются laboratory-only и не подменяют turret motion layer;
 - вкладка `Lidar` должна уметь тестировать и `TFmini Plus`, и `HC-SR04`-class профиль;
 - вкладка `Motion Sensor` может быть зарезервирована заранее, даже если конкретный датчик еще не выбран;
 - целевой сценарий для `Motion Sensor`: wake-testing turret-контура при обнаружении движения объекта в радиусе до примерно `20 m` днем или ночью;
+- из `ESP32`-only shell display slice должен оставаться видимым, но locked до появления `Raspberry Pi` owner-side узла;
 - `Laboratory` должна уметь принимать и внеплановые / неизвестные модули без слома общей структуры;
-- параметры экспериментов из `Laboratory` не должны автоматически становиться глобальными настройками системы.
+- параметры экспериментов из `Laboratory` не должны автоматически становиться глобальными настройками системы;
+- при этом `Laboratory` должна быть спроектирована так, чтобы позже оператор мог явно повысить выбранный laboratory profile или preset до системной настройки в `Settings` с последующим применением в `Manual`, `FPV` и других релевантных user-facing режимах;
+- slices, завязанные на adjustable bench supply, должны уметь честно различать manual power context:
+  - `Bench PSU`
+  - `LiFePO4 battery`
+- при battery-context voltage-dependent calibration flow остается advisory-only или blocked до появления отдельного battery-safe profile.
 
 ### `Gallery`
 
