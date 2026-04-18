@@ -26,23 +26,31 @@
 - service-gated команды:
   - `arm`
   - `disarm`
+  - `stop`
   - `abort`
   - `pulse`
   - `burst`
+  - `loop`
+  - `continuous on`
   - `preset`
 - API-маршруты:
   - `/api/v1/strobe_bench/status`
   - `/api/v1/strobe_bench/presets`
   - `/api/v1/strobe_bench/arm`
   - `/api/v1/strobe_bench/disarm`
+  - `/api/v1/strobe_bench/stop`
   - `/api/v1/strobe_bench/abort`
   - `/api/v1/strobe_bench/pulse`
   - `/api/v1/strobe_bench/burst`
+  - `/api/v1/strobe_bench/loop`
+  - `/api/v1/strobe_bench/continuous`
   - `/api/v1/strobe_bench/preset`
 - tab-based service page `/service/strobe`
   - `Overview`
   - `Pulse`
   - `Burst`
+  - `Loop`
+  - `Continuous`
   - `Presets`
 - live status window без reload страницы;
 - окно последнего ответа команды и история текущей сессии;
@@ -58,6 +66,7 @@
 - переключение между вкладками происходит внутри одной страницы;
 - пользователь одновременно видит controls, поля ввода и живой статус;
 - `burst` теперь доведен до UI-уровня, а не только существует в controller;
+- donor-режимы `loop` и timed `continuous on` теперь тоже живут внутри platform laboratory surface, а не остаются в старом bench-repo;
 - инженерный сервисный контур остается отделенным от продуктового `FPV/manual` доступа к боевому `strobe`.
 
 ## Что пока еще не закрыто
@@ -66,7 +75,7 @@
 - перенос этих параметров в общий profile/preset contract платформы;
 - отдельный platform-level event log именно для `strobe_bench`;
 - owner-side handoff между turret product-layer и service-layer;
-- более глубокие диагностические сценарии beyond `pulse/burst/preset`.
+- более глубокие диагностические сценарии beyond `pulse/burst/loop/continuous/preset`.
 
 ## Правило безопасности
 

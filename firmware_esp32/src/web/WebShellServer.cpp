@@ -131,9 +131,12 @@ const char kFallbackStrobeServiceHtml[] PROGMEM = R"HTML(
 /api/v1/strobe_bench/presets
 /api/v1/strobe_bench/arm
 /api/v1/strobe_bench/disarm
+/api/v1/strobe_bench/stop
 /api/v1/strobe_bench/abort
 /api/v1/strobe_bench/pulse
 /api/v1/strobe_bench/burst
+/api/v1/strobe_bench/loop
+/api/v1/strobe_bench/continuous
 /api/v1/strobe_bench/preset</pre>
       <p><a href="/">Вернуться в shell</a></p>
     </div>
@@ -655,9 +658,12 @@ void WebShellServer::registerRoutes() {
     server_.on("/api/v1/strobe_bench/presets", HTTP_GET, [this]() { handleStrobePresets(); });
     server_.on("/api/v1/strobe_bench/arm", HTTP_POST, [this]() { handleStrobeArm(); });
     server_.on("/api/v1/strobe_bench/disarm", HTTP_POST, [this]() { handleStrobeDisarm(); });
+    server_.on("/api/v1/strobe_bench/stop", HTTP_POST, [this]() { handleStrobeStop(); });
     server_.on("/api/v1/strobe_bench/abort", HTTP_POST, [this]() { handleStrobeAbort(); });
     server_.on("/api/v1/strobe_bench/pulse", HTTP_POST, [this]() { handleStrobePulse(); });
     server_.on("/api/v1/strobe_bench/burst", HTTP_POST, [this]() { handleStrobeBurst(); });
+    server_.on("/api/v1/strobe_bench/loop", HTTP_POST, [this]() { handleStrobeLoop(); });
+    server_.on("/api/v1/strobe_bench/continuous", HTTP_POST, [this]() { handleStrobeContinuous(); });
     server_.on("/api/v1/strobe_bench/preset", HTTP_POST, [this]() { handleStrobePreset(); });
 
     server_.onNotFound([this]() { handleNotFound(); });
@@ -1144,6 +1150,16 @@ void WebShellServer::handleStrobeDisarm() {
                  buildCommandResponseJson("strobe_disarm", result, "disarm command processed"));
 }
 
+void WebShellServer::handleStrobeStop() {
+    const auto result = strobeBenchController_.stop();
+    platformLog_.addLocal("strobe_bench",
+                          result == modules::strobe::CommandResult::Accepted ? "info" : "warn",
+                          "strobe_stop",
+                          "stop command processed");
+    server_.send(200, "application/json; charset=utf-8",
+                 buildCommandResponseJson("strobe_stop", result, "stop command processed"));
+}
+
 void WebShellServer::handleStrobeAbort() {
     const auto result = strobeBenchController_.abort();
     platformLog_.addLocal("strobe_bench",
@@ -1181,6 +1197,35 @@ void WebShellServer::handleStrobeBurst() {
                           detail.c_str());
     server_.send(200, "application/json; charset=utf-8",
                  buildCommandResponseJson("strobe_burst", result, "burst command processed"));
+}
+
+void WebShellServer::handleStrobeLoop() {
+    const uint32_t onMs = static_cast<uint32_t>(server_.arg("on_ms").toInt());
+    const uint32_t offMs = static_cast<uint32_t>(server_.arg("off_ms").toInt());
+    const auto result = strobeBenchController_.loop(serviceModeActive(), onMs, offMs);
+    const String detail = String("on_ms=") + String(onMs) + ", off_ms=" + String(offMs);
+    platformLog_.addLocal("strobe_bench",
+                          result == modules::strobe::CommandResult::Accepted ? "info" : "warn",
+                          "strobe_loop",
+                          "loop command processed",
+                          detail.c_str());
+    server_.send(200, "application/json; charset=utf-8",
+                 buildCommandResponseJson("strobe_loop", result, "loop command processed"));
+}
+
+void WebShellServer::handleStrobeContinuous() {
+    const uint32_t timeoutMs = static_cast<uint32_t>(server_.arg("timeout_ms").toInt());
+    const auto result = strobeBenchController_.continuousOn(serviceModeActive(), timeoutMs);
+    const String detail = String("timeout_ms=") + String(timeoutMs);
+    platformLog_.addLocal("strobe_bench",
+                          result == modules::strobe::CommandResult::Accepted ? "info" : "warn",
+                          "strobe_continuous",
+                          "continuous-on command processed",
+                          detail.c_str());
+    server_.send(200, "application/json; charset=utf-8",
+                 buildCommandResponseJson("strobe_continuous",
+                                          result,
+                                          "continuous-on command processed"));
 }
 
 void WebShellServer::handleStrobePreset() {

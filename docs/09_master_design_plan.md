@@ -75,7 +75,7 @@
 
 - [42_docs_completeness_migration_plan.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/docs/42_docs_completeness_migration_plan.md)
 
-После этого шага legacy `ТЗ` должен остаться только временным reference-файлом до финального удаления.
+После этого шага legacy `ТЗ` больше не нужен как reference-файл: полезные знания мигрированы в активные docs, а сам legacy `.docx` удален из рабочего набора.
 
 ## 3. Этап 2. `System Shell v1`
 

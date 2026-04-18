@@ -65,9 +65,12 @@ private:
     void handleStrobePresets();
     void handleStrobeArm();
     void handleStrobeDisarm();
+    void handleStrobeStop();
     void handleStrobeAbort();
     void handleStrobePulse();
     void handleStrobeBurst();
+    void handleStrobeLoop();
+    void handleStrobeContinuous();
     void handleStrobePreset();
     void handleNotFound();
 

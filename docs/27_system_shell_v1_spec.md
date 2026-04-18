@@ -154,6 +154,25 @@ Default language:
 
 Этого достаточно для `v1`.
 
+## 9.1. Canonical Surface Map
+
+Чтобы следующий implementation-чат не домысливал навигацию заново, фиксируем базовую карту surface-level маршрутов.
+
+| User-facing surface | Backing module or layer | Owner scope | Canonical path | Route mode | Primary evidence path |
+| --- | --- | --- | --- | --- | --- |
+| `Home / System Shell` | `system_shell` | `shared` | `/` | local shell | activity summary + `Gallery > Reports` |
+| `Irrigation` | `irrigation` | `ESP32` | `/irrigation` | local or handoff | irrigation reports / gallery reports |
+| `Turret` | `turret_bridge` | `Raspberry Pi` | `/turret` | local or handoff | turret reports / gallery reports |
+| `Gallery` | shared virtual section | `shared` | `/gallery` | virtual shared explorer | `Plants`, `Media`, `Reports` |
+| `Reports` quick entry | `logs` summary path | `shared` | `/gallery?tab=reports` | shared viewer shortcut | canonical history viewer |
+| `Laboratory` | `service_mode` + owner-specific service slices | `shared entry + owner execution` | `/service` | local workspace + owner-aware tools | readiness + `Gallery > Reports` |
+| `Settings` | `settings` | `shared` | `/settings` | local persistent page | settings audit trail later |
+
+Важно:
+
+- не каждая user-facing surface обязана иметь отдельный runtime module id один-к-одному;
+- но каждая поверхность обязана иметь canonical path, owner semantics и понятный evidence path.
+
 ## 10. Что пока не обязательно
 
 Для `System Shell v1` пока не обязательно:

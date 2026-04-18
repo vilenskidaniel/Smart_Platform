@@ -15,7 +15,15 @@ constexpr uint32_t kMinPatternOffMs = 10;
 constexpr uint32_t kMaxBurstCount = 1000;
 constexpr uint32_t kMaxBurstOnMs = 5000;
 constexpr uint32_t kMaxBurstOffMs = 60000;
+constexpr uint32_t kMaxLoopOnMs = 5000;
+constexpr uint32_t kMaxLoopOffMs = 60000;
+constexpr uint32_t kDefaultContinuousOnMs = 1500;
+constexpr uint32_t kMaxContinuousOnMs = 5000;
+constexpr uint32_t kMaxLoopRuntimeMs = 120000;
+constexpr uint32_t kMaxLoopDutyPercent = 80;
+constexpr uint32_t kMaxBurstDutyPercent = 90;
 constexpr uint32_t kCooldownTriggerActiveMs = 1500;
+constexpr uint32_t kCooldownTriggerDutyPercent = 60;
 constexpr uint32_t kCooldownDurationMs = 3000;
 
 enum class BenchState : uint8_t {
@@ -30,14 +38,19 @@ enum class BenchState : uint8_t {
 enum class PatternType : uint8_t {
     None = 0,
     Pulse,
-    Burst
+    Burst,
+    Loop,
+    ContinuousOn
 };
 
 enum class StopReason : uint8_t {
     None = 0,
     Completed,
+    UserStop,
     UserDisarm,
     UserAbort,
+    ContinuousTimeout,
+    LoopTimeout,
     ServiceModeExited,
     FaultLatched
 };
@@ -57,6 +70,7 @@ enum class CommandResult : uint8_t {
     CoolingDown,
     FaultLatched,
     InvalidArguments,
+    UnsafeTiming,
     ServiceModeRequired
 };
 
@@ -103,10 +117,13 @@ public:
 
     CommandResult arm(bool serviceModeActive);
     CommandResult disarm();
+    CommandResult stop();
     CommandResult abort();
     CommandResult forceServiceExit();
     CommandResult pulse(bool serviceModeActive, uint32_t durationMs);
     CommandResult burst(bool serviceModeActive, uint32_t count, uint32_t onMs, uint32_t offMs);
+    CommandResult loop(bool serviceModeActive, uint32_t onMs, uint32_t offMs);
+    CommandResult continuousOn(bool serviceModeActive, uint32_t timeoutMs);
     CommandResult runPreset(bool serviceModeActive, const char* presetId);
 
     bool isOn() const;
@@ -137,6 +154,8 @@ private:
     CommandResult validateReadyForRun(bool serviceModeActive) const;
     CommandResult validatePulse(bool serviceModeActive, uint32_t durationMs) const;
     CommandResult validateBurst(bool serviceModeActive, uint32_t count, uint32_t onMs, uint32_t offMs) const;
+    CommandResult validateLoop(bool serviceModeActive, uint32_t onMs, uint32_t offMs) const;
+    CommandResult validateContinuousOn(bool serviceModeActive, uint32_t timeoutMs) const;
 
     uint8_t gatePin_;
     bool activeHigh_;
@@ -152,6 +171,7 @@ private:
     uint32_t onDurationMs_;
     uint32_t offDurationMs_;
     uint32_t remainingBursts_;
+    uint32_t continuousTimeoutMs_;
     uint32_t activeTimeAccumulatedMs_;
     uint32_t cooldownUntilMs_;
     const char* currentPresetId_;

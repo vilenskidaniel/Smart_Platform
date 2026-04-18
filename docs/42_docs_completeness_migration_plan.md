@@ -266,11 +266,12 @@ Legacy `ТЗ` удаляем только когда:
 После первого extraction pass ситуация такая:
 
 - `docs/43-47` уже получили базовые adapted knowledge packets из legacy `ТЗ`;
+- visual и interaction detail layer для shell, `Gallery`, `Laboratory` и blocked-state UX перенесен в `docs/05_ui_shell_and_navigation.md`, `docs/27_system_shell_v1_spec.md` и `docs/39_design_decisions_and_screen_map.md`;
 - sections `5-8` legacy файла больше не содержат уникальной архитектурной истины, которую нельзя было бы выразить в текущих owner-aware docs;
 - sections `9-11` и `14` в legacy файле оказались в основном placeholder-level и не дают скрытого детализированного spec;
 - sections `12-13` полезны только как редкие observations для sequencing или procurement risk, но не как обязательный core spec.
 
 Практический вывод:
 
-- legacy `.docx` можно удалять после глобального docs-audit, если этот аудит не обнаружит новых уникальных зависимостей на старый текст;
-- на текущий момент удаление уже выглядит безопасным, потому что remaining value файла либо мигрирован, либо сознательно признан устаревшим.
+- глобальный docs-audit не обнаружил новых уникальных зависимостей на старый текст;
+- legacy `.docx` уже удален из рабочего набора, потому что remaining value файла либо мигрирован, либо сознательно признан устаревшим.

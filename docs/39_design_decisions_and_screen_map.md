@@ -17,6 +17,41 @@
 - нижняя часть экрана в `FPV/manual` резервируется под боевые и операторские controls, поэтому глобальную нижнюю навигацию как основной паттерн не выбираем;
 - основной shell-routing строится вокруг главной страницы и полноэкранных разделов, а не вокруг постоянного bottom-nav.
 
+## 1.1. Visual system
+
+Нужен не просто удобный layout, а узнаваемый характер интерфейса.
+
+Базовые решения:
+
+- фоновые поверхности могут быть атмосферными и живыми, но рабочие панели должны оставаться читаемыми через полупрозрачные слои и blur;
+- сами интерактивные surfaces должны ощущаться как frosted panels / cards, а не как голые браузерные блоки;
+- shell и `Gallery` допускают более воздушную и product-like подачу;
+- `Laboratory` и `FPV/manual` должны быть плотнее, серьезнее и инженернее;
+- единая iconography и цветовые состояния обязательны для `online / degraded / locked / fault / service`.
+
+### Темы
+
+- светлая тема: светлый фон, темный текст, мягкий зелено-нейтральный тон;
+- тёмная тема: темные surfaces, светлый текст, тот же язык состояний и акцентов;
+- переключение темы должно быть быстрым и не превращаться в отдельный reload-event.
+
+## 1.2. Interaction feedback
+
+Фиксируем единый contract обратной связи:
+
+- активная кнопка: краткий pressed-state без грубой анимационной перегрузки;
+- blocked control: не имитирует успех, а дает blocked-feedback и объяснение;
+- short feedback: `toast`;
+- confirmation / warning: modal window;
+- pairing / connecting / handoff: blocking overlay с явным transitional смыслом;
+- long-press tooltip допустим как secondary layer, но не как единственный способ объяснить смысл control.
+
+## 1.3. Transition language
+
+- при обычной навигации используем короткие fade / slide переходы;
+- резкие page reload feelings считаются дефектом UX;
+- тяжелый spinner показываем только при реальном ожидании owner, pairing или remote content.
+
 ## 2. Выбранная навигационная модель
 
 ### Главная страница
@@ -44,6 +79,12 @@
 - вход в разделы через главный launcher и контекстные страницы;
 - внутри сложных разделов используем верхнюю левую область под tabs/drawer entry;
 - не опираемся на постоянный bottom-nav, чтобы не отнимать место у FPV и manual controls.
+
+### Touch behavior
+
+- mobile-first layout должен избегать случайного pinch-zoom и double-tap frustration там, где экран используется как quasi-app workspace;
+- ключевые actions и статусы должны читаться без горизонтального скролла;
+- fullscreen для `Laboratory` и `FPV/manual` считается основным, а не дополнительным режимом.
 
 ## 3. Правило недоступных модулей
 
@@ -193,6 +234,18 @@ Alias-имена той же сущности:
 - без ощущения сырого backend-экрана.
 - это должен быть app-like workspace “программа внутри программы”, а не набор разрозненных utility screens.
 
+### Tab-level внешка
+
+Каждая laboratory-вкладка должна визуально держать один и тот же каркас:
+
+- заголовок и owner/reason chips сверху;
+- первый слой: structured status cards;
+- второй слой: controls и forms;
+- третий слой: terminal/report region;
+- optional graphs / additional evidence blocks ниже.
+
+Это нужно, чтобы даже разные по смыслу вкладки ощущались одной системой, а не набором случайных utility pages.
+
 ## 8. Gallery Page
 
 `Gallery` - это отдельная глобальная страница, открываемая с главной.
@@ -312,6 +365,12 @@ Alias-имена той же сущности:
 - `Settings` не должны дублировать `Laboratory`;
 - `Settings` не должны управлять набором laboratory tabs и локальными экспериментальными controls;
 - `Laboratory` нужен для изолированных тестов, а `Settings` — для persistent system-wide choices.
+
+### Внешний характер `Settings`
+
+- `Settings` должны ощущаться как спокойная persistent page, а не как engineering console;
+- sections и switches читаются как platform-wide policy and preference layer;
+- блокировки и недоступные policy-flags остаются видимыми и disabled, а не пропадают.
 
 ## 10. Product Target Vs Software Baseline
 

@@ -6,6 +6,15 @@ namespace smart_platform::modules::strobe {
 
 namespace {
 
+uint32_t percentOf(uint32_t numerator, uint32_t denominator) {
+    if (denominator == 0) {
+        return 0;
+    }
+
+    return static_cast<uint32_t>((static_cast<uint64_t>(numerator) * 100ULL) /
+                                 static_cast<uint64_t>(denominator));
+}
+
 constexpr PresetDefinition kPresets[] = {
     {
         "bringup_safe",
@@ -66,6 +75,7 @@ StrobeBenchController::StrobeBenchController(uint8_t gatePin, bool activeHigh)
       onDurationMs_(0),
       offDurationMs_(0),
       remainingBursts_(0),
+    continuousTimeoutMs_(0),
       activeTimeAccumulatedMs_(0),
       cooldownUntilMs_(0),
       currentPresetId_("") {
@@ -89,6 +99,7 @@ void StrobeBenchController::begin() {
 
 void StrobeBenchController::update() {
     const uint32_t now = millis();
+    const uint32_t totalRuntime = now - runStartedMs_;
 
     if (state_ == BenchState::Cooldown) {
         if (static_cast<int32_t>(now - cooldownUntilMs_) >= 0) {
@@ -132,6 +143,40 @@ void StrobeBenchController::update() {
                 setLed(true);
                 phaseOn_ = true;
                 lastChangeMs_ = now;
+            }
+            return;
+
+        case PatternType::Loop:
+            if (totalRuntime >= kMaxLoopRuntimeMs) {
+                if (phaseOn_ && ledOn_) {
+                    recordActivePhase(now);
+                }
+                setLed(false);
+                finishRun(StopReason::LoopTimeout, false);
+                return;
+            }
+
+            if (phaseOn_) {
+                if (elapsed >= onDurationMs_) {
+                    recordActivePhase(now);
+                    setLed(false);
+                    phaseOn_ = false;
+                    lastChangeMs_ = now;
+                }
+            } else if (elapsed >= offDurationMs_) {
+                setLed(true);
+                phaseOn_ = true;
+                lastChangeMs_ = now;
+            }
+            return;
+
+        case PatternType::ContinuousOn:
+            if (totalRuntime >= continuousTimeoutMs_) {
+                if (ledOn_) {
+                    recordActivePhase(now);
+                }
+                setLed(false);
+                finishRun(StopReason::ContinuousTimeout, false);
             }
             return;
 
@@ -185,6 +230,24 @@ CommandResult StrobeBenchController::disarm() {
     clearPatternState();
     lastStopReason_ = StopReason::UserDisarm;
     setState(BenchState::SafeDisarmed);
+    return CommandResult::Accepted;
+}
+
+CommandResult StrobeBenchController::stop() {
+    if (hasFault()) {
+        return CommandResult::FaultLatched;
+    }
+
+    if (!isBusy()) {
+        return CommandResult::IdleAlready;
+    }
+
+    if (ledOn_) {
+        recordActivePhase(millis());
+    }
+
+    setLed(false);
+    finishRun(StopReason::UserStop, false);
     return CommandResult::Accepted;
 }
 
@@ -243,7 +306,39 @@ CommandResult StrobeBenchController::burst(bool serviceModeActive,
     remainingBursts_ = count;
     onDurationMs_ = onMs;
     offDurationMs_ = offMs;
+    continuousTimeoutMs_ = 0;
     startPattern(PatternType::Burst);
+    return CommandResult::Accepted;
+}
+
+CommandResult StrobeBenchController::loop(bool serviceModeActive, uint32_t onMs, uint32_t offMs) {
+    const CommandResult validation = validateLoop(serviceModeActive, onMs, offMs);
+    if (validation != CommandResult::Accepted) {
+        return validation;
+    }
+
+    currentPresetId_ = "";
+    onDurationMs_ = onMs;
+    offDurationMs_ = offMs;
+    remainingBursts_ = 0;
+    continuousTimeoutMs_ = 0;
+    startPattern(PatternType::Loop);
+    return CommandResult::Accepted;
+}
+
+CommandResult StrobeBenchController::continuousOn(bool serviceModeActive, uint32_t timeoutMs) {
+    const uint32_t effectiveTimeoutMs = timeoutMs == 0 ? kDefaultContinuousOnMs : timeoutMs;
+    const CommandResult validation = validateContinuousOn(serviceModeActive, effectiveTimeoutMs);
+    if (validation != CommandResult::Accepted) {
+        return validation;
+    }
+
+    currentPresetId_ = "";
+    onDurationMs_ = effectiveTimeoutMs;
+    offDurationMs_ = 0;
+    remainingBursts_ = 0;
+    continuousTimeoutMs_ = effectiveTimeoutMs;
+    startPattern(PatternType::ContinuousOn);
     return CommandResult::Accepted;
 }
 
@@ -253,18 +348,25 @@ CommandResult StrobeBenchController::runPreset(bool serviceModeActive, const cha
         return CommandResult::InvalidArguments;
     }
 
-    currentPresetId_ = preset->id;
-
+    CommandResult result = CommandResult::InvalidArguments;
     switch (preset->pattern) {
         case PatternType::Pulse:
-            return pulse(serviceModeActive, preset->onMs);
+            result = pulse(serviceModeActive, preset->onMs);
+            break;
         case PatternType::Burst:
-            return burst(serviceModeActive, preset->count, preset->onMs, preset->offMs);
+            result = burst(serviceModeActive, preset->count, preset->onMs, preset->offMs);
+            break;
         case PatternType::None:
         default:
             currentPresetId_ = "";
             return CommandResult::InvalidArguments;
     }
+
+    if (result == CommandResult::Accepted) {
+        currentPresetId_ = preset->id;
+    }
+
+    return result;
 }
 
 bool StrobeBenchController::isOn() const {
@@ -331,6 +433,10 @@ const char* StrobeBenchController::patternName(PatternType value) {
             return "pulse";
         case PatternType::Burst:
             return "burst";
+        case PatternType::Loop:
+            return "loop";
+        case PatternType::ContinuousOn:
+            return "continuous_on";
         case PatternType::None:
         default:
             return "none";
@@ -341,10 +447,16 @@ const char* StrobeBenchController::stopReasonName(StopReason value) {
     switch (value) {
         case StopReason::Completed:
             return "completed";
+        case StopReason::UserStop:
+            return "user_stop";
         case StopReason::UserDisarm:
             return "user_disarm";
         case StopReason::UserAbort:
             return "user_abort";
+        case StopReason::ContinuousTimeout:
+            return "continuous_timeout";
+        case StopReason::LoopTimeout:
+            return "loop_timeout";
         case StopReason::ServiceModeExited:
             return "service_mode_exited";
         case StopReason::FaultLatched:
@@ -385,6 +497,8 @@ const char* StrobeBenchController::commandResultName(CommandResult value) {
             return "fault_latched";
         case CommandResult::InvalidArguments:
             return "invalid_arguments";
+        case CommandResult::UnsafeTiming:
+            return "unsafe_timing";
         case CommandResult::ServiceModeRequired:
             return "service_mode_required";
         default:
@@ -406,7 +520,21 @@ const char* StrobeBenchController::riskName(PresetRisk value) {
 }
 
 bool StrobeBenchController::shouldCooldown() const {
-    return activeTimeMs() >= kCooldownTriggerActiveMs;
+    if (activeTimeMs() >= kCooldownTriggerActiveMs) {
+        return true;
+    }
+
+    if (pattern_ == PatternType::ContinuousOn) {
+        return true;
+    }
+
+    if (pattern_ == PatternType::Pulse) {
+        return false;
+    }
+
+    const uint32_t cycleMs = onDurationMs_ + offDurationMs_;
+    const uint32_t dutyPercent = percentOf(onDurationMs_, cycleMs);
+    return dutyPercent >= kCooldownTriggerDutyPercent;
 }
 
 uint32_t StrobeBenchController::runtimeMs() const {
@@ -445,6 +573,7 @@ void StrobeBenchController::clearPatternState() {
     onDurationMs_ = 0;
     offDurationMs_ = 0;
     remainingBursts_ = 0;
+    continuousTimeoutMs_ = 0;
     activeTimeAccumulatedMs_ = 0;
     runStartedMs_ = millis();
     lastChangeMs_ = millis();
@@ -484,6 +613,7 @@ void StrobeBenchController::finishRun(StopReason reason, bool forceDisarm) {
     onDurationMs_ = 0;
     offDurationMs_ = 0;
     remainingBursts_ = 0;
+    continuousTimeoutMs_ = 0;
 
     if (needCooldown && !forceDisarm) {
         cooldownUntilMs_ = millis() + kCooldownDurationMs;
@@ -549,6 +679,49 @@ CommandResult StrobeBenchController::validateBurst(bool serviceModeActive,
     }
 
     if (offMs < kMinPatternOffMs || offMs > kMaxBurstOffMs) {
+        return CommandResult::InvalidArguments;
+    }
+
+    const uint32_t dutyPercent = percentOf(onMs, onMs + offMs);
+    if (dutyPercent > kMaxBurstDutyPercent) {
+        return CommandResult::UnsafeTiming;
+    }
+
+    return CommandResult::Accepted;
+}
+
+CommandResult StrobeBenchController::validateLoop(bool serviceModeActive,
+                                                  uint32_t onMs,
+                                                  uint32_t offMs) const {
+    const CommandResult base = validateReadyForRun(serviceModeActive);
+    if (base != CommandResult::Accepted) {
+        return base;
+    }
+
+    if (onMs < kMinPulseMs || onMs > kMaxLoopOnMs) {
+        return CommandResult::InvalidArguments;
+    }
+
+    if (offMs < kMinPatternOffMs || offMs > kMaxLoopOffMs) {
+        return CommandResult::InvalidArguments;
+    }
+
+    const uint32_t dutyPercent = percentOf(onMs, onMs + offMs);
+    if (dutyPercent > kMaxLoopDutyPercent) {
+        return CommandResult::UnsafeTiming;
+    }
+
+    return CommandResult::Accepted;
+}
+
+CommandResult StrobeBenchController::validateContinuousOn(bool serviceModeActive,
+                                                          uint32_t timeoutMs) const {
+    const CommandResult base = validateReadyForRun(serviceModeActive);
+    if (base != CommandResult::Accepted) {
+        return base;
+    }
+
+    if (timeoutMs < kMinPulseMs || timeoutMs > kMaxContinuousOnMs) {
         return CommandResult::InvalidArguments;
     }
 

@@ -15,6 +15,11 @@
 - диагностические снимки состояния;
 - разделение UI и управления железом.
 
+Статус:
+
+- relevant service logic уже выборочно перенесена в `Smart_Platform`;
+- donor-репозиторий больше не нужен как активная часть workspace.
+
 ### Из IrrigationSystemESP32
 
 - `Wi-Fi` и `SoftAP/STA` идеи;
@@ -22,6 +27,11 @@
 - структуру страниц и shell навигацию;
 - идеи каталога растений и полива;
 - подход к автономному браузерному управлению.
+
+Статус:
+
+- product owner-model, shell и plant-library contract уже живут в `Smart_Platform`;
+- donor-репозиторий не должен оставаться обязательным reference-слоем после удаления из workspace.
 
 ### Из IS with Server
 

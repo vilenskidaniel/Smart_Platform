@@ -109,6 +109,33 @@
 - serial/USB diagnostics path;
 - локальный fallback diagnostics UI.
 
+### 6.3 Confirmed `ESP32` hardware map for `v1`
+
+| Family | Product or service role | Owner path | Interface class | Power class | Current certainty |
+| --- | --- | --- | --- | --- | --- |
+| Soil moisture zones | product sensing | `Irrigation` | filtered analog inputs | `3.3V` sensing rail | confirmed baseline: `5` plant zones, exact pin map still open |
+| Environment pack | product sensing | `Irrigation` | `I2C` / digital sensor bus | `3.3V` logic rail | confirmed family, exact pack still evolving |
+| Peristaltic pump | product irrigation actuator | `Irrigation` | switched actuator output | isolated irrigation motor rail | confirmed baseline |
+| Valve cascade | product irrigation actuator | `Irrigation` | switched low-side outputs | irrigation actuator rail | confirmed baseline |
+| `SD` module | product storage | `Gallery`, history, sync intake | `SPI` | `3.3V` logic rail | confirmed baseline |
+| `strobe_bench` output | service-only actuator | `Laboratory / Strobe` | isolated bench switch path | external bench power path | confirmed baseline |
+| Local status indicators | diagnostics / lightweight feedback | shell and service | simple GPIO / low-current outputs | logic rail | optional |
+
+## 8.4 Current IO planning status
+
+Для `ESP32` уже можно считать зафиксированным:
+
+- sensor families должны быть логически отделены от actuator switch families;
+- irrigation actuator outputs и bench outputs не должны смешиваться в одной owner-semantics группе;
+- `SPI SD` относится к local storage contour, а не к optional cosmetic accessory;
+- serial / USB diagnostics path обязателен хотя бы для bring-up и fault tracing.
+
+Пока еще не зафиксировано на уровне exact electrical map:
+
+- конкретные GPIO по каждой зоне;
+- окончательный power-module set для logic/actuator rails;
+- единый rule для резервных / expansion pins.
+
 ## 7. Storage And Persistence
 
 `ESP32`-сторона должна мыслиться так:
@@ -218,3 +245,12 @@
 - zone или sensor не исчезает silently;
 - shell и `Laboratory` должны уметь показать missing / fault / service-required состояние;
 - service qualification не должна автоматически менять product defaults.
+
+## 13. Open electrical questions for `ESP32`
+
+Эти вопросы уже не про продуктовую архитектуру, а про окончательное hardware closure:
+
+- точная pin-to-zone карта для `5` plant zones в первом реальном `ESP32` профиле;
+- какие силовые ветки выделяем отдельно для logic, valves, peristaltic path и `strobe_bench`;
+- как именно публикуется состояние irrigation-side power readiness в shell и `Laboratory`;
+- какие пины считаем reserved заранее под expansion или future sensor packs.

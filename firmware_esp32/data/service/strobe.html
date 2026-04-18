@@ -386,12 +386,13 @@
         <div class="row">
           <button class="primary" id="arm-btn">Arm</button>
           <button class="secondary" id="disarm-btn">Disarm</button>
+          <button class="secondary" id="stop-btn">Stop</button>
           <button class="danger" id="abort-btn">Abort</button>
         </div>
       </div>
       <div class="meta">
         Управляющие команды остаются защищенными service-mode. Вкладки ниже дают быстрый доступ
-        к ручному pulse, burst-сценарию, безопасным пресетам и живому техническому статусу.
+        к ручному pulse, burst, loop, timed continuous-on, безопасным пресетам и живому техническому статусу.
       </div>
     </section>
 
@@ -406,6 +407,8 @@
             <button class="tab active" type="button" data-tab="overview">Overview</button>
             <button class="tab" type="button" data-tab="pulse">Pulse</button>
             <button class="tab" type="button" data-tab="burst">Burst</button>
+            <button class="tab" type="button" data-tab="loop">Loop</button>
+            <button class="tab" type="button" data-tab="continuous">Continuous</button>
             <button class="tab" type="button" data-tab="presets">Presets</button>
           </div>
 
@@ -414,7 +417,8 @@
               <strong>Сценарий</strong>
               <span>
                 Этот экран предназначен для последовательной лабораторной проверки канала:
-                сначала service-mode и arm, затем короткий pulse, затем burst и только потом preset.
+                сначала service-mode и arm, затем короткий pulse, затем burst, затем loop или timed continuous,
+                и только потом повторяемый preset.
               </span>
             </div>
             <div class="action-grid">
@@ -481,6 +485,42 @@
             </div>
           </section>
 
+          <section class="panel" data-panel="loop">
+            <div class="card-head">
+              <h3>Loop Pattern</h3>
+              <span class="meta">Повторяющийся цикл on/off с внутренним runtime limit и safety timing checks.</span>
+            </div>
+            <div class="form-grid">
+              <label class="field">
+                <span>ON, мс</span>
+                <input id="loop-on" type="number" min="1" max="5000" step="1" value="50">
+              </label>
+              <label class="field">
+                <span>OFF, мс</span>
+                <input id="loop-off" type="number" min="10" max="60000" step="1" value="150">
+              </label>
+            </div>
+            <div class="cta-row">
+              <button class="warn" id="loop-btn">Запустить loop</button>
+            </div>
+          </section>
+
+          <section class="panel" data-panel="continuous">
+            <div class="card-head">
+              <h3>Timed Continuous On</h3>
+              <span class="meta">Непрерывное включение с обязательным timeout, чтобы bench не остался включенным бесконтрольно.</span>
+            </div>
+            <div class="form-grid">
+              <label class="field">
+                <span>Timeout, мс</span>
+                <input id="continuous-timeout" type="number" min="1" max="5000" step="1" value="1500">
+              </label>
+            </div>
+            <div class="cta-row">
+              <button class="warn" id="continuous-btn">Запустить continuous on</button>
+            </div>
+          </section>
+
           <section class="panel" data-panel="presets">
             <div class="card-head">
               <h3>Safe Presets</h3>
@@ -521,6 +561,14 @@
             <div class="metric">
               <strong>Runtime</strong>
               <span id="status-runtime">waiting...</span>
+            </div>
+            <div class="metric">
+              <strong>Last stop</strong>
+              <span id="status-last-stop">waiting...</span>
+            </div>
+            <div class="metric">
+              <strong>Timing</strong>
+              <span id="status-timing">waiting...</span>
             </div>
           </div>
           <pre id="status-json" class="log">Ожидание данных...</pre>
@@ -588,6 +636,17 @@
       document.getElementById("status-preset").textContent = status.current_preset_id || "-";
       document.getElementById("status-bursts").textContent = String(status.remaining_bursts);
       document.getElementById("status-runtime").textContent = `${status.runtime_ms} ms`;
+      document.getElementById("status-last-stop").textContent = status.last_stop_reason || "-";
+
+      let timing = "-";
+      if (status.pattern === "pulse") {
+        timing = `pulse ${status.on_duration_ms} ms`;
+      } else if (status.pattern === "burst" || status.pattern === "loop") {
+        timing = `on ${status.on_duration_ms} / off ${status.off_duration_ms} ms`;
+      } else if (status.pattern === "continuous_on") {
+        timing = `timeout ${status.on_duration_ms} ms`;
+      }
+      document.getElementById("status-timing").textContent = timing;
 
       document.getElementById("status-json").textContent = JSON.stringify(status, null, 2);
     }
@@ -702,6 +761,7 @@
       document.getElementById("refresh-btn").addEventListener("click", () => refreshStatus().catch(showPageError));
       document.getElementById("arm-btn").addEventListener("click", () => sendCommand("/api/v1/strobe_bench/arm", "arm"));
       document.getElementById("disarm-btn").addEventListener("click", () => sendCommand("/api/v1/strobe_bench/disarm", "disarm"));
+      document.getElementById("stop-btn").addEventListener("click", () => sendCommand("/api/v1/strobe_bench/stop", "stop"));
       document.getElementById("abort-btn").addEventListener("click", () => sendCommand("/api/v1/strobe_bench/abort", "abort"));
 
       document.getElementById("pulse-btn").addEventListener("click", () => {
@@ -718,6 +778,21 @@
           off_ms: String(Number(document.getElementById("burst-off").value || 0))
         });
         sendCommand(`/api/v1/strobe_bench/burst?${params.toString()}`, "burst");
+      });
+
+      document.getElementById("loop-btn").addEventListener("click", () => {
+        const params = new URLSearchParams({
+          on_ms: String(Number(document.getElementById("loop-on").value || 0)),
+          off_ms: String(Number(document.getElementById("loop-off").value || 0))
+        });
+        sendCommand(`/api/v1/strobe_bench/loop?${params.toString()}`, "loop");
+      });
+
+      document.getElementById("continuous-btn").addEventListener("click", () => {
+        const params = new URLSearchParams({
+          timeout_ms: String(Number(document.getElementById("continuous-timeout").value || 0))
+        });
+        sendCommand(`/api/v1/strobe_bench/continuous?${params.toString()}`, "continuous_on");
       });
     }
 

@@ -92,6 +92,9 @@
 | `ACC-SHELL-01` | single-board `ESP32` entry | `ESP32` only | shell reachable | `ESP32` shown as current board, peer shown as absent, peer-owned routes visible but blocked | report or session note for shell smoke |
 | `ACC-SHELL-02` | single-board `Raspberry Pi` entry | `Raspberry Pi` only | shell reachable | `Raspberry Pi` shown as current board, `Irrigation` visible but degraded/locked | shell smoke report |
 | `ACC-SHELL-03` | dual-board handoff | both boards | peer sync active | peer-owned routes open through owner-aware handoff, not fake local ownership | handoff report |
+| `ACC-SHELL-04` | blocked-state explanation | any single-board degraded view | peer-owned route tapped while owner missing | blocked module stays visible and returns explanation instead of fake success | shell note or warning report |
+| `ACC-SHELL-05` | theme and language continuity | one or both boards | shell reachable, `Settings` available | theme/language change updates shell chrome without breaking IA or owner semantics | shell note or UI smoke report |
+| `ACC-SHELL-06` | mobile/fullscreen continuity | phone browser | shell opened on mobile | `Home`, `Gallery`, `Laboratory` stay readable without browser-like breakdown; fullscreen entry remains usable where expected | UI smoke report |
 | `ACC-IRR-01` | irrigation zone visibility | `ESP32` + at least one zone profile | irrigation module online | zones and sensor state visible with honest missing-data markers | irrigation status report |
 | `ACC-IRR-02` | manual irrigation action | `ESP32` irrigation path | zone configured, service lock absent | manual action available only through owner, state changes visible in shell | action report |
 | `ACC-IRR-03` | irrigation degraded sensing | `ESP32` with missing sensor | one sensor absent or invalid | affected zone remains visible and degraded, not silently removed | warning report |
@@ -99,8 +102,10 @@
 | `ACC-TUR-02` | turret degraded readiness | `Raspberry Pi` without one critical family | camera/range/action family partially absent | turret remains visible, unavailable family shown as degraded/locked | readiness report |
 | `ACC-GAL-01` | local gallery slice | one board only | local content exists | `Gallery` opens local slice and marks missing peer content | gallery report |
 | `ACC-GAL-02` | mixed reports feed | both boards | reports/events exist on one or both nodes | `Gallery > Reports` shows mixed feed with source and result metadata | reports feed evidence |
+| `ACC-GAL-03` | quick report capture | one or both boards | `Gallery > Reports` open | testcase and operator note capture create visible report cards in chronological feed | report card evidence |
 | `ACC-LAB-01` | laboratory preflight | one or both boards | `Laboratory` reachable | preflight shows what can be tested now and what waits for peer | readiness report |
 | `ACC-LAB-02` | experimental profile isolation | `Laboratory` with `HC-SR04` or stepper profile | experimental slice enabled | experimental slice visible as laboratory-only, not product-ready | lab report |
+| `ACC-LAB-03` | laboratory workspace continuity | one or both boards | `Laboratory` opened from shell | status ribbon, tabs and active workspace stay visible without full navigation reset between slices | laboratory UI smoke report |
 | `ACC-SAFE-01` | interlock reflection | turret-sensitive branch + interlock | interlock engaged | shell and owner module show locked state with explicit reason | safety report |
 | `ACC-SAFE-02` | service collision handling | service session active | product command attempted | product command blocked with explicit reason | collision report |
 

@@ -96,6 +96,18 @@
 - связь между wake detection, shell readiness и turret policy state;
 - видимость этого readiness слоя в `Laboratory` и shell.
 
+### 6.3 Confirmed `Raspberry Pi` turret map for `v1`
+
+| Family | Product or service role | Owner path | Interface class | Power class | Current certainty |
+| --- | --- | --- | --- | --- | --- |
+| `IMX219 130°` | primary camera | `Turret` / `Manual FPV` / `Automatic` | `CSI` camera path | local logic + camera rail | confirmed baseline |
+| `TFmini Plus` | owner-side range | `Turret` and `Laboratory / Lidar` | `UART` or equivalent range link | logic rail | confirmed baseline, exact wiring still open |
+| `MG996R + PCA9685` | motion baseline | `Turret` and `Laboratory / Servos` | `I2C` driver + servo PWM outputs | separate servo rail | confirmed baseline |
+| `SEAFLO 12V` | turret water path | `Turret` and `Laboratory / Sprayer` | protected switch / driver boundary | `12V` turret water rail | confirmed baseline |
+| Turret `strobe` | deterrence action | `Turret` and `Laboratory / Strobe` | protected switch / driver boundary | dedicated strobe power path | confirmed family, exact channel wiring open |
+| Turret `audio` | deterrence / voice / signal family | `Turret` and `Laboratory / Audio` | one dual-channel driver for `ultrasonic_pair` + `horn_pair`, plus Bluetooth path for `voice_fx` | separate audio path | family confirmed, stereo driver topology fixed, exact board wiring still open |
+| Motion wake input | wake and readiness path | shell / `Laboratory / Motion Sensor` | sensor input / trigger path | low-power wake-capable path | role confirmed, exact sensor still open |
+
 ## 7. Runtime-Relevant Interfaces
 
 ### 7.1 Camera
@@ -149,6 +161,19 @@
 - emergency interlock как истина для разрешения чувствительных действий;
 - degradation при отсутствии camera, range или actuator family.
 
+### 9.1 Interlock visibility contract
+
+На turret-owner side должны различаться два слоя:
+
+- physical interlock truth;
+- software-derived runtime reaction.
+
+В UI и API нужно уметь отдельно выражать:
+
+- питание turret-sensitive ветвей подано или снято;
+- latched ли `emergency` / `fault` состояние;
+- какие action families сейчас обесточены и потому blocked даже при живом shell.
+
 Это важнее старых рассуждений о зарядках, powerbank и общих потребительских сценариях питания.
 
 ## 10. Laboratory Relationship
@@ -197,3 +222,13 @@
 - camera absence должна блокировать или деградировать automatic path;
 - range absence должна честно менять readiness соответствующих сценариев;
 - interlock active должен блокировать чувствительные action families вне зависимости от peer state.
+
+## 14. Open electrical questions for `Raspberry Pi`
+
+Ниже уже не продуктовые, а hardware-closure вопросы:
+
+- как именно публикуем readback physical emergency interlock в runtime и shell snapshot;
+- какая конкретная линия используется для motion wake-profile в `v1`;
+- какая конкретная board-level wiring map у dual-channel audio driver, где одна пара спикеров сидит на левом канале, а другая на правом;
+- какая topology у protected switch / driver boundaries для `strobe` и `SEAFLO`;
+- какие power rails считаем отдельными для logic, camera, servos, audio, strobe и water path.
