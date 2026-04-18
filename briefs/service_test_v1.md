@@ -53,16 +53,31 @@
 - внутри уже есть owner-aware workspace;
 - первый углубленный slice уже существует для `strobe`;
 - будущие срезы должны повторять ту же модель, а не разъезжаться по разным стилям.
+- аппаратный источник истины по наличию и ownership держим в `docs/smart_platform_workshop_inventory.xlsx`.
 
 ## Первая обязательная структура вкладок
 
-Первый уровень:
+Первый уровень строится по hardware/function groups, а не по owner и не по крупным product-модулям:
 
 - `Strobe`
-- `Irrigation`
-- `Turret`
+- `Ultrasonic`
+- `Servos`
+- `Stepper Motor / Drives`
+- `Sprayer / Water`
 - `Audio`
-- другие модульные вкладки по мере появления
+- `Air Temperature / Humidity`
+- `Soil Moisture + Valves + Peristaltic`
+- `LED`
+- `Lidar`
+- `Camera`
+- `Motion Sensor`
+
+Важно:
+
+- `Servos` фиксируются вокруг рабочего turret-baseline `MG996R + PCA9685`;
+- `Stepper Motor / Drives` - strictly laboratory-only ветка и не часть turret motion UX;
+- `Lidar` должен уметь тестировать owner-side `TFmini Plus` и `HC-SR04`-class laboratory-профили;
+- `Laboratory` должна уметь принимать и внеплановые / неизвестные модули без слома общей структуры.
 
 Верхний статус-бар Laboratory должен показывать:
 
@@ -104,6 +119,7 @@
 ## Следующие практические приоритеты
 
 1. Довести `strobe` до profile-ready laboratory slice.
-2. Формализовать layout и usage-правила для `Laboratory` в общем design-doc.
-3. Развести product UX и deep diagnostic UX окончательно.
-4. После этого брать `audio` как следующий отдельный module-tab.
+2. Формализовать hardware/function tab model для всего `Laboratory`.
+3. Добавить experimental profiles для `HC-SR04`-class range и stepper drives.
+4. Развести product UX и deep diagnostic UX окончательно.
+5. После этого брать `audio` как следующий отдельный module-tab.

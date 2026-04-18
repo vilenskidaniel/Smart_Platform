@@ -12,10 +12,18 @@
 
 - показывать статус зон;
 - читать датчики;
+- вести малый peristaltic pump и клапанный каскад растений;
 - запускать ручной полив;
 - выполнять автоматические сценарии;
 - поддерживать сервисный тест зон и датчиков;
+- отдавать данные для turret HUD overlay, если `ESP32` доступен;
+- использовать `ESP32 SD` как расширение хранения и локальную точку резервных synced-файлов;
 - логировать действия и ошибки.
+
+Важно:
+
+- модуль `irrigation` не владеет `SEAFLO` turret water path;
+- `SEAFLO` принадлежит `Raspberry Pi` и относится к turret defense/sprayer contour.
 
 ## Текущий Статус
 
@@ -26,6 +34,10 @@
 - есть базовый auto-mode на `ESP32`;
 - есть sensor simulation как отдельный data-layer;
 - есть platform-log интеграция и shell-visible service entry point.
+- hardware baseline зафиксирован так:
+   - малый peristaltic pump + plant valves;
+   - soil / environment sensors;
+   - `ESP32 SD module` как storage extension.
 
 ## Что модуль не должен делать
 
@@ -42,7 +54,7 @@
 ## Следующие Задачи
 
 1. Подключить реальные датчики и калибровку вместо полной симуляции.
-2. Подтвердить аппаратный water-path и безопасные уровни активации.
+2. Подключить реальный peristaltic + valve cascade и подтвердить безопасные уровни активации.
 3. Добавить расписания и более богатые automatic scenarios.
 4. Подготовить синхронизацию irrigation-сценариев между `ESP32` и `Raspberry Pi`.
 5. Подготовить owner-visible water reserve model:
@@ -56,3 +68,4 @@
    - air temperature;
    - air humidity;
    - water reserve summary.
+7. Не смешивать irrigation hardware plan с donor-слоем после подтверждения миграции знаний.

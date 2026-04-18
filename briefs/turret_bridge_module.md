@@ -40,6 +40,26 @@
 - есть action channels `motion`, `strobe`, `water`, `audio` с safety-gates;
 - есть `platform log`, `TurretEventLog` и `TurretDriverLayer`.
 
+Подтвержденный hardware baseline этого шага:
+
+- primary camera:
+  - `IMX219 130°`
+- range:
+  - `TFmini Plus` как owner-side профиль
+  - `HC-SR04`-class как laboratory-профиль после закупки
+- motion:
+  - `MG996R`
+  - `PCA9685`
+- turret water:
+  - `SEAFLO 12V`
+- stepper-моторы:
+  - только `Laboratory`, не turret motion
+- audio stock baseline:
+  - `ultrasonic_pair = 2`
+  - `horn_pair = 2`
+  - `Soundcore Motion 300` в наличии
+- `strobe` остается частью turret defense-line `v1`, а не отдельным поздним профилем.
+
 ## Уточненный Product Context
 
 Для следующего этапа turret нужно мыслить уже не только как runtime-owner,
@@ -82,9 +102,10 @@
 
 ## Следующие Задачи
 
-1. Подключить реальные camera/range driver'ы вместо полной software simulation.
-2. Подтвердить real hardware bindings для `motion`, `strobe`, `water` и `audio`.
+1. Подключить реальные `IMX219` / `TFmini Plus` driver'ы вместо полной software simulation.
+2. Подтвердить real hardware bindings для `MG996R + PCA9685`, `strobe`, `SEAFLO` и `audio`.
 3. Довести FPV/media и heavy content flow до реального owner-side сценария.
 4. Углубить `strobe` как ближайший service/test и FPV-facing action slice.
-5. После этого синхронизировать turret service entry points с общим `Service/Test v1`.
+5. После этого синхронизировать turret service entry points с общим `Laboratory` workspace.
 6. К `audio` переходить отдельным этапом после hardware/power briefing.
+7. Вести `HC-SR04`-class и stepper profiles только как laboratory-пути, не как product-ready turret controls.

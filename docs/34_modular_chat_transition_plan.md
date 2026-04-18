@@ -83,14 +83,15 @@
 Базовый порядок чтения:
 
 1. [README.md](../README.md)
-2. [docs/26_v1_product_spec.md](26_v1_product_spec.md)
-3. [docs/01_product_decisions.md](01_product_decisions.md)
-4. [docs/02_system_architecture.md](02_system_architecture.md)
-5. [docs/05_ui_shell_and_navigation.md](05_ui_shell_and_navigation.md)
-6. [docs/40_system_shell_navigation_alignment.md](40_system_shell_navigation_alignment.md)
-7. [docs/09_master_design_plan.md](09_master_design_plan.md)
-8. [briefs/README.md](../briefs/README.md)
-9. нужный brief по конкретному продуктовому блоку
+2. [docs/smart_platform_workshop_inventory.xlsx](smart_platform_workshop_inventory.xlsx)
+3. [docs/26_v1_product_spec.md](26_v1_product_spec.md)
+4. [docs/01_product_decisions.md](01_product_decisions.md)
+5. [docs/02_system_architecture.md](02_system_architecture.md)
+6. [docs/05_ui_shell_and_navigation.md](05_ui_shell_and_navigation.md)
+7. [docs/40_system_shell_navigation_alignment.md](40_system_shell_navigation_alignment.md)
+8. [docs/09_master_design_plan.md](09_master_design_plan.md)
+9. [briefs/README.md](../briefs/README.md)
+10. нужный brief по конкретному продуктовому блоку
 
 Рабочий каталог для новой платформенной разработки:
 
@@ -101,6 +102,7 @@
 Не использовать как основной рабочий корень:
 
 - соседние legacy/bench/donor-репозитории без явного migration-intent
+- donor-репозитории после подтвержденной выборочной миграции лучше убирать из активного workspace, чтобы не плодить конкурирующие источники истины
 
 Исключение:
 

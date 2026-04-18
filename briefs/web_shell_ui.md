@@ -12,7 +12,8 @@
 - быть главной точкой входа в систему;
 - показывать доступность узлов и модулей;
 - обеспечивать owner-aware handoff;
-- давать доступ к `Настройкам`, `Диагностике`, `Логам` и `Service/Test`.
+- давать доступ к `Gallery`, `Laboratory` и `Settings`;
+- давать быстрый вход в `Gallery > Reports` как в главный user-facing viewer истории.
 
 ## Что входит в ответственность shell
 
@@ -22,6 +23,7 @@
 - статус узлов;
 - статусы продуктовых модулей;
 - federated handoff к peer-owned страницам;
+- activity summary и быстрый вход в `Gallery > Reports`;
 - единый язык визуальных состояний `online/degraded/locked/fault/service`.
 
 ## Что shell не должен делать
@@ -48,10 +50,20 @@
 1. `Главная`
 2. `Полив`
 3. `Турель`
-4. `Service/Test`
-5. `Настройки`
-6. `Диагностика`
-7. `Логи`
+4. `Gallery`
+5. `Laboratory`
+6. `Настройки`
+
+Не считать top-level user-facing страницами:
+
+- `Логи`
+- `Диагностика`
+- `Service/Test`
+
+Важно:
+
+- `Laboratory` остается user-facing именем инженерного контура;
+- `Service/Test v1` сохраняем только как внутренний stage-term.
 
 ## Первый practical follow-up
 

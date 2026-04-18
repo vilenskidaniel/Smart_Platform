@@ -172,13 +172,13 @@
 
 Что должно быть:
 
-- `Strobe Bench`;
+- `Strobe` и `strobe_bench` как разные laboratory-входы одного семейства;
 - сервисные тесты полива;
 - сервисные сценарии турели;
 - ручные диагностические команды;
 - понятные блокировки и предупреждения;
 - deep `Laboratory / Test Bench` contour;
-- grouped tabs по owner, модулю и компоненту;
+- grouped tabs по hardware/function groups, а не по owner-level страницам;
 - terminal, logs, graphs and reports.
 
 ## 8. Этап 7. Минимальные platform services для `v1`
@@ -200,6 +200,7 @@
 
 После продуктовой фиксации:
 
+- подтверждаем workbook `docs/smart_platform_workshop_inventory.xlsx` как hardware source of truth;
 - подтверждаем `v1` набор компонентов;
 - делаем локальный `ESP32` pin/power scope;
 - делаем turret hardware map для `Raspberry Pi`;
@@ -255,7 +256,7 @@
 6. возврат к общей координации;
 7. real hardware docs;
 8. live integration;
-9. итоговая уборка проекта.
+9. итоговая уборка проекта и donor-layer cleanup после подтвержденной выборочной миграции.
 
 Переходный документ для этого режима:
 

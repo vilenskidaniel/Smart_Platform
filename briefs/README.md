@@ -16,7 +16,7 @@
    `Turret v1`
 
 4. [service_test_v1.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/briefs/service_test_v1.md)
-   `Service/Test v1`
+   `Laboratory v1`
 
 ## Support Briefs
 
@@ -31,8 +31,9 @@
 Перед новым отдельным чатом:
 
 1. открыть [README.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/README.md);
-2. открыть [docs/34_modular_chat_transition_plan.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/docs/34_modular_chat_transition_plan.md);
-3. выбрать только один основной brief;
-4. при необходимости добрать support-briefы.
+2. открыть [docs/smart_platform_workshop_inventory.xlsx](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/docs/smart_platform_workshop_inventory.xlsx);
+3. открыть [docs/34_modular_chat_transition_plan.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/docs/34_modular_chat_transition_plan.md);
+4. выбрать только один основной brief;
+5. при необходимости добрать support-briefы.
 
 Если задача начинает затрагивать второй product-level блок, это уже повод вынести его в отдельный чат.
