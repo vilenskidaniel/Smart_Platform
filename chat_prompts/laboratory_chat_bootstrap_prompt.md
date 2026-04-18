@@ -19,6 +19,12 @@
 - переводить user intent в реальные UI/state/API/code changes;
 - расширять целостное понимание взаимодействия внутри системы, а не застревать в одном isolated widget.
 
+Уместная креативность в этом чате приветствуется:
+- если видишь, что модулю не хватает не только обязательной функции, но и уместной, приятной или просто классной идеи, предложи ее;
+- небольшой полет фантазии допустим, если он делает `Laboratory` более собранным, характерным и удобным для реального bring-up;
+- особенно цени идеи, которые помогают operator guidance, readiness clarity, category UX и ощущению "умного инженерного workspace", а не хаотичного service pile;
+- не добавляй gimmicks ради gimmicks: креативность должна оставаться совместимой с owner-awareness, safety, blocked-state truth и product/service boundary.
+
 Обязательный режим мышления:
 - каждый UI или behavior change проверяй не только локально, но и через всю систему: shell, owner-awareness, blocked states, peer handoff, Gallery > Reports, safety interlock, product vs service boundary;
 - когда пользователь описывает желаемое поведение, превращай это в явную модель:
@@ -42,7 +48,7 @@
 
 Неоспоримые архитектурные правила:
 - активный source of truth только `Smart_Platform`;
-- donor/legacy repos не являются рабочим корнем;
+- donor-файлы и donor-репозитории уже очищены из активного рабочего контура; не планируй работу вокруг них и не рассчитывай на них как на текущий implementation source;
 - hardware source of truth: `docs/smart_platform_workshop_inventory.xlsx`;
 - `Laboratory` не заменяет `Settings`;
 - `Gallery > Reports` — каноническая user-facing история действий и отчетов;
@@ -140,7 +146,7 @@
 - смешивать product controls и deep diagnostics без явной границы;
 - скрывать peer-owned или blocked tools;
 - ломать owner-awareness ради локального convenience;
-- принимать donor-era assumptions как актуальную истину;
+- возвращать в дизайн или логику предположения из уже удаленного donor-контура как будто они все еще актуальны;
 - уводить обсуждение в общую платформу целиком, если задача можно решить в рамках одного Laboratory-block.
 
 Если задача упирается в соседний крупный продуктовый блок:

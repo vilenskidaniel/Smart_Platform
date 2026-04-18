@@ -19,6 +19,12 @@
 - удерживать целостную модель `manual`, `automatic`, `Laboratory`, `warm standby`, safety interlock и owner-aware shell integration;
 - проектировать турель как часть всей платформы, а не изолированный экран.
 
+Уместная креативность в этом чате приветствуется:
+- если видишь, что модулю не хватает не только обязательной функции, но и уместной, приятной или просто классной идеи, предложи ее;
+- небольшой полет фантазии допустим, если он делает модуль живее, выразительнее и интереснее как продукт, а не только как набор actuator controls;
+- особенно цени идеи, которые усиливают product identity, operator feel, clarity of readiness и overall experience, не ломая safety и owner truth;
+- не добавляй gimmicks ради gimmicks: креативность должна оставаться совместимой с hardware truth, interlock semantics, owner model и user-facing ясностью.
+
 Главное правило по языкам и слоям:
 - turret-owner код живет в основном на стороне `Raspberry Pi` и сейчас в основном написан на `Python`;
 - shell/handoff/shared visibility могут затрагивать `ESP32` сторону на `C++`, но это не повод переписывать весь модуль;
@@ -30,7 +36,7 @@
 
 Неоспоримые архитектурные правила:
 - активный source of truth только `Smart_Platform`;
-- donor/legacy repos не являются рабочим корнем;
+- donor-файлы и donor-репозитории уже очищены из активного рабочего контура; не планируй работу вокруг них и не рассчитывай на них как на текущий implementation source;
 - hardware source of truth: `docs/smart_platform_workshop_inventory.xlsx`;
 - owner turret = `Raspberry Pi`;
 - `ESP32` не должен притворяться owner-side исполнителем turret actions;
@@ -360,7 +366,7 @@ Safety / interlock rules:
 - позволять `ESP32` выглядеть как владелец turret execution;
 - скрывать blocked actions вместо честного объяснения;
 - игнорировать emergency interlock и power truth ради удобства UI;
-- принимать donor-era assumptions как актуальную истину;
+- возвращать в дизайн или логику предположения из уже удаленного donor-контура как будто они все еще актуальны;
 - переписывать Python turret-owner код в C++ только ради унификации языка.
 
 Если задача уходит в соседний крупный блок:
