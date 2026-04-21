@@ -125,11 +125,23 @@ def build_server(config: BridgeConfig, state: BridgeState, sync_client: SyncClie
             if parsed.path == "/":
                 self._serve_file(web_root / "index.html", "text/html; charset=utf-8")
                 return
+            if parsed.path == "/static/entry_context.js":
+                self._serve_file(web_root / "static" / "entry_context.js", "application/javascript; charset=utf-8")
+                return
             if parsed.path == "/federated/handoff":
                 self._raw_response(build_federated_handoff_html(), "text/html; charset=utf-8")
                 return
+            if parsed.path == "/irrigation":
+                self._redirect("/federated/handoff?module_id=irrigation")
+                return
             if parsed.path == "/service":
                 self._serve_file(web_root / "service.html", "text/html; charset=utf-8")
+                return
+            if parsed.path == "/service/irrigation":
+                self._redirect("/federated/handoff?module_id=irrigation_service")
+                return
+            if parsed.path == "/service/strobe":
+                self._redirect("/federated/handoff?module_id=strobe_bench")
                 return
             if parsed.path == "/gallery":
                 self._serve_file(web_root / "gallery.html", "text/html; charset=utf-8")
@@ -509,6 +521,12 @@ def build_server(config: BridgeConfig, state: BridgeState, sync_client: SyncClie
             self.send_header("Content-Length", str(len(raw)))
             self.end_headers()
             self.wfile.write(raw)
+
+        def _redirect(self, location: str, status: HTTPStatus = HTTPStatus.TEMPORARY_REDIRECT) -> None:
+            self.send_response(status)
+            self.send_header("Location", location)
+            self.send_header("Content-Length", "0")
+            self.end_headers()
 
         def _json_response(self, payload: object, status: HTTPStatus = HTTPStatus.OK) -> None:
             raw = json.dumps(payload, ensure_ascii=False).encode("utf-8")

@@ -50,11 +50,25 @@
 
 ## Как запустить
 
-Из каталога `raspberry_pi`:
+Поддерживаемые entry paths:
+
+1. owner-side запуск из каталога `raspberry_pi`:
 
 ```bash
 python3 app.py
 ```
+
+2. local laptop smoke из корня репозитория с честно отключенным sync:
+
+```powershell
+$env:SMART_PLATFORM_RPI_HOST = "127.0.0.1"
+$env:SMART_PLATFORM_RPI_PORT = "8091"
+$env:SMART_PLATFORM_RPI_PUBLIC_BASE_URL = "http://127.0.0.1:8091"
+$env:SMART_PLATFORM_SYNC_ENABLED = "0"
+python raspberry_pi/app.py
+```
+
+Во втором случае shell остается `Raspberry Pi`-веткой по ownership, но browser entry context должен маркироваться как `Laptop smoke`, а не как real-device equivalent.
 
 По умолчанию сервер поднимается на:
 
@@ -63,8 +77,18 @@ python3 app.py
 Основные страницы:
 
 - `/`
+- `/service`
+- `/gallery`
+- `/settings`
 - `/turret`
 - `/service/turret`
+- `/service/displays`
+
+Логичные direct routes для peer-owned slices должны уходить не в raw `404`, а в owner-aware handoff / blocked explanation:
+
+- `/irrigation`
+- `/service/irrigation`
+- `/service/strobe`
 
 Полезные API:
 
@@ -91,6 +115,7 @@ python3 app.py
 - `Raspberry Pi` — владелец турели.
 - `ESP32` не должен напрямую перетирать runtime турели.
 - shell на `Raspberry Pi` и `ESP32` должен оставаться визуально согласованным.
+- верхняя shell bar должна объяснять не только ownership, но и entry context: host runtime, launch client, topology, input profile и layout helper;
 - текущий driver layer еще не управляет железом, а только держит каркас binding'ов.
 - peer-owned модули теперь открываются через federated handoff flow, а не через слепое локальное управление чужой страницей.
 - тяжелый контент и крупные библиотеки данных на этой стороне должны жить в `content_root`, зеркально к `ESP32 SD`.

@@ -696,14 +696,29 @@ uint16_t WebShellServer::port() const {
 
 void WebShellServer::registerRoutes() {
     server_.on("/", HTTP_GET, [this]() { handleRoot(); });
+    server_.on("/static/entry_context.js", HTTP_GET, [this]() {
+        if (!sendFileFromFileSystem("/static/entry_context.js", "application/javascript; charset=utf-8")) {
+            server_.send(200,
+                         "application/javascript; charset=utf-8",
+                         "window.SmartPlatformEntryContext=window.SmartPlatformEntryContext||{mount:function(){}};");
+        }
+    });
     server_.on("/federated/handoff", HTTP_GET, [this]() { handleFederatedHandoffPage(); });
     server_.on("/service", HTTP_GET, [this]() { handleServiceHubPage(); });
     server_.on("/gallery", HTTP_GET, [this]() { handleGalleryPage(); });
     server_.on("/settings", HTTP_GET, [this]() { handleSettingsPage(); });
     server_.on("/content", HTTP_GET, [this]() { handleContentPage(); });
     server_.on("/irrigation", HTTP_GET, [this]() { handleIrrigationPage(); });
+    server_.on("/turret", HTTP_GET, [this]() {
+        server_.sendHeader("Location", "/federated/handoff?module_id=turret_bridge", true);
+        server_.send(307, "text/plain", "");
+    });
     server_.on("/service/irrigation", HTTP_GET, [this]() { handleIrrigationServicePage(); });
     server_.on("/service/strobe", HTTP_GET, [this]() { handleStrobeServicePage(); });
+    server_.on("/service/turret", HTTP_GET, [this]() {
+        server_.sendHeader("Location", "/federated/handoff?module_id=turret_bridge", true);
+        server_.send(307, "text/plain", "");
+    });
 
     server_.on("/api/v1/system", HTTP_GET, [this]() { handleSystemSnapshot(); });
     server_.on("/api/v1/shell/snapshot", HTTP_GET, [this]() { handleShellSnapshot(); });

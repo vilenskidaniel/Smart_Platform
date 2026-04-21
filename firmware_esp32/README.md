@@ -12,10 +12,12 @@
 - `ShellSnapshotFacade`;
 - `WiFiBootstrap` с локальным shell по `SoftAP`;
 - `StorageManager` и content status;
+- entry-context layer в верхней bar-строке для `ESP32 shell`, launch client, topology, input profile и layout helper;
 - `IrrigationController` как software-level `Irrigation v1` модуль;
 - product page `/irrigation` и service page `/service/irrigation`;
 - базовый irrigation auto-mode и sensor simulation;
 - `StrobeBenchController` как локальный `Service/Test` модуль;
+- logical direct route `/turret` теперь должен идти через owner-aware handoff вместо сырого `404`;
 - базовые sync endpoints для связи с `Raspberry Pi`.
 
 ## Что Пока Еще Не Завершено

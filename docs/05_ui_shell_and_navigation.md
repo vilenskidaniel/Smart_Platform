@@ -41,6 +41,7 @@
 На обоих узлах должны быть одинаковые базовые элементы:
 
 - верхняя статусная полоса;
+- entry-context bar с иконками runtime/client/input/layout;
 - карточки статуса `ESP32` и `Raspberry Pi`;
 - глобальная навигация;
 - зона системных уведомлений и handoff-подсказок;
@@ -52,6 +53,48 @@ Shell должен выглядеть одинаково независимо о
 - если открыт `ESP32`, структура остается той же;
 - если открыт `Raspberry Pi`, структура остается той же;
 - если owner-модуль отсутствует, интерфейс не меняет архитектуру, а показывает деградацию.
+
+### 3.0 Entry Context Strip
+
+Верхняя bar-строка должна не только показывать board ownership, но и объяснять контекст запуска.
+
+Минимальный набор entry-context icons:
+
+- host runtime: `ESP32 shell`, `Raspberry Pi shell` или `Laptop smoke`;
+- launch client: `Phone`, `Tablet`, `Desktop/Laptop`, `Raspberry Pi display`;
+- topology: `single-board`, `dual-board` или `laptop-only`;
+- input profile: `touch`, `keyboard + mouse` или смешанный режим;
+- layout helper: `rotate / fullscreen / browser mode`.
+
+Правила для этого слоя:
+
+- hover, focus или tap по иконке должны раскрывать короткое понятное объяснение;
+- иконки не заменяют device ribbon, а добавляют контекст запуска поверх owner model;
+- browser-side device detection считается эвристикой и не должна притворяться hardware truth там, где браузер не дает точного сигнала;
+- `Laptop smoke` обязан быть честно обозначен как testing path, а не как production-equivalent runtime.
+
+### 3.0.1 Launch Profiles And Behavior
+
+На уровне shell фиксируем три большие entry-семантики:
+
+1. `ESP32 shell`
+2. `Raspberry Pi shell`
+3. `Laptop smoke path`
+
+При этом отдельно от host runtime должен определяться launch client.
+
+Что это означает practically:
+
+- смартфон, открывающий `ESP32` или `Raspberry Pi`, остается phone-client поверх owner shell;
+- встроенный `Raspberry Pi` display считается отдельным owner-side display profile, а не просто generic desktop browser;
+- ноутбук с локальным запуском должен маркироваться как `Laptop smoke`, даже если backend сейчас исполняет `Raspberry Pi`-ветку.
+
+Поведение по client profile:
+
+- phone: доступен layout helper для перехода в landscape/fullscreen там, где браузер это разрешает;
+- desktop/laptop: доступны keyboard shortcuts, hover hints и pointer-oriented interactions;
+- Raspberry Pi display: упор на touch/fullscreen density и owner-side screen qualification;
+- любой профиль должен честно показывать, какие affordances реально доступны, а какие только желательны.
 
 ### 3.1 Visual language baseline
 
@@ -112,6 +155,13 @@ Shell должен выглядеть одинаково независимо о
 - открывается canonical owner route;
 - handoff должен быть мягким и визуально согласованным;
 - пользователь не должен чувствовать, что его перебросили на “другой сайт”.
+
+### Если пользователь вводит логичный route напрямую
+
+- логичные product/service адреса (`/irrigation`, `/turret`, `/service/irrigation`, `/service/turret`) не должны уходить в raw `404`, если модуль известен shell;
+- если route локальный, открывается локальная страница;
+- если route peer-owned, открывается owner-aware handoff или blocked explanation;
+- `404` допустим только для реально неизвестного route, а не для известного продуктового входа.
 
 ## 5. Роль `System Shell`
 

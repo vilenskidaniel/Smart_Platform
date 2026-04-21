@@ -216,6 +216,33 @@ Transition rule:
 - current software baseline временно может продолжать отдавать transitional keys;
 - но новые shell-изменения должны проектироваться уже вокруг `gallery` и `laboratory`, а не вокруг `content` и `service`.
 
+## 7.1 Entry Context Alignment
+
+Помимо navigation keys shell теперь должен держать еще один компактный верхний слой согласования: `entry context`.
+
+Он обязан одинаково трактоваться на обеих сторонах:
+
+- host runtime: `ESP32 shell` / `Raspberry Pi shell` / `Laptop smoke`;
+- launch client: `phone` / `tablet` / `desktop-laptop` / `embedded Raspberry Pi display`;
+- topology: `single-board` / `dual-board` / `laptop-only`;
+- input profile: `touch` / `keyboard + mouse` / mixed;
+- layout helper: `rotate` / `fullscreen` / plain browser mode.
+
+Важно:
+
+- это browser/runtime convenience layer, а не hardware source of truth;
+- owner semantics, module ownership и real hardware availability остаются первичными;
+- `Laptop smoke` должен считаться честным single-node testing path, а не третьим hardware owner.
+
+## 7.2 Logical Direct Route Policy
+
+На shell-level alignment-map фиксируем еще одно правило:
+
+- логичные user-typed routes не должны ломаться в сырой `404`, если shell знает соответствующий module;
+- owner-local route открывается локально;
+- peer-owned route переводит на federated handoff или blocked explanation;
+- прямой ввод адреса должен быть совместим с owner-aware vocabulary, а не обходить ее.
+
 Практический вывод для snapshot migration:
 
 1. Добавить canonical navigation entries:
