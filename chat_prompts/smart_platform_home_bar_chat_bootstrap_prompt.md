@@ -53,6 +53,12 @@
 15. Soil-zone names и будущие plant descriptions живут в tooltip, а не раздувают саму bar.
 16. При снижении ширины bar сначала уплотняется, а затем может переходить в stacked / multi-row режим вместо постоянного horizontal scroll.
 17. `Settings` и `Laboratory` не должны деградировать в shallow pages только потому, что home/bar слой стал компактнее.
+18. `runtime_profile`, viewer presence и текущий browser client важнее грубых эвристик вида “если loopback, значит вся правда уже понятна”.
+19. Custom tooltip не должен дублироваться browser-native `title` tooltip.
+20. Grouped summary tooltip должен раскрываться структурированными строками/секциями, а не длинной plain-text фразой.
+21. Fullscreen restore не должен отнимать первый пользовательский клик у ссылки, кнопки или route change.
+22. После правки bar нужно проверять не только home screen, но и `Gallery`, `Laboratory`, `Turret`, `Settings` на live-served version.
+23. `Raspberry Pi` и `ESP32` home/bar implementations можно использовать как reference друг для друга, но нельзя считать их drop-in identical.
 
 ## Что Нельзя Делать
 
@@ -62,7 +68,17 @@
 - делать все элементы одинаковыми pill-кнопками;
 - держать на главной странице логи, reports summary или oversized diagnostic cards;
 - имитировать, будто laptop smoke является отдельным hardware owner;
-- смешивать английский и русский на одном экране без реального language-switch context.
+- смешивать английский и русский на одном экране без реального language-switch context;
+- вешать fullscreen restore на такой low-level event, который ломает обычный click/navigation flow;
+- делать большой несфокусированный patch по длинному `smart_bar.js`, если ту же работу можно провести последовательными локальными hunks.
+
+## Практические Guardrails Для Этого Чата
+
+- shared bar — это infrastructure layer, поэтому локальная правка одной кнопки может сломать несколько страниц сразу;
+- если проблема уже локализована в одном `JS`-файле, сначала чинить этот slice, а не расползаться по repo;
+- для длинных `JS`-файлов сначала править helpers/state, затем markup, затем interaction handlers, и валидировать после каждого существенного шага;
+- после первой substantive правки обязателен узкий validation step: file errors, live-served asset, затем browser/DOM smoke;
+- если `ESP32`-версия содержит более богатый UX, использовать ее как reference surface, а не как blind copy source.
 
 ## Если Задача Уходит В Соседний Блок
 

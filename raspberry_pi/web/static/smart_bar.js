@@ -33,6 +33,7 @@
   let viewerHeartbeatInFlight = false;
   let fullscreenToggleIntent = null;
   let fullscreenResumeListenersInstalled = false;
+  let fullscreenPendingHintPage = "";
 
   function esc(value) {
     return String(value ?? "")
@@ -78,6 +79,10 @@
     writeStorage(FULLSCREEN_PENDING_KEY, pending ? "1" : "0");
   }
 
+  function fullscreenRestorePending() {
+    return fullscreenNavigationPending() && !document.fullscreenElement;
+  }
+
   function clearTooltipHideTimer() {
     if (!tooltipHideTimer) {
       return;
@@ -101,10 +106,16 @@
     }
   }
 
-  async function handleFullscreenResumeInteraction() {
+  async function handleFullscreenResumeInteraction(event) {
     if (!fullscreenPreferenceEnabled()) {
       clearFullscreenResumeListeners();
       return;
+    }
+
+    if (event instanceof MouseEvent) {
+      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+        return;
+      }
     }
 
     const resumed = await requestStoredFullscreen();
@@ -118,7 +129,7 @@
       return;
     }
 
-    document.removeEventListener("pointerdown", handleFullscreenResumeInteraction, true);
+    document.removeEventListener("click", handleFullscreenResumeInteraction, true);
     document.removeEventListener("keydown", handleFullscreenResumeInteraction, true);
     fullscreenResumeListenersInstalled = false;
   }
@@ -128,7 +139,7 @@
       return;
     }
 
-    document.addEventListener("pointerdown", handleFullscreenResumeInteraction, true);
+    document.addEventListener("click", handleFullscreenResumeInteraction, true);
     document.addEventListener("keydown", handleFullscreenResumeInteraction, true);
     fullscreenResumeListenersInstalled = true;
   }
@@ -1502,10 +1513,22 @@
 
   function controlTokens(snapshot, phoneDensity) {
     const localViewer = detectClient(snapshot);
+    const fullscreenPending = fullscreenRestorePending();
     const controls = [
       { id: "home", href: "/", icon: "home", title: "Smart Platform Home", detail: "Return to the Smart Platform launcher." },
       { id: "input", icon: "keyboard", title: "Input Helpers", detail: desktopControlsEnabled ? "Desktop keyboard shortcuts and hover helpers are enabled." : "Desktop keyboard shortcuts and hover helpers are disabled.", active: desktopControlsEnabled },
-      { id: "fullscreen", icon: "fullscreen", title: "Fullscreen", detail: document.fullscreenElement ? "Leave fullscreen mode." : "Enter fullscreen mode." }
+      {
+        id: "fullscreen",
+        icon: "fullscreen",
+        title: "Fullscreen",
+        detail: document.fullscreenElement
+          ? "Leave fullscreen mode."
+          : fullscreenPending
+          ? "Browser fullscreen ended during page navigation. Click once on this page or use this control to restore fullscreen."
+          : "Enter fullscreen mode.",
+        active: document.fullscreenElement || fullscreenPending,
+        blink: fullscreenPending
+      }
     ];
 
     if (phoneDensity && localViewer.kind !== "desktop") {
@@ -1622,6 +1645,27 @@
 
     applyBarLayout(bar, snapshot, density || undefined);
     bindInteractions();
+    maybeShowFullscreenRestoreHint();
+  }
+
+  function maybeShowFullscreenRestoreHint() {
+    if (!fullscreenRestorePending()) {
+      fullscreenPendingHintPage = "";
+      return;
+    }
+
+    const pageKey = `${window.location.pathname || "/"}${window.location.search || ""}`;
+    if (fullscreenPendingHintPage === pageKey) {
+      return;
+    }
+
+    const toggle = document.querySelector('.sp-control[data-control-id="fullscreen"]');
+    if (!(toggle instanceof HTMLElement)) {
+      return;
+    }
+
+    fullscreenPendingHintPage = pageKey;
+    showTooltip(toggle, true);
   }
 
   function readTooltipPayload(target) {

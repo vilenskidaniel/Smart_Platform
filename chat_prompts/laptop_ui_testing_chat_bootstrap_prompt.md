@@ -166,6 +166,19 @@
 - operator/developer notes capture during local UI review;
 - clearer explanation of single-node vs dual-board expectations in local runs.
 
+Практические guardrails из реальных laptop smoke сессий:
+- всегда отделяй `host launch` от `browser entry`: launcher и опубликованный URL — это не одна и та же сущность;
+- если UI bug воспроизводится только на PC, сначала работай только с PC/browser slice, не открывая phone/tablet ветку без необходимости;
+- после каждой существенной JS/UI правки делай минимум три проверки:
+  - ошибки измененного файла;
+  - live-served asset на реальном порту;
+  - узкий browser/DOM smoke для нужного route;
+- browser cache может показывать устаревший `JS`, поэтому source-file сам по себе не считается достаточной проверкой;
+- если работа идет в длинном `JS`-файле, правь его маленькими hunks в порядке следования кода;
+- fullscreen continuity across navigation считай best-effort browser behavior, а не абсолютной гарантией;
+- restore fullscreen не должен красть первый клик пользователя и превращать нормальную навигацию в обязательный double-click;
+- если `runtime_profile` или viewer-presence уже есть в snapshot, они важнее упрощенных loopback-эвристик.
+
 Что нельзя делать:
 - притворяться, что laptop run равен hardware-ready production mode;
 - скрывать simulation;

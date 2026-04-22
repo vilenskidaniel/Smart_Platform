@@ -94,3 +94,13 @@
 - Добавлять пометки `TODO(stage-x)` там, где код еще не завершен.
 - Указывать, какая часть пришла из старого проекта, а какая переписана заново.
 - Для сложных мест писать не только что происходит, но и почему это так устроено.
+
+## Guardrails Для Активных UI/Shell Чатов
+
+- До работы по shell/home/bar сначала открыть [docs/48_browser_entry_and_host_launch.md](docs/48_browser_entry_and_host_launch.md) и [docs/49_shell_runtime_and_chat_guardrails.md](docs/49_shell_runtime_and_chat_guardrails.md).
+- В runtime-модели всегда отдельно различать host node, module owner, current browser client и entry context.
+- Не смешивать `host launch` и `browser entry` в одну сущность даже тогда, когда на `Windows` они выглядят как один пользовательский сценарий.
+- При shared UI edits проверять не только source-файл, но и live-served asset на рабочем порту.
+- Длинные JS-файлы править маленькими hunks в порядке следования кода, а не большими смешанными patch-блоками.
+- После regression сначала вернуть рабочее поведение в этом же slice, и только потом расширять scope.
+- Если пользователь ограничил задачу до конкретного runtime slice, например только PC/browser path, сначала закрыть именно его.
