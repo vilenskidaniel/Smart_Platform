@@ -216,23 +216,29 @@ Transition rule:
 - current software baseline временно может продолжать отдавать transitional keys;
 - но новые shell-изменения должны проектироваться уже вокруг `gallery` и `laboratory`, а не вокруг `content` и `service`.
 
-## 7.1 Entry Context Alignment
+## 7.1 Home And Bar Alignment
 
-Помимо navigation keys shell теперь должен держать еще один компактный верхний слой согласования: `entry context`.
+Помимо navigation keys платформа теперь должна держать единый `home / bar contract`.
 
-Он обязан одинаково трактоваться на обеих сторонах:
+User-facing смысл этого слоя:
 
-- host runtime: `ESP32 shell` / `Raspberry Pi shell` / `Laptop smoke`;
-- launch client: `phone` / `tablet` / `desktop-laptop` / `embedded Raspberry Pi display`;
-- topology: `single-board` / `dual-board` / `laptop-only`;
-- input profile: `touch` / `keyboard + mouse` / mixed;
-- layout helper: `rotate` / `fullscreen` / plain browser mode.
+- домашняя страница называется `Smart Platform`, а не `System Shell`;
+- верхняя bar-панель становится главным носителем честных статусов;
+- отдельный блок `Entry Context` на home screen убирается;
+- большая часть технической детализации уходит в tooltip/status-sheet по hover, focus или tap.
+
+Bar contract обязан одинаково трактоваться на обеих сторонах:
+
+- слева: compact home logomark, desktop interaction toggle, fullscreen toggle, current client icon;
+- в центре: постоянные ярлыки `Raspberry Pi` и `ESP32`, mode-chips только для реально доступных owner modules, moisture strip из 5 irrigation groups;
+- справа: `Wi-Fi`, `Sync`, environmental and system indicators, language, time, date;
+- если данных нет, slot сохраняется, а индикатор уходит в честное серое `no data` состояние.
 
 Важно:
 
-- это browser/runtime convenience layer, а не hardware source of truth;
-- owner semantics, module ownership и real hardware availability остаются первичными;
-- `Laptop smoke` должен считаться честным single-node testing path, а не третьим hardware owner.
+- это не dashboard для сырых booleans и не место для `node_id`, `base_url` или `wifi: true / false`;
+- browser-side client detection остается эвристикой, а не hardware source of truth;
+- `Laptop smoke` считается честным single-node testing path, а не третьим hardware owner.
 
 ## 7.2 Logical Direct Route Policy
 

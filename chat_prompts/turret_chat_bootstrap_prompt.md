@@ -376,7 +376,7 @@ Safety / interlock rules:
 
 Примеры таких границ:
 - deep audio hardware/power design -> отдельный audio-focused chat
-- full shell/navigation refactor -> отдельный System Shell chat
+- full home/bar launcher redesign -> отдельный Smart Platform Home / Bar chat
 - irrigation logic and sensors -> отдельный Irrigation chat
 - general Laboratory framework changes beyond turret needs -> отдельный Laboratory chat
 
@@ -393,7 +393,7 @@ Safety / interlock rules:
 
 - вставь содержимое блока `Готовый Prompt Для Новой Сессии` в новый чат;
 - после вставки дай этому чату одну конкретную задачу только по `Turret`;
-- не смешивай в том же чате глубокую проработку `Irrigation`, `Gallery`, `System Shell` и общего `Laboratory`, если это уже не прямой локальный блокер.
+- не смешивай в том же чате глубокую проработку `Irrigation`, `Gallery`, home/bar launcher layer и общего `Laboratory`, если это уже не прямой локальный блокер.
 
 ## Рекомендуемый Старт После Вставки
 

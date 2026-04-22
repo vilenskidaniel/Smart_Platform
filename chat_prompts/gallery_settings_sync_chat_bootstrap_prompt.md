@@ -175,7 +175,7 @@
 - явно пометь, что дальнейшая глубокая проработка должна идти отдельным модульным чатом.
 
 Примеры таких границ:
-- full shell redesign -> отдельный System Shell chat;
+- full home/bar launcher redesign -> отдельный Smart Platform Home / Bar chat;
 - deep Gallery feed UX without sync semantics -> отдельный Gallery chat;
 - local-only settings UX without cross-node continuity -> отдельный Settings-focused chat;
 - transport/auth/bootstrap flow beyond current scope -> отдельный onboarding/runtime chat.

@@ -97,6 +97,7 @@
 - если peer или sensing family отсутствует, это не должно выглядеть как поломанная страница.
 
 Manual FPV intent, который уже считается важной частью продукта:
+- `Manual` должен развиваться как гибрид между `FPV for drones` и `smartphone shooter HUD`, но без потери safety truth, owner visibility и blocked-state honesty;
 - live video;
 - crosshair;
 - green auto-detection box;
@@ -246,7 +247,7 @@ Automatic intent, который нужно уважать:
 
 Примеры таких границ:
 - deep audio hardware/power design -> отдельный audio-focused chat;
-- full shell/navigation refactor -> отдельный System Shell chat;
+- full home/bar launcher redesign -> отдельный Smart Platform Home / Bar chat;
 - irrigation logic and sensors -> отдельный Irrigation chat;
 - general Laboratory framework changes beyond turret needs -> отдельный Laboratory chat.
 

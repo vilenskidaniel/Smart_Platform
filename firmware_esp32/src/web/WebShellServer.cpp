@@ -703,6 +703,11 @@ void WebShellServer::registerRoutes() {
                          "window.SmartPlatformEntryContext=window.SmartPlatformEntryContext||{mount:function(){}};");
         }
     });
+    server_.on("/static/smart_bar.js", HTTP_GET, [this]() {
+        if (!sendFileFromFileSystem("/static/smart_bar.js", "application/javascript; charset=utf-8")) {
+            server_.send(200, "application/javascript; charset=utf-8", "(function(){})();");
+        }
+    });
     server_.on("/federated/handoff", HTTP_GET, [this]() { handleFederatedHandoffPage(); });
     server_.on("/service", HTTP_GET, [this]() { handleServiceHubPage(); });
     server_.on("/gallery", HTTP_GET, [this]() { handleGalleryPage(); });

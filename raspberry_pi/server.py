@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import os
+import platform
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -9,6 +11,7 @@ from urllib.parse import parse_qs, urlparse
 from bridge_config import BridgeConfig
 from bridge_state import BridgeState
 from shell_snapshot_facade import ShellSnapshotFacade
+from shell_viewer_presence import ShellViewerPresence
 from sync_client import SyncClient
 
 
@@ -91,11 +94,39 @@ def build_federated_handoff_html() -> bytes:
     return html.encode("utf-8")
 
 
+def _detect_runtime_profile(config: BridgeConfig) -> str:
+    explicit = os.getenv("SMART_PLATFORM_RUNTIME_PROFILE", "").strip().lower()
+    if explicit:
+        return explicit
+
+    hostname = ""
+    try:
+        hostname = (urlparse(config.public_base_url).hostname or "").strip().lower()
+    except ValueError:
+        hostname = ""
+
+    if hostname in {"127.0.0.1", "localhost"}:
+        return "desktop_smoke"
+
+    system_name = platform.system().strip().lower()
+    if system_name in {"windows", "darwin"}:
+        return "desktop_smoke"
+
+    return "owner_device"
+
+
 def build_server(config: BridgeConfig, state: BridgeState, sync_client: SyncClient) -> ThreadingHTTPServer:
     web_root = Path(__file__).resolve().parent / "web"
     content_root = Path(config.content_root)
     content_root_resolved = content_root.resolve()
-    shell_snapshot_facade = ShellSnapshotFacade(state, content_root)
+    runtime_profile = _detect_runtime_profile(config)
+    viewer_presence = ShellViewerPresence()
+    shell_snapshot_facade = ShellSnapshotFacade(
+        state,
+        content_root,
+        runtime_profile=runtime_profile,
+        viewer_provider=viewer_presence.active_viewers,
+    )
 
     class RequestHandler(BaseHTTPRequestHandler):
         # Отключаем стандартный шум в stderr, чтобы логика платформы
@@ -125,8 +156,19 @@ def build_server(config: BridgeConfig, state: BridgeState, sync_client: SyncClie
             if parsed.path == "/":
                 self._serve_file(web_root / "index.html", "text/html; charset=utf-8")
                 return
-            if parsed.path == "/static/entry_context.js":
-                self._serve_file(web_root / "static" / "entry_context.js", "application/javascript; charset=utf-8")
+            if requested_path.parts and requested_path.parts[0] == "static":
+                static_root = (web_root / "static").resolve()
+                resolved_path = (web_root / requested_path).resolve()
+                try:
+                    resolved_path.relative_to(static_root)
+                except ValueError:
+                    self._json_response(
+                        {"error": "invalid_path", "message": "Requested static path escapes web root"},
+                        HTTPStatus.BAD_REQUEST,
+                    )
+                    return
+
+                self._serve_file(resolved_path, self._content_type_for_path(requested_path))
                 return
             if parsed.path == "/federated/handoff":
                 self._raw_response(build_federated_handoff_html(), "text/html; charset=utf-8")
@@ -501,6 +543,44 @@ def build_server(config: BridgeConfig, state: BridgeState, sync_client: SyncClie
                         "message": "operator note recorded",
                         "report_entry": report_entry,
                         "reports_source_kind": state.build_reports(limit=1).get("source_kind", "unknown"),
+                    }
+                )
+                return
+
+            if parsed.path == "/api/v1/shell/viewer-heartbeat":
+                viewer_id = self._param(params, "viewer_id").strip()
+                viewer_kind = self._param(params, "viewer_kind", "desktop")
+                title = self._param(params, "title")
+                value = self._param(params, "value")
+                page = self._param(params, "page", "/")
+
+                if not viewer_id:
+                    self._json_response(
+                        {
+                            "command": "viewer_heartbeat",
+                            "accepted": False,
+                            "message": "viewer_id is required",
+                        },
+                        HTTPStatus.BAD_REQUEST,
+                    )
+                    return
+
+                viewers = viewer_presence.heartbeat(
+                    viewer_id,
+                    viewer_kind=viewer_kind,
+                    title=title,
+                    value=value,
+                    page=page,
+                    address=self.client_address[0],
+                    user_agent=self.headers.get("User-Agent", ""),
+                )
+                self._json_response(
+                    {
+                        "command": "viewer_heartbeat",
+                        "accepted": True,
+                        "message": "viewer heartbeat recorded",
+                        "viewers": viewers,
+                        "runtime_profile": runtime_profile,
                     }
                 )
                 return

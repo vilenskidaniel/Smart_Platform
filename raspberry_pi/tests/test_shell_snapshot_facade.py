@@ -45,6 +45,38 @@ class ShellSnapshotFacadeTests(unittest.TestCase):
         self.assertTrue(snapshot["nodes"]["current"]["wifi_ready"])
         self.assertTrue(snapshot["nodes"]["current"]["sync_ready"])
 
+    def test_snapshot_can_include_runtime_profile_and_viewers(self) -> None:
+        facade = ShellSnapshotFacade(
+            self.state,
+            PROJECT_ROOT / "content",
+            runtime_profile="desktop_smoke",
+            viewer_provider=lambda: [
+                {
+                    "viewer_id": "viewer-phone",
+                    "viewer_kind": "phone",
+                    "title": "Phone",
+                    "value": "PH",
+                    "page": "/",
+                    "address": "192.168.1.52",
+                },
+                {
+                    "viewer_id": "viewer-desktop",
+                    "viewer_kind": "desktop",
+                    "title": "Desktop",
+                    "value": "PC",
+                    "page": "/",
+                    "address": "192.168.1.227",
+                },
+            ],
+        )
+
+        snapshot = facade.build_snapshot()
+
+        self.assertEqual("desktop_smoke", snapshot["current_shell"]["runtime_profile"])
+        self.assertEqual(2, len(snapshot["viewers"]))
+        self.assertEqual("phone", snapshot["viewers"][0]["viewer_kind"])
+        self.assertEqual("desktop", snapshot["viewers"][1]["viewer_kind"])
+
     def test_irrigation_card_is_blocked_without_peer_owner(self) -> None:
         snapshot = self.facade.build_snapshot()
         irrigation = next(card for card in snapshot["module_cards"] if card["id"] == "irrigation")

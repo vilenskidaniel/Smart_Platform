@@ -221,7 +221,7 @@
 - явно пометь, что дальнейшая глубокая проработка должна идти отдельным модульным чатом.
 
 Примеры таких границ:
-- full shell/navigation refactor -> отдельный System Shell chat;
+- full home/bar launcher redesign -> отдельный Smart Platform Home / Bar chat;
 - sync rules and merge semantics -> отдельный sync-focused chat;
 - irrigation product logic -> отдельный Irrigation chat;
 - general Laboratory workflow design beyond reports/evidence -> отдельный Laboratory chat.
@@ -234,7 +234,7 @@
 
 - вставь содержимое блока `Готовый Prompt Для Новой Сессии` в новый чат;
 - после вставки дай этому чату одну конкретную задачу только по `Gallery`;
-- не смешивай в том же чате глубокую проработку `Irrigation`, `Turret`, `sync` и общего `System Shell`, если это уже не прямой локальный блокер.
+- не смешивай в том же чате глубокую проработку `Irrigation`, `Turret`, `sync` и общего home/bar launcher layer, если это уже не прямой локальный блокер.
 
 ## Рекомендуемый Старт После Вставки
 

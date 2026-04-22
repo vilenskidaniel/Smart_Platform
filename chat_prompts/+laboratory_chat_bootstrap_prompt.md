@@ -24,6 +24,7 @@
 - небольшой полет фантазии допустим, если он делает `Laboratory` более собранным, характерным и удобным для реального bring-up;
 - особенно цени идеи, которые помогают operator guidance, readiness clarity, category UX и ощущению "умного инженерного workspace", а не хаотичного service pile;
 - не добавляй gimmicks ради gimmicks: креативность должна оставаться совместимой с owner-awareness, safety, blocked-state truth и product/service boundary.
+- `Laboratory` должен оставаться глубоким и удобным workspace, а не упрощенной summary-page ради визуальной чистоты home layer.
 
 Обязательный режим мышления:
 - каждый UI или behavior change проверяй не только локально, но и через всю систему: shell, owner-awareness, blocked states, peer handoff, Gallery > Reports, safety interlock, product vs service boundary;
@@ -173,7 +174,7 @@
 
 - вставь содержимое блока `Готовый Prompt Для Новой Сессии` в новый чат;
 - после вставки дай этому чату одну конкретную задачу только по `Laboratory`;
-- не смешивай в том же чате глубокую проработку `Irrigation`, `Turret`, `Gallery` и `System Shell`, если это уже не прямой локальный блокер.
+- не смешивай в том же чате глубокую проработку `Irrigation`, `Turret`, `Gallery` и общего home/bar launcher layer, если это уже не прямой локальный блокер.
 
 ## Рекомендуемый Старт После Вставки
 

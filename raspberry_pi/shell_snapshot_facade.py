@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from time import monotonic
-from typing import Any
+from typing import Any, Callable
 
 from bridge_state import BridgeState
 
@@ -15,10 +15,19 @@ class ShellSnapshotFacade:
     картину по кускам из нескольких API.
     """
 
-    def __init__(self, state: BridgeState, content_root: Path) -> None:
+    def __init__(
+        self,
+        state: BridgeState,
+        content_root: Path,
+        *,
+        runtime_profile: str = "owner_device",
+        viewer_provider: Callable[[], list[dict[str, Any]]] | None = None,
+    ) -> None:
         self._state = state
         self._content_root = content_root
         self._created_at = monotonic()
+        self._runtime_profile = runtime_profile
+        self._viewer_provider = viewer_provider
 
     def build_snapshot(self) -> dict[str, Any]:
         system_snapshot = self._state.build_system_snapshot()
@@ -27,6 +36,7 @@ class ShellSnapshotFacade:
         local_node = system_snapshot["local_node"]
         peer_node = system_snapshot["peer_node"]
         modules = system_snapshot["modules"]
+        viewers = self._viewer_provider() if self._viewer_provider is not None else []
 
         return {
             "schema_version": "shell-snapshot.v1",
@@ -39,7 +49,9 @@ class ShellSnapshotFacade:
                 "ui_shell_version": system_snapshot.get("ui_shell_version", "0.1.0"),
                 "active_mode": system_snapshot.get("active_mode", "manual"),
                 "service_mode": system_snapshot.get("active_mode") == "service_test",
+                "runtime_profile": self._runtime_profile,
             },
+            "viewers": viewers,
             "nodes": {
                 "current": {
                     "node_id": local_node["node_id"],

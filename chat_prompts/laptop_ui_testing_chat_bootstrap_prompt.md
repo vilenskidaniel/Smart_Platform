@@ -179,7 +179,7 @@
 - явно пометь, что дальнейшая глубокая проработка должна идти отдельным модульным чатом.
 
 Примеры таких границ:
-- full shell/navigation redesign -> отдельный System Shell chat;
+- full home/bar launcher redesign -> отдельный Smart Platform Home / Bar chat;
 - turret behavior/runtime redesign -> отдельный Turret chat;
 - sync semantics and mirrored content rules -> отдельный sync-focused chat;
 - hardware bring-up procedures beyond local web smoke -> отдельный Laboratory or onboarding chat.
@@ -189,7 +189,7 @@
 
 - вставь содержимое блока `Готовый Prompt Для Новой Сессии` в новый чат;
 - после вставки дай этому чату одну конкретную задачу только по laptop-based UI testing path;
-- не смешивай в том же чате глубокую проработку turret behavior, irrigation product logic, sync semantics и полного shell redesign, если это уже не прямой локальный блокер.
+- не смешивай в том же чате глубокую проработку turret behavior, irrigation product logic, sync semantics и полного home/bar launcher redesign, если это уже не прямой локальный блокер.
 
 ## Рекомендуемый Старт После Вставки
 
