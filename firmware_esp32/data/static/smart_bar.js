@@ -7,6 +7,7 @@
   const DEFAULT_TOOLTIP = "Status details are loading.";
   const REFRESH_MS = 5000;
   const VIEWER_HEARTBEAT_MS = 5000;
+  const TOUCH_TOOLTIP_HIDE_MS = 2000;
   const CLOCK_MS = 30000;
   const ROUTES = {
     KeyH: "/",
@@ -19,7 +20,7 @@
 
   let currentSnapshot = null;
   let batterySnapshot = { available: false };
-  let desktopControlsEnabled = localStorage.getItem(STORAGE_KEY) !== "0";
+  let desktopControlsEnabled = readStorage(STORAGE_KEY) !== "0";
   let tooltipPinned = false;
   let tooltipOwnerId = "";
   let globalListenersInstalled = false;
@@ -27,6 +28,7 @@
   let viewerSessionId = "";
   let viewerHeartbeatTimer = 0;
   let viewerHeartbeatInFlight = false;
+  let tooltipHideTimer = 0;
 
   function esc(value) {
     return String(value ?? "")
@@ -35,6 +37,22 @@
       .replace(/>/g, "&gt;")
       .replace(/\"/g, "&quot;")
       .replace(/'/g, "&#39;");
+  }
+
+  function readStorage(key) {
+    try {
+      return window.localStorage.getItem(key);
+    } catch (_error) {
+      return null;
+    }
+  }
+
+  function writeStorage(key, value) {
+    try {
+      window.localStorage.setItem(key, value);
+    } catch (_error) {
+      return;
+    }
   }
 
   function createViewerId() {
@@ -49,19 +67,15 @@
       return viewerSessionId;
     }
 
-    try {
-      const existing = localStorage.getItem(VIEWER_STORAGE_KEY);
-      if (existing) {
-        viewerSessionId = existing;
-        return viewerSessionId;
-      }
-      viewerSessionId = createViewerId();
-      localStorage.setItem(VIEWER_STORAGE_KEY, viewerSessionId);
-      return viewerSessionId;
-    } catch (_error) {
-      viewerSessionId = createViewerId();
+    const existing = readStorage(VIEWER_STORAGE_KEY);
+    if (existing) {
+      viewerSessionId = existing;
       return viewerSessionId;
     }
+
+    viewerSessionId = createViewerId();
+    writeStorage(VIEWER_STORAGE_KEY, viewerSessionId);
+    return viewerSessionId;
   }
 
   function injectStyles() {
@@ -194,183 +208,148 @@
         display: none;
       }
 
-      .sp-bar[data-density="phone"] {
+      .sp-bar[data-density="narrow"],
+      .sp-bar[data-density="phone-portrait"] {
         display: grid;
         grid-template-columns: minmax(0, 1fr);
         align-items: stretch;
         justify-content: stretch;
         overflow: hidden;
-        gap: 8px;
+        gap: 6px;
       }
 
-      .sp-bar[data-density="phone"] .sp-row {
+      .sp-bar[data-density="narrow"] .sp-row,
+      .sp-bar[data-density="phone-portrait"] .sp-row {
         min-width: 0;
       }
 
-      .sp-bar[data-density="phone"] .sp-row[data-row="top"] {
-        display: grid;
-        grid-template-columns: auto minmax(0, 1fr);
-        gap: 8px;
+      .sp-bar[data-density="narrow"] .sp-row[data-row="top"] {
+        display: flex;
+        gap: 6px;
         align-items: center;
+        min-width: 0;
       }
 
-      .sp-bar[data-density="phone"] .sp-row[data-row="bottom"] {
+      .sp-bar[data-density="narrow"] .sp-row[data-row="bottom"] {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        min-width: 0;
+      }
+
+      .sp-bar[data-density="phone-portrait"] .sp-row[data-row="top"] {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: auto minmax(0, 1fr) auto;
         gap: 6px;
         align-items: center;
       }
 
-      .sp-bar[data-density="phone"] .sp-row-cluster {
+      .sp-bar[data-density="phone-portrait"] .sp-row[data-row="bottom"] {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        min-width: 0;
+      }
+
+      .sp-bar[data-density="phone-landscape"] {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        overflow: hidden;
+      }
+
+      .sp-bar[data-density="narrow"] .sp-row-cluster,
+      .sp-bar[data-density="phone-portrait"] .sp-row-cluster,
+      .sp-bar[data-density="phone-landscape"] .sp-row-cluster {
         min-width: 0;
         display: flex;
         align-items: center;
         gap: 4px;
       }
 
-      .sp-bar[data-density="phone"] .sp-row-cluster[data-cluster="controls"] {
+      .sp-bar[data-density="narrow"] .sp-row-cluster[data-cluster="controls"],
+      .sp-bar[data-density="phone-portrait"] .sp-row-cluster[data-cluster="controls"],
+      .sp-bar[data-density="phone-landscape"] .sp-row-cluster[data-cluster="controls"] {
+        flex: 0 0 auto;
         justify-content: flex-start;
       }
 
-      .sp-bar[data-density="phone"] .sp-row-cluster[data-cluster="devices"] {
-        justify-content: flex-end;
+      .sp-bar[data-density="narrow"] .sp-row-cluster[data-cluster="devices"],
+      .sp-bar[data-density="narrow"] .sp-row-cluster[data-cluster="irrigation"],
+      .sp-bar[data-density="phone-portrait"] .sp-row-cluster[data-cluster="devices"],
+      .sp-bar[data-density="phone-portrait"] .sp-row-cluster[data-cluster="summary"],
+      .sp-bar[data-density="phone-landscape"] .sp-row-cluster[data-cluster="center"] {
         overflow-x: auto;
         scrollbar-width: none;
       }
 
-      .sp-bar[data-density="phone"] .sp-row-cluster[data-cluster="devices"]::-webkit-scrollbar {
+      .sp-bar[data-density="narrow"] .sp-row-cluster[data-cluster="devices"]::-webkit-scrollbar,
+      .sp-bar[data-density="narrow"] .sp-row-cluster[data-cluster="irrigation"]::-webkit-scrollbar,
+      .sp-bar[data-density="phone-portrait"] .sp-row-cluster[data-cluster="devices"]::-webkit-scrollbar,
+      .sp-bar[data-density="phone-portrait"] .sp-row-cluster[data-cluster="summary"]::-webkit-scrollbar,
+      .sp-bar[data-density="phone-landscape"] .sp-row-cluster[data-cluster="center"]::-webkit-scrollbar {
         display: none;
       }
 
-      .sp-bar[data-density="phone"] .sp-token,
-      .sp-bar[data-density="phone"] .sp-control {
+      .sp-bar[data-density="narrow"] .sp-row-cluster[data-cluster="devices"] {
+        flex: 1 1 auto;
+      }
+
+      .sp-bar[data-density="narrow"] .sp-row-cluster[data-cluster="sensors"] {
+        flex: 0 0 auto;
+      }
+
+      .sp-bar[data-density="narrow"] .sp-row-cluster[data-cluster="system"],
+      .sp-bar[data-density="phone-portrait"] .sp-row-cluster[data-cluster="system"],
+      .sp-bar[data-density="phone-landscape"] .sp-row-cluster[data-cluster="system"] {
+        flex: 0 0 auto;
+        margin-left: auto;
+        justify-content: flex-end;
+      }
+
+      .sp-bar[data-density="phone-landscape"] .sp-row-cluster[data-cluster="center"] {
+        flex: 1 1 auto;
+      }
+
+      .sp-bar[data-density="narrow"] .sp-token,
+      .sp-bar[data-density="narrow"] .sp-control,
+      .sp-bar[data-density="phone-portrait"] .sp-token,
+      .sp-bar[data-density="phone-portrait"] .sp-control,
+      .sp-bar[data-density="phone-landscape"] .sp-token,
+      .sp-bar[data-density="phone-landscape"] .sp-control {
         min-height: 28px;
         padding-inline: 6px;
         gap: 4px;
       }
 
-      .sp-bar[data-density="phone"] .sp-control {
+      .sp-bar[data-density="narrow"] .sp-control,
+      .sp-bar[data-density="phone-portrait"] .sp-control,
+      .sp-bar[data-density="phone-landscape"] .sp-control {
         width: 28px;
         padding-inline: 0;
       }
 
-      .sp-bar[data-density="phone"] .sp-icon,
-      .sp-bar[data-density="phone"] .sp-icon svg {
+      .sp-bar[data-density="narrow"] .sp-icon,
+      .sp-bar[data-density="narrow"] .sp-icon svg,
+      .sp-bar[data-density="phone-portrait"] .sp-icon,
+      .sp-bar[data-density="phone-portrait"] .sp-icon svg,
+      .sp-bar[data-density="phone-landscape"] .sp-icon,
+      .sp-bar[data-density="phone-landscape"] .sp-icon svg {
         width: 14px;
         height: 14px;
       }
 
-      .sp-bar[data-density="phone"] .sp-value {
+      .sp-bar[data-density="narrow"] .sp-value,
+      .sp-bar[data-density="phone-portrait"] .sp-value,
+      .sp-bar[data-density="phone-landscape"] .sp-value {
         font-size: 11px;
       }
 
-      .sp-bar[data-density="phone"] .sp-row[data-row="bottom"] .sp-token {
-        width: 100%;
+      .sp-bar[data-density="narrow"] .sp-row[data-row="bottom"] .sp-token,
+      .sp-bar[data-density="phone-portrait"] .sp-row[data-row="bottom"] .sp-token,
+      .sp-bar[data-density="phone-landscape"] .sp-row-cluster[data-cluster="center"] .sp-token {
         min-width: 0;
         justify-content: center;
-      }
-
-      .sp-bar[data-density="stacked"] {
-        display: grid;
-        grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.35fr);
-        grid-template-areas:
-          "controls devices"
-          "irrigation irrigation"
-          "sensors system";
-        align-items: start;
-        justify-content: stretch;
-        overflow-x: visible;
-        gap: 8px 10px;
-      }
-
-      .sp-bar[data-density="stacked"] .sp-group {
-        min-width: 0;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 4px;
-        padding-right: 0;
-        border-right: 0;
-      }
-
-      .sp-bar[data-density="stacked"] .sp-group[data-group="controls"] {
-        grid-area: controls;
-        justify-content: flex-start;
-      }
-
-      .sp-bar[data-density="stacked"] .sp-group[data-group="devices"] {
-        grid-area: devices;
-        justify-content: flex-end;
-      }
-
-      .sp-bar[data-density="stacked"] .sp-group[data-group="irrigation"] {
-        grid-area: irrigation;
-        justify-content: space-between;
-      }
-
-      .sp-bar[data-density="stacked"] .sp-group[data-group="sensors"] {
-        grid-area: sensors;
-        justify-content: flex-start;
-      }
-
-      .sp-bar[data-density="stacked"] .sp-group[data-group="system"] {
-        grid-area: system;
-        justify-content: flex-end;
-      }
-
-      .sp-bar[data-density="stacked"] .sp-token,
-      .sp-bar[data-density="stacked"] .sp-control {
-        min-height: 28px;
-        padding-inline: 6px;
-        gap: 4px;
-      }
-
-      .sp-bar[data-density="stacked"] .sp-control {
-        width: 28px;
-        padding-inline: 0;
-      }
-
-      .sp-bar[data-density="stacked"] .sp-icon,
-      .sp-bar[data-density="stacked"] .sp-icon svg {
-        width: 14px;
-        height: 14px;
-      }
-
-      .sp-bar[data-density="stacked"] .sp-value {
-        font-size: 11px;
-      }
-
-      .sp-bar[data-density="stacked"] .sp-group[data-group="sensors"] .sp-value,
-      .sp-bar[data-density="stacked"] .sp-token[data-token-id="system-volume"] .sp-value {
-        display: none;
-      }
-
-      .sp-bar[data-density="stacked"] .sp-group[data-group="irrigation"] .sp-token {
-        flex: 1 1 calc(20% - 8px);
-        justify-content: center;
-        min-width: 0;
-      }
-
-      @media (max-width: 540px) {
-        .sp-bar[data-density="stacked"] {
-          grid-template-columns: 1fr;
-          grid-template-areas:
-            "controls"
-            "devices"
-            "irrigation"
-            "sensors"
-            "system";
-        }
-
-        .sp-bar[data-density="stacked"] .sp-group[data-group="controls"],
-        .sp-bar[data-density="stacked"] .sp-group[data-group="devices"],
-        .sp-bar[data-density="stacked"] .sp-group[data-group="sensors"],
-        .sp-bar[data-density="stacked"] .sp-group[data-group="system"] {
-          justify-content: flex-start;
-        }
-
-        .sp-bar[data-density="stacked"] .sp-group[data-group="irrigation"] .sp-token {
-          flex-basis: calc(50% - 6px);
-        }
       }
 
       .sp-token,
@@ -509,9 +488,9 @@
       .sp-tooltip {
         position: fixed;
         z-index: 80;
-        max-width: min(320px, calc(100vw - 24px));
-        padding: 10px 12px;
-        border-radius: 14px;
+        max-width: min(360px, calc(100vw - 20px));
+        padding: 12px 13px;
+        border-radius: 16px;
         border: 1px solid rgba(53, 88, 63, 0.12);
         background: rgba(33, 44, 36, 0.94);
         color: #eff8f0;
@@ -533,6 +512,61 @@
         margin-bottom: 4px;
         font-weight: 700;
         color: #ffffff;
+      }
+
+      .sp-tooltip-subtitle {
+        margin: 0 0 8px;
+        color: rgba(231, 241, 233, 0.76);
+        font-size: 12px;
+      }
+
+      .sp-tooltip-body {
+        display: grid;
+        gap: 8px;
+      }
+
+      .sp-tooltip-description {
+        margin: 0;
+        color: rgba(239, 248, 240, 0.9);
+      }
+
+      .sp-tooltip-section {
+        display: grid;
+        gap: 6px;
+        padding-top: 8px;
+        border-top: 1px solid rgba(216, 232, 218, 0.14);
+      }
+
+      .sp-tooltip-section:first-of-type {
+        padding-top: 0;
+        border-top: 0;
+      }
+
+      .sp-tooltip-section-title {
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: rgba(196, 220, 201, 0.84);
+      }
+
+      .sp-tooltip-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 10px;
+        align-items: start;
+      }
+
+      .sp-tooltip-row-label {
+        min-width: 0;
+        color: #ffffff;
+        font-weight: 600;
+      }
+
+      .sp-tooltip-row-value {
+        white-space: nowrap;
+        text-align: right;
+        color: #d5f0db;
+        font-weight: 700;
       }
 
       @media (max-width: 760px) {
@@ -559,6 +593,10 @@
         .sp-control {
           width: 30px;
           padding-inline: 0;
+        }
+
+        .sp-tooltip {
+          max-width: min(340px, calc(100vw - 16px));
         }
       }
     `;
@@ -858,7 +896,7 @@
     const current = ((snapshot || {}).nodes || {}).current || {};
     const peer = ((snapshot || {}).nodes || {}).peer || {};
     const smokeRuntime = isSmokeRuntime(snapshot);
-    const shellType = String(currentShell(snapshot).node_type || "esp32").toLowerCase();
+    const shellType = String(currentShell(snapshot).node_type || "raspberry_pi").toLowerCase();
 
     if (smokeRuntime) {
       return [
@@ -878,9 +916,7 @@
           value: "ESP",
           title: "ESP32",
           state: "neutral",
-          detail: shellType === "esp32"
-            ? "Smoke runtime is serving the ESP32 shell from a desktop host. The physical ESP32 board is not attached right now. To test the real board, power the device and open its own shell."
-            : "ESP32 owner is currently absent in this smoke runtime. Power the ESP32 board and restore the peer link to unlock irrigation-owned slices."
+          detail: "ESP32 owner is currently absent in this smoke runtime. Power the ESP32 board and restore the peer link to unlock irrigation-owned slices."
         }
       ];
     }
@@ -967,18 +1003,23 @@
     return tokens;
   }
 
-  function zoneTokens() {
+  function zonePreviewRows() {
     return Array.from({ length: 5 }, (_, index) => ({
       id: `zone-${index + 1}`,
-      icon: "water",
-      value: "--%",
       title: `Zone ${index + 1}`,
-      state: "neutral",
-      detail: `Zone ${index + 1}. Live soil moisture is not published in the shell snapshot yet. Later this tooltip can also show the linked plant profile from Gallery, Settings, or Irrigation.`
+      mode: "Manual",
+      targetSoil: "60%",
+      targetTemp: "24C",
+      targetLight: "60%",
+      targetPh: "5.8",
+      liveSoil: "--%",
+      liveTemp: "--°",
+      liveLight: "--",
+      livePh: "--"
     }));
   }
 
-  function sensorTokens(snapshot) {
+  function environmentPreviewRows() {
     const hour = new Date().getHours();
     const night = hour >= 20 || hour < 6;
     return [
@@ -988,7 +1029,21 @@
         value: "--",
         title: "Air Humidity",
         state: "neutral",
-        detail: "Ambient humidity is not published in the current shell snapshot yet. The icon stays humidity-specific so it does not collide with future wind-speed indicators."
+        detail: "Live ambient humidity is not published to the shell snapshot yet.",
+        tooltip: {
+          title: "Air Humidity",
+          subtitle: "Environment preview",
+          description: "Humidity still uses a preview target until the real ambient feed is published.",
+          sections: [
+            {
+              title: "Readout",
+              rows: [
+                { label: "Live", value: "--" },
+                { label: "Preview target", value: "60%" }
+              ]
+            }
+          ]
+        }
       },
       {
         id: "sensor-temp",
@@ -997,7 +1052,21 @@
         value: "--°",
         title: "Temperature",
         state: "neutral",
-        detail: "Ambient temperature is not published in the current shell snapshot yet. When a real value appears, this thermometer can fill proportionally instead of staying empty."
+        detail: "Live ambient temperature is not published to the shell snapshot yet.",
+        tooltip: {
+          title: "Temperature",
+          subtitle: "Environment preview",
+          description: "The thermometer stays neutral until a truthful temperature feed is linked.",
+          sections: [
+            {
+              title: "Readout",
+              rows: [
+                { label: "Live", value: "--°" },
+                { label: "Comfort target", value: "24C" }
+              ]
+            }
+          ]
+        }
       },
       {
         id: "sensor-light",
@@ -1008,9 +1077,248 @@
         state: "neutral",
         detail: night
           ? "Night-phase icon is derived from the current local time until a truthful light sensor value is published."
-          : "Day-phase icon is derived from the current local time until a truthful light sensor value is published."
+          : "Day-phase icon is derived from the current local time until a truthful light sensor value is published.",
+        tooltip: {
+          title: "Light / Day Cycle",
+          subtitle: "Environment preview",
+          description: "The icon already switches between day and night, but the bar is still waiting for a real light reading.",
+          sections: [
+            {
+              title: "Readout",
+              rows: [
+                { label: "Live", value: "--" },
+                { label: "Derived phase", value: night ? "Night" : "Day" }
+              ]
+            }
+          ]
+        }
       }
     ];
+  }
+
+  function systemState(snapshot) {
+    const smokeRuntime = isSmokeRuntime(snapshot);
+    const current = ((snapshot || {}).nodes || {}).current || {};
+    const diagnostics = (((snapshot || {}).summaries || {}).diagnostics || {});
+    const syncState = String(diagnostics.sync_state || "unknown");
+    const locale = navigator.language || "en";
+    const now = new Date();
+    return {
+      smokeRuntime,
+      current,
+      diagnostics,
+      syncState,
+      locale,
+      now,
+      wifiReady: !smokeRuntime && Boolean(current.wifi_ready),
+      syncReady: !smokeRuntime && syncState === "ready",
+      syncPending: !smokeRuntime && syncState === "pending"
+    };
+  }
+
+  function wirelessToken(state, showValue) {
+    return {
+      id: "system-wifi",
+      icon: "wifi",
+      iconOptions: { variant: state.wifiReady ? "online" : "offline" },
+      value: showValue ? (state.smokeRuntime ? "PRE" : state.wifiReady ? "ON" : "OFF") : "",
+      title: "Wi-Fi",
+      state: state.smokeRuntime ? "neutral" : state.wifiReady ? "online" : "attention",
+      detail: state.smokeRuntime
+        ? "Smoke runtime keeps wireless status in preview mode."
+        : state.wifiReady
+        ? "The active owner reports network readiness."
+        : "The active owner is not currently reporting Wi-Fi readiness.",
+      tooltip: {
+        title: "Wireless Link",
+        subtitle: state.smokeRuntime ? "Smoke preview" : "Owner-reported connectivity",
+        description: state.smokeRuntime
+          ? "Desktop smoke does not prove board-level radio readiness."
+          : "This compact view keeps the connection story short and prioritised.",
+        sections: [
+          {
+            title: "Connectivity",
+            rows: [
+              { label: "Wi-Fi", value: state.smokeRuntime ? "Preview only" : state.wifiReady ? "Ready" : "Waiting" },
+              { label: "Sync", value: state.smokeRuntime ? "Preview" : state.syncReady ? `Ready (${state.syncState})` : state.syncPending ? `Pending (${state.syncState})` : state.syncState }
+            ]
+          }
+        ]
+      }
+    };
+  }
+
+  function syncToken(state) {
+    return {
+      id: "system-sync",
+      icon: "sync",
+      iconOptions: { variant: state.smokeRuntime ? "pending" : state.syncReady ? "online" : state.syncPending ? "pending" : "offline" },
+      value: "",
+      title: "Sync",
+      state: state.smokeRuntime ? "neutral" : state.syncReady ? "online" : "attention",
+      detail: state.smokeRuntime
+        ? "Smoke runtime keeps sync in preview mode."
+        : state.syncReady
+        ? `Sync stack is ready. Current state: ${state.syncState}.`
+        : state.syncPending
+        ? "Peer link is visible, but sync is still pending."
+        : `Sync is not ready. Current state: ${state.syncState}.`,
+      tooltip: {
+        title: "Sync",
+        subtitle: state.smokeRuntime ? "Smoke preview" : "Peer status",
+        description: state.smokeRuntime
+          ? "Real peer readiness must come from hardware-linked owners."
+          : "This token is narrowed to the peer-handshake state that matters for the current shell.",
+        sections: [
+          {
+            title: "Readout",
+            rows: [
+              { label: "State", value: state.smokeRuntime ? "Preview" : state.syncState },
+              { label: "Peer readiness", value: state.syncReady ? "Ready" : state.syncPending ? "Pending" : "Waiting" }
+            ]
+          }
+        ]
+      }
+    };
+  }
+
+  function volumeToken(showValue) {
+    return {
+      id: "system-volume",
+      icon: "volume",
+      iconOptions: { level: null },
+      value: showValue ? "--" : "",
+      title: "Volume",
+      state: "neutral",
+      detail: "System volume is not exposed as a truthful browser-side signal yet.",
+      tooltip: {
+        title: "Volume",
+        subtitle: "Client-side only",
+        description: "The browser does not publish a reliable system volume level yet, so this control stays neutral instead of inventing one.",
+        sections: [
+          {
+            title: "Readout",
+            rows: [
+              { label: "Level", value: "--" },
+              { label: "Source", value: "Client browser" }
+            ]
+          }
+        ]
+      }
+    };
+  }
+
+  function localeToken(state) {
+    return {
+      id: "system-language",
+      icon: "language",
+      value: String(state.locale).slice(0, 2).toUpperCase(),
+      title: "Language",
+      state: "neutral",
+      detail: `Current browser locale: ${state.locale}. Language switching belongs in Settings.`,
+      tooltip: {
+        title: "Language",
+        subtitle: "Client locale",
+        sections: [
+          {
+            title: "Readout",
+            rows: [
+              { label: "Locale", value: state.locale },
+              { label: "Switching", value: "Settings" }
+            ]
+          }
+        ]
+      }
+    };
+  }
+
+  function timeToken(state) {
+    const timeValue = state.now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    const dateValue = state.now.toLocaleDateString([], { month: "short", day: "2-digit" });
+    return {
+      id: "system-time",
+      icon: "time",
+      value: timeValue,
+      title: "Time",
+      state: "neutral",
+      detail: "Client local time.",
+      tooltip: {
+        title: "Local Clock",
+        subtitle: "Client-side system time",
+        sections: [
+          {
+            title: "Readout",
+            rows: [
+              { label: "Time", value: timeValue },
+              { label: "Date", value: dateValue },
+              { label: "Locale", value: state.locale }
+            ]
+          }
+        ]
+      }
+    };
+  }
+
+  function dateToken(state) {
+    return {
+      id: "system-date",
+      icon: "date",
+      value: state.now.toLocaleDateString([], { month: "short", day: "2-digit" }),
+      title: "Date",
+      state: "neutral",
+      detail: "Client local date."
+    };
+  }
+
+  function compactSystemTokens(snapshot) {
+    const state = systemState(snapshot);
+    return [wirelessToken(state, false), volumeToken(false), batteryToken(), timeToken(state)];
+  }
+
+  function phoneSystemTokens(snapshot) {
+    const state = systemState(snapshot);
+    return [wirelessToken(state, false), volumeToken(false), batteryToken(), timeToken(state)];
+  }
+
+  function zoneTokens() {
+    return zonePreviewRows().map((zone) => ({
+      id: zone.id,
+      icon: "water",
+      value: zone.liveSoil,
+      title: zone.title,
+      state: "neutral",
+      detail: `${zone.title}. Live irrigation telemetry is not linked to the shell snapshot yet.`,
+      tooltip: {
+        title: zone.title,
+        subtitle: "Compact irrigation preview",
+        description: "Live telemetry is still pending, so the tooltip keeps the plant-profile targets visible instead of showing an empty shell.",
+        sections: [
+          {
+            title: "Profile",
+            rows: [
+              { label: "Mode", value: zone.mode },
+              { label: "Target soil", value: zone.targetSoil },
+              { label: "Target temp", value: zone.targetTemp },
+              { label: "Target light", value: zone.targetLight },
+              { label: "Target pH", value: zone.targetPh }
+            ]
+          },
+          {
+            title: "Live feed",
+            rows: [
+              { label: "Soil", value: zone.liveSoil },
+              { label: "Temp", value: zone.liveTemp },
+              { label: "Light", value: zone.liveLight },
+              { label: "pH", value: zone.livePh }
+            ]
+          }
+        ]
+      }
+    }));
+  }
+
+  function sensorTokens(snapshot) {
+    return environmentPreviewRows(snapshot);
   }
 
   function batteryToken() {
@@ -1022,7 +1330,20 @@
         value: "--",
         title: "Battery",
         state: "neutral",
-        detail: "Battery state is not available in this browser session."
+        detail: "Battery state is not available in this browser session.",
+        tooltip: {
+          title: "Battery",
+          subtitle: "Client-side power state",
+          sections: [
+            {
+              title: "Readout",
+              rows: [
+                { label: "Level", value: "--" },
+                { label: "Status", value: "Unavailable" }
+              ]
+            }
+          ]
+        }
       };
     }
 
@@ -1040,92 +1361,34 @@
         ? `Client battery is charging. Current level: ${percent}%.`
         : saver
         ? `Client battery is low at ${percent}%. Compact saver styling is active.`
-        : `Client battery level: ${percent}%.`
+        : `Client battery level: ${percent}%.`,
+      tooltip: {
+        title: "Battery",
+        subtitle: batterySnapshot.charging ? "Charging" : "Client-side power state",
+        sections: [
+          {
+            title: "Readout",
+            rows: [
+              { label: "Level", value: `${percent}%` },
+              { label: "Status", value: batterySnapshot.charging ? "Charging" : saver ? "Low power" : "Stable" }
+            ]
+          }
+        ]
+      }
     };
   }
 
   function systemTokens(snapshot) {
-    const smokeRuntime = isSmokeRuntime(snapshot);
-    const current = ((snapshot || {}).nodes || {}).current || {};
-    const diagnostics = (((snapshot || {}).summaries || {}).diagnostics || {});
-    const syncState = String(diagnostics.sync_state || "unknown");
-    const locale = navigator.language || "en";
-    const now = new Date();
-    const wifiReady = !smokeRuntime && Boolean(current.wifi_ready);
-    const syncReady = !smokeRuntime && syncState === "ready";
-    const syncPending = !smokeRuntime && syncState === "pending";
-
-    return [
-      {
-        id: "system-wifi",
-        icon: "wifi",
-        iconOptions: { variant: wifiReady ? "online" : "offline" },
-        value: "",
-        title: "Wi-Fi",
-        state: smokeRuntime ? "neutral" : wifiReady ? "online" : "attention",
-        detail: smokeRuntime
-          ? "Smoke runtime does not prove board-level Wi-Fi readiness."
-          : wifiReady
-          ? "The active owner reports network readiness."
-          : "The active owner is not currently reporting Wi-Fi readiness."
-      },
-      {
-        id: "system-sync",
-        icon: "sync",
-        iconOptions: { variant: smokeRuntime ? "pending" : syncReady ? "online" : syncPending ? "pending" : "offline" },
-        value: "",
-        title: "Sync",
-        state: smokeRuntime ? "neutral" : syncReady ? "online" : syncPending ? "attention" : "attention",
-        detail: smokeRuntime
-          ? "Smoke runtime keeps sync in preview mode. Real peer readiness must come from hardware-linked owners."
-          : syncReady
-          ? `Sync stack is ready. Current state: ${syncState}.`
-          : syncPending
-          ? "Peer link is visible, but sync is still pending."
-          : `Sync is not ready. Current state: ${syncState}.`
-      },
-      {
-        id: "system-volume",
-        icon: "volume",
-        iconOptions: { level: null },
-        value: "--",
-        title: "Volume",
-        state: "neutral",
-        detail: "System volume is not exposed as a truthful browser-side signal yet, so the compact bar keeps it neutral instead of inventing a level."
-      },
-      batteryToken(),
-      {
-        id: "system-language",
-        icon: "language",
-        value: String(locale).slice(0, 2).toUpperCase(),
-        title: "Language",
-        state: "neutral",
-        detail: `Current browser locale: ${locale}. Language switching belongs in Settings.`
-      },
-      {
-        id: "system-time",
-        icon: "time",
-        value: now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        title: "Time",
-        state: "neutral",
-        detail: "Client local time."
-      },
-      {
-        id: "system-date",
-        icon: "date",
-        value: now.toLocaleDateString([], { month: "short", day: "2-digit" }),
-        title: "Date",
-        state: "neutral",
-        detail: "Client local date."
-      }
-    ];
+    const state = systemState(snapshot);
+    return [wirelessToken(state, false), syncToken(state), volumeToken(true), batteryToken(), localeToken(state), timeToken(state), dateToken(state)];
   }
 
   function controlMarkup(item) {
     const detail = esc(item.detail || DEFAULT_TOOLTIP);
+    const payload = tooltipPayloadAttr(item);
     if (item.href) {
       return `
-        <a class="sp-control" href="${esc(item.href)}" data-tooltip-title="${esc(item.title)}" data-tooltip-detail="${detail}" title="${esc(item.title)}. ${detail}">
+        <a class="sp-control" href="${esc(item.href)}" data-tooltip-title="${esc(item.title)}" data-tooltip-detail="${detail}" data-tooltip-payload="${payload}" title="${esc(item.title)}. ${detail}">
           <span class="sp-icon">${icon(item.icon, item.iconOptions)}</span>
         </a>
       `;
@@ -1138,6 +1401,7 @@
         data-control-id="${esc(item.id)}"
         data-tooltip-title="${esc(item.title)}"
         data-tooltip-detail="${detail}"
+        data-tooltip-payload="${payload}"
         data-active="${item.active ? "true" : "false"}"
         data-blink="${item.blink ? "true" : "false"}"
         title="${esc(item.title)}. ${detail}">
@@ -1148,14 +1412,16 @@
 
   function tokenMarkup(item) {
     const detail = esc(item.detail || DEFAULT_TOOLTIP);
+    const payload = tooltipPayloadAttr(item);
     return `
       <button
         type="button"
         class="sp-token"
-        data-token-id="${esc(item.id || "")}" 
-        data-tooltip-title="${esc(item.title || "")}" 
+        data-token-id="${esc(item.id || "")}"
+        data-tooltip-title="${esc(item.title || "")}"
         data-tooltip-detail="${detail}"
-        data-state="${esc(item.state || "neutral")}" 
+        data-tooltip-payload="${payload}"
+        data-state="${esc(item.state || "neutral")}"
         data-blink="${item.blink ? "true" : "false"}"
         title="${esc(item.title || "")}. ${detail}">
         <span class="sp-icon">${icon(item.icon || "raspberry_pi", item.iconOptions)}</span>
@@ -1189,14 +1455,28 @@
   }
 
   function irrigationSummaryToken(snapshot) {
-    const items = zoneTokens(snapshot);
+    const rows = zonePreviewRows();
     return {
       id: "summary-irrigation",
       icon: "water",
-      value: `${items.length}Z`,
-      title: "Irrigation Summary",
-      state: summarizeState(items),
-      detail: summarizeDetail(items)
+      value: `${rows.length}Z`,
+      title: "Irrigation",
+      state: "neutral",
+      detail: "Compact irrigation zone matrix.",
+      tooltip: {
+        title: "Irrigation Overview",
+        subtitle: "Compact zone matrix",
+        description: "Profile targets stay visible even before live irrigation telemetry is linked into the shell snapshot.",
+        sections: [
+          {
+            title: "Zones",
+            rows: rows.map((zone) => ({
+              label: zone.title,
+              value: `${zone.targetSoil} soil • ${zone.targetTemp} temp • ${zone.targetLight} light • pH ${zone.targetPh}`
+            }))
+          }
+        ]
+      }
     };
   }
 
@@ -1206,25 +1486,60 @@
       id: "summary-sensors",
       icon: "humidity",
       value: "ENV",
-      title: "Sensor Summary",
+      title: "Environment",
       state: summarizeState(items),
-      detail: summarizeDetail(items)
+      detail: "Compact environment matrix.",
+      tooltip: {
+        title: "Environment Overview",
+        subtitle: "Compact sensor matrix",
+        description: "The bar keeps one compact sensor summary here and moves the detailed values into a small table.",
+        sections: [
+          {
+            title: "Sensors",
+            rows: items.map((item) => ({
+              label: item.title,
+              value: item.value || "--"
+            }))
+          }
+        ]
+      }
     };
   }
 
   function systemSummaryToken(snapshot) {
-    const items = systemTokens(snapshot);
+    const state = systemState(snapshot);
     return {
       id: "summary-system",
       icon: "sync",
       value: "SYS",
       title: "System Summary",
-      state: summarizeState(items),
-      detail: summarizeDetail(items)
+      state: state.smokeRuntime ? "neutral" : state.wifiReady ? "online" : "attention",
+      detail: "Prioritized system overview.",
+      tooltip: {
+        title: "System Overview",
+        subtitle: "Prioritized compact status",
+        sections: [
+          {
+            title: "Connectivity",
+            rows: [
+              { label: "Wi-Fi", value: state.smokeRuntime ? "Preview" : state.wifiReady ? "Ready" : "Waiting" },
+              { label: "Sync", value: state.smokeRuntime ? "Preview" : state.syncState }
+            ]
+          },
+          {
+            title: "Client",
+            rows: [
+              { label: "Battery", value: batterySnapshot.available ? `${Math.round((batterySnapshot.level || 0) * 100)}%` : "--" },
+              { label: "Locale", value: state.locale },
+              { label: "Time", value: state.now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) }
+            ]
+          }
+        ]
+      }
     };
   }
 
-  function controlTokens(snapshot, phoneDensity) {
+  function controlTokens(snapshot, density) {
     const localViewer = detectClient(snapshot);
     const controls = [
       { id: "home", href: "/", icon: "home", title: "Smart Platform Home", detail: "Return to the Smart Platform launcher." },
@@ -1232,18 +1547,57 @@
       { id: "fullscreen", icon: "fullscreen", title: "Fullscreen", detail: document.fullscreenElement ? "Leave fullscreen mode." : "Enter fullscreen mode." }
     ];
 
-    if (phoneDensity && localViewer.kind !== "desktop") {
+    if ((density === "phone-portrait" || density === "phone-landscape") && localViewer.kind !== "desktop") {
       return controls.filter((item) => item.id !== "input");
     }
 
     return controls;
   }
 
-  function phoneBarMarkup(controls, deviceTokens, summaryTokens) {
+  function tooltipPayloadForItem(item) {
+    return item.tooltip || {
+      title: item.title || "",
+      description: item.detail || DEFAULT_TOOLTIP
+    };
+  }
+
+  function tooltipPayloadAttr(item) {
+    try {
+      return esc(encodeURIComponent(JSON.stringify(tooltipPayloadForItem(item))));
+    } catch (_error) {
+      return "";
+    }
+  }
+
+  function clusterMarkup(clusterName, items, renderer) {
+    return `<div class="sp-row-cluster" data-cluster="${esc(clusterName)}">${items.map(renderer).join("")}</div>`;
+  }
+
+  function narrowDesktopBarMarkup(snapshot, view, controls, deviceTokens) {
+    const sensorItems = view.width < 1160 ? [sensorSummaryToken(snapshot)] : sensorTokens(snapshot);
+    const irrigationItems = view.width < 1080 ? [irrigationSummaryToken(snapshot)] : zoneTokens(snapshot);
+    const systemItems = compactSystemTokens(snapshot);
+
     return [
-      `<div class="sp-row" data-row="top"><div class="sp-row-cluster" data-cluster="controls">${controls.map(controlMarkup).join("")}</div><div class="sp-row-cluster" data-cluster="devices">${deviceTokens.map(tokenMarkup).join("")}</div></div>`,
-      `<div class="sp-row" data-row="bottom">${summaryTokens.map(tokenMarkup).join("")}</div>`
+      `<div class="sp-row" data-row="top">${clusterMarkup("controls", controls, controlMarkup)}${clusterMarkup("devices", deviceTokens, tokenMarkup)}${clusterMarkup("sensors", sensorItems, tokenMarkup)}${clusterMarkup("system", systemItems, tokenMarkup)}</div>`,
+      `<div class="sp-row" data-row="bottom">${clusterMarkup("irrigation", irrigationItems, tokenMarkup)}</div>`
     ].join("");
+  }
+
+  function phonePortraitBarMarkup(snapshot, controls, deviceTokens) {
+    const systemItems = phoneSystemTokens(snapshot);
+    const summaryItems = [irrigationSummaryToken(snapshot), sensorSummaryToken(snapshot)];
+
+    return [
+      `<div class="sp-row" data-row="top">${clusterMarkup("controls", controls, controlMarkup)}${clusterMarkup("devices", deviceTokens, tokenMarkup)}${clusterMarkup("system", systemItems, tokenMarkup)}</div>`,
+      `<div class="sp-row" data-row="bottom">${clusterMarkup("summary", summaryItems, tokenMarkup)}</div>`
+    ].join("");
+  }
+
+  function phoneLandscapeBarMarkup(snapshot, controls, deviceTokens) {
+    const systemItems = phoneSystemTokens(snapshot);
+    const middleItems = [...deviceTokens, irrigationSummaryToken(snapshot), sensorSummaryToken(snapshot)];
+    return `${clusterMarkup("controls", controls, controlMarkup)}${clusterMarkup("middle", middleItems, tokenMarkup)}${clusterMarkup("system", systemItems, tokenMarkup)}`;
   }
 
   function measureBarFits(bar, density) {
@@ -1263,40 +1617,38 @@
     return fits;
   }
 
-  function chooseBarDensity(bar, viewportWidth) {
-    if (viewportWidth <= 900) {
-      return "phone";
+  function chooseBarDensity(view) {
+    if (view.coarse) {
+      return view.landscape ? "phone-landscape" : "phone-portrait";
     }
 
-    if (viewportWidth > 1320 && measureBarFits(bar, "full")) {
+    if (view.width >= 1680) {
       return "full";
     }
 
-    if (measureBarFits(bar, "compact")) {
+    if (view.width >= 1320) {
       return "compact";
     }
 
-    return "stacked";
+    return "narrow";
   }
 
-  function applyBarLayout(bar) {
+  function applyBarLayout(bar, density) {
     if (barLayoutFrame) {
       cancelAnimationFrame(barLayoutFrame);
     }
 
     barLayoutFrame = requestAnimationFrame(() => {
       barLayoutFrame = 0;
-      const viewportWidth = Math.max(window.innerWidth || 0, document.documentElement.clientWidth || 0);
-      const density = chooseBarDensity(bar, viewportWidth);
       bar.dataset.density = density;
       bar.dataset.fit = density === "full" || density === "compact" ? "true" : "false";
     });
   }
 
   function renderBar(snapshot) {
-    const viewportWidth = Math.max(window.innerWidth || 0, document.documentElement.clientWidth || 0);
-    const phoneDensity = viewportWidth <= 900;
-    const controls = controlTokens(snapshot, phoneDensity);
+    const view = viewportInfo();
+    const density = chooseBarDensity(view);
+    const controls = controlTokens(snapshot, density);
     const deviceTokens = [...viewerTokens(snapshot), ...boardTokens(snapshot), ...modeTokens(snapshot)];
 
     const bar = document.getElementById("sp-compact-bar");
@@ -1304,8 +1656,12 @@
       return;
     }
 
-    if (phoneDensity) {
-      bar.innerHTML = phoneBarMarkup(controls, deviceTokens, [irrigationSummaryToken(snapshot), sensorSummaryToken(snapshot), systemSummaryToken(snapshot)]);
+    if (density === "phone-landscape") {
+      bar.innerHTML = phoneLandscapeBarMarkup(snapshot, controls, deviceTokens);
+    } else if (density === "phone-portrait") {
+      bar.innerHTML = phonePortraitBarMarkup(snapshot, controls, deviceTokens);
+    } else if (density === "narrow") {
+      bar.innerHTML = narrowDesktopBarMarkup(snapshot, view, controls, deviceTokens);
     } else {
       bar.innerHTML = [
         groupMarkup("controls", controls, controlMarkup),
@@ -1316,20 +1672,87 @@
       ].join("");
     }
 
-    applyBarLayout(bar);
+    applyBarLayout(bar, density);
     bindInteractions();
+  }
+
+  function clearTooltipHideTimer() {
+    if (!tooltipHideTimer) {
+      return;
+    }
+    window.clearTimeout(tooltipHideTimer);
+    tooltipHideTimer = 0;
+  }
+
+  function readTooltipPayload(target) {
+    const encoded = target.getAttribute("data-tooltip-payload") || "";
+    if (encoded) {
+      try {
+        return JSON.parse(decodeURIComponent(encoded));
+      } catch (_error) {
+        // Fall through to the plain-text tooltip fallback below.
+      }
+    }
+
+    return {
+      title: target.getAttribute("data-tooltip-title") || "",
+      description: target.getAttribute("data-tooltip-detail") || DEFAULT_TOOLTIP
+    };
+  }
+
+  function renderTooltipMarkup(payload) {
+    const sections = Array.isArray(payload.sections) ? payload.sections : [];
+    const description = payload.description
+      ? `<p class="sp-tooltip-description">${esc(payload.description)}</p>`
+      : "";
+    const sectionMarkup = sections.map((section) => {
+      const rows = Array.isArray(section.rows) ? section.rows : [];
+      return `
+        <section class="sp-tooltip-section">
+          ${section.title ? `<div class="sp-tooltip-section-title">${esc(section.title)}</div>` : ""}
+          <div class="sp-tooltip-table">
+            ${rows.map((row) => `
+              <div class="sp-tooltip-row">
+                <span class="sp-tooltip-row-label">${esc(row.label || "")}</span>
+                <span class="sp-tooltip-row-value">${esc(row.value || "")}</span>
+              </div>
+            `).join("")}
+          </div>
+        </section>
+      `;
+    }).join("");
+
+    return `
+      <span class="sp-tooltip-title">${esc(payload.title || "")}</span>
+      ${payload.subtitle ? `<span class="sp-tooltip-subtitle">${esc(payload.subtitle)}</span>` : ""}
+      <div class="sp-tooltip-body">${description}${sectionMarkup}</div>
+    `;
+  }
+
+  function scheduleTooltipAutoHide() {
+    clearTooltipHideTimer();
+    if (!isCoarsePointer()) {
+      return;
+    }
+
+    const ownerId = tooltipOwnerId;
+    tooltipHideTimer = window.setTimeout(() => {
+      if (tooltipOwnerId === ownerId) {
+        hideTooltip(true);
+      }
+    }, TOUCH_TOOLTIP_HIDE_MS);
   }
 
   function showTooltip(target, pinned) {
     const tooltip = ensureTooltip();
-    const title = target.getAttribute("data-tooltip-title") || "";
-    const detail = target.getAttribute("data-tooltip-detail") || DEFAULT_TOOLTIP;
+    const payload = readTooltipPayload(target);
     const rect = target.getBoundingClientRect();
 
-    tooltip.innerHTML = `<span class="sp-tooltip-title">${esc(title)}</span>${esc(detail)}`;
+    tooltip.innerHTML = renderTooltipMarkup(payload);
     tooltip.setAttribute("data-visible", "true");
     tooltipOwnerId = target.getAttribute("data-token-id") || target.getAttribute("data-control-id") || "";
     tooltipPinned = Boolean(pinned);
+    scheduleTooltipAutoHide();
 
     requestAnimationFrame(() => {
       const tipRect = tooltip.getBoundingClientRect();
@@ -1345,6 +1768,7 @@
     if (tooltipPinned && !force) {
       return;
     }
+    clearTooltipHideTimer();
     const tooltip = ensureTooltip();
     tooltip.setAttribute("data-visible", "false");
     tooltipOwnerId = "";
@@ -1382,7 +1806,7 @@
       inputToggle.onclick = (event) => {
         event.preventDefault();
         desktopControlsEnabled = !desktopControlsEnabled;
-        localStorage.setItem(STORAGE_KEY, desktopControlsEnabled ? "1" : "0");
+        writeStorage(STORAGE_KEY, desktopControlsEnabled ? "1" : "0");
         renderBar(currentSnapshot);
         const nextToggle = document.querySelector('.sp-control[data-control-id="input"]');
         if (nextToggle) {
@@ -1449,10 +1873,7 @@
       });
 
       window.addEventListener("resize", () => {
-        const bar = document.getElementById("sp-compact-bar");
-        if (bar) {
-          applyBarLayout(bar);
-        }
+        renderBar(currentSnapshot);
       });
     }
   }

@@ -278,6 +278,138 @@
       color: var(--accent);
     }
 
+    .home-actions {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .entry-action {
+      appearance: none;
+      border: 1px solid var(--button-line);
+      background: rgba(255, 255, 255, 0.72);
+      color: var(--accent);
+      border-radius: 999px;
+      min-height: 42px;
+      padding: 10px 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      box-shadow: 0 10px 24px rgba(21, 36, 26, 0.08);
+      transition: transform 150ms ease, box-shadow 150ms ease, background 150ms ease;
+    }
+
+    .entry-action:hover,
+    .entry-action:focus-visible {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 28px rgba(21, 36, 26, 0.12);
+      outline: none;
+    }
+
+    .entry-action[hidden] {
+      display: none;
+    }
+
+    .entry-modal {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(21, 31, 24, 0.46);
+      backdrop-filter: blur(10px);
+      z-index: 90;
+    }
+
+    .entry-modal[hidden] {
+      display: none;
+    }
+
+    .entry-modal-card {
+      position: relative;
+      width: min(100%, 430px);
+      padding: 24px 24px 22px;
+      border-radius: 28px;
+      border: 1px solid rgba(45, 93, 67, 0.12);
+      background: rgba(249, 252, 246, 0.96);
+      box-shadow: 0 26px 60px rgba(18, 30, 22, 0.22);
+      display: grid;
+      gap: 14px;
+    }
+
+    .entry-modal-close {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      width: 36px;
+      height: 36px;
+      border-radius: 999px;
+      border: 1px solid var(--button-line);
+      background: rgba(45, 93, 67, 0.08);
+      color: var(--accent);
+      cursor: pointer;
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .entry-modal-close:hover,
+    .entry-modal-close:focus-visible {
+      background: rgba(45, 93, 67, 0.16);
+      outline: none;
+    }
+
+    .entry-modal-eyebrow {
+      margin: 0;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .entry-modal-title {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 34px);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+    }
+
+    .entry-modal-copy {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    .entry-modal-qr-shell {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      border-radius: 24px;
+      border: 1px solid rgba(45, 93, 67, 0.12);
+      background: rgba(255, 255, 255, 0.94);
+      min-height: 280px;
+    }
+
+    .entry-modal-qr-shell img {
+      width: min(100%, 240px);
+      height: auto;
+      display: block;
+    }
+
+    .entry-modal-link {
+      color: var(--accent);
+      word-break: break-all;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
     .launcher-stack {
       display: grid;
       gap: 14px;
@@ -310,6 +442,12 @@
       gap: 14px;
     }
 
+    .launcher-copy {
+      min-width: 0;
+      display: grid;
+      gap: 8px;
+    }
+
     .launcher-head {
       display: flex;
       align-items: center;
@@ -323,6 +461,14 @@
       font-size: clamp(24px, 4vw, 34px);
       line-height: 1;
       letter-spacing: -0.02em;
+    }
+
+    .launcher-summary {
+      margin: 0;
+      max-width: 720px;
+      color: var(--muted);
+      line-height: 1.45;
+      font-size: 15px;
     }
 
     .card-state {
@@ -527,8 +673,24 @@
   <div class="app-shell">
     <main class="home-main">
       <h1 class="home-title">Smart Platform</h1>
+      <div class="home-actions">
+        <button class="entry-action" type="button" id="open-smartphone-entry" hidden>Open On Smartphone</button>
+      </div>
       <section class="launcher-stack" id="launcher-stack"></section>
     </main>
+  </div>
+
+  <div class="entry-modal" id="mobile-entry-modal" hidden>
+    <section class="entry-modal-card" role="dialog" aria-modal="true" aria-labelledby="mobile-entry-title">
+      <button class="entry-modal-close" type="button" id="mobile-entry-close" aria-label="Close smartphone entry popup">&times;</button>
+      <p class="entry-modal-eyebrow">Open On Smartphone</p>
+      <h2 class="entry-modal-title" id="mobile-entry-title">Scan to open the current shell on your phone.</h2>
+      <p class="entry-modal-copy" id="mobile-entry-copy">Use the phone camera to open the same Smart Platform page from this desktop session.</p>
+      <div class="entry-modal-qr-shell">
+        <img id="mobile-entry-qr" alt="QR code for opening Smart Platform on a smartphone">
+      </div>
+      <a class="entry-modal-link" id="mobile-entry-link" href="#" target="_blank" rel="noreferrer"></a>
+    </section>
   </div>
 
   <script src="/static/smart_bar.js"></script>
@@ -538,8 +700,11 @@
       '#diagnostics': '/settings#diagnostics',
       '#settings': '/settings'
     };
+    const MOBILE_ENTRY_STORAGE_KEY = 'smart-platform.mobile-entry.dismissed';
 
     let currentSnapshot = null;
+    let mobileEntryTargetUrl = '';
+    let mobileEntryAutoPromptAttempted = false;
 
     function redirectLegacyHash() {
       const target = LEGACY_HASH_REDIRECTS[window.location.hash];
@@ -559,12 +724,169 @@
         .replace(/'/g, '&#39;');
     }
 
+    function readStorage(key) {
+      try {
+        return window.localStorage.getItem(key);
+      } catch (_error) {
+        return null;
+      }
+    }
+
+    function writeStorage(key, value) {
+      try {
+        window.localStorage.setItem(key, value);
+      } catch (_error) {
+        return;
+      }
+    }
+
     function isLoopbackHost(hostname) {
       return hostname === '127.0.0.1' || hostname === 'localhost';
     }
 
+    function isDesktopLikeClient() {
+      const userAgent = String(navigator.userAgent || '').toLowerCase();
+      return !/android|iphone|ipad|ipod|mobile|tablet/.test(userAgent);
+    }
+
+    function mobileEntryDismissKey(targetUrl) {
+      try {
+        return `${MOBILE_ENTRY_STORAGE_KEY}:${new URL(targetUrl).origin}`;
+      } catch (_error) {
+        return MOBILE_ENTRY_STORAGE_KEY;
+      }
+    }
+
+    function mobileEntryDismissed(targetUrl) {
+      return readStorage(mobileEntryDismissKey(targetUrl)) === '1';
+    }
+
+    function markMobileEntryDismissed(targetUrl) {
+      writeStorage(mobileEntryDismissKey(targetUrl), '1');
+    }
+
+    function resolveMobileEntryUrl(snapshot) {
+      const shell = (snapshot && snapshot.current_shell) || {};
+      const shellBaseUrl = String(shell.shell_base_url || '').trim();
+      if (shellBaseUrl) {
+        try {
+          const baseUrl = new URL(shellBaseUrl, window.location.href);
+          if (!isLoopbackHost(baseUrl.hostname)) {
+            return new URL(`${window.location.pathname}${window.location.search}${window.location.hash}`, `${baseUrl.origin}/`).toString();
+          }
+        } catch (_error) {
+        }
+      }
+
+      try {
+        const currentUrl = new URL(window.location.href);
+        if (!isLoopbackHost(currentUrl.hostname)) {
+          return currentUrl.toString();
+        }
+      } catch (_error) {
+      }
+
+      return '';
+    }
+
+    function setMobileEntryActionState(targetUrl) {
+      const action = document.getElementById('open-smartphone-entry');
+      if (!action) {
+        return;
+      }
+
+      if (!targetUrl || !isDesktopLikeClient()) {
+        action.hidden = true;
+        return;
+      }
+
+      action.hidden = false;
+      action.title = 'Show the QR code for opening this Smart Platform page on a smartphone.';
+    }
+
+    function hideMobileEntryPrompt(persist) {
+      const modal = document.getElementById('mobile-entry-modal');
+      if (!modal) {
+        return;
+      }
+      modal.hidden = true;
+      if (persist && mobileEntryTargetUrl) {
+        markMobileEntryDismissed(mobileEntryTargetUrl);
+      }
+    }
+
+    function showMobileEntryPrompt(targetUrl) {
+      if (!targetUrl) {
+        return;
+      }
+
+      mobileEntryTargetUrl = targetUrl;
+      const modal = document.getElementById('mobile-entry-modal');
+      const qr = document.getElementById('mobile-entry-qr');
+      const link = document.getElementById('mobile-entry-link');
+      const copy = document.getElementById('mobile-entry-copy');
+      if (!modal || !qr || !link || !copy) {
+        return;
+      }
+
+      qr.src = `/api/v1/entry/qr.svg?target=${encodeURIComponent(targetUrl)}`;
+      link.href = targetUrl;
+      link.textContent = targetUrl;
+      copy.textContent = 'Use the phone camera to open the current Smart Platform shell over the local network.';
+      modal.hidden = false;
+    }
+
+    function syncMobileEntryPrompt(snapshot) {
+      const targetUrl = resolveMobileEntryUrl(snapshot);
+      mobileEntryTargetUrl = targetUrl;
+      setMobileEntryActionState(targetUrl);
+
+      if (!targetUrl || !isDesktopLikeClient() || mobileEntryAutoPromptAttempted || mobileEntryDismissed(targetUrl)) {
+        return;
+      }
+
+      mobileEntryAutoPromptAttempted = true;
+      showMobileEntryPrompt(targetUrl);
+    }
+
+    function bindMobileEntryPrompt() {
+      const action = document.getElementById('open-smartphone-entry');
+      const close = document.getElementById('mobile-entry-close');
+      const modal = document.getElementById('mobile-entry-modal');
+
+      if (action) {
+        action.onclick = () => {
+          if (mobileEntryTargetUrl) {
+            showMobileEntryPrompt(mobileEntryTargetUrl);
+          }
+        };
+      }
+
+      if (close) {
+        close.onclick = () => hideMobileEntryPrompt(true);
+      }
+
+      if (modal) {
+        modal.onclick = (event) => {
+          if (event.target === modal) {
+            hideMobileEntryPrompt(true);
+          }
+        };
+      }
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+          hideMobileEntryPrompt(true);
+        }
+      });
+    }
+
     function isLaptopSmoke(snapshot) {
       const shell = (snapshot && snapshot.current_shell) || {};
+      const runtimeProfile = String(shell.runtime_profile || '').toLowerCase();
+      if (runtimeProfile) {
+        return runtimeProfile !== 'owner_device';
+      }
       if (isLoopbackHost(window.location.hostname)) {
         return true;
       }
@@ -608,24 +930,50 @@
       return { key: 'attention', label: 'Waiting' };
     }
 
+    function moduleSummary(module, runtimePreview, copy) {
+      if (runtimePreview) {
+        return copy.preview;
+      }
+      if (module && module.owner_available) {
+        return copy.ready;
+      }
+      return copy.waiting;
+    }
+
     function renderLauncher(snapshot) {
       const runtimePreview = isLaptopSmoke(snapshot);
       const irrigation = resolveModule(snapshot, 'irrigation');
       const turret = resolveModule(snapshot, 'turret_bridge');
       const irrigationState = cardState(irrigation, runtimePreview);
       const turretState = cardState(turret, runtimePreview);
+      const irrigationSummary = moduleSummary(irrigation, runtimePreview, {
+        preview: 'Preview path from desktop smoke. Open irrigation UI without claiming board ownership.',
+        ready: 'ESP32 owner is available. Open zones, targets, and watering controls.',
+        waiting: 'ESP32 owner is not currently available. Waiting for irrigation handoff.'
+      });
+      const turretSummary = moduleSummary(turret, runtimePreview, {
+        preview: 'Preview path from desktop smoke. Validate manual and automatic entry flows without board ownership.',
+        ready: 'Raspberry Pi owner is available. Open direct control or automation runtime.',
+        waiting: 'Raspberry Pi owner is not currently available. Waiting for turret handoff.'
+      });
 
       document.getElementById('launcher-stack').innerHTML = `
         <a class="launcher-card" data-state="${irrigationState.key}" href="${resolveModulePath(irrigation, '/irrigation')}">
           <div class="launcher-head">
-            <h2 class="launcher-name">Irrigation</h2>
+            <div class="launcher-copy">
+              <h2 class="launcher-name">Irrigation</h2>
+              <p class="launcher-summary">${esc(irrigationSummary)}</p>
+            </div>
             <span class="card-state" data-state="${irrigationState.key}">${irrigationState.label}</span>
           </div>
         </a>
 
         <article class="launcher-panel">
           <div class="launcher-head">
-            <h2 class="launcher-name">Turret</h2>
+            <div class="launcher-copy">
+              <h2 class="launcher-name">Turret</h2>
+              <p class="launcher-summary">${esc(turretSummary)}</p>
+            </div>
             <span class="card-state" data-state="${turretState.key}">${turretState.label}</span>
           </div>
           <div class="card-actions">
@@ -636,21 +984,30 @@
 
         <a class="launcher-card" data-state="online" href="/gallery">
           <div class="launcher-head">
-            <h2 class="launcher-name">Gallery</h2>
+            <div class="launcher-copy">
+              <h2 class="launcher-name">Gallery</h2>
+              <p class="launcher-summary">Plants, media, and reports stay together on the shared content surface.</p>
+            </div>
             <span class="card-state" data-state="online">Ready</span>
           </div>
         </a>
 
         <a class="launcher-card" data-state="online" href="/service">
           <div class="launcher-head">
-            <h2 class="launcher-name">Laboratory</h2>
+            <div class="launcher-copy">
+              <h2 class="launcher-name">Laboratory</h2>
+              <p class="launcher-summary">Bring-up benches, diagnostics, and targeted service checks live here.</p>
+            </div>
             <span class="card-state" data-state="online">Ready</span>
           </div>
         </a>
 
         <a class="launcher-card" data-state="online" href="/settings">
           <div class="launcher-head">
-            <h2 class="launcher-name">Settings</h2>
+            <div class="launcher-copy">
+              <h2 class="launcher-name">Settings</h2>
+              <p class="launcher-summary">Platform policy, interface options, and sync-facing controls stay here.</p>
+            </div>
             <span class="card-state" data-state="online">Ready</span>
           </div>
         </a>
@@ -668,9 +1025,11 @@
     async function refresh() {
       currentSnapshot = await fetchSnapshot();
       renderLauncher(currentSnapshot);
+      syncMobileEntryPrompt(currentSnapshot);
     }
 
     if (!redirectLegacyHash()) {
+      bindMobileEntryPrompt();
       refresh().catch((error) => {
         document.getElementById('launcher-stack').innerHTML = `
           <article class="launcher-panel">

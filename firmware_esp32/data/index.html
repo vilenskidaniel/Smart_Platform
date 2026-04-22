@@ -310,6 +310,12 @@
       gap: 14px;
     }
 
+    .launcher-copy {
+      min-width: 0;
+      display: grid;
+      gap: 8px;
+    }
+
     .launcher-head {
       display: flex;
       align-items: center;
@@ -323,6 +329,14 @@
       font-size: clamp(24px, 4vw, 34px);
       line-height: 1;
       letter-spacing: -0.02em;
+    }
+
+    .launcher-summary {
+      margin: 0;
+      max-width: 720px;
+      color: var(--muted);
+      line-height: 1.45;
+      font-size: 15px;
     }
 
     .card-state {
@@ -565,6 +579,10 @@
 
     function isLaptopSmoke(snapshot) {
       const shell = (snapshot && snapshot.current_shell) || {};
+      const runtimeProfile = String(shell.runtime_profile || '').toLowerCase();
+      if (runtimeProfile) {
+        return runtimeProfile !== 'owner_device';
+      }
       if (isLoopbackHost(window.location.hostname)) {
         return true;
       }
@@ -608,24 +626,50 @@
       return { key: 'attention', label: 'Waiting' };
     }
 
+    function moduleSummary(module, runtimePreview, copy) {
+      if (runtimePreview) {
+        return copy.preview;
+      }
+      if (module && module.owner_available) {
+        return copy.ready;
+      }
+      return copy.waiting;
+    }
+
     function renderLauncher(snapshot) {
       const runtimePreview = isLaptopSmoke(snapshot);
       const irrigation = resolveModule(snapshot, 'irrigation');
       const turret = resolveModule(snapshot, 'turret_bridge');
       const irrigationState = cardState(irrigation, runtimePreview);
       const turretState = cardState(turret, runtimePreview);
+      const irrigationSummary = moduleSummary(irrigation, runtimePreview, {
+        preview: 'Preview path from desktop smoke. Open irrigation UI without claiming board ownership.',
+        ready: 'ESP32 owner is available. Open zones, targets, and watering controls.',
+        waiting: 'ESP32 owner is not currently available. Waiting for irrigation handoff.'
+      });
+      const turretSummary = moduleSummary(turret, runtimePreview, {
+        preview: 'Preview path from desktop smoke. Validate manual and automatic entry flows without board ownership.',
+        ready: 'Raspberry Pi owner is available. Open direct control or automation runtime.',
+        waiting: 'Raspberry Pi owner is not currently available. Waiting for turret handoff.'
+      });
 
       document.getElementById('launcher-stack').innerHTML = `
         <a class="launcher-card" data-state="${irrigationState.key}" href="${resolveModulePath(irrigation, '/irrigation')}">
           <div class="launcher-head">
-            <h2 class="launcher-name">Irrigation</h2>
+            <div class="launcher-copy">
+              <h2 class="launcher-name">Irrigation</h2>
+              <p class="launcher-summary">${esc(irrigationSummary)}</p>
+            </div>
             <span class="card-state" data-state="${irrigationState.key}">${irrigationState.label}</span>
           </div>
         </a>
 
         <article class="launcher-panel">
           <div class="launcher-head">
-            <h2 class="launcher-name">Turret</h2>
+            <div class="launcher-copy">
+              <h2 class="launcher-name">Turret</h2>
+              <p class="launcher-summary">${esc(turretSummary)}</p>
+            </div>
             <span class="card-state" data-state="${turretState.key}">${turretState.label}</span>
           </div>
           <div class="card-actions">
@@ -636,21 +680,30 @@
 
         <a class="launcher-card" data-state="online" href="/gallery">
           <div class="launcher-head">
-            <h2 class="launcher-name">Gallery</h2>
+            <div class="launcher-copy">
+              <h2 class="launcher-name">Gallery</h2>
+              <p class="launcher-summary">Plants, media, and reports stay together on the shared content surface.</p>
+            </div>
             <span class="card-state" data-state="online">Ready</span>
           </div>
         </a>
 
         <a class="launcher-card" data-state="online" href="/service">
           <div class="launcher-head">
-            <h2 class="launcher-name">Laboratory</h2>
+            <div class="launcher-copy">
+              <h2 class="launcher-name">Laboratory</h2>
+              <p class="launcher-summary">Bring-up benches, diagnostics, and targeted service checks live here.</p>
+            </div>
             <span class="card-state" data-state="online">Ready</span>
           </div>
         </a>
 
         <a class="launcher-card" data-state="online" href="/settings">
           <div class="launcher-head">
-            <h2 class="launcher-name">Settings</h2>
+            <div class="launcher-copy">
+              <h2 class="launcher-name">Settings</h2>
+              <p class="launcher-summary">Platform policy, interface options, and sync-facing controls stay here.</p>
+            </div>
             <span class="card-state" data-state="online">Ready</span>
           </div>
         </a>

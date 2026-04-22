@@ -98,6 +98,24 @@
 - `Raspberry Pi`-сторону развивать из `raspberry_pi/`;
 - legacy bench/donor-слой теперь живет вне этого репозитория и должен подтягиваться только осознанной выборочной миграцией, а не как основной рабочий корень.
 
+## Быстрый Host Launch На Windows
+
+Если нужен быстрый запуск `Raspberry Pi` shell с Windows-хоста, в репозитории теперь есть launcher:
+
+- [tools/Launch-SmartPlatformShell.vbs](tools/Launch-SmartPlatformShell.vbs)
+- [tools/Launch-SmartPlatformShell.cmd](tools/Launch-SmartPlatformShell.cmd)
+- [tools/Launch-SmartPlatformShell.ps1](tools/Launch-SmartPlatformShell.ps1)
+
+Что он делает:
+
+- поднимает `raspberry_pi/app.py` с правильными env-переменными;
+- по умолчанию запускает shell в `LAN`-режиме на `8091`;
+- держит host-side server скрытым, без постоянного терминала на рабочем столе;
+- открывает shell в app-like окне браузера;
+- может быть использован как основная точка входа для тестирования на `Windows PC`.
+
+Практическая модель входа для всех устройств описана в [docs/48_browser_entry_and_host_launch.md](docs/48_browser_entry_and_host_launch.md).
+
 ## С чего начинать
 
 Если работа идет из другого чата, сначала читать в таком порядке:

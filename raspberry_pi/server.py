@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import io
 import json
 import os
 import platform
@@ -14,6 +15,11 @@ from shell_snapshot_facade import ShellSnapshotFacade
 from shell_viewer_presence import ShellViewerPresence
 from sync_client import SyncClient
 
+try:
+    import segno
+except ImportError:
+    segno = None
+
 
 def build_content_status(content_root: Path) -> dict[str, object]:
     return {
@@ -25,6 +31,27 @@ def build_content_status(content_root: Path) -> dict[str, object]:
         "animations_ready": (content_root / "animations").is_dir(),
         "libraries_ready": (content_root / "libraries").is_dir(),
     }
+
+
+def build_entry_qr_svg(target_url: str) -> bytes:
+    if segno is None:
+        raise RuntimeError("qr_dependency_missing")
+
+    parsed = urlparse(target_url)
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        raise ValueError("target must be an absolute http or https URL")
+
+    qr = segno.make(target_url, error="m", micro=False)
+    buffer = io.BytesIO()
+    qr.save(
+        buffer,
+        kind="svg",
+        scale=7,
+        border=3,
+        dark="#234230",
+        light="#ffffff",
+    )
+    return buffer.getvalue()
 
 
 def build_federated_handoff_html() -> bytes:
@@ -208,6 +235,36 @@ def build_server(config: BridgeConfig, state: BridgeState, sync_client: SyncClie
                 return
             if parsed.path == "/api/v1/shell/snapshot":
                 self._json_response(shell_snapshot_facade.build_snapshot())
+                return
+            if parsed.path == "/api/v1/entry/qr.svg":
+                target = self._param(params, "target").strip()
+                if not target:
+                    self._json_response(
+                        {
+                            "error": "target_required",
+                            "message": "target query parameter is required",
+                        },
+                        HTTPStatus.BAD_REQUEST,
+                    )
+                    return
+                try:
+                    self._raw_response(build_entry_qr_svg(target), "image/svg+xml; charset=utf-8")
+                except RuntimeError:
+                    self._json_response(
+                        {
+                            "error": "qr_dependency_missing",
+                            "message": "Install the segno package to enable QR entry generation.",
+                        },
+                        HTTPStatus.SERVICE_UNAVAILABLE,
+                    )
+                except ValueError as error:
+                    self._json_response(
+                        {
+                            "error": "invalid_target",
+                            "message": str(error),
+                        },
+                        HTTPStatus.BAD_REQUEST,
+                    )
                 return
             if parsed.path == "/api/v1/modules":
                 self._json_response(state.build_system_snapshot()["modules"])
@@ -599,6 +656,7 @@ def build_server(config: BridgeConfig, state: BridgeState, sync_client: SyncClie
             self.send_response(HTTPStatus.OK)
             self.send_header("Content-Type", content_type)
             self.send_header("Content-Length", str(len(raw)))
+            self._send_no_cache_headers()
             self.end_headers()
             self.wfile.write(raw)
 
@@ -621,8 +679,14 @@ def build_server(config: BridgeConfig, state: BridgeState, sync_client: SyncClie
             self.send_response(status)
             self.send_header("Content-Type", content_type)
             self.send_header("Content-Length", str(len(raw)))
+            self._send_no_cache_headers()
             self.end_headers()
             self.wfile.write(raw)
+
+        def _send_no_cache_headers(self) -> None:
+            self.send_header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+            self.send_header("Pragma", "no-cache")
+            self.send_header("Expires", "0")
 
         def _param(self, params: dict[str, list[str]], name: str, default: str = "") -> str:
             values = params.get(name)

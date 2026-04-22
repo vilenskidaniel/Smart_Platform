@@ -4,7 +4,10 @@
   const TOOLTIP_ID = "smart-platform-compact-bar-tooltip";
   const STORAGE_KEY = "smart-platform.desktop-controls.enabled";
   const VIEWER_STORAGE_KEY = "smart-platform.viewer.id";
+  const FULLSCREEN_STORAGE_KEY = "smart-platform.fullscreen.enabled";
+  const FULLSCREEN_PENDING_KEY = "smart-platform.fullscreen.pending";
   const DEFAULT_TOOLTIP = "Status details are loading.";
+  const TOOLTIP_HIDE_MS = 2000;
   const REFRESH_MS = 5000;
   const VIEWER_HEARTBEAT_MS = 5000;
   const CLOCK_MS = 30000;
@@ -19,14 +22,17 @@
 
   let currentSnapshot = null;
   let batterySnapshot = { available: false };
-  let desktopControlsEnabled = localStorage.getItem(STORAGE_KEY) !== "0";
+  let desktopControlsEnabled = readStorage(STORAGE_KEY) !== "0";
   let tooltipPinned = false;
   let tooltipOwnerId = "";
+  let tooltipHideTimer = 0;
   let globalListenersInstalled = false;
   let barLayoutFrame = 0;
   let viewerSessionId = "";
   let viewerHeartbeatTimer = 0;
   let viewerHeartbeatInFlight = false;
+  let fullscreenToggleIntent = null;
+  let fullscreenResumeListenersInstalled = false;
 
   function esc(value) {
     return String(value ?? "")
@@ -35,6 +41,127 @@
       .replace(/>/g, "&gt;")
       .replace(/\"/g, "&quot;")
       .replace(/'/g, "&#39;");
+  }
+
+  function readStorage(key) {
+    try {
+      return window.localStorage.getItem(key);
+    } catch (_error) {
+      return null;
+    }
+  }
+
+  function writeStorage(key, value) {
+    try {
+      window.localStorage.setItem(key, value);
+    } catch (_error) {
+      return;
+    }
+  }
+
+  function fullscreenPreferenceEnabled() {
+    return readStorage(FULLSCREEN_STORAGE_KEY) === "1";
+  }
+
+  function setFullscreenPreference(enabled) {
+    writeStorage(FULLSCREEN_STORAGE_KEY, enabled ? "1" : "0");
+    if (!enabled) {
+      writeStorage(FULLSCREEN_PENDING_KEY, "0");
+    }
+  }
+
+  function fullscreenNavigationPending() {
+    return readStorage(FULLSCREEN_PENDING_KEY) === "1";
+  }
+
+  function setFullscreenNavigationPending(pending) {
+    writeStorage(FULLSCREEN_PENDING_KEY, pending ? "1" : "0");
+  }
+
+  function clearTooltipHideTimer() {
+    if (!tooltipHideTimer) {
+      return;
+    }
+    window.clearTimeout(tooltipHideTimer);
+    tooltipHideTimer = 0;
+  }
+
+  async function requestStoredFullscreen() {
+    if (!fullscreenPreferenceEnabled() || document.fullscreenElement || !document.fullscreenEnabled || !document.documentElement.requestFullscreen) {
+      return false;
+    }
+
+    try {
+      await document.documentElement.requestFullscreen();
+      setFullscreenNavigationPending(false);
+      clearFullscreenResumeListeners();
+      return true;
+    } catch (_error) {
+      return false;
+    }
+  }
+
+  async function handleFullscreenResumeInteraction() {
+    if (!fullscreenPreferenceEnabled()) {
+      clearFullscreenResumeListeners();
+      return;
+    }
+
+    const resumed = await requestStoredFullscreen();
+    if (resumed || !fullscreenPreferenceEnabled()) {
+      clearFullscreenResumeListeners();
+    }
+  }
+
+  function clearFullscreenResumeListeners() {
+    if (!fullscreenResumeListenersInstalled) {
+      return;
+    }
+
+    document.removeEventListener("pointerdown", handleFullscreenResumeInteraction, true);
+    document.removeEventListener("keydown", handleFullscreenResumeInteraction, true);
+    fullscreenResumeListenersInstalled = false;
+  }
+
+  function installFullscreenResumeListeners() {
+    if (fullscreenResumeListenersInstalled || !fullscreenPreferenceEnabled()) {
+      return;
+    }
+
+    document.addEventListener("pointerdown", handleFullscreenResumeInteraction, true);
+    document.addEventListener("keydown", handleFullscreenResumeInteraction, true);
+    fullscreenResumeListenersInstalled = true;
+  }
+
+  function ensureFullscreenPreference() {
+    if (!fullscreenPreferenceEnabled() || document.fullscreenElement) {
+      return;
+    }
+
+    requestStoredFullscreen().then((resumed) => {
+      if (!resumed && fullscreenPreferenceEnabled()) {
+        installFullscreenResumeListeners();
+      }
+    }).catch(() => {
+      if (fullscreenPreferenceEnabled()) {
+        installFullscreenResumeListeners();
+      }
+    });
+  }
+
+  function markFullscreenResumeOnInternalNavigation(destination) {
+    if (!(fullscreenPreferenceEnabled() || document.fullscreenElement)) {
+      return;
+    }
+
+    try {
+      const targetUrl = new URL(destination, window.location.href);
+      if (targetUrl.origin === window.location.origin) {
+        setFullscreenNavigationPending(true);
+      }
+    } catch (_error) {
+      return;
+    }
   }
 
   function createViewerId() {
@@ -49,19 +176,15 @@
       return viewerSessionId;
     }
 
-    try {
-      const existing = localStorage.getItem(VIEWER_STORAGE_KEY);
-      if (existing) {
-        viewerSessionId = existing;
-        return viewerSessionId;
-      }
-      viewerSessionId = createViewerId();
-      localStorage.setItem(VIEWER_STORAGE_KEY, viewerSessionId);
-      return viewerSessionId;
-    } catch (_error) {
-      viewerSessionId = createViewerId();
+    const existing = readStorage(VIEWER_STORAGE_KEY);
+    if (existing) {
+      viewerSessionId = existing;
       return viewerSessionId;
     }
+
+    viewerSessionId = createViewerId();
+    writeStorage(VIEWER_STORAGE_KEY, viewerSessionId);
+    return viewerSessionId;
   }
 
   function injectStyles() {
@@ -194,6 +317,7 @@
         display: none;
       }
 
+      .sp-bar[data-density="narrow"],
       .sp-bar[data-density="phone"] {
         display: grid;
         grid-template-columns: minmax(0, 1fr);
@@ -203,10 +327,12 @@
         gap: 8px;
       }
 
+      .sp-bar[data-density="narrow"] .sp-row,
       .sp-bar[data-density="phone"] .sp-row {
         min-width: 0;
       }
 
+      .sp-bar[data-density="narrow"] .sp-row[data-row="top"],
       .sp-bar[data-density="phone"] .sp-row[data-row="top"] {
         display: grid;
         grid-template-columns: auto minmax(0, 1fr);
@@ -214,6 +340,7 @@
         align-items: center;
       }
 
+      .sp-bar[data-density="narrow"] .sp-row[data-row="bottom"],
       .sp-bar[data-density="phone"] .sp-row[data-row="bottom"] {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -221,6 +348,7 @@
         align-items: center;
       }
 
+      .sp-bar[data-density="narrow"] .sp-row-cluster,
       .sp-bar[data-density="phone"] .sp-row-cluster {
         min-width: 0;
         display: flex;
@@ -228,20 +356,25 @@
         gap: 4px;
       }
 
+      .sp-bar[data-density="narrow"] .sp-row-cluster[data-cluster="controls"],
       .sp-bar[data-density="phone"] .sp-row-cluster[data-cluster="controls"] {
         justify-content: flex-start;
       }
 
+      .sp-bar[data-density="narrow"] .sp-row-cluster[data-cluster="devices"],
       .sp-bar[data-density="phone"] .sp-row-cluster[data-cluster="devices"] {
         justify-content: flex-end;
         overflow-x: auto;
         scrollbar-width: none;
       }
 
+      .sp-bar[data-density="narrow"] .sp-row-cluster[data-cluster="devices"]::-webkit-scrollbar,
       .sp-bar[data-density="phone"] .sp-row-cluster[data-cluster="devices"]::-webkit-scrollbar {
         display: none;
       }
 
+      .sp-bar[data-density="narrow"] .sp-token,
+      .sp-bar[data-density="narrow"] .sp-control,
       .sp-bar[data-density="phone"] .sp-token,
       .sp-bar[data-density="phone"] .sp-control {
         min-height: 28px;
@@ -249,21 +382,26 @@
         gap: 4px;
       }
 
+      .sp-bar[data-density="narrow"] .sp-control,
       .sp-bar[data-density="phone"] .sp-control {
         width: 28px;
         padding-inline: 0;
       }
 
+      .sp-bar[data-density="narrow"] .sp-icon,
+      .sp-bar[data-density="narrow"] .sp-icon svg,
       .sp-bar[data-density="phone"] .sp-icon,
       .sp-bar[data-density="phone"] .sp-icon svg {
         width: 14px;
         height: 14px;
       }
 
+      .sp-bar[data-density="narrow"] .sp-value,
       .sp-bar[data-density="phone"] .sp-value {
         font-size: 11px;
       }
 
+      .sp-bar[data-density="narrow"] .sp-row[data-row="bottom"] .sp-token,
       .sp-bar[data-density="phone"] .sp-row[data-row="bottom"] .sp-token {
         width: 100%;
         min-width: 0;
@@ -535,6 +673,62 @@
         color: #ffffff;
       }
 
+      .sp-tooltip-subtitle {
+        display: block;
+        margin-bottom: 8px;
+        color: rgba(199, 223, 205, 0.84);
+        font-size: 12px;
+      }
+
+      .sp-tooltip-body {
+        display: grid;
+        gap: 8px;
+      }
+
+      .sp-tooltip-description {
+        margin: 0;
+        color: rgba(239, 248, 240, 0.9);
+      }
+
+      .sp-tooltip-section {
+        display: grid;
+        gap: 6px;
+        padding-top: 8px;
+        border-top: 1px solid rgba(216, 232, 218, 0.14);
+      }
+
+      .sp-tooltip-section:first-of-type {
+        padding-top: 0;
+        border-top: 0;
+      }
+
+      .sp-tooltip-section-title {
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: rgba(196, 220, 201, 0.84);
+      }
+
+      .sp-tooltip-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 10px;
+        align-items: start;
+      }
+
+      .sp-tooltip-row-label {
+        min-width: 0;
+        color: #ffffff;
+        font-weight: 600;
+      }
+
+      .sp-tooltip-row-value {
+        white-space: nowrap;
+        text-align: right;
+        color: #d5f0db;
+        font-weight: 700;
+      }
+
       @media (max-width: 760px) {
         .sp-bar-host {
           width: calc(100% - 12px);
@@ -559,6 +753,10 @@
         .sp-control {
           width: 30px;
           padding-inline: 0;
+        }
+
+        .sp-tooltip {
+          max-width: min(340px, calc(100vw - 16px));
         }
       }
     `;
@@ -1119,11 +1317,27 @@
     ];
   }
 
+  function tooltipPayloadForItem(item) {
+    return item.tooltip || {
+      title: item.title || "",
+      description: item.detail || DEFAULT_TOOLTIP
+    };
+  }
+
+  function tooltipPayloadAttr(item) {
+    try {
+      return esc(encodeURIComponent(JSON.stringify(tooltipPayloadForItem(item))));
+    } catch (_error) {
+      return "";
+    }
+  }
+
   function controlMarkup(item) {
     const detail = esc(item.detail || DEFAULT_TOOLTIP);
+    const tooltipPayload = tooltipPayloadAttr(item);
     if (item.href) {
       return `
-        <a class="sp-control" href="${esc(item.href)}" data-tooltip-title="${esc(item.title)}" data-tooltip-detail="${detail}" title="${esc(item.title)}. ${detail}">
+        <a class="sp-control" href="${esc(item.href)}" data-tooltip-title="${esc(item.title)}" data-tooltip-detail="${detail}" data-tooltip-payload="${tooltipPayload}">
           <span class="sp-icon">${icon(item.icon, item.iconOptions)}</span>
         </a>
       `;
@@ -1136,9 +1350,9 @@
         data-control-id="${esc(item.id)}"
         data-tooltip-title="${esc(item.title)}"
         data-tooltip-detail="${detail}"
+        data-tooltip-payload="${tooltipPayload}"
         data-active="${item.active ? "true" : "false"}"
-        data-blink="${item.blink ? "true" : "false"}"
-        title="${esc(item.title)}. ${detail}">
+        data-blink="${item.blink ? "true" : "false"}">
         <span class="sp-icon">${icon(item.icon, item.iconOptions)}</span>
       </button>
     `;
@@ -1146,6 +1360,7 @@
 
   function tokenMarkup(item) {
     const detail = esc(item.detail || DEFAULT_TOOLTIP);
+    const tooltipPayload = tooltipPayloadAttr(item);
     return `
       <button
         type="button"
@@ -1153,9 +1368,9 @@
         data-token-id="${esc(item.id || "")}"
         data-tooltip-title="${esc(item.title || "")}"
         data-tooltip-detail="${detail}"
+        data-tooltip-payload="${tooltipPayload}"
         data-state="${esc(item.state || "neutral")}"
-        data-blink="${item.blink ? "true" : "false"}"
-        title="${esc(item.title || "")}. ${detail}">
+        data-blink="${item.blink ? "true" : "false"}">
         <span class="sp-icon">${icon(item.icon || "raspberry_pi", item.iconOptions)}</span>
         <span class="sp-value">${esc(item.value || "")}</span>
       </button>
@@ -1164,6 +1379,10 @@
 
   function groupMarkup(groupName, items, renderer) {
     return `<div class="sp-group" data-group="${esc(groupName)}">${items.map(renderer).join("")}</div>`;
+  }
+
+  function clusterMarkup(clusterName, items, renderer) {
+    return `<div class="sp-row-cluster" data-cluster="${esc(clusterName)}">${items.map(renderer).join("")}</div>`;
   }
 
   function summarizeState(items) {
@@ -1186,6 +1405,32 @@
     return items.map((item) => `${item.title}: ${item.value || "--"}. ${item.detail || ""}`.trim()).join(" ");
   }
 
+  function summaryTooltipValue(item) {
+    if (item.value) {
+      return item.value;
+    }
+
+    switch (item.state) {
+      case "online":
+        return "Ready";
+      case "active":
+        return "Active";
+      case "attention":
+        return "Waiting";
+      case "fault":
+        return "Fault";
+      default:
+        return "Preview";
+    }
+  }
+
+  function summaryTooltipRows(items) {
+    return items.map((item) => ({
+      label: item.title || "",
+      value: summaryTooltipValue(item)
+    }));
+  }
+
   function irrigationSummaryToken(snapshot) {
     const items = zoneTokens(snapshot);
     return {
@@ -1194,7 +1439,18 @@
       value: `${items.length}Z`,
       title: "Irrigation Summary",
       state: summarizeState(items),
-      detail: summarizeDetail(items)
+      detail: "Compact irrigation overview.",
+      tooltip: {
+        title: "Irrigation Summary",
+        subtitle: "Compact zone overview",
+        description: "The narrow desktop bar keeps irrigation compressed into one readable summary token.",
+        sections: [
+          {
+            title: "Zones",
+            rows: summaryTooltipRows(items)
+          }
+        ]
+      }
     };
   }
 
@@ -1206,7 +1462,18 @@
       value: "ENV",
       title: "Sensor Summary",
       state: summarizeState(items),
-      detail: summarizeDetail(items)
+      detail: "Compact environment overview.",
+      tooltip: {
+        title: "Sensor Summary",
+        subtitle: "Compact environment overview",
+        description: "Grouped environment readouts stay short in the bar and expand into rows here.",
+        sections: [
+          {
+            title: "Sensors",
+            rows: summaryTooltipRows(items)
+          }
+        ]
+      }
     };
   }
 
@@ -1218,7 +1485,18 @@
       value: "SYS",
       title: "System Summary",
       state: summarizeState(items),
-      detail: summarizeDetail(items)
+      detail: "Prioritized platform overview.",
+      tooltip: {
+        title: "System Summary",
+        subtitle: "Prioritized platform status",
+        description: "The compact bar keeps only the platform signals that matter most and expands them into a readable matrix here.",
+        sections: [
+          {
+            title: "System",
+            rows: summaryTooltipRows(items)
+          }
+        ]
+      }
     };
   }
 
@@ -1239,9 +1517,25 @@
 
   function phoneBarMarkup(controls, deviceTokens, summaryTokens) {
     return [
-      `<div class="sp-row" data-row="top"><div class="sp-row-cluster" data-cluster="controls">${controls.map(controlMarkup).join("")}</div><div class="sp-row-cluster" data-cluster="devices">${deviceTokens.map(tokenMarkup).join("")}</div></div>`,
+      `<div class="sp-row" data-row="top">${clusterMarkup("controls", controls, controlMarkup)}${clusterMarkup("devices", deviceTokens, tokenMarkup)}</div>`,
       `<div class="sp-row" data-row="bottom">${summaryTokens.map(tokenMarkup).join("")}</div>`
     ].join("");
+  }
+
+  function shouldUseNarrowDesktopDensity(snapshot, viewportWidth) {
+    if (shouldUsePhoneDensity(snapshot, viewportWidth)) {
+      return false;
+    }
+
+    return viewportWidth <= 1120;
+  }
+
+  function shouldUsePhoneDensity(snapshot, viewportWidth) {
+    if (viewportWidth > 900) {
+      return false;
+    }
+
+    return detectClient(snapshot).kind !== "desktop";
   }
 
   function measureBarFits(bar, density) {
@@ -1261,9 +1555,13 @@
     return fits;
   }
 
-  function chooseBarDensity(bar, viewportWidth) {
-    if (viewportWidth <= 900) {
+  function chooseBarDensity(bar, viewportWidth, phoneDensity, narrowDesktopDensity) {
+    if (phoneDensity) {
       return "phone";
+    }
+
+    if (narrowDesktopDensity) {
+      return "narrow";
     }
 
     if (viewportWidth > 1320 && measureBarFits(bar, "full")) {
@@ -1277,15 +1575,19 @@
     return "stacked";
   }
 
-  function applyBarLayout(bar) {
+  function applyBarLayout(bar, snapshot, forcedDensity) {
     if (barLayoutFrame) {
       cancelAnimationFrame(barLayoutFrame);
     }
 
     barLayoutFrame = requestAnimationFrame(() => {
       barLayoutFrame = 0;
-      const viewportWidth = Math.max(window.innerWidth || 0, document.documentElement.clientWidth || 0);
-      const density = chooseBarDensity(bar, viewportWidth);
+      const density = forcedDensity || (() => {
+        const viewportWidth = Math.max(window.innerWidth || 0, document.documentElement.clientWidth || 0);
+        const phoneDensity = shouldUsePhoneDensity(snapshot, viewportWidth);
+        const narrowDesktopDensity = shouldUseNarrowDesktopDensity(snapshot, viewportWidth);
+        return chooseBarDensity(bar, viewportWidth, phoneDensity, narrowDesktopDensity);
+      })();
       bar.dataset.density = density;
       bar.dataset.fit = density === "full" || density === "compact" ? "true" : "false";
     });
@@ -1293,17 +1595,21 @@
 
   function renderBar(snapshot) {
     const viewportWidth = Math.max(window.innerWidth || 0, document.documentElement.clientWidth || 0);
-    const phoneDensity = viewportWidth <= 900;
+    const phoneDensity = shouldUsePhoneDensity(snapshot, viewportWidth);
+    const narrowDesktopDensity = shouldUseNarrowDesktopDensity(snapshot, viewportWidth);
     const controls = controlTokens(snapshot, phoneDensity);
     const deviceTokens = [...viewerTokens(snapshot), ...boardTokens(snapshot), ...modeTokens(snapshot)];
+    const summaryTokens = [irrigationSummaryToken(snapshot), sensorSummaryToken(snapshot), systemSummaryToken(snapshot)];
 
     const bar = document.getElementById("sp-compact-bar");
     if (!bar) {
       return;
     }
 
-    if (phoneDensity) {
-      bar.innerHTML = phoneBarMarkup(controls, deviceTokens, [irrigationSummaryToken(snapshot), sensorSummaryToken(snapshot), systemSummaryToken(snapshot)]);
+    const density = phoneDensity ? "phone" : narrowDesktopDensity ? "narrow" : null;
+
+    if (density) {
+      bar.innerHTML = phoneBarMarkup(controls, deviceTokens, summaryTokens);
     } else {
       bar.innerHTML = [
         groupMarkup("controls", controls, controlMarkup),
@@ -1314,20 +1620,75 @@
       ].join("");
     }
 
-    applyBarLayout(bar);
+    applyBarLayout(bar, snapshot, density || undefined);
     bindInteractions();
+  }
+
+  function readTooltipPayload(target) {
+    const encoded = target.getAttribute("data-tooltip-payload") || "";
+    if (encoded) {
+      try {
+        return JSON.parse(decodeURIComponent(encoded));
+      } catch (_error) {
+        // Fall through to the plain-text tooltip fallback below.
+      }
+    }
+
+    return {
+      title: target.getAttribute("data-tooltip-title") || "",
+      description: target.getAttribute("data-tooltip-detail") || DEFAULT_TOOLTIP
+    };
+  }
+
+  function renderTooltipMarkup(payload) {
+    const sections = Array.isArray(payload.sections) ? payload.sections : [];
+    const description = payload.description
+      ? `<p class="sp-tooltip-description">${esc(payload.description)}</p>`
+      : "";
+    const sectionMarkup = sections.map((section) => {
+      const rows = Array.isArray(section.rows) ? section.rows : [];
+      return `
+        <section class="sp-tooltip-section">
+          ${section.title ? `<div class="sp-tooltip-section-title">${esc(section.title)}</div>` : ""}
+          <div class="sp-tooltip-table">
+            ${rows.map((row) => `
+              <div class="sp-tooltip-row">
+                <span class="sp-tooltip-row-label">${esc(row.label || "")}</span>
+                <span class="sp-tooltip-row-value">${esc(row.value || "")}</span>
+              </div>
+            `).join("")}
+          </div>
+        </section>
+      `;
+    }).join("");
+
+    return `
+      <span class="sp-tooltip-title">${esc(payload.title || "")}</span>
+      ${payload.subtitle ? `<span class="sp-tooltip-subtitle">${esc(payload.subtitle)}</span>` : ""}
+      <div class="sp-tooltip-body">${description}${sectionMarkup}</div>
+    `;
+  }
+
+  function scheduleTooltipAutoHide() {
+    clearTooltipHideTimer();
+    const ownerId = tooltipOwnerId;
+    tooltipHideTimer = window.setTimeout(() => {
+      if (tooltipOwnerId === ownerId) {
+        hideTooltip(true);
+      }
+    }, TOOLTIP_HIDE_MS);
   }
 
   function showTooltip(target, pinned) {
     const tooltip = ensureTooltip();
-    const title = target.getAttribute("data-tooltip-title") || "";
-    const detail = target.getAttribute("data-tooltip-detail") || DEFAULT_TOOLTIP;
+    const payload = readTooltipPayload(target);
     const rect = target.getBoundingClientRect();
 
-    tooltip.innerHTML = `<span class="sp-tooltip-title">${esc(title)}</span>${esc(detail)}`;
+    tooltip.innerHTML = renderTooltipMarkup(payload);
     tooltip.setAttribute("data-visible", "true");
     tooltipOwnerId = target.getAttribute("data-token-id") || target.getAttribute("data-control-id") || "";
     tooltipPinned = Boolean(pinned);
+    scheduleTooltipAutoHide();
 
     requestAnimationFrame(() => {
       const tipRect = tooltip.getBoundingClientRect();
@@ -1343,6 +1704,7 @@
     if (tooltipPinned && !force) {
       return;
     }
+    clearTooltipHideTimer();
     const tooltip = ensureTooltip();
     tooltip.setAttribute("data-visible", "false");
     tooltipOwnerId = "";
@@ -1380,7 +1742,7 @@
       inputToggle.onclick = (event) => {
         event.preventDefault();
         desktopControlsEnabled = !desktopControlsEnabled;
-        localStorage.setItem(STORAGE_KEY, desktopControlsEnabled ? "1" : "0");
+        writeStorage(STORAGE_KEY, desktopControlsEnabled ? "1" : "0");
         renderBar(currentSnapshot);
         const nextToggle = document.querySelector('.sp-control[data-control-id="input"]');
         if (nextToggle) {
@@ -1392,6 +1754,11 @@
     if (fullscreenToggle) {
       fullscreenToggle.onclick = async (event) => {
         event.preventDefault();
+        const wantsFullscreen = !document.fullscreenElement;
+        fullscreenToggleIntent = wantsFullscreen ? "enter" : "exit";
+        setFullscreenPreference(wantsFullscreen);
+        setFullscreenNavigationPending(false);
+        clearFullscreenResumeListeners();
         try {
           if (document.fullscreenElement && document.exitFullscreen) {
             await document.exitFullscreen();
@@ -1400,6 +1767,9 @@
           }
         } catch (_error) {
           // Ignore browser fullscreen rejections; the tooltip already explains the action.
+          setFullscreenPreference(Boolean(document.fullscreenElement));
+          setFullscreenNavigationPending(false);
+          fullscreenToggleIntent = null;
         }
         renderBar(currentSnapshot);
         const nextToggle = document.querySelector('.sp-control[data-control-id="fullscreen"]');
@@ -1414,6 +1784,12 @@
 
       document.addEventListener("click", (event) => {
         const target = event.target;
+        if (!event.defaultPrevented && event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey && target instanceof HTMLElement) {
+          const anchor = target.closest("a[href]");
+          if (anchor instanceof HTMLAnchorElement) {
+            markFullscreenResumeOnInternalNavigation(anchor.href);
+          }
+        }
         if (target instanceof HTMLElement && target.closest(".sp-token, .sp-control, .sp-tooltip")) {
           return;
         }
@@ -1439,18 +1815,37 @@
         }
 
         event.preventDefault();
+        markFullscreenResumeOnInternalNavigation(destination);
         window.location.href = destination;
       });
 
       document.addEventListener("fullscreenchange", () => {
+        if (document.fullscreenElement) {
+          setFullscreenPreference(true);
+          setFullscreenNavigationPending(false);
+          clearFullscreenResumeListeners();
+        } else if (fullscreenNavigationPending()) {
+          setFullscreenPreference(true);
+          installFullscreenResumeListeners();
+        } else if (fullscreenToggleIntent === "exit") {
+          setFullscreenPreference(false);
+          setFullscreenNavigationPending(false);
+          clearFullscreenResumeListeners();
+        } else if (fullscreenPreferenceEnabled()) {
+          setFullscreenPreference(false);
+          setFullscreenNavigationPending(false);
+          clearFullscreenResumeListeners();
+        }
+        fullscreenToggleIntent = null;
         renderBar(currentSnapshot);
       });
 
       window.addEventListener("resize", () => {
-        const bar = document.getElementById("sp-compact-bar");
-        if (bar) {
-          applyBarLayout(bar);
-        }
+        renderBar(currentSnapshot);
+      });
+
+      window.addEventListener("pageshow", () => {
+        ensureFullscreenPreference();
       });
     }
   }
@@ -1548,6 +1943,7 @@
   injectStyles();
   ensureHost();
   ensureTooltip();
+  ensureFullscreenPreference();
   renderBar(currentSnapshot);
   ensureBatteryWatcher().catch(() => {});
   ensureViewerHeartbeat();
