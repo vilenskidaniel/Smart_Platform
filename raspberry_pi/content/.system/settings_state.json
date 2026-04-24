@@ -1,9 +1,10 @@
 {
   "schema_version": "settings.v1",
-  "updated_at_ms": 1776899499238,
+  "updated_at_ms": 1777069059720,
   "interface": {
     "language": "ru",
     "desktop_controls_enabled": true,
+    "fullscreen_enabled": false,
     "show_advanced_diagnostics": true
   },
   "style": {
