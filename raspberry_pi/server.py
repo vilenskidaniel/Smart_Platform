@@ -11,6 +11,7 @@ from urllib.parse import parse_qs, urlparse
 
 from bridge_config import BridgeConfig
 from bridge_state import BridgeState
+from settings_store import SettingsStore
 from shell_snapshot_facade import ShellSnapshotFacade
 from shell_viewer_presence import ShellViewerPresence
 from sync_client import SyncClient
@@ -80,6 +81,7 @@ def build_federated_handoff_html() -> bytes:
       <pre class="mono" id="payload">waiting...</pre>
     </div>
   </div>
+    <script src="/static/smart_bar.js"></script>
   <script>
     const params = new URLSearchParams(window.location.search);
     const moduleId = params.get('module_id') || '';
@@ -148,6 +150,7 @@ def build_server(config: BridgeConfig, state: BridgeState, sync_client: SyncClie
     content_root_resolved = content_root.resolve()
     runtime_profile = _detect_runtime_profile(config)
     viewer_presence = ShellViewerPresence()
+    settings_store = SettingsStore(content_root / ".system" / "settings_state.json")
     shell_snapshot_facade = ShellSnapshotFacade(
         state,
         content_root,
@@ -295,6 +298,9 @@ def build_server(config: BridgeConfig, state: BridgeState, sync_client: SyncClie
             if parsed.path == "/api/v1/content/status":
                 self._json_response(build_content_status(content_root))
                 return
+            if parsed.path == "/api/v1/settings":
+                self._json_response(settings_store.load())
+                return
             if parsed.path == "/api/v1/turret/status":
                 self._json_response(state.build_turret_status())
                 return
@@ -391,6 +397,26 @@ def build_server(config: BridgeConfig, state: BridgeState, sync_client: SyncClie
                         "accepted": True,
                         "sync_status": state.build_sync_status(),
                     }
+                )
+                return
+
+            if parsed.path == "/api/v1/settings":
+                try:
+                    settings_payload = self._read_json_object()
+                except ValueError as error:
+                    self._json_response(
+                        {
+                            "command": "settings_update",
+                            "accepted": False,
+                            "message": str(error),
+                            "settings": settings_store.load(),
+                        },
+                        HTTPStatus.BAD_REQUEST,
+                    )
+                    return
+
+                self._json_response(
+                    settings_store.update(settings_payload)
                 )
                 return
 
@@ -693,6 +719,24 @@ def build_server(config: BridgeConfig, state: BridgeState, sync_client: SyncClie
             if not values:
                 return default
             return values[0]
+
+        def _read_json_object(self) -> dict[str, object]:
+            raw_length = self.headers.get("Content-Length", "0").strip()
+            try:
+                content_length = max(0, int(raw_length))
+            except ValueError as error:
+                raise ValueError("invalid content length") from error
+
+            raw = self.rfile.read(content_length) if content_length else b"{}"
+            try:
+                payload = json.loads(raw.decode("utf-8"))
+            except (UnicodeDecodeError, json.JSONDecodeError) as error:
+                raise ValueError("request body must be valid JSON") from error
+
+            if not isinstance(payload, dict):
+                raise ValueError("request body must be a JSON object")
+
+            return payload
 
         def _slug_param(self, params: dict[str, list[str]], name: str, default: str = "") -> str:
             raw = self._param(params, name, default).strip().lower().replace("-", "_")

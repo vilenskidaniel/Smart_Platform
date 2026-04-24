@@ -253,24 +253,205 @@ const char kFallbackSettingsHtml[] PROGMEM = R"HTML(
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Smart Platform / Settings</title>
   <style>
-    body { font-family: "Segoe UI", sans-serif; margin: 0; background: #f3f7f1; color: #1f2d23; }
-    .wrap { max-width: 980px; margin: 0 auto; padding: 32px 18px; }
-    .card { background: #ffffff; border-radius: 20px; padding: 22px; box-shadow: 0 12px 28px rgba(24, 38, 29, 0.08); }
-    h1 { margin-top: 0; }
-    a { color: #315d42; }
-    pre { background: #18221b; color: #e7f4e7; padding: 14px; border-radius: 16px; overflow: auto; }
+        :root {
+            --bg: #e0e7df;
+            --panel: #ffffff;
+            --ink: #1f2d23;
+            --muted: #667568;
+            --line: rgba(49, 83, 59, 0.12);
+            --accent: #2e5b42;
+            --shadow: 0 18px 40px rgba(24, 38, 29, 0.1);
+            --radius: 24px;
+            --radius-sm: 18px;
+        }
+        body {
+            font-family: "Segoe UI", sans-serif;
+            margin: 0;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at top left, rgba(65, 101, 76, 0.12), transparent 30%),
+                linear-gradient(180deg, #f6faf5 0%, var(--bg) 100%);
+        }
+        .page { max-width: 1320px; margin: 0 auto; padding: 26px 16px 48px; display: grid; gap: 16px; }
+        .hero,
+        .rail,
+        .card {
+            background: rgba(255, 255, 255, 0.94);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+        .hero {
+            padding: 24px;
+            background: linear-gradient(135deg, rgba(34, 67, 49, 0.98), rgba(72, 108, 81, 0.94));
+            color: #f3fbf2;
+        }
+        .eyebrow {
+            margin: 0 0 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            font-size: 12px;
+            font-weight: 800;
+            color: rgba(243, 251, 242, 0.74);
+        }
+        h1,
+        h2,
+        h3,
+        p { margin: 0; }
+        h1 { font-size: clamp(34px, 6vw, 52px); line-height: 0.96; }
+        .hero p + p { margin-top: 10px; }
+        .hero-copy { max-width: 840px; color: rgba(243, 251, 242, 0.84); line-height: 1.55; }
+        .actions,
+        .chips { display: flex; flex-wrap: wrap; gap: 10px; }
+        .actions { margin-top: 16px; }
+        .actions a,
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            min-height: 38px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            text-decoration: none;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            background: rgba(255, 255, 255, 0.08);
+            color: inherit;
+            font-size: 13px;
+        }
+        .layout { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 16px; align-items: start; }
+        .rail { padding: 18px; position: sticky; top: 16px; display: grid; gap: 10px; }
+        .rail a {
+            display: block;
+            padding: 12px 14px;
+            border-radius: 16px;
+            text-decoration: none;
+            color: var(--ink);
+            border: 1px solid var(--line);
+            background: #f7faf6;
+            font-size: 14px;
+        }
+        .stack { display: grid; gap: 16px; }
+        .card { padding: 18px; display: grid; gap: 12px; }
+        .card p,
+        .card li { color: var(--muted); line-height: 1.55; }
+        .card ul { margin: 0; padding-left: 18px; display: grid; gap: 8px; }
+        .card pre {
+            margin: 0;
+            padding: 14px;
+            border-radius: var(--radius-sm);
+            background: #17211a;
+            color: #e7f4e7;
+            overflow: auto;
+            font: 12px/1.5 "Consolas", monospace;
+        }
+        .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+        .note {
+            padding: 12px 14px;
+            border-radius: var(--radius-sm);
+            background: rgba(46, 91, 66, 0.08);
+            border: 1px solid rgba(46, 91, 66, 0.12);
+            color: var(--muted);
+        }
+        @media (max-width: 920px) {
+            .layout,
+            .grid { grid-template-columns: 1fr; }
+            .rail { position: static; }
+        }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="card">
-      <h1>Settings</h1>
-      <p>Settings page is not loaded from <code>LittleFS</code> yet, so the firmware fallback screen is shown.</p>
-      <pre>/settings
-/settings#diagnostics
+    <div class="page">
+        <section class="hero">
+            <p class="eyebrow">Fallback Surface</p>
+            <h1>Settings</h1>
+            <p class="hero-copy">LittleFS did not provide the full Settings page, so this firmware fallback keeps the agreed hierarchy visible instead of dropping back to a flat placeholder. The live APIs are still available, but the richer desktop-first and mobile-adjusted surface needs the packaged web assets.</p>
+            <div class="chips">
+                <span class="chip">Overview</span>
+                <span class="chip">Bar</span>
+                <span class="chip">Sync</span>
+                <span class="chip">Policies</span>
+                <span class="chip">Modules</span>
+                <span class="chip">Diagnostics</span>
+            </div>
+            <div class="actions">
+                <a href="/">Return to shell</a>
+                <a href="/gallery?tab=reports">Open Reports</a>
+                <a href="/api/v1/settings">Settings API</a>
+            </div>
+        </section>
+
+        <div class="layout">
+            <nav class="rail">
+                <a href="#overview">Overview</a>
+                <a href="#bar">Bar</a>
+                <a href="#interface">Interface</a>
+                <a href="#sync">Synchronization</a>
+                <a href="#policies">Policies</a>
+                <a href="#modules">Modules</a>
+                <a href="#style">Style</a>
+                <a href="#diagnostics">Diagnostics</a>
+            </nav>
+
+            <main class="stack">
+                <section class="card" id="overview">
+                    <h2>Overview</h2>
+                    <p>The full Settings UI is missing from LittleFS, but the firmware fallback still preserves the product hierarchy: persistent shell intent, owner-aware module baselines, and a hard line between Laboratory experiments and durable product policy.</p>
+                    <div class="grid">
+                        <div class="card">
+                            <h3>Live APIs</h3>
+                            <pre>/api/v1/settings
 /api/v1/shell/snapshot
-/api/v1/content/status</pre>
-      <p><a href="/">Return to shell</a></p>
+/api/v1/content/status
+/api/v1/sync/state</pre>
+                        </div>
+                        <div class="card">
+                            <h3>Fallback Rules</h3>
+                            <ul>
+                                <li>Do not hide blocked or unsupported settings.</li>
+                                <li>Keep Laboratory presets separate until explicit promotion.</li>
+                                <li>Keep owner-aware routing honest.</li>
+                                <li>Use Gallery and Reports as the evidence path.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="card" id="bar">
+                    <h2>Bar</h2>
+                    <p>Saved language, desktop-controls visibility, and fullscreen preference are part of the product-level Settings contract. The packaged LittleFS surface applies them directly; this fallback page only documents the expected hierarchy.</p>
+                    <div class="note">Bar semantics stay above ordinary interface controls because they affect every route in the shell.</div>
+                </section>
+
+                <section class="card" id="interface">
+                    <h2>Interface</h2>
+                    <p>Interface keeps browser-facing shell defaults. It must not pretend Laboratory candidates are already product settings, and it must keep diagnostics available without letting them dominate the page.</p>
+                </section>
+
+                <section class="card" id="sync">
+                    <h2>Synchronization</h2>
+                    <p>Synchronization should read closer to networking settings than to a raw transport console: peer reachability, readiness, and continuity rules first, low-level detail only after that.</p>
+                </section>
+
+                <section class="card" id="policies">
+                    <h2>Policies</h2>
+                    <p>Turret safety and automation rules belong here as durable policy. Unsupported rules stay visible and disabled instead of vanishing.</p>
+                </section>
+
+                <section class="card" id="modules">
+                    <h2>Modules</h2>
+                    <p>Irrigation stays owner-aware. Settings may keep persistent baselines, but it must not impersonate the full owner-side irrigation surface.</p>
+                    <div class="note">Promotion path: Laboratory -&gt; review -&gt; module-facing Settings baseline.</div>
+                </section>
+
+                <section class="card" id="style">
+                    <h2>Style</h2>
+                    <p>Theme and density remain product-level preferences. The richer preview cards live in the packaged page, but the fallback keeps the same section boundaries.</p>
+                </section>
+
+                <section class="card" id="diagnostics">
+                    <h2>Diagnostics</h2>
+                    <p>Diagnostics stay available at the bottom of Settings. This fallback keeps the route discoverable without letting raw payloads consume the whole surface.</p>
+                </section>
+            </main>
     </div>
   </div>
 </body>

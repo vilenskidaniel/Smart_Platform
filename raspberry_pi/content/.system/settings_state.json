@@ -1,0 +1,29 @@
+{
+  "schema_version": "settings.v1",
+  "updated_at_ms": 1776899499238,
+  "interface": {
+    "language": "ru",
+    "desktop_controls_enabled": true,
+    "show_advanced_diagnostics": true
+  },
+  "style": {
+    "theme": "meadow",
+    "density": "compact"
+  },
+  "synchronization": {
+    "preferred_mode": "auto",
+    "prefer_peer_continuity": true
+  },
+  "turret_policies": {
+    "silent_observation": false,
+    "allow_animal_deterrence": true,
+    "allow_auto_water_action": true,
+    "return_to_warm_standby": true,
+    "do_not_target_people": true
+  },
+  "irrigation": {
+    "prefer_driest_zone": true,
+    "block_automatic_during_service": true,
+    "require_sensor_health": true
+  }
+}

@@ -3,9 +3,12 @@
   const HOST_ID = "smart-platform-compact-bar-host";
   const TOOLTIP_ID = "smart-platform-compact-bar-tooltip";
   const STORAGE_KEY = "smart-platform.desktop-controls.enabled";
+  const SETTINGS_CACHE_KEY = "smart-platform.settings.cache";
+  const SETTINGS_LANGUAGE_KEY = "smart-platform.settings.language";
   const VIEWER_STORAGE_KEY = "smart-platform.viewer.id";
   const FULLSCREEN_STORAGE_KEY = "smart-platform.fullscreen.enabled";
   const FULLSCREEN_PENDING_KEY = "smart-platform.fullscreen.pending";
+  const SETTINGS_ENDPOINT = "/api/v1/settings";
   const DEFAULT_TOOLTIP = "Status details are loading.";
   const TOOLTIP_HIDE_MS = 2000;
   const REFRESH_MS = 5000;
@@ -34,6 +37,7 @@
   let fullscreenToggleIntent = null;
   let fullscreenResumeListenersInstalled = false;
   let fullscreenPendingHintPage = "";
+  let barSettings = { language: "", fullscreenEnabled: false, desktopControlsEnabled: desktopControlsEnabled };
 
   function esc(value) {
     return String(value ?? "")
@@ -57,6 +61,84 @@
       window.localStorage.setItem(key, value);
     } catch (_error) {
       return;
+    }
+  }
+
+  function normalizeBarLanguage(value) {
+    const normalized = String(value || "").trim().toLowerCase();
+    return normalized === "en" || normalized === "ru" ? normalized : "";
+  }
+
+  function readCachedSettings() {
+    const raw = readStorage(SETTINGS_CACHE_KEY);
+    if (!raw) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(raw);
+    } catch (_error) {
+      return null;
+    }
+  }
+
+  function boolPreference(value, fallback) {
+    if (typeof value === "boolean") {
+      return value;
+    }
+    if (typeof value === "string") {
+      return ["1", "true", "yes", "on"].includes(value.trim().toLowerCase());
+    }
+    return fallback;
+  }
+
+  function normalizeBarSettings(raw) {
+    const payload = raw && typeof raw === "object" ? raw : {};
+    const interfaceSettings = payload.interface && typeof payload.interface === "object" ? payload.interface : payload;
+    const storedLanguage = normalizeBarLanguage(readStorage(SETTINGS_LANGUAGE_KEY));
+    const storedFullscreen = readStorage(FULLSCREEN_STORAGE_KEY);
+    const storedDesktopControls = readStorage(STORAGE_KEY);
+    return {
+      language: normalizeBarLanguage(interfaceSettings.language) || storedLanguage,
+      fullscreenEnabled: storedFullscreen === null
+        ? boolPreference(interfaceSettings.fullscreen_enabled, fullscreenPreferenceEnabled())
+        : storedFullscreen === "1",
+      desktopControlsEnabled: storedDesktopControls === null
+        ? boolPreference(interfaceSettings.desktop_controls_enabled, desktopControlsEnabled)
+        : storedDesktopControls !== "0"
+    };
+  }
+
+  function preferredLocale() {
+    return barSettings.language || normalizeBarLanguage(readStorage(SETTINGS_LANGUAGE_KEY)) || navigator.language || "en";
+  }
+
+  function applyBarSettings(raw) {
+    barSettings = normalizeBarSettings(raw);
+    desktopControlsEnabled = barSettings.desktopControlsEnabled;
+    writeStorage(STORAGE_KEY, desktopControlsEnabled ? "1" : "0");
+    if (barSettings.language) {
+      writeStorage(SETTINGS_LANGUAGE_KEY, barSettings.language);
+    }
+    setFullscreenPreference(barSettings.fullscreenEnabled);
+    ensureFullscreenPreference();
+    renderBar(currentSnapshot);
+  }
+
+  async function loadBarSettings() {
+    try {
+      const response = await fetch(SETTINGS_ENDPOINT, { cache: "no-store" });
+      if (!response.ok) {
+        throw new Error(`Settings request failed: ${response.status}`);
+      }
+
+      const payload = await response.json();
+      writeStorage(SETTINGS_CACHE_KEY, JSON.stringify(payload));
+      applyBarSettings(payload);
+      return;
+    } catch (_error) {
+      const cached = readCachedSettings();
+      applyBarSettings(cached || {});
     }
   }
 
@@ -777,6 +859,7 @@
   function ensureHost() {
     let host = document.getElementById(HOST_ID);
     if (host) {
+      applyPageOffset(host);
       return host;
     }
 
@@ -792,7 +875,14 @@
 
     document.body.insertBefore(host, document.body.firstChild);
     document.body.setAttribute("data-sp-bar-mounted", "true");
+    applyPageOffset(host);
     return host;
+  }
+
+  function applyPageOffset(host) {
+    const target = host || document.getElementById(HOST_ID);
+    const height = target ? Math.ceil(target.getBoundingClientRect().height || 0) : 0;
+    document.documentElement.style.setProperty("--smart-platform-bar-height", `${Math.max(0, height)}px`);
   }
 
   function ensureTooltip() {
@@ -1256,7 +1346,7 @@
     const current = ((snapshot || {}).nodes || {}).current || {};
     const diagnostics = (((snapshot || {}).summaries || {}).diagnostics || {});
     const syncState = String(diagnostics.sync_state || "unknown");
-    const locale = navigator.language || "en";
+    const locale = preferredLocale();
     const now = new Date();
     const wifiReady = !smokeRuntime && Boolean(current.wifi_ready);
     const syncReady = !smokeRuntime && syncState === "ready";
@@ -1307,23 +1397,23 @@
         value: String(locale).slice(0, 2).toUpperCase(),
         title: "Language",
         state: "neutral",
-        detail: `Current browser locale: ${locale}. Language switching belongs in Settings.`
+        detail: `Current shell locale: ${locale}. Language switching belongs in Settings.`
       },
       {
         id: "system-time",
         icon: "time",
-        value: now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        value: now.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" }),
         title: "Time",
         state: "neutral",
-        detail: "Client local time."
+        detail: `Client local time rendered for ${locale}.`
       },
       {
         id: "system-date",
         icon: "date",
-        value: now.toLocaleDateString([], { month: "short", day: "2-digit" }),
+        value: now.toLocaleDateString(locale, { month: "short", day: "2-digit" }),
         title: "Date",
         state: "neutral",
-        detail: "Client local date."
+        detail: `Client local date rendered for ${locale}.`
       }
     ];
   }
@@ -1613,6 +1703,7 @@
       })();
       bar.dataset.density = density;
       bar.dataset.fit = density === "full" || density === "compact" ? "true" : "false";
+      applyPageOffset(bar.parentElement || undefined);
     });
   }
 
@@ -1646,6 +1737,7 @@
     applyBarLayout(bar, snapshot, density || undefined);
     bindInteractions();
     maybeShowFullscreenRestoreHint();
+    applyPageOffset(bar.parentElement || undefined);
   }
 
   function maybeShowFullscreenRestoreHint() {
@@ -1891,6 +1983,28 @@
       window.addEventListener("pageshow", () => {
         ensureFullscreenPreference();
       });
+
+      window.addEventListener("smart-platform:settings-updated", (event) => {
+        const detail = event instanceof CustomEvent ? event.detail : null;
+        applyBarSettings(detail || {});
+      });
+
+      window.addEventListener("storage", (event) => {
+        if (!event.key || ![STORAGE_KEY, FULLSCREEN_STORAGE_KEY, SETTINGS_LANGUAGE_KEY, SETTINGS_CACHE_KEY].includes(event.key)) {
+          return;
+        }
+
+        if (event.key === SETTINGS_CACHE_KEY && event.newValue) {
+          try {
+            applyBarSettings(JSON.parse(event.newValue));
+            return;
+          } catch (_error) {
+            return;
+          }
+        }
+
+        applyBarSettings(readCachedSettings() || {});
+      });
     }
   }
 
@@ -1984,18 +2098,38 @@
     sendViewerHeartbeat().catch(() => {});
   }
 
-  injectStyles();
-  ensureHost();
-  ensureTooltip();
-  ensureFullscreenPreference();
-  renderBar(currentSnapshot);
-  ensureBatteryWatcher().catch(() => {});
-  ensureViewerHeartbeat();
-  refresh().catch(() => {});
-  setInterval(() => {
-    refresh().catch(() => {});
-  }, REFRESH_MS);
-  setInterval(() => {
+  async function boot() {
+    injectStyles();
+    ensureHost();
+    ensureTooltip();
+    await loadBarSettings();
+    ensureFullscreenPreference();
     renderBar(currentSnapshot);
-  }, CLOCK_MS);
+    ensureBatteryWatcher().catch(() => {});
+    ensureViewerHeartbeat();
+    refresh().catch(() => {});
+    setInterval(() => {
+      refresh().catch(() => {});
+    }, REFRESH_MS);
+    setInterval(() => {
+      renderBar(currentSnapshot);
+    }, CLOCK_MS);
+  }
+
+  boot().catch(() => {
+    injectStyles();
+    ensureHost();
+    ensureTooltip();
+    ensureFullscreenPreference();
+    renderBar(currentSnapshot);
+    ensureBatteryWatcher().catch(() => {});
+    ensureViewerHeartbeat();
+    refresh().catch(() => {});
+    setInterval(() => {
+      refresh().catch(() => {});
+    }, REFRESH_MS);
+    setInterval(() => {
+      renderBar(currentSnapshot);
+    }, CLOCK_MS);
+  });
 })();
