@@ -11,6 +11,8 @@
   const SETTINGS_ENDPOINT = "/api/v1/settings";
   const DEFAULT_TOOLTIP = "Status details are loading.";
   const TOOLTIP_HIDE_MS = 2000;
+  const TOOLTIP_SHOW_DELAY_MS = 500;
+  const TOOLTIP_MOVE_TOLERANCE_PX = 3;
   const REFRESH_MS = 5000;
   const VIEWER_HEARTBEAT_MS = 5000;
   const CLOCK_MS = 30000;
@@ -28,6 +30,10 @@
   let desktopControlsEnabled = readStorage(STORAGE_KEY) !== "0";
   let tooltipPinned = false;
   let tooltipOwnerId = "";
+  let tooltipShowTimer = 0;
+  let tooltipHoverTarget = null;
+  let tooltipPointerX = 0;
+  let tooltipPointerY = 0;
   let tooltipHideTimer = 0;
   let globalListenersInstalled = false;
   let barLayoutFrame = 0;
@@ -153,6 +159,32 @@
     }
   }
 
+  async function persistFullscreenPreference(enabled) {
+    try {
+      const current = await fetch(SETTINGS_ENDPOINT, { cache: "no-store" });
+      const payload = current.ok ? await current.json() : {};
+      const next = {
+        ...(payload && typeof payload === "object" ? payload : {}),
+        interface: {
+          ...(((payload || {}).interface) || {}),
+          fullscreen_enabled: Boolean(enabled)
+        }
+      };
+      const saved = await fetch(SETTINGS_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(next)
+      });
+      const savedPayload = saved.ok ? await saved.json() : next;
+      writeStorage(SETTINGS_CACHE_KEY, JSON.stringify(savedPayload));
+      window.dispatchEvent(new CustomEvent("smart-platform:settings-updated", { detail: savedPayload }));
+    } catch (_error) {
+      window.dispatchEvent(new CustomEvent("smart-platform:fullscreen-updated", {
+        detail: { fullscreen_enabled: Boolean(enabled) }
+      }));
+    }
+  }
+
   function fullscreenNavigationPending() {
     return readStorage(FULLSCREEN_PENDING_KEY) === "1";
   }
@@ -171,6 +203,33 @@
     }
     window.clearTimeout(tooltipHideTimer);
     tooltipHideTimer = 0;
+  }
+
+  function clearTooltipShowTimer() {
+    if (!tooltipShowTimer) {
+      return;
+    }
+    window.clearTimeout(tooltipShowTimer);
+    tooltipShowTimer = 0;
+  }
+
+  function setTooltipPointerOrigin(event) {
+    const isPointerEvent = typeof PointerEvent !== "undefined" && event instanceof PointerEvent;
+    if (!(event instanceof MouseEvent || isPointerEvent)) {
+      return;
+    }
+    tooltipPointerX = event.clientX;
+    tooltipPointerY = event.clientY;
+  }
+
+  function tooltipMovedPastTolerance(event) {
+    const isPointerEvent = typeof PointerEvent !== "undefined" && event instanceof PointerEvent;
+    if (!(event instanceof MouseEvent || isPointerEvent)) {
+      return false;
+    }
+    const dx = Math.abs(event.clientX - tooltipPointerX);
+    const dy = Math.abs(event.clientY - tooltipPointerY);
+    return Math.max(dx, dy) > TOOLTIP_MOVE_TOLERANCE_PX;
   }
 
   async function requestStoredFullscreen() {
@@ -1834,6 +1893,27 @@
     }, TOOLTIP_HIDE_MS);
   }
 
+  function scheduleTooltipShow(target, pinned, event) {
+    if (!(target instanceof HTMLElement)) {
+      return;
+    }
+    if (tooltipPinned && !pinned) {
+      return;
+    }
+    if (tooltipHoverTarget === target && tooltipShowTimer) {
+      return;
+    }
+    clearTooltipShowTimer();
+    setTooltipPointerOrigin(event);
+    tooltipHoverTarget = target;
+    tooltipShowTimer = window.setTimeout(() => {
+      tooltipShowTimer = 0;
+      if (tooltipHoverTarget === target) {
+        showTooltip(target, pinned);
+      }
+    }, pinned ? 0 : TOOLTIP_SHOW_DELAY_MS);
+  }
+
   function showTooltip(target, pinned) {
     const tooltip = ensureTooltip();
     const payload = readTooltipPayload(target);
@@ -1859,10 +1939,12 @@
     if (tooltipPinned && !force) {
       return;
     }
+    clearTooltipShowTimer();
     clearTooltipHideTimer();
     const tooltip = ensureTooltip();
     tooltip.setAttribute("data-visible", "false");
     tooltipOwnerId = "";
+    tooltipHoverTarget = null;
     if (force) {
       tooltipPinned = false;
     }
@@ -1871,7 +1953,15 @@
   function bindInteractions() {
     const tokens = document.querySelectorAll(".sp-token, .sp-control");
     for (const token of tokens) {
-      token.onmouseenter = () => showTooltip(token, tooltipPinned && tooltipOwnerId === (token.getAttribute("data-token-id") || token.getAttribute("data-control-id") || ""));
+      token.onmouseenter = (event) => scheduleTooltipShow(token, tooltipPinned && tooltipOwnerId === (token.getAttribute("data-token-id") || token.getAttribute("data-control-id") || ""), event);
+      token.onmousemove = (event) => {
+        if (!tooltipHoverTarget || tooltipPinned) {
+          return;
+        }
+        if (tooltipMovedPastTolerance(event)) {
+          hideTooltip(true);
+        }
+      };
       token.onfocus = () => showTooltip(token, tooltipPinned && tooltipOwnerId === (token.getAttribute("data-token-id") || token.getAttribute("data-control-id") || ""));
       token.onmouseleave = () => hideTooltip(false);
       token.onblur = () => hideTooltip(false);
@@ -1886,6 +1976,7 @@
           hideTooltip(true);
           return;
         }
+        setTooltipPointerOrigin(event);
         showTooltip(token, true);
       };
     }
@@ -1926,6 +2017,8 @@
           setFullscreenNavigationPending(false);
           fullscreenToggleIntent = null;
         }
+        setFullscreenPreference(Boolean(document.fullscreenElement));
+        persistFullscreenPreference(Boolean(document.fullscreenElement)).catch(() => {});
         renderBar(currentSnapshot);
         const nextToggle = document.querySelector('.sp-control[data-control-id="fullscreen"]');
         if (nextToggle) {

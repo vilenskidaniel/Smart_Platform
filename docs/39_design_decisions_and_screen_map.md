@@ -47,6 +47,10 @@
 - confirmation / warning: modal window;
 - pairing / connecting / handoff: blocking overlay с явным transitional смыслом;
 - long-press tooltip допустим как secondary layer, но не как единственный способ объяснить смысл control.
+- hover tooltip появляется с задержкой около `500 ms`;
+- сдвиг курсора больше чем на `3 px` отменяет или закрывает hover tooltip;
+- повторяющийся helper text не должен одновременно жить под control и в tooltip.
+- выбранный язык применяется ко всему видимому тексту; смешение языков допустимо только для собственных имен, URL, аппаратных названий и устойчивых технических идентификаторов.
 
 ## 1.3. Transition language
 
@@ -361,12 +365,20 @@ Alias-имена той же сущности:
 
 `Settings` фиксируем как одну глобальную страницу с секциями:
 
-- `System`
-- `Synchronization`
-- `Interface`
-- `Turret Policies`
-- `Irrigation`
-- `Style`
+- `Appearance`
+- `Runtime`
+- `Platform Nodes`
+- `Sync`
+- `Storage`
+- `Ownership`
+- `Policies`
+- `Modules`
+- `Diagnostics`
+
+Видимый header страницы короткий: только `Settings` / `Настройки`.
+Status summary остается в bar-панели; внутри `Settings` оно повторяется только
+если дает расширенный контекст или control. Быстрые действия живут в одном
+месте, в нижней части левого меню. `Diagnostics` по умолчанию закрыта.
 
 Именно здесь должны жить:
 
@@ -384,6 +396,8 @@ Alias-имена той же сущности:
 - язык меняется глобально в `Settings`;
 - default language:
   - `EN`
+- выбранный язык применяется ко всем видимым заголовкам, подсказкам, состояниям и действиям;
+- русская локаль не оставляет `host/viewer/runtime/fallback/staged` как обычные пользовательские подписи, если это не технический идентификатор.
 
 Неподдерживаемые правила:
 

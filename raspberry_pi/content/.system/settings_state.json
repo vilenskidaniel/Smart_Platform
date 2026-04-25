@@ -1,6 +1,6 @@
 {
   "schema_version": "settings.v1",
-  "updated_at_ms": 1777121116997,
+  "updated_at_ms": 1777121952263,
   "interface": {
     "language": "ru",
     "desktop_controls_enabled": true,
@@ -16,7 +16,7 @@
     "prefer_peer_continuity": true
   },
   "turret_policies": {
-    "silent_observation": false,
+    "silent_observation": true,
     "allow_animal_deterrence": true,
     "allow_auto_water_action": true,
     "return_to_warm_standby": true,
