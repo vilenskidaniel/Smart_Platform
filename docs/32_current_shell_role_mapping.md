@@ -29,8 +29,8 @@
 | `ShellSnapshotFacade` | `SystemCore::buildSystemSnapshotJson()`, `WebShellServer::buildModulesJson()`, `buildDiagnosticsJson()`, `buildSyncStateJson()`, `StorageManager::buildContentStatusJson()` | `BridgeState::build_system_snapshot()`, `build_platform_log()`, `build_sync_status()`, частично `build_turret_status()` | Есть, но размазано |
 | `ShellNavigationCoordinator` | `WebShellServer::buildFederatedRouteInfoJson()`, `canonicalPathForModuleId()`, часть `handleFederatedHandoffPage()` | `BridgeState::build_module_route_info()`, handoff page в `server.py` | Есть, но смешано с transport |
 | `ShellHomePresenter` | `data/index.html` + fallback `buildIndexHtml()` | `web/index.html` | Есть, но зависит от сырого API |
-| `ShellSettingsPresenter` | Почти отсутствует как отдельная сущность | Почти отсутствует как отдельная сущность | Надо проектировать |
-| `ShellDiagnosticsPresenter` | `handleDiagnostics()` + `buildDiagnosticsJson()` + клиентская логика в shell page | `/api/v1/sync/status`, `build_sync_status()`, часть snapshot в `BridgeState` | Частично есть |
+| `ShellSettingsPresenter` | Почти отсутствует как отдельная сущность | `web/settings.html`, `/api/v1/settings`, `ShellSnapshotFacade`, `SettingsStore`, host path actions | Появился первый рабочий слой |
+| `ShellDiagnosticsPresenter` | `handleDiagnostics()` + `buildDiagnosticsJson()` + клиентская логика в shell page | `ShellSnapshotFacade`, `build_sync_status()`, `/api/v1/sync/state` как service surface | Частично есть |
 | `ShellLogPresenter` | `handleLogs()` + `PlatformEventLog::buildSnapshotJson()` | `/api/v1/logs` + `BridgeState::build_platform_log()` | Есть, но не отделен от log backend |
 | `ShellContentPresenter` | `/content`, `/api/v1/content/status`, fallback `buildContentHtml()` + `data/content/index.html` | `/content`, `/api/v1/content/status`, `web/content.html` | Уже хорошо выделяется |
 | `ShellHttpAdapter` | `WebShellServer` | `server.py` | Есть, но слишком жирный |
@@ -39,7 +39,8 @@
 
 - `ShellLogPresenter` в текущем software baseline остается transitional adapter-слоем;
 - product target viewer для глубокой истории действий теперь фиксируется как `Gallery > Reports`;
-- `ShellContentPresenter` тоже остается service/storage diagnostics surface и не должен считаться user-facing заменой `Gallery`.
+- `ShellContentPresenter` тоже остается service/storage diagnostics surface и не должен считаться user-facing заменой `Gallery`;
+- `ShellSettingsPresenter` должен читать truthful runtime/platform состояние из `GET /api/v1/shell/snapshot`, а persistent preferences из `GET /api/v1/settings`.
 
 ## 3. Что уже выглядит удачно
 

@@ -144,12 +144,14 @@ Storage-модель должна поддерживать ее вкладочн
 
 - `ESP32` отдает shell из `LittleFS`, а heavy-content ищет на `SD`;
 - `Raspberry Pi` отдает heavy-content из локального `content_root`;
-- обе стороны должны уметь отвечать на `GET /api/v1/content/status`;
+- обе стороны должны уметь отдавать storage readiness в `GET /api/v1/shell/snapshot`;
+- `GET /api/v1/content/status` остается прямым service endpoint для глубокой storage-диагностики;
 - reference-схема библиотек зафиксирована в [content_library_contract.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/shared_contracts/content_library_contract.md).
 
 Важно:
 
-- `GET /api/v1/content/status` нужен для service/storage диагностики;
+- `Settings` не собирает основную картину из `GET /api/v1/content/status`, а читает `snapshot.storage`;
+- прямой `GET /api/v1/content/status` нужен для service/storage диагностики;
 - этот endpoint не считается заменой user-facing `Gallery`.
 
 ## 7. Что пока остается неполным

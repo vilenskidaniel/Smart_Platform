@@ -1350,7 +1350,10 @@
     const now = new Date();
     const wifiReady = !smokeRuntime && Boolean(current.wifi_ready);
     const syncReady = !smokeRuntime && syncState === "ready";
-    const syncPending = !smokeRuntime && syncState === "pending";
+    const syncPending = !smokeRuntime && (syncState === "pending" || syncState === "never_synced");
+    const syncLocalOnly = !smokeRuntime && syncState === "local_only";
+    const syncRemoteUnavailable = !smokeRuntime && syncState === "remote_unavailable";
+    const syncError = !smokeRuntime && syncState === "error";
 
     return [
       {
@@ -1369,16 +1372,32 @@
       {
         id: "system-sync",
         icon: "sync",
-        iconOptions: { variant: smokeRuntime ? "pending" : syncReady ? "online" : syncPending ? "pending" : "offline" },
+        iconOptions: {
+          variant: smokeRuntime
+            ? "pending"
+            : syncReady
+            ? "online"
+            : syncPending || syncLocalOnly
+            ? "pending"
+            : "offline"
+        },
         value: "",
         title: "Sync",
-        state: smokeRuntime ? "neutral" : syncReady ? "online" : syncPending ? "attention" : "attention",
+        state: smokeRuntime ? "neutral" : syncReady ? "online" : syncError ? "fault" : "attention",
         detail: smokeRuntime
           ? "Smoke runtime keeps sync in preview mode. Real peer readiness must come from hardware-linked owners."
           : syncReady
           ? `Sync stack is ready. Current state: ${syncState}.`
+          : syncLocalOnly
+          ? "Background sync is disabled. This host is currently operating in local-only mode."
+          : syncRemoteUnavailable
+          ? "Base node connectivity is unavailable because the remote node is offline."
           : syncPending
-          ? "Peer link is visible, but sync is still pending."
+          ? syncState === "never_synced"
+            ? "Sync is enabled, but the first successful exchange has not completed yet."
+            : "Peer link is visible, but sync is still pending."
+          : syncError
+          ? `Sync reported an error. Current state: ${syncState}.`
           : `Sync is not ready. Current state: ${syncState}.`
       },
       {

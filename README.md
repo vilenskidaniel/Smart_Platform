@@ -32,7 +32,9 @@
 
 Важно:
 
-- `logs`, `settings`, `diagnostics`, `sync` — это platform services;
+- `logs`, `diagnostics`, `sync` — это platform services;
+- `Settings` не выделяется в отдельный product block, но остается обязательной persistent platform-page:
+  здесь пользователь видит truthful platform state, shared preferences, storage/sync semantics и policy baselines;
 - `camera_stack`, `driver layer`, `water path`, `sensor pack` — внутренние технические слои;
 - внутреннее stage-name `Service/Test v1` можно сохранять в roadmap, но user-facing имя страницы фиксируется как `Laboratory`.
 

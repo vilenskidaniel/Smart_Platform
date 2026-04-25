@@ -3,7 +3,7 @@ from __future__ import annotations
 from copy import deepcopy
 from pathlib import Path
 from threading import RLock
-from time import monotonic
+from time import monotonic, time
 from typing import Any
 
 from laboratory_session import LaboratorySessionState
@@ -121,6 +121,9 @@ class BridgeState:
 
     def _uptime_ms(self) -> int:
         return int((monotonic() - self._boot_time) * 1000)
+
+    def _now_ms(self) -> int:
+        return int(time() * 1000)
 
     def _seed_default_modules(self) -> None:
         # Каркас модулей должен повторять общую карту платформы.
@@ -315,6 +318,8 @@ class BridgeState:
         return routes.get(module_id, "/")
 
     def _owner_available(self, module: dict[str, Any]) -> bool:
+        if module["owner"] == "shared":
+            return True
         if module["owner"] == "esp32":
             return bool(
                 self._peer_node["reachable"]
@@ -325,6 +330,8 @@ class BridgeState:
         return True
 
     def _owner_node_id(self, module: dict[str, Any]) -> str:
+        if module["owner"] == "shared":
+            return ""
         if module["owner"] == "esp32":
             return str(self._peer_node["node_id"])
         return str(self._local_node["node_id"])
@@ -389,6 +396,7 @@ class BridgeState:
         with self._lock:
             self._local_node["uptime_ms"] = self._uptime_ms()
             self._local_node["reported_mode"] = self._active_mode
+            self._local_node["last_seen_ms"] = self._now_ms()
             return {
                 "ui_shell_version": self._shell_version,
                 "active_mode": self._active_mode,
@@ -705,9 +713,97 @@ class BridgeState:
             self._refresh_runtime_state()
             return result
 
+    def _sync_state_value(self) -> str:
+        enabled = bool(self._sync_status.get("enabled"))
+        peer_reachable = bool(self._peer_node.get("reachable"))
+        peer_sync_ready = bool(self._peer_node.get("sync_ready"))
+        last_sync_ms = int(self._sync_status.get("last_sync_ms", 0) or 0)
+        last_error = str(self._sync_status.get("last_error", "") or "").strip()
+        last_push_ok = bool(self._sync_status.get("last_push_ok"))
+
+        if not enabled:
+            return "local_only"
+        if not peer_reachable:
+            return "remote_unavailable"
+        if peer_reachable and not last_sync_ms:
+            return "never_synced"
+        if peer_sync_ready and last_push_ok:
+            return "ready"
+        if last_error:
+            return "error"
+        return "pending"
+
+    def _sync_summary(self, state_value: str) -> str:
+        if state_value == "local_only":
+            return "Background sync is disabled. This host is currently operating in local-only mode."
+        if state_value == "remote_unavailable":
+            return "Base node connectivity is unavailable because the remote node is offline."
+        if state_value == "never_synced":
+            return "Sync is enabled, but the first successful exchange has not completed yet."
+        if state_value == "ready":
+            return "Background sync is ready and the remote node is reachable."
+        if state_value == "error":
+            return "Background sync reported an error during the last exchange."
+        return "Background sync is enabled, but the remote node is still pending."
+
+    def _sync_domains(self, state_value: str) -> list[dict[str, Any]]:
+        def domain_state(enabled: bool) -> str:
+            if not enabled:
+                return "local_only"
+            if state_value in {"remote_unavailable", "never_synced", "pending", "ready", "error"}:
+                return state_value
+            return "local_only"
+
+        transport_enabled = bool(self._sync_status.get("enabled"))
+        transport_state = domain_state(transport_enabled)
+        return [
+            {
+                "id": "service_link",
+                "title": "Service Link",
+                "enabled": transport_enabled,
+                "state": transport_state,
+                "summary": "Heartbeat and base node connectivity between platform owners.",
+            },
+            {
+                "id": "module_state",
+                "title": "Module State",
+                "enabled": transport_enabled,
+                "state": transport_state,
+                "summary": "Owner-side module availability and route summaries.",
+            },
+            {
+                "id": "reports_history",
+                "title": "Reports And Logs",
+                "enabled": transport_enabled,
+                "state": transport_state,
+                "summary": "Platform log mirroring and Gallery > Reports continuity.",
+            },
+            {
+                "id": "shared_preferences",
+                "title": "Shared Preferences",
+                "enabled": False,
+                "state": "local_only",
+                "summary": "Preferences are currently stored per host. Cross-node preference sync is not enabled.",
+            },
+            {
+                "id": "media_content",
+                "title": "Media And Content",
+                "enabled": False,
+                "state": "local_only",
+                "summary": "Heavy media/content mirroring is not enabled in this runtime yet.",
+            },
+        ]
+
     def build_sync_status(self) -> dict[str, Any]:
         with self._lock:
-            return deepcopy(self._sync_status)
+            payload = deepcopy(self._sync_status)
+            state_value = self._sync_state_value()
+            payload["peer_reachable"] = bool(self._peer_node.get("reachable"))
+            payload["peer_sync_ready"] = bool(self._peer_node.get("sync_ready"))
+            payload["state"] = state_value
+            payload["summary"] = self._sync_summary(state_value)
+            payload["domains"] = self._sync_domains(state_value)
+            return payload
 
     def set_sync_enabled(self, enabled: bool) -> None:
         with self._lock:
@@ -792,7 +888,7 @@ class BridgeState:
 
     def apply_esp32_snapshot(self, snapshot: dict[str, Any]) -> None:
         with self._lock:
-            now_ms = self._uptime_ms()
+            now_ms = self._now_ms()
             local = snapshot.get("local_node", {})
             if local:
                 self._peer_node["node_id"] = local.get("node_id", self._peer_node["node_id"])
@@ -852,7 +948,7 @@ class BridgeState:
             self._peer_node["reported_mode"] = "manual"
             self._sync_status["last_push_ok"] = False
             self._sync_status["last_error"] = error_text
-            self._sync_status["last_sync_ms"] = self._uptime_ms()
+            self._sync_status["last_sync_ms"] = self._now_ms()
             self._modules["sync_core"]["state"] = "degraded"
             self._modules["sync_core"]["block_reason"] = "owner_unavailable"
 

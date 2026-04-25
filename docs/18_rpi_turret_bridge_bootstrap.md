@@ -83,12 +83,18 @@
 ### API
 
 - `/api/v1/system`
+- `/api/v1/shell/snapshot`
 - `/api/v1/modules`
 - `/api/v1/turret/status`
 - `/api/v1/turret/mode`
 - `/api/v1/turret/module`
-- `/api/v1/sync/status`
-- `/api/v1/sync/refresh`
+- `/api/v1/settings`
+- `/api/v1/sync/state`
+
+Важно: `/api/v1/shell/snapshot` является главным shell-level контрактом для
+`Settings`, `Home` и bar-level summaries. Sync/content endpoint остаются
+service/backend surfaces и не должны заново становиться основным источником
+смысла для страницы настроек.
 
 ## Что дальше
 

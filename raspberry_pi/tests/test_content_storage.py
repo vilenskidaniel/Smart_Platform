@@ -20,10 +20,17 @@ class ContentStorageTests(unittest.TestCase):
 
         self.assertEqual("filesystem", status["storage"])
         self.assertTrue(status["content_root_exists"])
+        self.assertEqual("ready", status["content_root_state"])
         self.assertTrue(status["assets_ready"])
         self.assertTrue(status["audio_ready"])
         self.assertTrue(status["animations_ready"])
         self.assertTrue(status["libraries_ready"])
+        self.assertIn("paths", status)
+        self.assertEqual(
+            ["content_root", "gallery_reports", "assets", "audio", "animations", "libraries"],
+            [entry["id"] for entry in status["paths"]],
+        )
+        self.assertTrue(all("file_count" in entry for entry in status["paths"]))
 
     def test_reference_library_files_are_valid_json(self) -> None:
         library_root = PROJECT_ROOT / "content" / "libraries"

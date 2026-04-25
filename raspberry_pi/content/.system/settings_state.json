@@ -1,6 +1,6 @@
 {
   "schema_version": "settings.v1",
-  "updated_at_ms": 1777069059720,
+  "updated_at_ms": 1777121116997,
   "interface": {
     "language": "ru",
     "desktop_controls_enabled": true,
@@ -9,7 +9,7 @@
   },
   "style": {
     "theme": "meadow",
-    "density": "compact"
+    "density": "comfortable"
   },
   "synchronization": {
     "preferred_mode": "auto",

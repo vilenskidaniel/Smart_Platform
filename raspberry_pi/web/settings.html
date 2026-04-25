@@ -29,8 +29,8 @@
       --fault: #a43a3a;
       --fault-soft: rgba(164, 58, 58, 0.14);
       --shadow: 0 24px 54px rgba(21, 33, 25, 0.12);
-      --radius: 28px;
-      --radius-sm: 20px;
+      --radius: 14px;
+      --radius-sm: 10px;
       --display: "Bahnschrift SemiCondensed", "Arial Narrow", "Trebuchet MS", sans-serif;
       --sans: "Segoe UI Variable Text", "Segoe UI", "Trebuchet MS", sans-serif;
       --mono: "Consolas", "SFMono-Regular", monospace;
@@ -106,7 +106,7 @@
 
     body {
       margin: 0;
-      min-height: 100vh;
+      height: 100vh;
       font-family: var(--sans);
       color: var(--ink);
       background:
@@ -114,6 +114,7 @@
         radial-gradient(circle at right center, color-mix(in srgb, var(--accent-soft) 58%, transparent), transparent 28%),
         linear-gradient(180deg, color-mix(in srgb, var(--panel-strong) 68%, white) 0%, var(--bg) 100%);
       transition: background 180ms ease, color 180ms ease;
+      overflow: hidden;
     }
 
     body::before {
@@ -142,8 +143,7 @@
       max-width: 1460px;
       margin: 0 auto;
       height: 100vh;
-      min-height: 100vh;
-      padding: calc(var(--shell-safe-top) + 8px) 18px 24px;
+      padding: var(--shell-safe-top) 18px 18px;
       display: grid;
       grid-template-rows: auto minmax(0, 1fr);
       gap: var(--page-gap);
@@ -158,7 +158,7 @@
     }
 
     .hero {
-      padding: 6px 2px 0;
+      padding: 0 2px;
       background: transparent;
       border: 0;
       box-shadow: none;
@@ -166,21 +166,18 @@
       color: var(--ink);
     }
 
-    .hero::after {
-      display: none;
-    }
-
     .hero-head {
       display: flex;
       justify-content: space-between;
-      gap: 20px;
+      gap: 12px;
       flex-wrap: wrap;
       align-items: flex-start;
     }
 
     .hero-copy {
-      display: block;
-      max-width: none;
+      max-width: 980px;
+      display: grid;
+      gap: 4px;
     }
 
     .hero-kicker,
@@ -192,20 +189,30 @@
       font-weight: 800;
       letter-spacing: 0.14em;
       text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .hero-kicker,
+    .section-kicker,
+    .panel-kicker,
+    .metric-kicker,
+    .rail-kicker {
+      display: none;
     }
 
     .hero h1,
     .section-title,
     .rail-title,
-    .metric-title {
+    .metric-title,
+    .panel-title {
       margin: 0;
       font-family: var(--display);
       letter-spacing: -0.03em;
     }
 
     .hero h1 {
-      font-size: clamp(38px, 5.4vw, 60px);
-      line-height: 0.92;
+      font-size: clamp(30px, 3vw, 42px);
+      line-height: 1;
     }
 
     .hero p,
@@ -217,10 +224,7 @@
     .detail-copy {
       margin: 0;
       line-height: 1.55;
-    }
-
-    .hero p {
-      display: none;
+      color: var(--muted);
     }
 
     .hero-pills,
@@ -229,7 +233,9 @@
     .option-row,
     .action-row,
     .rail-actions,
-    .status-row {
+    .status-row,
+    .button-row,
+    .path-actions {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
@@ -249,17 +255,6 @@
       line-height: 1;
       text-decoration: none;
       border: 1px solid var(--line);
-    }
-
-    .pill,
-    .hero-link {
-      border-color: rgba(255, 255, 255, 0.16);
-      background: rgba(255, 255, 255, 0.08);
-      color: inherit;
-    }
-
-    .status-chip,
-    .inline-chip {
       background: var(--panel-soft);
       color: var(--muted);
     }
@@ -294,6 +289,7 @@
       gap: var(--page-gap);
       align-items: stretch;
       min-height: 0;
+      height: 100%;
       overflow: hidden;
     }
 
@@ -301,21 +297,25 @@
     .section-panel,
     .detail-card,
     .metric-card,
-    .perk-card,
+    .path-card,
+    .node-card,
+    .ownership-card,
+    .module-card,
+    .note-card,
     .theme-card,
-    .empty-state,
-    .candidate-card {
+    .empty-state {
       background: linear-gradient(180deg, color-mix(in srgb, var(--panel-strong) 86%, white), color-mix(in srgb, var(--panel-strong) 92%, var(--bg)));
     }
 
     .settings-rail {
       position: sticky;
-      top: var(--shell-safe-top);
+      top: 0;
       padding: var(--section-pad);
       display: grid;
       gap: 14px;
       min-height: 0;
-      max-height: 100%;
+      height: 100%;
+      max-height: none;
       overflow: auto;
       overscroll-behavior: contain;
       scrollbar-gutter: stable;
@@ -333,11 +333,6 @@
     .rail-title {
       font-size: 26px;
       line-height: 0.98;
-    }
-
-    .rail-copy {
-      color: var(--muted);
-      font-size: 14px;
     }
 
     .search-shell {
@@ -401,7 +396,9 @@
     }
 
     .rail-button span {
-      display: none;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
     }
 
     .action-button,
@@ -432,12 +429,21 @@
       outline: none;
     }
 
+    .action-button.is-disabled,
+    .ghost-button.is-disabled {
+      opacity: 0.62;
+      cursor: help;
+      transform: none;
+      box-shadow: none;
+    }
+
     .settings-detail {
       min-width: 0;
       display: grid;
       gap: var(--page-gap);
       min-height: 0;
-      max-height: 100%;
+      height: 100%;
+      max-height: none;
       overflow: auto;
       overscroll-behavior: contain;
       padding-right: 4px;
@@ -448,7 +454,7 @@
       padding: var(--section-pad);
       display: grid;
       gap: 16px;
-      scroll-margin-top: calc(var(--shell-safe-top) + 12px);
+      scroll-margin-top: 12px;
     }
 
     .section-head {
@@ -459,40 +465,18 @@
       flex-wrap: wrap;
     }
 
-    .section-kicker,
-    .panel-kicker,
-    .metric-kicker,
-    .rail-kicker {
-      color: var(--accent);
-    }
-
     .section-title {
       font-size: clamp(28px, 4vw, 40px);
       line-height: 0.98;
     }
 
-    .section-copy,
-    .detail-copy,
-    .metric-copy,
-    .section-note,
-    .muted {
-      color: var(--muted);
-    }
-
-    .section-stack,
-    .detail-stack,
-    .toggle-list,
-    .info-stack,
-    .diagnostics-stack {
-      display: grid;
-      gap: 12px;
-    }
-
     .overview-grid,
     .detail-grid,
-    .perk-grid,
-    .theme-grid,
-    .sync-grid {
+    .path-grid,
+    .node-grid,
+    .ownership-grid,
+    .module-grid,
+    .theme-grid {
       display: grid;
       gap: 12px;
     }
@@ -502,12 +486,14 @@
     }
 
     .detail-grid,
-    .theme-grid,
-    .sync-grid {
+    .path-grid,
+    .ownership-grid,
+    .module-grid,
+    .theme-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .perk-grid {
+    .node-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
@@ -515,7 +501,7 @@
       grid-column: span 3;
       padding: 16px;
       border: 1px solid var(--line);
-      border-radius: 22px;
+      border-radius: 10px;
       display: grid;
       gap: 10px;
     }
@@ -524,15 +510,27 @@
       grid-column: span 6;
     }
 
-    .metric-card[data-tone="ok"] {
+    .metric-card[data-tone="ok"],
+    .node-card[data-tone="ok"],
+    .path-card[data-tone="ok"],
+    .ownership-card[data-tone="ok"],
+    .module-card[data-tone="ok"] {
       border-color: color-mix(in srgb, var(--ok) 22%, transparent);
     }
 
-    .metric-card[data-tone="warn"] {
+    .metric-card[data-tone="warn"],
+    .node-card[data-tone="warn"],
+    .path-card[data-tone="warn"],
+    .ownership-card[data-tone="warn"],
+    .module-card[data-tone="warn"] {
       border-color: color-mix(in srgb, var(--warn) 22%, transparent);
     }
 
-    .metric-card[data-tone="fault"] {
+    .metric-card[data-tone="fault"],
+    .node-card[data-tone="fault"],
+    .path-card[data-tone="fault"],
+    .ownership-card[data-tone="fault"],
+    .module-card[data-tone="fault"] {
       border-color: color-mix(in srgb, var(--fault) 22%, transparent);
     }
 
@@ -542,13 +540,20 @@
     }
 
     .metric-stack,
-    .info-stack {
+    .info-stack,
+    .status-list,
+    .module-list,
+    .ownership-list,
+    .note-stack,
+    .diagnostics-stack {
       display: grid;
       gap: 10px;
     }
 
     .metric-row,
-    .info-row {
+    .info-row,
+    .status-row-item,
+    .ownership-row {
       display: flex;
       justify-content: space-between;
       gap: 12px;
@@ -559,31 +564,42 @@
     }
 
     .metric-row:first-child,
-    .info-row:first-child {
+    .info-row:first-child,
+    .status-row-item:first-child,
+    .ownership-row:first-child {
       padding-top: 0;
       border-top: 0;
     }
 
     .metric-row strong,
-    .info-row strong {
+    .info-row strong,
+    .status-row-item strong,
+    .ownership-row strong {
       color: var(--ink);
     }
 
     .metric-row span:last-child,
-    .info-row span:last-child {
+    .info-row span:last-child,
+    .status-row-item span:last-child,
+    .ownership-row span:last-child {
       text-align: right;
       color: var(--ink);
       min-width: 0;
-      max-width: 62%;
+      max-width: 64%;
       overflow-wrap: anywhere;
       word-break: break-word;
     }
 
     .detail-card,
-    .candidate-card {
+    .path-card,
+    .node-card,
+    .ownership-card,
+    .module-card,
+    .note-card,
+    .empty-state {
       padding: 16px;
       border: 1px solid var(--line);
-      border-radius: 22px;
+      border-radius: 10px;
       display: grid;
       gap: 12px;
     }
@@ -597,11 +613,9 @@
     }
 
     .panel-title {
-      margin: 0;
-      font-size: 22px;
+      font-size: 20px;
       line-height: 1.04;
-      letter-spacing: -0.02em;
-      font-family: var(--display);
+      letter-spacing: 0;
     }
 
     .toggle {
@@ -617,11 +631,12 @@
 
     .toggle.is-disabled {
       opacity: 0.72;
+      cursor: help;
     }
 
     .toggle-copy {
       display: grid;
-      gap: 0;
+      gap: 2px;
     }
 
     .toggle-copy strong {
@@ -705,10 +720,6 @@
       background: color-mix(in srgb, var(--accent) 11%, white);
     }
 
-    .theme-grid {
-      align-items: stretch;
-    }
-
     .theme-card {
       min-height: 148px;
       border-radius: 22px;
@@ -716,7 +727,7 @@
       padding: 16px;
       cursor: pointer;
       display: grid;
-      gap: 12px;
+      gap: 10px;
       transition: transform 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
     }
 
@@ -739,20 +750,6 @@
       box-shadow: 0 14px 24px rgba(19, 31, 23, 0.08);
     }
 
-    .status-chip[title],
-    .inline-chip[title],
-    .rail-button[title],
-    .metric-card[title],
-    .detail-card[title],
-    .candidate-card[title],
-    .toggle[title],
-    .action-button[title],
-    .ghost-button[title],
-    .theme-card[title],
-    .search-input[title] {
-      cursor: help;
-    }
-
     .theme-option input:checked + .theme-card {
       border-color: color-mix(in srgb, var(--accent) 42%, transparent);
       box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 20%, transparent);
@@ -763,6 +760,11 @@
       font-size: 24px;
       line-height: 1;
       margin: 0;
+      letter-spacing: 0;
+    }
+
+    .theme-card .detail-copy {
+      display: none;
     }
 
     .theme-swatch-row {
@@ -781,116 +783,119 @@
     .theme-card[data-theme-preview="meadow"] .theme-swatch:nth-child(2) { background: #588062; }
     .theme-card[data-theme-preview="meadow"] .theme-swatch:nth-child(3) { background: #dce5dd; }
     .theme-card[data-theme-preview="dawn"] .theme-swatch:nth-child(1) { background: #7e4f21; }
-    .theme-card[data-theme-preview="dawn"] .theme-swatch:nth-child(2) { background: #c28e4e; }
-    .theme-card[data-theme-preview="dawn"] .theme-swatch:nth-child(3) { background: #f2e6d8; }
-    .theme-card[data-theme-preview="studio"] .theme-swatch:nth-child(1) { background: #254556; }
-    .theme-card[data-theme-preview="studio"] .theme-swatch:nth-child(2) { background: #69859a; }
-    .theme-card[data-theme-preview="studio"] .theme-swatch:nth-child(3) { background: #e1e8ec; }
+    .theme-card[data-theme-preview="dawn"] .theme-swatch:nth-child(2) { background: #c08546; }
+    .theme-card[data-theme-preview="dawn"] .theme-swatch:nth-child(3) { background: #e7ddd1; }
+    .theme-card[data-theme-preview="studio"] .theme-swatch:nth-child(1) { background: #2a475d; }
+    .theme-card[data-theme-preview="studio"] .theme-swatch:nth-child(2) { background: #7090a6; }
+    .theme-card[data-theme-preview="studio"] .theme-swatch:nth-child(3) { background: #dce2e7; }
 
-    .perk-grid {
-      align-items: stretch;
+    .path-value,
+    .mono-value,
+    .code-block {
+      font-family: var(--mono);
     }
 
-    .perk-card {
+    .path-value {
+      color: var(--ink);
+      font-size: 13px;
+      line-height: 1.55;
+      overflow-wrap: anywhere;
+    }
+
+    .module-pill-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .module-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 34px;
+      padding: 8px 12px;
+      border-radius: 999px;
       border: 1px solid var(--line);
-      border-radius: 22px;
-      padding: 16px;
-      display: grid;
-      gap: 14px;
+      background: var(--panel-soft);
+      color: var(--ink);
+      font-size: 13px;
     }
 
-    .perk-card.is-disabled {
-      opacity: 0.76;
-    }
-
-    .perk-copy {
-      display: grid;
-      gap: 6px;
-    }
-
-    .perk-title {
-      margin: 0;
-      font-size: 22px;
-      font-family: var(--display);
-      line-height: 1.02;
-      letter-spacing: -0.02em;
-    }
-
-    .perk-copy p {
-      margin: 0;
+    .note-box {
+      padding: 12px 14px;
+      border-radius: 18px;
+      border: 1px dashed color-mix(in srgb, var(--line-strong) 82%, transparent);
+      background: color-mix(in srgb, var(--panel-soft) 78%, white);
       color: var(--muted);
       line-height: 1.5;
       font-size: 14px;
     }
 
-    .perk-toggle {
-      margin-top: auto;
-    }
-
-    details {
+    .readonly-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 12px 14px;
       border: 1px solid var(--line);
       border-radius: 18px;
       background: var(--panel-soft);
-      overflow: hidden;
+      color: var(--ink);
+      font-size: 14px;
     }
 
-    summary {
-      cursor: pointer;
-      padding: 12px 14px;
-      font-weight: 700;
-      list-style: none;
-    }
-
-    summary::-webkit-details-marker {
-      display: none;
-    }
-
-    .code-block {
-      margin: 0;
-      padding: 0 14px 14px;
-      white-space: pre-wrap;
-      overflow: auto;
-      font: 12px/1.5 var(--mono);
-      color: #e8f5e8;
-      background: #152019;
-      min-height: 170px;
+    .readonly-row strong {
+      display: block;
+      margin-bottom: 4px;
     }
 
     .empty-state {
-      padding: 28px;
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      display: grid;
-      gap: 12px;
-      text-align: center;
-      place-items: center;
+      padding: 22px;
     }
 
     .empty-state h2 {
-      margin: 0;
-      font-family: var(--display);
-      font-size: 34px;
-      line-height: 1;
+      margin: 0 0 8px;
+      font-size: 28px;
+    }
+
+    .diagnostics-details {
+      display: grid;
+      gap: 12px;
+    }
+
+    .diagnostics-details > summary {
+      cursor: pointer;
+      font-weight: 700;
+      color: var(--ink);
+      list-style-position: inside;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--panel-soft);
+    }
+
+    .diagnostics-details[open] > summary {
+      margin-bottom: 12px;
     }
 
     .toast-stack {
       position: fixed;
       right: 18px;
       bottom: 18px;
-      z-index: 30;
+      z-index: 80;
       display: grid;
       gap: 10px;
-      pointer-events: none;
+      max-width: min(92vw, 340px);
     }
 
     .toast {
-      min-width: min(360px, calc(100vw - 36px));
-      padding: 14px 16px;
       border-radius: 18px;
       border: 1px solid var(--line);
-      background: rgba(249, 252, 246, 0.96);
-      color: var(--ink);
-      box-shadow: 0 18px 36px rgba(18, 30, 22, 0.14);
+      background: color-mix(in srgb, var(--panel-strong) 92%, white);
+      box-shadow: 0 20px 38px rgba(18, 30, 22, 0.14);
+      padding: 14px 16px;
+      display: grid;
+      gap: 4px;
     }
 
     .toast[data-tone="ok"] {
@@ -901,52 +906,139 @@
       border-color: color-mix(in srgb, var(--warn) 22%, transparent);
     }
 
-    .toast strong {
-      display: block;
-      margin-bottom: 4px;
+    .toast[data-tone="fault"] {
+      border-color: color-mix(in srgb, var(--fault) 22%, transparent);
     }
 
-    @media (max-width: 1220px) {
-      .metric-card {
-        grid-column: span 6;
-      }
+    .code-block {
+      margin: 0;
+      padding: 14px;
+      border-radius: 18px;
+      background: #17221a;
+      color: #e8f5e8;
+      overflow: auto;
+      font-size: 12px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .sp-tooltip {
+      position: fixed;
+      z-index: 90;
+      max-width: min(360px, calc(100vw - 24px));
+      padding: 12px 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(45, 93, 67, 0.14);
+      background: rgba(250, 252, 248, 0.98);
+      color: var(--ink);
+      box-shadow: 0 18px 34px rgba(19, 31, 23, 0.14);
+      backdrop-filter: blur(14px);
+      opacity: 0;
+      transform: translateY(6px);
+      pointer-events: none;
+      transition: opacity 140ms ease, transform 140ms ease;
+    }
+
+    .sp-tooltip[data-visible="true"] {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .sp-tooltip-title {
+      display: block;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+
+    .sp-tooltip-subtitle {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .sp-tooltip-description {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .sp-tooltip-body {
+      display: grid;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .sp-tooltip-section {
+      display: grid;
+      gap: 6px;
+    }
+
+    .sp-tooltip-section-title {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .sp-tooltip-table {
+      display: grid;
+      gap: 6px;
+    }
+
+    .sp-tooltip-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .sp-tooltip-row-label {
+      color: var(--muted);
+    }
+
+    .sp-tooltip-row-value {
+      text-align: right;
+      max-width: 58%;
+      overflow-wrap: anywhere;
     }
 
     @media (max-width: 1100px) {
-      .page {
-        height: auto;
-        min-height: 100vh;
-      }
-
       .settings-shell {
-        grid-template-columns: minmax(0, 1fr);
-        overflow: visible;
+        grid-template-columns: 1fr;
+        grid-template-rows: auto minmax(0, 1fr);
       }
 
       .settings-rail {
         position: static;
-        max-height: none;
-        overflow: visible;
-      }
-
-      .rail-nav {
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        height: auto;
+        max-height: min(34vh, 330px);
       }
 
       .settings-detail {
+        height: 100%;
         max-height: none;
-        overflow: visible;
       }
     }
 
     @media (max-width: 860px) {
-      .overview-grid,
       .detail-grid,
-      .perk-grid,
-      .theme-grid,
-      .sync-grid,
-      .rail-nav {
+      .path-grid,
+      .node-grid,
+      .ownership-grid,
+      .module-grid,
+      .theme-grid {
         grid-template-columns: 1fr;
+      }
+
+      .overview-grid {
+        grid-template-columns: repeat(1, minmax(0, 1fr));
       }
 
       .metric-card,
@@ -957,59 +1049,36 @@
 
     @media (max-width: 760px) {
       .page {
-        height: auto;
-        min-height: 100vh;
         padding-inline: 12px;
-        padding-bottom: 42px;
       }
 
-      .hero,
-      .settings-rail,
-      .section-panel,
-      .empty-state,
-      .toast {
-        border-radius: 24px;
-      }
-
-      .hero-head,
       .section-head,
+      .hero-head,
+      .panel-head {
+        align-items: stretch;
+      }
+
       .metric-row,
-      .info-row {
+      .info-row,
+      .status-row-item,
+      .ownership-row,
+      .readonly-row {
         flex-direction: column;
       }
 
       .metric-row span:last-child,
-      .info-row span:last-child {
-        text-align: left;
+      .info-row span:last-child,
+      .status-row-item span:last-child,
+      .ownership-row span:last-child {
         max-width: none;
-      }
-
-      .toggle {
-        grid-template-columns: minmax(0, 1fr);
-      }
-
-      .rail-nav {
-        display: flex;
-        gap: 8px;
-        overflow-x: auto;
-        padding-bottom: 2px;
-      }
-
-      .rail-button {
-        min-width: 220px;
-      }
-
-      .toast-stack {
-        left: 12px;
-        right: 12px;
-        bottom: 12px;
+        text-align: left;
       }
     }
   </style>
 </head>
 <body>
   <div class="page">
-    <section class="card hero" id="hero"></section>
+    <section class="hero" id="hero"></section>
     <div class="settings-shell">
       <aside class="card settings-rail" id="settings-rail"></aside>
       <main class="settings-detail" id="settings-detail"></main>
@@ -1017,528 +1086,539 @@
   </div>
 
   <div class="toast-stack" id="toast-stack" aria-live="polite"></div>
+  <div class="sp-tooltip" id="settings-tooltip" data-visible="false"></div>
 
   <script src="/static/smart_bar.js"></script>
   <script>
-    const SETTINGS_FALLBACK_KEY = 'smart-platform.settings.page';
-    const DESKTOP_CONTROLS_KEY = 'smart-platform.desktop-controls.enabled';
-    const FULLSCREEN_STORAGE_KEY = 'smart-platform.fullscreen.enabled';
-    const SETTINGS_LANGUAGE_KEY = 'smart-platform.settings.language';
+    const SETTINGS_FALLBACK_KEY = "smart-platform.settings.page";
+    const DESKTOP_CONTROLS_KEY = "smart-platform.desktop-controls.enabled";
+    const FULLSCREEN_STORAGE_KEY = "smart-platform.fullscreen.enabled";
+    const SETTINGS_LANGUAGE_KEY = "smart-platform.settings.language";
+    const VIEWER_STORAGE_KEY = "smart-platform.viewer.id";
+    const TOOLTIP_HIDE_MS = 2000;
+    const TOOLTIP_SHOW_DELAY_MS = 500;
+    const TOOLTIP_MOVE_TOLERANCE_PX = 3;
+
     const DEFAULT_SETTINGS = {
-      schema_version: 'settings.v1',
+      schema_version: "settings.v1",
       updated_at_ms: 0,
       interface: {
-        language: 'en',
+        language: "en",
         desktop_controls_enabled: true,
         fullscreen_enabled: false,
-        show_advanced_diagnostics: false,
+        show_advanced_diagnostics: false
       },
       style: {
-        theme: 'meadow',
-        density: 'comfortable',
+        theme: "meadow",
+        density: "comfortable"
       },
       synchronization: {
-        preferred_mode: 'auto',
-        prefer_peer_continuity: true,
+        preferred_mode: "auto",
+        prefer_peer_continuity: true
       },
       turret_policies: {
         silent_observation: true,
         allow_animal_deterrence: true,
         allow_auto_water_action: false,
         return_to_warm_standby: true,
-        do_not_target_people: true,
+        do_not_target_people: true
       },
       irrigation: {
         prefer_driest_zone: true,
         block_automatic_during_service: true,
-        require_sensor_health: true,
-      },
+        require_sensor_health: true
+      }
     };
-    const SECTION_ORDER = ['overview', 'bar', 'interface', 'synchronization', 'policies', 'modules', 'style', 'diagnostics'];
+
+    const SECTION_ORDER = [
+      "appearance",
+      "runtime",
+      "nodes",
+      "sync",
+      "storage",
+      "ownership",
+      "policies",
+      "modules",
+      "diagnostics"
+    ];
+
     const COPY = {
       en: {
-        pageTitle: 'Settings',
-        pageSubtitle: 'Persistent platform choices for synchronization, interface defaults, and policy baselines. Laboratory keeps experiments local; Settings keeps durable operator intent.',
-        savedServer: 'Saved on this shell',
-        savedBrowser: 'Saved in this browser',
-        saving: 'Saving...',
-        storageServer: 'Server-backed persistence',
-        storageBrowser: 'Browser fallback persistence',
-        node: 'Node',
-        peer: 'Peer',
-        backToShell: 'Back To Shell',
-        gallery: 'Gallery',
-        laboratory: 'Laboratory',
-        reports: 'Open Reports',
-        platform: 'Platform',
-        continuity: 'Peer Continuity',
-        storage: 'Storage',
-        persistence: 'Persistence',
-        system: 'System',
-        overview: 'Overview',
-        overviewLead: 'The first pass is about orientation: topology, persistence, shell promises, and what this page is allowed to control.',
-        bar: 'Bar',
-        barLead: 'Top-bar behavior belongs near the top because it changes the feel of every page in the shell.',
-        interface: 'Interface',
-        synchronization: 'Synchronization',
-        turretPolicies: 'Turret Policies',
-        policies: 'Policies',
-        policiesLead: 'Persistent safety and automation intent is visible here as durable product policy, not as temporary lab mood.',
-        irrigation: 'Irrigation',
-        modules: 'Modules',
-        modulesLead: 'Owner-aware module baselines live here without pretending this page is the full module UI.',
-        style: 'Style',
-        diagnostics: 'Diagnostics',
-        systemLead: 'Stable shell contract, ownership map, and route vocabulary.',
-        syncLead: 'Peer reachability and continuity rules stay visible here, not hidden in raw logs.',
-        interfaceLead: 'Browser-facing defaults that the shell can honor without pretending Laboratory presets are product settings.',
-        turretLead: 'Persistent policy baselines. Unsupported rules stay visible and disabled.',
-        irrigationLead: 'Owner-side irrigation baseline stays explicit even when the ESP32 owner is absent.',
-        styleLead: 'Quiet page-level presentation choices stored for the operator.',
-        diagnosticsLead: 'Live payloads stay available, but no longer dominate the page.',
-        searchSettings: 'Search Settings',
-        searchLead: 'Filter the rail and the detail pane together.',
-        searchPlaceholder: 'Filter sections, controls, and notes',
-        searchEmptyTitle: 'No matching settings',
-        searchEmptyBody: 'Clear the filter or use a broader term to bring sections back into view.',
-        clearFilter: 'Clear filter',
-        quickActions: 'Quick Actions',
-        runtimeSummary: 'Runtime Summary',
-        visibleSections: 'Visible sections',
-        systemFrame: 'System Frame',
-        routeVocabulary: 'Route Vocabulary',
-        shellPromise: 'Shell promise',
-        barBehavior: 'Bar Behavior',
-        barPreview: 'Bar Preview',
-        barPendingHint: 'Fullscreen, tooltip depth, and time-date formatting are the next live wiring slice. This pass sets hierarchy and keeps current controls honest.',
-        barLocale: 'Bar locale',
-        barDateTime: 'Time and date',
-        barTooltips: 'Tooltip depth',
-        followsShellLocale: 'Follows shell locale',
-        mediumDetailed: 'Medium detailed',
-        themePreview: 'Theme Preview',
-        surfaceDensity: 'Surface Density',
-        perkLive: 'Live policy',
-        perkDisabled: 'Visible, disabled',
-        moduleStatus: 'Module Status',
-        candidatePath: 'Promotion Path',
-        candidateBody: 'Laboratory candidates do not silently become product settings. Reviewed promotions land here as module-facing baselines.',
-        currentShell: 'Current shell',
-        peerShell: 'Peer shell',
-        ownershipSummary: 'Ownership summary',
-        runtimeProfile: 'Runtime profile',
-        activeMode: 'Active mode',
-        navigationRoutes: 'Navigation routes',
-        reportsPointer: 'Reports pointer',
-        moduleAvailability: 'Module availability',
-        syncEnabled: 'Background sync',
-        syncState: 'Sync state',
-        peerReachability: 'Peer reachability',
-        preferredMode: 'Sync review mode',
-        preferPeerContinuity: 'Prefer peer continuity when the peer is ready',
-        auto: 'Automatic',
-        manualReview: 'Manual review',
-        language: 'Language',
-        fullscreen: 'Fullscreen',
-        enabled: 'Enabled',
-        disabled: 'Disabled',
-        desktopControls: 'Desktop controls in top bar',
-        advancedDiagnostics: 'Show expanded diagnostics',
-        theme: 'Theme',
-        density: 'Density',
-        comfortable: 'Comfortable',
-        compact: 'Compact',
-        meadow: 'Meadow',
-        dawn: 'Dawn',
-        studio: 'Studio',
-        turretSilent: 'Silent observation',
-        turretAnimal: 'Allow animal deterrence',
-        turretWater: 'Allow automatic water action',
-        turretStandby: 'Return to warm standby after target loss',
-        turretPeople: 'Do not target people',
-        turretPeopleHint: 'Visible by design, but not wired into runtime gates yet.',
-        irrigationDriest: 'Prefer driest eligible zone',
-        irrigationServiceBlock: 'Block automatic watering during service/test',
-        irrigationSensorHealth: 'Require healthy sensors for automatic watering',
-        irrigationOwnerState: 'Irrigation owner state',
-        routeMode: 'Route mode',
-        lastSaved: 'Last saved',
-        refreshLiveData: 'Refresh live data',
-        openStorageDiagnostics: 'Open Storage Diagnostics',
-        shellSnapshot: 'Shell snapshot',
-        contentStatus: 'Content status',
-        syncPayload: 'Sync payload',
-        diagnosticsHidden: 'Expanded diagnostics are hidden. Use the interface switch above to expose live payloads.',
-        settingsHint: 'The rest of the shell can adopt these preferences incrementally.',
-        labBoundary: 'Laboratory presets stay separate until explicit review and promotion.',
-        irrigationHint: 'This is a stored baseline for later owner-side apply on ESP32. It is not a fake local irrigation controller.',
-        notYet: 'Not yet',
-        online: 'online',
-        offline: 'offline',
-        degraded: 'degraded',
-        blocked: 'blocked',
-        pending: 'pending',
-        ready: 'ready',
-        localOnly: 'local only',
-        routeLocal: 'Local',
-        routeHandoff: 'Owner handoff',
-        routeBlocked: 'Blocked',
-        routeVirtual: 'Virtual',
-        routeUnknown: 'Unknown',
-        saveFallbackHint: 'Server endpoint unavailable. Preferences were saved locally in this browser.',
+        pageTitle: "Settings",
+        pageLead: "Truthful runtime state, shared preferences, sync semantics, storage paths, and module ownership come together here without pretending a desktop preview is a live hardware owner.",
+        savedOnHost: "Saved on this host",
+        browserFallback: "Browser fallback",
+        savingNow: "Saving...",
+        overview: "Overview",
+        appearance: "Appearance",
+        runtime: "Runtime & Entry",
+        nodes: "Platform Nodes",
+        sync: "Sync",
+        storage: "Storage",
+        ownership: "Ownership",
+        policies: "Policies",
+        modules: "Modules",
+        diagnostics: "Diagnostics",
+        searchSettings: "Search Settings",
+        searchLead: "Filter the rail and the detail pane together.",
+        searchPlaceholder: "Filter sections, labels, and notes",
+        searchEmptyTitle: "No matching settings",
+        searchEmptyBody: "Clear the filter or use a broader term to bring sections back.",
+        clearFilter: "Clear filter",
+        quickActions: "Quick Actions",
+        runtimeSummary: "Runtime Summary",
+        visibleSections: "Visible sections",
+        currentRuntime: "Current Runtime",
+        currentViewer: "Current Viewer",
+        systemStatus: "System Status",
+        platformNodes: "Platform Nodes",
+        syncState: "Sync state",
+        syncDomains: "Sync domains",
+        sharedPreferences: "Shared preferences",
+        moduleOwnership: "Module ownership",
+        moduleRegistry: "Module registry",
+        moduleConstructor: "Module constructor",
+        truthfulState: "Truthful state",
+        interfaceDefaults: "Interface defaults",
+        host: "Host",
+        hostKind: "Host type",
+        viewer: "Viewer",
+        viewerType: "Viewer type",
+        viewerHeartbeat: "Viewer heartbeat",
+        serverStatus: "Server status",
+        serverUrl: "Server URL",
+        runtimeProfile: "Runtime profile",
+        currentPage: "Current page",
+        projectRoot: "Project root",
+        runtimeFolder: "Runtime folder",
+        language: "Language",
+        theme: "Theme",
+        density: "Density",
+        fullscreen: "Fullscreen",
+        desktopControls: "Desktop controls",
+        advancedDiagnostics: "Advanced diagnostics",
+        preferredMode: "Preferred mode",
+        preferPeerContinuity: "Prefer peer continuity",
+        localLaunchBoardsOffline: "Local launch, boards offline",
+        ownerHostPeerOffline: "Owner host online, peer offline",
+        systemReady: "Core shell online",
+        systemDegraded: "System degraded",
+        hostViewerSame: "You are using the same device that currently hosts Smart Platform.",
+        hostViewerDifferent: "Host and viewer are different devices.",
+        liveHeartbeat: "Live heartbeat",
+        browserFallbackHeartbeat: "Local browser fallback",
+        online: "Online",
+        offline: "Offline",
+        degraded: "Degraded",
+        fault: "Fault",
+        unknown: "Unknown",
+        ready: "Ready",
+        pending: "Pending",
+        localOnly: "Local only",
+        remoteUnavailable: "Remote unavailable",
+        neverSynced: "Never synced",
+        missing: "Missing",
+        notConfigured: "Not configured",
+        unavailable: "Unavailable",
+        verifiedLater: "Verification pending",
+        registryModules: "Modules in registry",
+        ownerAvailable: "Owner available",
+        ownerExpected: "Expected owner",
+        role: "Role",
+        lastSeen: "Last seen",
+        uptime: "Uptime",
+        connectivity: "Connectivity",
+        shellReady: "Shell ready",
+        wifiReady: "Wi-Fi ready",
+        syncReady: "Sync ready",
+        componentTruthPending: "Component detection is not published in the shell snapshot yet. This page shows node/module truth first, then component truth when the backend provides it.",
+        componentTruthOffline: "Component verification is pending because this node is offline.",
+        systemNarrative: "The top cards separate backend host, current viewer, physical nodes, sync, and storage so desktop preview never pretends to be Raspberry Pi online.",
+        appearanceLead: "Shared UI preferences are stored once and reflected in Smart Bar and the rest of the shell.",
+        runtimeLead: "Host launch, browser entry, and current viewer stay separated so the page can explain who is running the server and who is looking at it.",
+        nodesLead: "Physical nodes stay visible even when they are offline, and node ownership is separate from live reachability.",
+        syncLead: "Base node connectivity is separate from optional sync domains. A disabled or unavailable remote link should read honestly, not as vague local mode.",
+        storageLead: "Storage diagnostics support the shell, but they do not replace Gallery. Paths stay compact in cards and keep full detail in tooltips.",
+        ownershipLead: "Expected ownership remains visible even when nodes are offline. Shared services do not masquerade as one specific board.",
+        policiesLead: "Persistent turret and irrigation intent lives here. Laboratory experiments stay separate until an explicit apply flow exists.",
+        modulesLead: "Node -> Module -> Component is the target model. The constructor skeleton is visible now, while real registry writes remain staged.",
+        diagnosticsLead: "Raw payloads stay available for engineering work without dominating the main overview.",
+        hostStateTip: "Host means the device where the Smart Platform backend/server is currently running.",
+        viewerStateTip: "Viewer means the browser/device currently showing this page.",
+        systemStatusTip: "This card summarizes the honest runtime situation without collapsing host, viewer, and physical nodes into one label.",
+        syncTip: "Sync is a platform process. It should not be hidden inside the ESP32 or Raspberry Pi card.",
+        storageTip: "Storage paths belong to the host filesystem. Open folder actions run on that host, not necessarily on the current viewer device.",
+        copyPath: "Copy path",
+        openFolder: "Open folder",
+        copyCurrentUrl: "Copy current URL",
+        copyServerUrl: "Copy server URL",
+        refreshStatus: "Refresh status",
+        backToShell: "Back to shell",
+        gallery: "Gallery",
+        laboratory: "Laboratory",
+        reports: "Reports",
+        openStorageDiagnostics: "Storage diagnostics",
+        sameDevice: "Same device",
+        differentDevice: "Different devices",
+        pathState: "Path state",
+        files: "Files",
+        folders: "Folders",
+        serviceLink: "Service link",
+        baseConnectivity: "Base connectivity",
+        optionalDomains: "Optional domains",
+        copySuccess: "Value copied to clipboard",
+        openFolderQueued: "Folder open action sent to host",
+        openFolderBlocked: "Open folder is blocked for this viewer",
+        openFolderHostOnly: "This action opens a folder on the host device. From this viewer you can still copy the path.",
+        openFolderUnsupported: "This host/runtime does not expose a safe folder-open action for this path.",
+        addModule: "+ Add module",
+        editConfiguration: "Edit configuration",
+        editModeOffTip: "Enable edit configuration first. Registry writes are intentionally gated behind explicit edit mode.",
+        constructorStaged: "Constructor flows are staged. Real registry writes are not wired yet.",
+        ownershipColumnOwner: "Owner",
+        ownershipColumnState: "Live state",
+        ownershipColumnRoute: "Route",
+        routeLocal: "Local",
+        routeHandoff: "Handoff",
+        routeBlocked: "Blocked",
+        routeVirtual: "Virtual",
+        blocked: "Blocked",
+        service: "Service",
+        statePreview: "Preview",
+        platformService: "Platform service",
+        desktopHostLabel: "Desktop host",
+        rpiOwnerHostLabel: "Raspberry Pi owner",
+        esp32FallbackLabel: "ESP32 fallback shell",
+        desktopViewerLabel: "Desktop",
+        phoneViewerLabel: "Phone",
+        tabletViewerLabel: "Tablet",
+        displayViewerLabel: "Raspberry Pi display",
+        toolbarHint: "Quick actions reflect the same runtime model as the overview cards.",
+        persistence: "Persistence",
+        savedAt: "Saved at",
+        notYet: "Not yet",
+        comfortable: "Comfortable",
+        compact: "Compact",
+        meadow: "Meadow",
+        dawn: "Dawn",
+        studio: "Studio",
+        auto: "Auto",
+        manualReview: "Manual review",
+        turretPolicies: "Turret policies",
+        irrigationDefaults: "Irrigation defaults",
+        silentObservation: "Silent observation",
+        animalDeterrence: "Allow animal deterrence",
+        autoWaterAction: "Allow automatic water action",
+        warmStandby: "Return to warm standby",
+        doNotTargetPeople: "Do not target people",
+        safetyBaseline: "Safety baseline",
+        preferDriestZone: "Prefer driest zone",
+        blockAutoDuringService: "Block automatic mode during service",
+        requireSensorHealth: "Require sensor health",
+        diagnosticsHidden: "Enable advanced diagnostics above to inspect raw payloads.",
+        shellSnapshot: "Shell snapshot",
+        settingsPayload: "Settings payload",
+        editMode: "Edit mode",
+        stagedOnly: "Staged only",
+        physicalNode: "Physical node",
+        plannedModules: "Planned modules",
+        copyLanUrlTip: "Copy the current page URL so another device can open the same shell entry.",
+        copyServerUrlTip: "Copy the host server URL published by the backend.",
+        hostFolderTip: "Runtime and project folders stay on the host device. Use Copy path everywhere; Open folder only when the current viewer is trusted to act on the host.",
+        reportsArchive: "Reports archive",
+        moduleState: "Module state",
+        statusReason: "Status reason",
+        currentView: "Current view",
+        quickGalleryTip: "Open the shared Gallery surface.",
+        quickLaboratoryTip: "Open the Laboratory workspace.",
+        quickReportsTip: "Open Gallery > Reports.",
+        refreshPageTip: "Fetch a fresh shell snapshot and redraw the page.",
+        refreshThisPageTip: "Fetch a fresh shell snapshot and redraw this page.",
+        englishLanguageTip: "Use English across the shell.",
+        russianLanguageTip: "Use Russian across the shell.",
+        fullscreenTip: "Shared fullscreen preference for shell surfaces.",
+        desktopControlsTip: "Shared keyboard and hover helper preference used by Smart Bar.",
+        advancedDiagnosticsTip: "Keep raw payloads available without forcing them into the main overview.",
+        themeDensityTip: "Theme and density are shared page-level appearance preferences.",
+        meadowTip: "Neutral green shell baseline.",
+        dawnTip: "Warm amber workspace tone.",
+        studioTip: "Cool technical shell tone.",
+        comfortableTip: "Roomier spacing for relaxed reading.",
+        compactTip: "Tighter density for more information on screen.",
+        runtimeTooltipSection: "Runtime",
+        viewerTooltipSection: "Viewer",
+        pathTooltipSection: "Path",
+        locationTooltipSection: "Location",
+        sharedPreferenceIntentTip: "Shared preference intent is separate from live remote sync state.",
+        syncAutoTip: "Apply preferred continuity automatically when it is supported.",
+        syncManualTip: "Review continuity-sensitive decisions manually.",
+        syncContinuityTip: "Keep cross-node continuity preferred when the platform can support it.",
+        storageDiagnosticsTip: "Open the low-level storage diagnostics surface.",
+        persistentTurretPolicyTip: "Persistent product-level turret preference.",
+        animalDeterrenceTip: "Allow deterrence actions for non-human targets when the runtime supports them.",
+        autoWaterActionTip: "Allow automatic water action when policy and runtime conditions allow it.",
+        warmStandbyTip: "Return the turret to warm standby after action sequences.",
+        safetyBaselineTip: "This safety baseline remains always on in the current settings contract.",
+        driestZoneTip: "Bias automatic irrigation toward the driest known zone.",
+        serviceBlockTip: "Keep irrigation automatic mode blocked while service workflows are active.",
+        sensorHealthTip: "Require healthy sensor state before automatic irrigation can proceed.",
+        constructorEnableTip: "Enable staged constructor controls without silently writing to the registry."
       },
       ru: {
-        pageTitle: 'Настройки',
-        pageSubtitle: 'Постоянный слой platform choices для синхронизации, интерфейса и policy baseline. Laboratory оставляет эксперименты локальными, а Settings хранит устойчивое намерение оператора.',
-        savedServer: 'Сохранено в этом shell',
-        savedBrowser: 'Сохранено в браузере',
-        saving: 'Сохранение...',
-        storageServer: 'Серверное хранение',
-        storageBrowser: 'Локальный browser fallback',
-        node: 'Узел',
-        peer: 'Соседний узел',
-        backToShell: 'Вернуться в shell',
-        gallery: 'Gallery',
-        laboratory: 'Laboratory',
-        reports: 'Открыть Reports',
-        platform: 'Платформа',
-        continuity: 'Peer continuity',
-        storage: 'Хранилище',
-        persistence: 'Сохранение',
-        system: 'System',
-        overview: 'Overview',
-        overviewLead: 'Первый проход решает ориентацию: topology, persistence, shell promises и границы того, что эта страница вообще имеет право контролировать.',
-        bar: 'Bar',
-        barLead: 'Top-bar поведение должно быть почти наверху, потому что оно меняет ощущение от каждой страницы shell.',
-        interface: 'Interface',
-        synchronization: 'Synchronization',
-        turretPolicies: 'Turret Policies',
-        policies: 'Policies',
-        policiesLead: 'Устойчивые safety и automation rules должны читаться как product policy, а не как временный лабораторный режим.',
-        irrigation: 'Irrigation',
-        modules: 'Modules',
-        modulesLead: 'Owner-aware baselines живут здесь без притворства, что Settings заменяет полноценные module pages.',
-        style: 'Style',
-        diagnostics: 'Diagnostics',
-        systemLead: 'Спокойный контур shell, ownership map и route vocabulary.',
-        syncLead: 'Reachability и continuity не прячутся в сырых логах, а остаются читаемыми прямо здесь.',
-        interfaceLead: 'Browser-facing defaults для shell без притворства, что Laboratory presets уже стали product settings.',
-        turretLead: 'Постоянные policy baselines. Неподдерживаемые правила остаются видимыми и disabled.',
-        irrigationLead: 'Owner-side irrigation baseline остаётся явным даже когда ESP32 сейчас недоступен.',
-        styleLead: 'Тихие page-level choices, которые сохраняются для оператора.',
-        diagnosticsLead: 'Live payloads остаются доступны, но больше не захватывают всю страницу.',
-        searchSettings: 'Search Settings',
-        searchLead: 'Один фильтр для rail и detail pane.',
-        searchPlaceholder: 'Фильтр по разделам, controls и notes',
-        searchEmptyTitle: 'Ничего не найдено',
-        searchEmptyBody: 'Сбрось фильтр или задай более широкий термин, чтобы вернуть разделы.',
-        clearFilter: 'Сбросить фильтр',
-        quickActions: 'Quick Actions',
-        runtimeSummary: 'Runtime Summary',
-        visibleSections: 'Видимые разделы',
-        systemFrame: 'System Frame',
-        routeVocabulary: 'Route Vocabulary',
-        shellPromise: 'Shell promise',
-        barBehavior: 'Bar Behavior',
-        barPreview: 'Bar Preview',
-        barPendingHint: 'Fullscreen, tooltip depth и time-date formatting пойдут в следующий живой wiring slice. Сейчас фиксируется hierarchy и честные текущие controls.',
-        barLocale: 'Bar locale',
-        barDateTime: 'Time and date',
-        barTooltips: 'Tooltip depth',
-        followsShellLocale: 'Следует shell locale',
-        mediumDetailed: 'Средне подробно',
-        themePreview: 'Theme Preview',
-        surfaceDensity: 'Surface Density',
-        perkLive: 'Live policy',
-        perkDisabled: 'Visible, disabled',
-        moduleStatus: 'Module Status',
-        candidatePath: 'Promotion Path',
-        candidateBody: 'Laboratory candidates не должны тихо становиться product settings. После review они приземляются сюда как module-facing baselines.',
-        currentShell: 'Текущий shell',
-        peerShell: 'Peer shell',
-        ownershipSummary: 'Ownership summary',
-        runtimeProfile: 'Runtime profile',
-        activeMode: 'Active mode',
-        navigationRoutes: 'Навигационные маршруты',
-        reportsPointer: 'Указатель на Reports',
-        moduleAvailability: 'Доступность модулей',
-        syncEnabled: 'Фоновый sync',
-        syncState: 'Состояние sync',
-        peerReachability: 'Доступность peer',
-        preferredMode: 'Режим review для sync',
-        preferPeerContinuity: 'Предпочитать continuity через peer, когда он готов',
-        auto: 'Автоматически',
-        manualReview: 'Ручной review',
-        language: 'Язык',
-        fullscreen: 'Fullscreen',
-        enabled: 'Включено',
-        disabled: 'Выключено',
-        desktopControls: 'Desktop controls в верхнем bar',
-        advancedDiagnostics: 'Показывать расширенную diagnostics',
-        theme: 'Тема',
-        density: 'Плотность',
-        comfortable: 'Обычная',
-        compact: 'Компактная',
-        meadow: 'Meadow',
-        dawn: 'Dawn',
-        studio: 'Studio',
-        turretSilent: 'Silent observation',
-        turretAnimal: 'Разрешить animal deterrence',
-        turretWater: 'Разрешить automatic water action',
-        turretStandby: 'Возвращаться в warm standby после потери цели',
-        turretPeople: 'Не стрелять в людей',
-        turretPeopleHint: 'Это правило должно быть видно всегда, но runtime wiring пока не опубликован.',
-        irrigationDriest: 'Выбирать самую сухую eligible zone',
-        irrigationServiceBlock: 'Блокировать automatic watering во время service/test',
-        irrigationSensorHealth: 'Требовать healthy sensors для automatic watering',
-        irrigationOwnerState: 'Состояние irrigation owner',
-        routeMode: 'Route mode',
-        lastSaved: 'Последнее сохранение',
-        refreshLiveData: 'Обновить live data',
-        openStorageDiagnostics: 'Открыть Storage Diagnostics',
-        shellSnapshot: 'Shell snapshot',
-        contentStatus: 'Content status',
-        syncPayload: 'Sync payload',
-        diagnosticsHidden: 'Расширенная diagnostics скрыта. Включи её через switch выше, если нужен живой payload.',
-        settingsHint: 'Остальной shell может подхватывать эти preferences поэтапно.',
-        labBoundary: 'Laboratory presets остаются отдельными до явного review и promotion.',
-        irrigationHint: 'Это сохранённый baseline для будущего owner-side apply на ESP32, а не притворное локальное управление irrigation.',
-        notYet: 'Пока нет',
-        online: 'online',
-        offline: 'offline',
-        degraded: 'degraded',
-        blocked: 'blocked',
-        pending: 'pending',
-        ready: 'ready',
-        localOnly: 'только локально',
-        routeLocal: 'Локально',
-        routeHandoff: 'Owner handoff',
-        routeBlocked: 'Blocked',
-        routeVirtual: 'Virtual',
-        routeUnknown: 'Unknown',
-        saveFallbackHint: 'Server endpoint недоступен. Preferences сохранены только в этом браузере.',
-      },
+        pageTitle: "Настройки",
+        pageLead: "Здесь сходятся truthful runtime state, общие пользовательские настройки, sync semantics, storage paths и распределение модулей без ложного ощущения, что desktop preview равен живому Raspberry Pi owner.",
+        savedOnHost: "Сохранено на host-устройстве",
+        browserFallback: "Браузерный fallback",
+        savingNow: "Сохранение...",
+        overview: "Обзор",
+        appearance: "Интерфейс",
+        runtime: "Runtime и вход",
+        nodes: "Узлы платформы",
+        sync: "Синхронизация",
+        storage: "Хранилище",
+        ownership: "Владение",
+        policies: "Политики",
+        modules: "Модули",
+        diagnostics: "Диагностика",
+        searchSettings: "Поиск по настройкам",
+        searchLead: "Фильтрует rail и detail-pane одновременно.",
+        searchPlaceholder: "Фильтр по секциям, подписям и заметкам",
+        searchEmptyTitle: "Совпадений не найдено",
+        searchEmptyBody: "Сбросьте фильтр или используйте более общий запрос.",
+        clearFilter: "Сбросить фильтр",
+        quickActions: "Быстрые действия",
+        runtimeSummary: "Краткая сводка",
+        visibleSections: "Видимые секции",
+        currentRuntime: "Текущий runtime",
+        currentViewer: "Текущее устройство",
+        systemStatus: "Состояние системы",
+        platformNodes: "Узлы платформы",
+        syncState: "Состояние sync",
+        syncDomains: "Домены sync",
+        sharedPreferences: "Общие настройки",
+        moduleOwnership: "Распределение модулей",
+        moduleRegistry: "Реестр модулей",
+        moduleConstructor: "Конструктор модулей",
+        truthfulState: "Truthful state",
+        interfaceDefaults: "Настройки интерфейса",
+        host: "Host",
+        hostKind: "Тип host",
+        viewer: "Viewer",
+        viewerType: "Тип viewer",
+        viewerHeartbeat: "Heartbeat viewer",
+        serverStatus: "Состояние сервера",
+        serverUrl: "URL сервера",
+        runtimeProfile: "Runtime profile",
+        currentPage: "Текущая страница",
+        projectRoot: "Корень проекта",
+        runtimeFolder: "Папка runtime",
+        language: "Язык",
+        theme: "Тема",
+        density: "Плотность",
+        fullscreen: "Полноэкранный режим",
+        desktopControls: "Desktop controls",
+        advancedDiagnostics: "Расширенная диагностика",
+        preferredMode: "Предпочитаемый режим",
+        preferPeerContinuity: "Предпочитать continuity с peer",
+        localLaunchBoardsOffline: "Локальный запуск, платы offline",
+        ownerHostPeerOffline: "Host-owner online, peer offline",
+        systemReady: "Основная оболочка online",
+        systemDegraded: "Система degraded",
+        hostViewerSame: "Вы смотрите интерфейс с того же устройства, где сейчас запущен Smart Platform.",
+        hostViewerDifferent: "Host и viewer — разные устройства.",
+        liveHeartbeat: "Живой heartbeat",
+        browserFallbackHeartbeat: "Локальный fallback браузера",
+        online: "Online",
+        offline: "Offline",
+        degraded: "Degraded",
+        fault: "Fault",
+        unknown: "Unknown",
+        ready: "Ready",
+        pending: "Pending",
+        localOnly: "Только локально",
+        remoteUnavailable: "Remote unavailable",
+        neverSynced: "Ещё не синхронизировалось",
+        missing: "Missing",
+        notConfigured: "Не настроено",
+        unavailable: "Недоступно",
+        verifiedLater: "Проверка позже",
+        registryModules: "Модули в registry",
+        ownerAvailable: "Owner доступен",
+        ownerExpected: "Ожидаемый owner",
+        role: "Роль",
+        lastSeen: "Последний контакт",
+        uptime: "Uptime",
+        connectivity: "Связность",
+        shellReady: "Shell готов",
+        wifiReady: "Wi-Fi готов",
+        syncReady: "Sync готов",
+        componentTruthPending: "Детекция компонентов пока не публикуется в shell snapshot. Сейчас страница честно показывает уровень node/module, а component truth добавится после расширения backend-контракта.",
+        componentTruthOffline: "Проверка компонентов отложена, потому что узел сейчас offline.",
+        systemNarrative: "Верхние карточки теперь разделяют backend host, текущее viewer-устройство, физические узлы, sync и storage. Desktop preview больше не притворяется живым Raspberry Pi owner.",
+        appearanceLead: "Общие UI preferences хранятся один раз и отражаются и в Smart Bar, и в остальных shell-surface.",
+        runtimeLead: "Host launch, browser entry и current viewer разделены, чтобы страница честно объясняла, кто держит сервер и кто сейчас смотрит интерфейс.",
+        nodesLead: "Физические узлы остаются видимыми даже в offline-состоянии, а ownership отделён от live reachability.",
+        syncLead: "Базовая связь узлов отделена от optional sync domains. Отключённый или недоступный remote link должен читаться честно, а не как расплывчатое локально.",
+        storageLead: "Storage diagnostics поддерживает shell, но не подменяет Gallery. Пути компактны в карточках и раскрываются полностью в tooltip.",
+        ownershipLead: "Ожидаемое распределение модулей видно даже когда узлы offline. Shared services не маскируются под конкретную плату.",
+        policiesLead: "Постоянные turret и irrigation policy-параметры живут здесь. Эксперименты Laboratory остаются отдельно до явного apply flow.",
+        modulesLead: "Node -> Module -> Component — целевая модель. Сейчас виден честный constructor skeleton, а реальные registry writes ещё staged.",
+        diagnosticsLead: "Сырые payload остаются доступны для инженерной работы, но больше не доминируют над основным обзором.",
+        hostStateTip: "Host — устройство, где сейчас запущен backend/server Smart Platform.",
+        viewerStateTip: "Viewer — устройство/браузер, с которого сейчас открыта эта страница.",
+        systemStatusTip: "Карточка резюмирует честную ситуацию runtime без смешения host, viewer и физических узлов в один ложный статус.",
+        syncTip: "Sync — отдельный platform process. Он не должен прятаться внутри карточки ESP32 или Raspberry Pi.",
+        storageTip: "Storage paths относятся к файловой системе host-устройства. Open folder выполняется там, а не обязательно на текущем viewer.",
+        copyPath: "Скопировать путь",
+        openFolder: "Открыть папку",
+        copyCurrentUrl: "Скопировать текущий URL",
+        copyServerUrl: "Скопировать URL сервера",
+        refreshStatus: "Обновить статус",
+        backToShell: "Назад в shell",
+        gallery: "Галерея",
+        laboratory: "Laboratory",
+        reports: "Отчёты",
+        openStorageDiagnostics: "Storage diagnostics",
+        sameDevice: "То же устройство",
+        differentDevice: "Разные устройства",
+        pathState: "Состояние пути",
+        files: "Файлы",
+        folders: "Папки",
+        serviceLink: "Базовая связь",
+        baseConnectivity: "Базовая связность",
+        optionalDomains: "Опциональные домены",
+        copySuccess: "Значение скопировано в буфер",
+        openFolderQueued: "Команда открытия папки отправлена на host",
+        openFolderBlocked: "Открытие папки недоступно для этого viewer",
+        openFolderHostOnly: "Эта команда открывает папку на host-устройстве. С текущего viewer можно безопасно только скопировать путь.",
+        openFolderUnsupported: "Для этого пути host/runtime не публикует безопасное Open folder действие.",
+        addModule: "+ Добавить модуль",
+        editConfiguration: "Редактировать конфигурацию",
+        editModeOffTip: "Сначала включите режим редактирования. Изменения registry намеренно спрятаны за явным edit mode.",
+        constructorStaged: "Конструктор уже показан, но реальные записи в registry/config пока не подключены.",
+        ownershipColumnOwner: "Owner",
+        ownershipColumnState: "Live state",
+        ownershipColumnRoute: "Маршрут",
+        routeLocal: "Local",
+        routeHandoff: "Handoff",
+        routeBlocked: "Blocked",
+        routeVirtual: "Virtual",
+        blocked: "Заблокировано",
+        service: "Service",
+        statePreview: "Preview",
+        platformService: "Сервис платформы",
+        desktopHostLabel: "Desktop host",
+        rpiOwnerHostLabel: "Raspberry Pi owner",
+        esp32FallbackLabel: "ESP32 fallback shell",
+        desktopViewerLabel: "Desktop",
+        phoneViewerLabel: "Телефон",
+        tabletViewerLabel: "Планшет",
+        displayViewerLabel: "Экран Raspberry Pi",
+        toolbarHint: "Быстрые действия используют ту же runtime model, что и overview cards.",
+        persistence: "Сохранение",
+        savedAt: "Время сохранения",
+        notYet: "Ещё нет",
+        comfortable: "Комфортно",
+        compact: "Компактно",
+        meadow: "Meadow",
+        dawn: "Dawn",
+        studio: "Studio",
+        auto: "Авто",
+        manualReview: "Ручная проверка",
+        turretPolicies: "Политики турели",
+        irrigationDefaults: "Настройки полива",
+        silentObservation: "Тихое наблюдение",
+        animalDeterrence: "Разрешить отпугивание животных",
+        autoWaterAction: "Разрешить автоматическое водяное действие",
+        warmStandby: "Возврат в warm standby",
+        doNotTargetPeople: "Не воздействовать на людей",
+        safetyBaseline: "Базовая safety-линия",
+        preferDriestZone: "Предпочитать самую сухую зону",
+        blockAutoDuringService: "Блокировать автоматику во время service",
+        requireSensorHealth: "Требовать здоровье датчиков",
+        diagnosticsHidden: "Включите расширенную диагностику выше, чтобы видеть raw payload.",
+        shellSnapshot: "Shell snapshot",
+        settingsPayload: "Payload настроек",
+        editMode: "Edit mode",
+        stagedOnly: "Только staged",
+        physicalNode: "Физический узел",
+        plannedModules: "Назначенные модули",
+        copyLanUrlTip: "Скопировать URL текущей страницы, чтобы открыть тот же shell entry с другого устройства.",
+        copyServerUrlTip: "Скопировать host server URL, который публикует backend.",
+        hostFolderTip: "Runtime и project folders живут на host-устройстве. Copy path доступен везде; Open folder — только когда viewer доверенно действует от имени host.",
+        reportsArchive: "Архив отчётов",
+        moduleState: "Состояние модуля",
+        statusReason: "Причина статуса",
+        currentView: "Текущий вид",
+        quickGalleryTip: "Открыть общий раздел Gallery.",
+        quickLaboratoryTip: "Открыть рабочее пространство Laboratory.",
+        quickReportsTip: "Открыть Gallery > Reports.",
+        refreshPageTip: "Запросить свежий shell snapshot и перерисовать страницу.",
+        refreshThisPageTip: "Запросить свежий shell snapshot и обновить этот экран.",
+        englishLanguageTip: "Использовать английский язык во всей оболочке.",
+        russianLanguageTip: "Использовать русский язык во всей оболочке.",
+        fullscreenTip: "Общая настройка полноэкранного режима для shell-страниц.",
+        desktopControlsTip: "Общая настройка клавиатуры и hover-подсказок, которую использует Smart Bar.",
+        advancedDiagnosticsTip: "Оставить raw payload доступным, не вынося его в главный обзор.",
+        themeDensityTip: "Тема и плотность являются общими настройками внешнего вида страницы.",
+        meadowTip: "Нейтральная зелёная базовая тема оболочки.",
+        dawnTip: "Тёплый янтарный тон рабочего пространства.",
+        studioTip: "Холодный технический тон оболочки.",
+        comfortableTip: "Более свободные отступы для спокойного чтения.",
+        compactTip: "Более плотная компоновка, чтобы видеть больше информации.",
+        runtimeTooltipSection: "Runtime",
+        viewerTooltipSection: "Viewer",
+        pathTooltipSection: "Путь",
+        locationTooltipSection: "Расположение",
+        sharedPreferenceIntentTip: "Намерение общих настроек отделено от текущего состояния remote sync.",
+        syncAutoTip: "Автоматически применять предпочтение continuity, когда платформа это поддерживает.",
+        syncManualTip: "Проверять continuity-sensitive решения вручную.",
+        syncContinuityTip: "Сохранять предпочтение cross-node continuity, когда платформа может его поддержать.",
+        storageDiagnosticsTip: "Открыть низкоуровневую диагностику хранилища.",
+        persistentTurretPolicyTip: "Постоянная product-level настройка турели.",
+        animalDeterrenceTip: "Разрешить deterrence-действия для нечеловеческих целей, когда runtime это поддерживает.",
+        autoWaterActionTip: "Разрешить автоматическое водяное действие, когда политика и runtime-условия это допускают.",
+        warmStandbyTip: "Возвращать турель в warm standby после последовательностей действий.",
+        safetyBaselineTip: "Эта safety-база всегда включена в текущем контракте настроек.",
+        driestZoneTip: "Смещать автоматический полив к самой сухой известной зоне.",
+        serviceBlockTip: "Блокировать автоматический полив, пока активны service-сценарии.",
+        sensorHealthTip: "Требовать здоровое состояние датчиков перед автоматическим поливом.",
+        constructorEnableTip: "Включить staged-controls конструктора без скрытой записи в registry."
+      }
     };
-    Object.assign(COPY.en, {
-      overview: 'Overview',
-      bar: 'Top Bar',
-      interface: 'Interface',
-      synchronization: 'Synchronization',
-      policies: 'Policies',
-      modules: 'Modules',
-      style: 'Style',
-      diagnostics: 'Diagnostics',
-      searchSettings: 'Find Settings',
-      visibleSections: 'Sections',
-      systemFrame: 'System Frame',
-      routeVocabulary: 'Route Vocabulary',
-      shellPromise: 'Shell Routes',
-      barBehavior: 'Top Bar Behavior',
-      barPreview: 'Preview',
-      themePreview: 'Themes',
-      surfaceDensity: 'Density',
-      currentShell: 'Current shell',
-      peerShell: 'Peer shell',
-      ownershipSummary: 'Ownership map',
-      runtimeProfile: 'Runtime profile',
-      activeMode: 'Active mode',
-      navigationRoutes: 'Routes',
-      reportsPointer: 'Reports link',
-      moduleAvailability: 'Visible modules',
-      syncEnabled: 'Background sync',
-      syncState: 'Sync status',
-      peerReachability: 'Peer reachability',
-      preferredMode: 'Sync mode',
-      browserStorageLabel: 'Browser only',
-      deviceStorageLabel: 'Saved on device',
-      browserStorageTip: 'The server endpoint is unavailable, so these choices live only in this browser profile.',
-      deviceStorageTip: 'These choices are saved by the shell on this device and reused by the Settings page and the compact bar.',
-      previewState: 'Preview',
-      serviceMode: 'Service',
-      fault: 'Fault',
-      localShellActive: 'Local shell is active',
-      peerOwnerOffline: 'Peer owner is offline',
-      peerVisiblePending: 'Peer is reachable, but sync is still pending',
-      peerOwnerReady: 'Peer owner is ready',
-      turretShort: 'Turret',
-      irrigationShort: 'Irrigation',
-      settingsShort: 'Settings',
-      turretSmokeTip: 'This page runs in desktop smoke mode. Turret screens are available only as a preview until the real Raspberry Pi owner device is attached.',
-      irrigationOfflineTip: 'Irrigation belongs to the ESP32 owner. Until that board is reachable, this module stays unavailable here.',
-      moduleReadyTip: 'The owner side needed for this module is available.',
-      moduleDegradedTip: 'The module is reachable, but one or more runtime conditions still limit it.',
-      moduleLockedTip: 'The module is intentionally blocked by the current ownership or safety state.',
-      moduleFaultTip: 'The module reported a fault and needs attention before use.',
-      storagePathTip: 'The shell content root on this host. Long paths are shortened in the card to avoid horizontal overflow.',
-    });
-    Object.assign(COPY.ru, {
-      pageSubtitle: 'Постоянные настройки платформы для интерфейса, синхронизации и базовых политик.',
-      savedServer: 'Сохранено на устройстве',
-      savedBrowser: 'Сохранено только в браузере',
-      storageServer: 'Сохранение на устройстве',
-      storageBrowser: 'Сохранение только в браузере',
-      gallery: 'Галерея',
-      laboratory: 'Лаборатория',
-      overview: 'Обзор',
-      overviewLead: 'Короткая сводка по оболочке, соседнему узлу и тому, где реально сохраняются настройки.',
-      bar: 'Верхняя панель',
-      barLead: 'Здесь находятся настройки, которые сразу меняют поведение compact bar и всей оболочки.',
-      interface: 'Интерфейс',
-      synchronization: 'Синхронизация',
-      turretPolicies: 'Политики турели',
-      policies: 'Политики',
-      policiesLead: 'Постоянные правила безопасности и автоматизации.',
-      modules: 'Модули',
-      modulesLead: 'Базовые настройки модулей с учётом владельца и доступности оборудования.',
-      style: 'Оформление',
-      diagnostics: 'Диагностика',
-      systemLead: 'Спокойный контур оболочки, карта владения и словарь маршрутов.',
-      syncLead: 'Статус связи с соседним узлом и правила продолжения работы при потере связи.',
-      interfaceLead: 'Настройки интерфейса, которые оболочка может применять сразу.',
-      turretLead: 'Базовые правила поведения турели. Неподдерживаемые правила остаются видимыми.',
-      irrigationLead: 'Сохранённая база для ирригации без притворства, что этот экран заменяет полноценный owner-side UI.',
-      styleLead: 'Темы и плотность интерфейса для текущего оператора.',
-      diagnosticsLead: 'Живые payload доступны ниже, но не перегружают основной экран.',
-      searchSettings: 'Поиск настроек',
-      searchLead: 'Один фильтр для списка разделов и содержимого справа.',
-      searchPlaceholder: 'Найти раздел или настройку',
-      searchEmptyTitle: 'Совпадений не найдено',
-      searchEmptyBody: 'Очистите фильтр или используйте более общий запрос.',
-      clearFilter: 'Сбросить фильтр',
-      quickActions: 'Быстрые действия',
-      runtimeSummary: 'Сводка',
-      visibleSections: 'Разделы',
-      systemFrame: 'Контур системы',
-      routeVocabulary: 'Словарь маршрутов',
-      shellPromise: 'Маршруты оболочки',
-      barBehavior: 'Поведение верхней панели',
-      barPreview: 'Предпросмотр',
-      barPendingHint: 'Полный экран, язык и элементы управления панели применяются сразу ко всей оболочке и compact bar.',
-      barLocale: 'Язык панели',
-      barDateTime: 'Дата и время',
-      barTooltips: 'Подсказки',
-      followsShellLocale: 'Следуют выбранному языку оболочки',
-      mediumDetailed: 'Подробные',
-      themePreview: 'Темы',
-      surfaceDensity: 'Плотность',
-      perkLive: 'Действует',
-      perkDisabled: 'Видно, но пока не действует',
-      moduleStatus: 'Состояние модуля',
-      candidatePath: 'Путь публикации',
-      candidateBody: 'Эксперимент из Лаборатории не становится продуктовой настройкой автоматически. Сначала review, потом перенос в базовые настройки.',
-      currentShell: 'Текущая оболочка',
-      peerShell: 'Соседняя оболочка',
-      ownershipSummary: 'Карта владения',
-      runtimeProfile: 'Профиль запуска',
-      activeMode: 'Активный режим',
-      navigationRoutes: 'Маршруты',
-      reportsPointer: 'Ссылка на Reports',
-      moduleAvailability: 'Видимых модулей',
-      syncEnabled: 'Фоновая синхронизация',
-      syncState: 'Статус синхронизации',
-      peerReachability: 'Доступность соседнего узла',
-      preferredMode: 'Режим синхронизации',
-      preferPeerContinuity: 'При наличии соседа продолжать работу через него без лишних переключений',
-      auto: 'Автоматически',
-      manualReview: 'После проверки',
-      fullscreen: 'Полный экран',
-      enabled: 'Включено',
-      disabled: 'Выключено',
-      desktopControls: 'Показывать desktop-элементы в верхней панели',
-      advancedDiagnostics: 'Показывать расширенную диагностику',
-      theme: 'Тема',
-      density: 'Плотность',
-      comfortable: 'Обычная',
-      compact: 'Компактная',
-      turretSilent: 'Тихое наблюдение',
-      turretAnimal: 'Разрешить отпугивание животных',
-      turretWater: 'Разрешить автоматическое водяное воздействие',
-      turretStandby: 'Возвращаться в тёплый standby после потери цели',
-      turretPeople: 'Не нацеливаться на людей',
-      turretPeopleHint: 'Это правило видно всегда. Когда runtime-gate появится, оно должно остаться обязательным.',
-      irrigationDriest: 'Выбирать самую сухую доступную зону',
-      irrigationServiceBlock: 'Блокировать автоматический полив во время service/test',
-      irrigationSensorHealth: 'Требовать исправные датчики для автоматического полива',
-      irrigationOwnerState: 'Состояние владельца ирригации',
-      routeMode: 'Маршрут',
-      lastSaved: 'Последнее сохранение',
-      refreshLiveData: 'Обновить данные',
-      openStorageDiagnostics: 'Открыть диагностику хранилища',
-      shellSnapshot: 'Снимок оболочки',
-      contentStatus: 'Состояние контента',
-      syncPayload: 'Payload синхронизации',
-      diagnosticsHidden: 'Расширенная диагностика скрыта. Включите её выше, если нужен живой payload.',
-      settingsHint: 'Остальные страницы оболочки постепенно подхватывают эти настройки.',
-      labBoundary: 'Экспериментальные профили Лаборатории остаются отдельными до явного review и публикации.',
-      irrigationHint: 'Это сохранённый baseline для owner-side применения на ESP32, а не локальный fake-controller.',
-      notYet: 'Ещё не сохранялось',
-      online: 'в сети',
-      offline: 'не в сети',
-      degraded: 'ограничено',
-      blocked: 'заблокировано',
-      pending: 'ожидание',
-      ready: 'готово',
-      localOnly: 'локально',
-      routeLocal: 'Локально',
-      routeHandoff: 'Передача владельцу',
-      routeBlocked: 'Недоступно',
-      routeVirtual: 'Виртуально',
-      routeUnknown: 'Неизвестно',
-      saveFallbackHint: 'Серверный endpoint недоступен. Настройки сохранены только в браузере.',
-      browserStorageLabel: 'Только в браузере',
-      deviceStorageLabel: 'На устройстве',
-      browserStorageTip: 'Серверный endpoint сейчас недоступен, поэтому изменения сохранены только в локальном хранилище браузера.',
-      deviceStorageTip: 'Настройки сохраняются файлом оболочки на этом устройстве и подхватываются страницей Settings и compact bar.',
-      previewState: 'Предпросмотр',
-      serviceMode: 'Сервис',
-      fault: 'Ошибка',
-      localShellActive: 'Локальная оболочка активна',
-      peerOwnerOffline: 'Соседний узел сейчас недоступен',
-      peerVisiblePending: 'Соседний узел виден, но синхронизация ещё не готова',
-      peerOwnerReady: 'Соседний узел готов',
-      turretShort: 'Турель',
-      irrigationShort: 'Ирригация',
-      settingsShort: 'Настройки',
-      turretSmokeTip: 'Страница запущена в режиме desktop smoke. Экран турели доступен только как предпросмотр, пока реальное Raspberry Pi устройство не подключено.',
-      irrigationOfflineTip: 'Ирригация принадлежит ESP32. Пока соседний узел недоступен, модуль остаётся заблокирован.',
-      moduleReadyTip: 'Нужная owner-side часть модуля сейчас доступна.',
-      moduleDegradedTip: 'Модуль доступен, но одна или несколько runtime-проверок пока ограничивают его.',
-      moduleLockedTip: 'Модуль намеренно заблокирован текущим состоянием владения или безопасности.',
-      moduleFaultTip: 'Модуль сообщил об ошибке и требует внимания перед использованием.',
-      storagePathTip: 'Корневая папка контента на этом хосте. Длинный путь сокращён, чтобы не ломать раскладку.',
-    });
+
     const state = {
       snapshot: null,
-      content: null,
       sync: null,
+      storage: null,
       settings: normalizeSettings(DEFAULT_SETTINGS),
-      settingsStorage: 'loading',
-      saveState: 'idle',
-      saveMessage: '',
-      runtimeError: '',
-      saveResetTimer: 0,
-      searchQuery: '',
-      activeSection: 'overview',
-      pendingScrollId: '',
+      settingsStorage: "loading",
+      saveState: "idle",
+      saveMessage: "",
+      runtimeError: "",
+      searchQuery: "",
+      activeSection: "appearance",
+      pendingScrollId: "",
+      currentViewer: null,
+      editMode: false,
       toastTimer: 0,
+      tooltipPinned: false,
+      tooltipOwnerId: "",
+      tooltipShowTimer: 0,
+      tooltipHoverTarget: null,
+      tooltipPointerX: 0,
+      tooltipPointerY: 0,
+      tooltipHideTimer: 0,
+      saveResetTimer: 0
     };
 
     function esc(value) {
-      return String(value ?? '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-    }
-
-    function tipAttrs(text) {
-      const normalized = String(text || '').trim();
-      if (!normalized) {
-        return '';
-      }
-      const safe = esc(normalized);
-      return ` title="${safe}" aria-label="${safe}"`;
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
     }
 
     function readStorage(key) {
@@ -1561,38 +1641,18 @@
       return JSON.parse(JSON.stringify(value));
     }
 
-    function isSmokeRuntime(snapshot) {
-      return String((((snapshot || {}).current_shell || {}).runtime_profile || '')).trim().toLowerCase() === 'desktop_smoke';
-    }
-
-    function compactPathLabel(value) {
-      const text = String(value || '').trim();
-      if (!text) {
-        return '-';
-      }
-      if (text.length <= 36) {
-        return text;
-      }
-      const normalized = text.replace(/\\/g, '/');
-      const segments = normalized.split('/').filter(Boolean);
-      if (segments.length <= 4) {
-        return text;
-      }
-      return `.../${segments.slice(-4).join('/')}`;
-    }
-
     function boolValue(value, fallback) {
-      if (typeof value === 'boolean') {
+      if (typeof value === "boolean") {
         return value;
       }
-      if (typeof value === 'string') {
-        return ['1', 'true', 'yes', 'on'].includes(value.trim().toLowerCase());
+      if (typeof value === "string") {
+        return ["1", "true", "yes", "on"].includes(value.trim().toLowerCase());
       }
       return fallback;
     }
 
     function choiceValue(value, allowed, fallback) {
-      const normalized = String(value ?? '').trim().toLowerCase();
+      const normalized = String(value ?? "").trim().toLowerCase();
       return allowed.includes(normalized) ? normalized : fallback;
     }
 
@@ -1602,83 +1662,309 @@
     }
 
     function normalizeSettings(raw) {
-      const payload = raw && typeof raw === 'object' ? raw : {};
-      const interfaceSettings = payload.interface && typeof payload.interface === 'object' ? payload.interface : {};
-      const styleSettings = payload.style && typeof payload.style === 'object' ? payload.style : {};
-      const syncSettings = payload.synchronization && typeof payload.synchronization === 'object' ? payload.synchronization : {};
-      const turretPolicies = payload.turret_policies && typeof payload.turret_policies === 'object' ? payload.turret_policies : {};
-      const irrigationSettings = payload.irrigation && typeof payload.irrigation === 'object' ? payload.irrigation : {};
+      const payload = raw && typeof raw === "object" ? raw : {};
+      const interfaceSettings = payload.interface && typeof payload.interface === "object" ? payload.interface : {};
+      const styleSettings = payload.style && typeof payload.style === "object" ? payload.style : {};
+      const syncSettings = payload.synchronization && typeof payload.synchronization === "object" ? payload.synchronization : {};
+      const turretPolicies = payload.turret_policies && typeof payload.turret_policies === "object" ? payload.turret_policies : {};
+      const irrigationSettings = payload.irrigation && typeof payload.irrigation === "object" ? payload.irrigation : {};
 
       return {
-        schema_version: 'settings.v1',
+        schema_version: "settings.v1",
         updated_at_ms: numberValue(payload.updated_at_ms, 0),
         interface: {
-          language: choiceValue(interfaceSettings.language, ['en', 'ru'], 'en'),
+          language: choiceValue(interfaceSettings.language, ["en", "ru"], "en"),
           desktop_controls_enabled: boolValue(interfaceSettings.desktop_controls_enabled, true),
           fullscreen_enabled: boolValue(interfaceSettings.fullscreen_enabled, false),
-          show_advanced_diagnostics: boolValue(interfaceSettings.show_advanced_diagnostics, false),
+          show_advanced_diagnostics: boolValue(interfaceSettings.show_advanced_diagnostics, false)
         },
         style: {
-          theme: choiceValue(styleSettings.theme, ['meadow', 'dawn', 'studio'], 'meadow'),
-          density: choiceValue(styleSettings.density, ['comfortable', 'compact'], 'comfortable'),
+          theme: choiceValue(styleSettings.theme, ["meadow", "dawn", "studio"], "meadow"),
+          density: choiceValue(styleSettings.density, ["comfortable", "compact"], "comfortable")
         },
         synchronization: {
-          preferred_mode: choiceValue(syncSettings.preferred_mode, ['auto', 'manual_review'], 'auto'),
-          prefer_peer_continuity: boolValue(syncSettings.prefer_peer_continuity, true),
+          preferred_mode: choiceValue(syncSettings.preferred_mode, ["auto", "manual_review"], "auto"),
+          prefer_peer_continuity: boolValue(syncSettings.prefer_peer_continuity, true)
         },
         turret_policies: {
           silent_observation: boolValue(turretPolicies.silent_observation, true),
           allow_animal_deterrence: boolValue(turretPolicies.allow_animal_deterrence, true),
           allow_auto_water_action: boolValue(turretPolicies.allow_auto_water_action, false),
           return_to_warm_standby: boolValue(turretPolicies.return_to_warm_standby, true),
-          do_not_target_people: true,
+          do_not_target_people: true
         },
         irrigation: {
           prefer_driest_zone: boolValue(irrigationSettings.prefer_driest_zone, true),
           block_automatic_during_service: boolValue(irrigationSettings.block_automatic_during_service, true),
-          require_sensor_health: boolValue(irrigationSettings.require_sensor_health, true),
-        },
-      };
-    }
-
-    function normalizeSyncPayload(raw) {
-      const payload = raw && typeof raw === 'object' ? raw : {};
-      if (Object.prototype.hasOwnProperty.call(payload, 'enabled')) {
-        return {
-          source: 'rpi',
-          enabled: !!payload.enabled,
-          last_push_ok: !!payload.last_push_ok,
-          last_sync_ms: numberValue(payload.last_sync_ms, 0),
-          last_error: String(payload.last_error || ''),
-          peer_reachable: !!(((state.snapshot || {}).nodes || {}).peer || {}).reachable,
-          peer_sync_ready: !!(((state.snapshot || {}).nodes || {}).peer || {}).sync_ready,
-          raw: payload,
-        };
-      }
-      return {
-        source: 'esp32',
-        enabled: true,
-        last_push_ok: !!payload.peer_sync_ready,
-        last_sync_ms: 0,
-        last_error: '',
-        peer_reachable: !!payload.peer_reachable,
-        peer_sync_ready: !!payload.peer_sync_ready,
-        raw: payload,
+          require_sensor_health: boolValue(irrigationSettings.require_sensor_health, true)
+        }
       };
     }
 
     function t(key) {
-      const language = (state.settings && state.settings.interface && state.settings.interface.language) || 'en';
+      const language = (state.settings && state.settings.interface && state.settings.interface.language) || "en";
       const dictionary = COPY[language] || COPY.en;
       return dictionary[key] || COPY.en[key] || key;
     }
 
+    function tooltipPayload(title, description, sections, subtitle) {
+      return {
+        title: String(title || "").trim(),
+        description: String(description || "").trim(),
+        subtitle: String(subtitle || "").trim(),
+        sections: Array.isArray(sections) ? sections : []
+      };
+    }
+
+    function tooltipAttrs(payload) {
+      const encoded = encodeURIComponent(JSON.stringify(payload || {}));
+      return ` data-tooltip-payload="${esc(encoded)}"`;
+    }
+
+    function tooltipOwnerId(target) {
+      if (!(target instanceof HTMLElement)) {
+        return "";
+      }
+      return target.getAttribute("data-tooltip-owner")
+        || target.getAttribute("data-action")
+        || target.getAttribute("data-section-target")
+        || target.getAttribute("id")
+        || "";
+    }
+
+    function ensureTooltip() {
+      return document.getElementById("settings-tooltip");
+    }
+
+    function readTooltipPayload(target) {
+      if (!(target instanceof HTMLElement)) {
+        return null;
+      }
+      const encoded = target.getAttribute("data-tooltip-payload") || "";
+      if (!encoded) {
+        return null;
+      }
+      try {
+        return JSON.parse(decodeURIComponent(encoded));
+      } catch (_error) {
+        return null;
+      }
+    }
+
+    function renderTooltipMarkup(payload) {
+      const sections = Array.isArray(payload.sections) ? payload.sections : [];
+      const description = payload.description
+        ? `<p class="sp-tooltip-description">${esc(payload.description)}</p>`
+        : "";
+      const sectionMarkup = sections.map((section) => {
+        const rows = Array.isArray(section.rows) ? section.rows : [];
+        return `
+          <section class="sp-tooltip-section">
+            ${section.title ? `<div class="sp-tooltip-section-title">${esc(section.title)}</div>` : ""}
+            <div class="sp-tooltip-table">
+              ${rows.map((row) => `
+                <div class="sp-tooltip-row">
+                  <span class="sp-tooltip-row-label">${esc(row.label || "")}</span>
+                  <span class="sp-tooltip-row-value">${esc(row.value || "")}</span>
+                </div>
+              `).join("")}
+            </div>
+          </section>
+        `;
+      }).join("");
+
+      return `
+        <span class="sp-tooltip-title">${esc(payload.title || "")}</span>
+        ${payload.subtitle ? `<span class="sp-tooltip-subtitle">${esc(payload.subtitle)}</span>` : ""}
+        <div class="sp-tooltip-body">${description}${sectionMarkup}</div>
+      `;
+    }
+
+    function clearTooltipHideTimer() {
+      if (!state.tooltipHideTimer) {
+        return;
+      }
+      window.clearTimeout(state.tooltipHideTimer);
+      state.tooltipHideTimer = 0;
+    }
+
+    function clearTooltipShowTimer() {
+      if (!state.tooltipShowTimer) {
+        return;
+      }
+      window.clearTimeout(state.tooltipShowTimer);
+      state.tooltipShowTimer = 0;
+    }
+
+    function setTooltipPointerOrigin(event) {
+      const isPointerEvent = typeof PointerEvent !== "undefined" && event instanceof PointerEvent;
+      if (!(event instanceof MouseEvent || isPointerEvent)) {
+        return;
+      }
+      state.tooltipPointerX = event.clientX;
+      state.tooltipPointerY = event.clientY;
+    }
+
+    function tooltipMovedPastTolerance(event) {
+      const isPointerEvent = typeof PointerEvent !== "undefined" && event instanceof PointerEvent;
+      if (!(event instanceof MouseEvent || isPointerEvent)) {
+        return false;
+      }
+      const dx = Math.abs(event.clientX - state.tooltipPointerX);
+      const dy = Math.abs(event.clientY - state.tooltipPointerY);
+      return Math.max(dx, dy) > TOOLTIP_MOVE_TOLERANCE_PX;
+    }
+
+    function hideTooltip(force) {
+      if (state.tooltipPinned && !force) {
+        return;
+      }
+      clearTooltipShowTimer();
+      clearTooltipHideTimer();
+      const tooltip = ensureTooltip();
+      if (!tooltip) {
+        return;
+      }
+      tooltip.setAttribute("data-visible", "false");
+      state.tooltipOwnerId = "";
+      state.tooltipHoverTarget = null;
+      if (force) {
+        state.tooltipPinned = false;
+      }
+    }
+
+    function scheduleTooltipAutoHide() {
+      clearTooltipHideTimer();
+      const ownerId = state.tooltipOwnerId;
+      state.tooltipHideTimer = window.setTimeout(() => {
+        if (state.tooltipOwnerId === ownerId) {
+          hideTooltip(true);
+        }
+      }, TOOLTIP_HIDE_MS);
+    }
+
+    function showTooltip(target, pinned) {
+      const payload = readTooltipPayload(target);
+      const tooltip = ensureTooltip();
+      if (!payload || !tooltip || !(target instanceof HTMLElement)) {
+        return;
+      }
+
+      const rect = target.getBoundingClientRect();
+      tooltip.innerHTML = renderTooltipMarkup(payload);
+      tooltip.setAttribute("data-visible", "true");
+      state.tooltipOwnerId = tooltipOwnerId(target);
+      state.tooltipPinned = Boolean(pinned);
+      scheduleTooltipAutoHide();
+
+      window.requestAnimationFrame(() => {
+        const tipRect = tooltip.getBoundingClientRect();
+        const left = Math.min(
+          Math.max(12, rect.left + (rect.width / 2) - (tipRect.width / 2)),
+          window.innerWidth - tipRect.width - 12
+        );
+        const showAbove = rect.bottom + tipRect.height + 16 > window.innerHeight;
+        const top = showAbove ? rect.top - tipRect.height - 8 : rect.bottom + 8;
+        tooltip.style.left = `${left}px`;
+        tooltip.style.top = `${Math.max(12, top)}px`;
+      });
+    }
+
+    function scheduleTooltipShow(target, pinned, event) {
+      if (!(target instanceof HTMLElement)) {
+        return;
+      }
+      if (state.tooltipPinned && !pinned) {
+        return;
+      }
+      if (state.tooltipHoverTarget === target && state.tooltipShowTimer) {
+        return;
+      }
+      clearTooltipShowTimer();
+      setTooltipPointerOrigin(event);
+      state.tooltipHoverTarget = target;
+      state.tooltipShowTimer = window.setTimeout(() => {
+        state.tooltipShowTimer = 0;
+        if (state.tooltipHoverTarget === target) {
+          showTooltip(target, pinned);
+        }
+      }, pinned ? 0 : TOOLTIP_SHOW_DELAY_MS);
+    }
+
+    function closestTooltipTarget(node) {
+      return node instanceof HTMLElement ? node.closest("[data-tooltip-payload]") : null;
+    }
+
+    function bindTooltipEvents() {
+      document.addEventListener("mouseover", (event) => {
+        const target = closestTooltipTarget(event.target);
+        if (!target) {
+          return;
+        }
+        scheduleTooltipShow(target, false, event);
+      });
+
+      document.addEventListener("mousemove", (event) => {
+        if (!state.tooltipHoverTarget || state.tooltipPinned) {
+          return;
+        }
+        if (tooltipMovedPastTolerance(event)) {
+          hideTooltip(true);
+        }
+      });
+
+      document.addEventListener("mouseout", (event) => {
+        const target = closestTooltipTarget(event.target);
+        if (!target) {
+          return;
+        }
+        const related = event.relatedTarget;
+        if (related instanceof HTMLElement && (target.contains(related) || related.closest(".sp-tooltip"))) {
+          return;
+        }
+        hideTooltip(false);
+      });
+
+      document.addEventListener("focusin", (event) => {
+        const target = closestTooltipTarget(event.target);
+        if (target) {
+          showTooltip(target, false);
+        }
+      });
+
+      document.addEventListener("focusout", (event) => {
+        const related = event.relatedTarget;
+        if (related instanceof HTMLElement && related.closest(".sp-tooltip")) {
+          return;
+        }
+        hideTooltip(false);
+      });
+
+      document.addEventListener("click", (event) => {
+        const target = closestTooltipTarget(event.target);
+        if (target) {
+          const targetOwner = tooltipOwnerId(target);
+          if (state.tooltipPinned && state.tooltipOwnerId === targetOwner) {
+            hideTooltip(true);
+            return;
+          }
+          setTooltipPointerOrigin(event);
+          showTooltip(target, true);
+          return;
+        }
+
+        if (!(event.target instanceof HTMLElement) || !event.target.closest(".sp-tooltip")) {
+          hideTooltip(true);
+        }
+      });
+    }
+
     function setDeepValue(target, path, value) {
-      const segments = path.split('.');
+      const segments = path.split(".");
       let cursor = target;
       while (segments.length > 1) {
         const segment = segments.shift();
-        if (!cursor[segment] || typeof cursor[segment] !== 'object') {
+        if (!cursor[segment] || typeof cursor[segment] !== "object") {
           cursor[segment] = {};
         }
         cursor = cursor[segment];
@@ -1689,17 +1975,19 @@
     function applyVisualSettings() {
       document.body.dataset.theme = state.settings.style.theme;
       document.body.dataset.density = state.settings.style.density;
-      document.documentElement.lang = state.settings.interface.language;
-      document.title = state.settings.interface.language === 'ru' ? 'Smart Platform / Настройки' : 'Smart Platform / Settings';
-      writeStorage(DESKTOP_CONTROLS_KEY, state.settings.interface.desktop_controls_enabled ? '1' : '0');
-      writeStorage(FULLSCREEN_STORAGE_KEY, state.settings.interface.fullscreen_enabled ? '1' : '0');
+      document.documentElement.lang = state.settings.interface.language === "ru" ? "ru" : "en";
+      document.title = state.settings.interface.language === "ru"
+        ? "Smart Platform / Настройки"
+        : "Smart Platform / Settings";
+      writeStorage(DESKTOP_CONTROLS_KEY, state.settings.interface.desktop_controls_enabled ? "1" : "0");
+      writeStorage(FULLSCREEN_STORAGE_KEY, state.settings.interface.fullscreen_enabled ? "1" : "0");
       writeStorage(SETTINGS_LANGUAGE_KEY, state.settings.interface.language);
     }
 
     function broadcastSettingsUpdate() {
       try {
-        window.dispatchEvent(new CustomEvent('smart-platform:settings-updated', {
-          detail: clone(state.settings),
+        window.dispatchEvent(new CustomEvent("smart-platform:settings-updated", {
+          detail: clone(state.settings)
         }));
       } catch (_error) {
         return;
@@ -1707,27 +1995,19 @@
     }
 
     async function fetchJson(url, options) {
-      const response = await fetch(url, Object.assign({ cache: 'no-store' }, options || {}));
+      const response = await fetch(url, Object.assign({ cache: "no-store" }, options || {}));
       if (!response.ok) {
         throw new Error(`${response.status} ${response.statusText}`.trim());
       }
       return response.json();
     }
 
-    async function fetchSyncJson() {
-      try {
-        return await fetchJson('/api/v1/sync/status');
-      } catch (_statusError) {
-        return fetchJson('/api/v1/sync/state');
-      }
-    }
-
     async function loadSettings() {
       try {
-        const payload = await fetchJson('/api/v1/settings');
+        const payload = await fetchJson("/api/v1/settings");
         state.settings = normalizeSettings(payload);
-        state.settingsStorage = 'server';
-        state.saveMessage = '';
+        state.settingsStorage = "server";
+        state.saveMessage = "";
       } catch (_error) {
         const raw = readStorage(SETTINGS_FALLBACK_KEY);
         if (raw) {
@@ -1737,198 +2017,195 @@
             state.settings = normalizeSettings(DEFAULT_SETTINGS);
           }
         }
-        state.settingsStorage = 'browser';
+        state.settingsStorage = "browser";
       }
       applyVisualSettings();
       broadcastSettingsUpdate();
     }
 
     function showToast(title, body, tone) {
-      const toastStack = document.getElementById('toast-stack');
+      const toastStack = document.getElementById("toast-stack");
       if (!toastStack) {
         return;
       }
       toastStack.innerHTML = `
-        <div class="toast" data-tone="${esc(tone || 'ok')}">
+        <div class="toast" data-tone="${esc(tone || "ok")}">
           <strong>${esc(title)}</strong>
           <div>${esc(body)}</div>
         </div>
       `;
       window.clearTimeout(state.toastTimer);
       state.toastTimer = window.setTimeout(() => {
-        toastStack.innerHTML = '';
-      }, 2400);
+        toastStack.innerHTML = "";
+      }, 2600);
     }
 
     async function saveSettings(nextSettings) {
-      state.saveState = 'saving';
-      state.saveMessage = '';
+      state.saveState = "saving";
+      state.saveMessage = "";
       state.settings = normalizeSettings(nextSettings);
       applyVisualSettings();
       broadcastSettingsUpdate();
       render();
 
       try {
-        const payload = await fetchJson('/api/v1/settings', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(state.settings),
+        const payload = await fetchJson("/api/v1/settings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(state.settings)
         });
         state.settings = normalizeSettings(payload);
-        state.settingsStorage = 'server';
-        state.saveMessage = '';
-        showToast(t('savedServer'), t('settingsHint'), 'ok');
+        state.settingsStorage = "server";
+        state.saveMessage = "";
+        showToast(t("savedOnHost"), t("sharedPreferences"), "ok");
       } catch (_error) {
         writeStorage(SETTINGS_FALLBACK_KEY, JSON.stringify(state.settings));
-        state.settingsStorage = 'browser';
-        state.saveMessage = t('saveFallbackHint');
-        showToast(t('savedBrowser'), t('saveFallbackHint'), 'warn');
+        state.settingsStorage = "browser";
+        state.saveMessage = t("browserFallback");
+        showToast(t("browserFallback"), t("sharedPreferences"), "warn");
       }
 
-      state.saveState = 'saved';
+      state.saveState = "saved";
       window.clearTimeout(state.saveResetTimer);
       state.saveResetTimer = window.setTimeout(() => {
-        state.saveState = 'idle';
-        renderHero();
-        renderRail();
+        state.saveState = "idle";
+        render();
       }, 1400);
       render();
     }
 
-    function routeModeLabel(value) {
-      const normalized = String(value || '').toLowerCase();
-      if (normalized === 'local') {
-        return t('routeLocal');
+    function normalizeViewerKind(kind) {
+      const normalized = String(kind || "").trim().toLowerCase();
+      if (["desktop", "phone", "tablet", "display"].includes(normalized)) {
+        return normalized;
       }
-      if (normalized === 'handoff') {
-        return t('routeHandoff');
-      }
-      if (normalized === 'blocked') {
-        return t('routeBlocked');
-      }
-      if (normalized === 'virtual') {
-        return t('routeVirtual');
-      }
-      return t('routeUnknown');
+      return "desktop";
     }
 
-    function healthLabel(value) {
-      const normalized = String(value || '').toLowerCase();
-      if (normalized === 'online') {
-        return t('online');
+    function viewerFallback() {
+      const ua = String(navigator.userAgent || "").toLowerCase();
+      if (/iphone|android.+mobile|mobile/.test(ua)) {
+        return { viewer_kind: "phone", title: t("phoneViewerLabel"), value: "PH" };
       }
-      if (normalized === 'offline') {
-        return t('offline');
+      if (/ipad|tablet/.test(ua)) {
+        return { viewer_kind: "tablet", title: t("tabletViewerLabel"), value: "TB" };
       }
-      if (normalized === 'degraded') {
-        return t('degraded');
-      }
-      if (normalized === 'blocked') {
-        return t('blocked');
-      }
-      if (normalized === 'ready') {
-        return t('ready');
-      }
-      if (normalized === 'pending') {
-        return t('pending');
-      }
-      return normalized || t('routeUnknown');
+      return { viewer_kind: "desktop", title: t("desktopViewerLabel"), value: "PC" };
     }
 
-    function toneForState(value) {
-      const normalized = String(value || '').toLowerCase();
-      if (['online', 'ready'].includes(normalized)) {
-        return 'ok';
-      }
-      if (['offline', 'fault', 'blocked'].includes(normalized)) {
-        return 'fault';
-      }
-      return 'warn';
-    }
-
-    function lastSavedLabel() {
-      if (!state.settings.updated_at_ms) {
-        return t('notYet');
-      }
-      return new Date(state.settings.updated_at_ms).toLocaleString(state.settings.interface.language);
-    }
-
-    function syncStateLabel() {
-      const sync = state.sync || {};
-      if (!sync.enabled) {
-        return t('localOnly');
-      }
-      if (!sync.peer_reachable) {
-        return t('offline');
-      }
-      if (sync.peer_sync_ready || sync.last_push_ok) {
-        return t('ready');
-      }
-      return t('pending');
-    }
-
-    function localizedNodeSummary(node, fallbackKey) {
-      const summary = String((node || {}).summary || '').trim();
-      if (summary === 'Local shell is active') {
-        return t('localShellActive');
-      }
-      if (summary === 'Peer owner is offline') {
-        return t('peerOwnerOffline');
-      }
-      if (summary === 'Peer is visible but sync is pending') {
-        return t('peerVisiblePending');
-      }
-      if (summary === 'Peer owner is ready') {
-        return t('peerOwnerReady');
-      }
-      return summary || t(fallbackKey);
-    }
-
-    function persistenceInfo() {
-      if (state.settingsStorage === 'server') {
+    function resolveCurrentViewer(snapshot) {
+      const viewers = Array.isArray((snapshot || {}).viewers) ? snapshot.viewers : [];
+      const viewerId = readStorage(VIEWER_STORAGE_KEY) || "";
+      const matched = viewers.find((item) => String(item.viewer_id || "") === viewerId);
+      if (matched) {
+        const matchedKind = normalizeViewerKind(matched.viewer_kind);
         return {
-          label: t('deviceStorageLabel'),
-          tone: 'ok',
-          tip: t('deviceStorageTip'),
+          viewer_id: String(matched.viewer_id || ""),
+          viewer_kind: matchedKind,
+          title: String(matched.title || formatViewerKind(matchedKind)),
+          value: String(matched.value || viewerFallback().value),
+          page: String(matched.page || window.location.pathname || "/"),
+          address: String(matched.address || "")
         };
       }
+
+      const fallback = viewerFallback();
       return {
-        label: t('browserStorageLabel'),
-        tone: 'warn',
-        tip: t('browserStorageTip'),
+        viewer_id: viewerId,
+        viewer_kind: fallback.viewer_kind,
+        title: fallback.title,
+        value: fallback.value,
+        page: `${window.location.pathname || "/"}${window.location.search || ""}`,
+        address: window.location.hostname || ""
       };
     }
 
-    function moduleDisplayState(module) {
-      if (!module) {
-        return { label: t('routeUnknown'), tone: 'warn', tip: t('moduleLockedTip') };
-      }
+    function normalizeSync(raw) {
+      const payload = raw && typeof raw === "object" ? raw : {};
+      return {
+        enabled: !!payload.enabled,
+        state: String(payload.state || "pending"),
+        peer_reachable: !!payload.peer_reachable,
+        peer_sync_ready: !!payload.peer_sync_ready,
+        last_sync_ms: numberValue(payload.last_sync_ms, 0),
+        last_error: String(payload.last_error || ""),
+        summary: String(payload.summary || ""),
+        domains: Array.isArray(payload.domains) ? payload.domains : []
+      };
+    }
 
-      if (isSmokeRuntime(state.snapshot) && module.id === 'turret_bridge') {
-        return { label: t('previewState'), tone: 'warn', tip: t('turretSmokeTip') };
-      }
+    function normalizeStorage(raw) {
+      const payload = raw && typeof raw === "object" ? raw : {};
+      return {
+        storage_kind: String(payload.storage_kind || payload.storage || "filesystem"),
+        content_root: String(payload.content_root || ""),
+        content_root_state: String(payload.content_root_state || "unknown"),
+        content_root_exists: !!payload.content_root_exists,
+        summary: String(payload.summary || ""),
+        paths: Array.isArray(payload.paths) ? payload.paths : []
+      };
+    }
 
-      if (module.state === 'fault') {
-        return { label: t('fault'), tone: 'fault', tip: t('moduleFaultTip') };
+    async function refreshRuntime() {
+      try {
+        const snapshot = await fetchJson("/api/v1/shell/snapshot");
+        state.snapshot = snapshot;
+        state.sync = normalizeSync(snapshot.sync || {});
+        state.storage = normalizeStorage(snapshot.storage || {});
+        state.currentViewer = resolveCurrentViewer(snapshot);
+        state.runtimeError = "";
+      } catch (error) {
+        state.runtimeError = `Settings runtime load error: ${error}`;
       }
-      if (module.state === 'service') {
-        return { label: t('serviceMode'), tone: 'warn', tip: t('moduleDegradedTip') };
-      }
-      if (module.state === 'degraded') {
-        return { label: t('degraded'), tone: 'warn', tip: t('moduleDegradedTip') };
-      }
-      if (module.state === 'locked') {
-        return { label: t('blocked'), tone: 'warn', tip: module.id === 'irrigation' ? t('irrigationOfflineTip') : t('moduleLockedTip') };
-      }
-      if (module.id === 'irrigation' && !module.owner_available) {
-        return { label: t('offline'), tone: 'warn', tip: t('irrigationOfflineTip') };
-      }
-      return { label: t('ready'), tone: 'ok', tip: t('moduleReadyTip') };
+      render();
+    }
+
+    function currentNode() {
+      return (((state.snapshot || {}).nodes || {}).current || {});
+    }
+
+    function peerNode() {
+      return (((state.snapshot || {}).nodes || {}).peer || {});
+    }
+
+    function runtimeHost() {
+      return ((((state.snapshot || {}).runtime || {}).host) || {});
+    }
+
+    function storagePaths() {
+      return ((state.storage || {}).paths || []);
+    }
+
+    function runtimeHostPaths() {
+      return ((runtimeHost().paths) || []);
+    }
+
+    function moduleCards() {
+      return Array.isArray((state.snapshot || {}).module_cards) ? state.snapshot.module_cards : [];
+    }
+
+    function moduleByOwner(ownerScope) {
+      return moduleCards().filter((module) => String(module.owner_scope || "") === ownerScope);
     }
 
     function moduleById(id) {
-      const cards = (state.snapshot && state.snapshot.module_cards) || [];
-      return cards.find((item) => item.id === id) || null;
+      return moduleCards().find((module) => module.id === id) || null;
+    }
+
+    function compactPathLabel(value) {
+      const text = String(value || "").trim();
+      if (!text) {
+        return "-";
+      }
+      if (text.length <= 44) {
+        return text;
+      }
+      const normalized = text.replace(/\\/g, "/");
+      const segments = normalized.split("/").filter(Boolean);
+      if (segments.length <= 4) {
+        return text;
+      }
+      return `.../${segments.slice(-4).join("/")}`;
     }
 
     function infoRow(label, value) {
@@ -1939,41 +2216,262 @@
       return `<div class="metric-row"><strong>${esc(label)}</strong><span>${esc(value)}</span></div>`;
     }
 
-    function radioChip(path, value, label, currentValue) {
-      const id = `${path.replace(/\./g, '-')}-${value}`;
-      return `
-        <label class="option-chip" for="${esc(id)}"${tipAttrs(label)}>
-          <input id="${esc(id)}" type="radio" name="${esc(path)}" data-setting-path="${esc(path)}" value="${esc(value)}" ${value === currentValue ? 'checked' : ''}>
-          <span>${esc(label)}</span>
-        </label>
-      `;
+    function toneForState(value) {
+      const normalized = String(value || "").trim().toLowerCase();
+      if (["online", "ready"].includes(normalized)) {
+        return "ok";
+      }
+      if (["fault", "offline", "missing", "blocked", "error"].includes(normalized)) {
+        return "fault";
+      }
+      return "warn";
     }
 
-    function toggleControl(path, checked, title, hint, disabled) {
-      return `
-        <label class="toggle${disabled ? ' is-disabled' : ''}"${tipAttrs(hint)}>
-          <span class="toggle-copy">
-            <strong>${esc(title)}</strong>
-          </span>
-          <input class="switch" type="checkbox" data-setting-path="${esc(path)}" ${checked ? 'checked' : ''} ${disabled ? 'disabled' : ''}>
-        </label>
-      `;
+    function nodeStateLabel(value) {
+      const normalized = String(value || "").trim().toLowerCase();
+      if (normalized === "online") {
+        return t("online");
+      }
+      if (normalized === "offline") {
+        return t("offline");
+      }
+      if (normalized === "degraded") {
+        return t("degraded");
+      }
+      if (normalized === "fault") {
+        return t("fault");
+      }
+      if (normalized === "locked") {
+        return t("blocked");
+      }
+      if (normalized === "service") {
+        return t("service");
+      }
+      return t("unknown");
+    }
+
+    function syncStateLabel(value) {
+      const normalized = String(value || (state.sync || {}).state || "").trim().toLowerCase();
+      if (normalized === "ready") {
+        return t("ready");
+      }
+      if (normalized === "pending") {
+        return t("pending");
+      }
+      if (normalized === "local_only") {
+        return t("localOnly");
+      }
+      if (normalized === "remote_unavailable") {
+        return t("remoteUnavailable");
+      }
+      if (normalized === "never_synced") {
+        return t("neverSynced");
+      }
+      if (normalized === "error") {
+        return t("fault");
+      }
+      return t("unknown");
+    }
+
+    function storageStateLabel(value) {
+      const normalized = String(value || "").trim().toLowerCase();
+      if (normalized === "ready") {
+        return t("ready");
+      }
+      if (normalized === "missing") {
+        return t("missing");
+      }
+      if (normalized === "not_configured") {
+        return t("notConfigured");
+      }
+      if (normalized === "unavailable") {
+        return t("unavailable");
+      }
+      return t("unknown");
+    }
+
+    function routeModeLabel(value) {
+      const normalized = String(value || "").trim().toLowerCase();
+      if (normalized === "local") {
+        return t("routeLocal");
+      }
+      if (normalized === "handoff") {
+        return t("routeHandoff");
+      }
+      if (normalized === "blocked") {
+        return t("routeBlocked");
+      }
+      if (normalized === "virtual") {
+        return t("routeVirtual");
+      }
+      return t("unknown");
+    }
+
+    function formatHostKind(value) {
+      const normalized = String(value || "").trim().toLowerCase();
+      if (normalized === "desktop_host") {
+        return t("desktopHostLabel");
+      }
+      if (normalized === "raspberry_pi_owner") {
+        return t("rpiOwnerHostLabel");
+      }
+      if (normalized === "esp32_fallback") {
+        return t("esp32FallbackLabel");
+      }
+      return normalized || t("unknown");
+    }
+
+    function formatViewerKind(value) {
+      const normalized = normalizeViewerKind(value);
+      if (normalized === "phone") {
+        return t("phoneViewerLabel");
+      }
+      if (normalized === "tablet") {
+        return t("tabletViewerLabel");
+      }
+      if (normalized === "display") {
+        return t("displayViewerLabel");
+      }
+      return t("desktopViewerLabel");
+    }
+
+    function ownerScopeLabel(scope) {
+      const normalized = String(scope || "").trim().toLowerCase();
+      if (normalized === "esp32") {
+        return "ESP32";
+      }
+      if (normalized === "rpi") {
+        return "Raspberry Pi";
+      }
+      return t("platformService");
+    }
+
+    function lastSavedLabel() {
+      if (!state.settings.updated_at_ms) {
+        return t("notYet");
+      }
+      const locale = state.settings.interface.language === "ru" ? "ru-RU" : "en-US";
+      return new Date(state.settings.updated_at_ms).toLocaleString(locale);
+    }
+
+    function formatDateTime(ms) {
+      if (!ms) {
+        return t("notYet");
+      }
+      const locale = state.settings.interface.language === "ru" ? "ru-RU" : "en-US";
+      return new Date(ms).toLocaleString(locale);
+    }
+
+    function formatRelativeTime(ms) {
+      if (!ms) {
+        return t("notYet");
+      }
+      const diff = Date.now() - ms;
+      if (diff < 10000) {
+        return state.settings.interface.language === "ru" ? "только что" : "just now";
+      }
+
+      const minutes = Math.round(diff / 60000);
+      if (minutes < 60) {
+        return state.settings.interface.language === "ru"
+          ? `${minutes} мин назад`
+          : `${minutes} min ago`;
+      }
+
+      const hours = Math.round(minutes / 60);
+      if (hours < 48) {
+        return state.settings.interface.language === "ru"
+          ? `${hours} ч назад`
+          : `${hours} hr ago`;
+      }
+
+      const days = Math.round(hours / 24);
+      return state.settings.interface.language === "ru"
+        ? `${days} дн назад`
+        : `${days} day ago`;
+    }
+
+    function systemStatusTitle() {
+      const host = runtimeHost();
+      const current = currentNode();
+      const peer = peerNode();
+
+      if (String(((state.snapshot || {}).current_shell || {}).runtime_profile || "") === "desktop_smoke" && !current.reachable && !peer.reachable) {
+        return t("localLaunchBoardsOffline");
+      }
+      if (current.health === "online" && peer.health === "online") {
+        return t("systemReady");
+      }
+      if (current.health === "online" && !peer.reachable) {
+        return t("ownerHostPeerOffline");
+      }
+      if (host.server_status === "online") {
+        return t("systemDegraded");
+      }
+      return t("unknown");
+    }
+
+    function viewerHeartbeatLabel() {
+      const snapshotViewers = Array.isArray((state.snapshot || {}).viewers) ? state.snapshot.viewers : [];
+      const viewerId = String((state.currentViewer || {}).viewer_id || "");
+      return snapshotViewers.some((item) => String(item.viewer_id || "") === viewerId)
+        ? t("liveHeartbeat")
+        : t("browserFallbackHeartbeat");
+    }
+
+    function persistenceInfo() {
+      if (state.settingsStorage === "server") {
+        return {
+          label: t("savedOnHost"),
+          tone: "ok",
+          tip: tooltipPayload(
+            t("persistence"),
+            "Settings are currently stored through the backend-backed settings endpoint for this host.",
+            [
+              {
+                title: "Storage",
+                rows: [
+                  { label: "Mode", value: "server" },
+                  { label: "Saved at", value: lastSavedLabel() }
+                ]
+              }
+            ]
+          )
+        };
+      }
+      return {
+        label: t("browserFallback"),
+        tone: "warn",
+        tip: tooltipPayload(
+          t("browserFallback"),
+          "The page is currently using browser-side fallback storage because the backend-backed settings store was not available.",
+          [
+            {
+              title: "Impact",
+              rows: [
+                { label: "Scope", value: "current browser" },
+                { label: "Saved at", value: lastSavedLabel() }
+              ]
+            }
+          ]
+        )
+      };
     }
 
     function metricCard(card) {
       return `
-        <article class="metric-card" data-tone="${esc(card.tone)}" data-span="${esc(card.span || '3')}"${tipAttrs(card.tip || card.body)}>
+        <article class="metric-card" data-tone="${esc(card.tone)}" data-span="${esc(card.span || "3")}"${tooltipAttrs(card.tip || tooltipPayload(card.eyebrow, card.body || ""))}>
           <div class="metric-kicker">${esc(card.eyebrow)}</div>
           <h3 class="metric-title">${esc(card.title)}</h3>
           <p class="metric-copy">${esc(card.body)}</p>
-          <div class="metric-stack">${card.metrics.map((metric) => metricRow(metric[0], metric[1])).join('')}</div>
+          <div class="metric-stack">${(card.metrics || []).map((metric) => metricRow(metric[0], metric[1])).join("")}</div>
         </article>
       `;
     }
 
-    function detailCard(kicker, title, body, contentHtml) {
+    function detailCard(kicker, title, payload, contentHtml) {
       return `
-        <div class="detail-card"${tipAttrs(body)}>
+        <article class="detail-card"${tooltipAttrs(payload)}>
           <div class="panel-head">
             <div>
               <div class="panel-kicker">${esc(kicker)}</div>
@@ -1981,32 +2479,38 @@
             </div>
           </div>
           ${contentHtml}
-        </div>
-      `;
-    }
-
-    function perkCard(path, checked, title, hint, disabled) {
-      return `
-        <article class="perk-card${disabled ? ' is-disabled' : ''}"${tipAttrs(hint)}>
-          <div class="panel-head">
-            <span class="inline-chip" data-tone="${disabled ? 'warn' : 'ok'}">${esc(disabled ? t('perkDisabled') : t('perkLive'))}</span>
-          </div>
-          <div class="perk-copy">
-            <h3 class="perk-title">${esc(title)}</h3>
-          </div>
-          <div class="perk-toggle">
-            ${toggleControl(path, checked, title, hint, disabled)}
-          </div>
         </article>
       `;
     }
 
-    function themeOption(value, title, body, currentValue) {
-      const id = `style-theme-${value}`;
+    function radioChip(path, value, label, currentValue, payload) {
+      const id = `${path.replace(/\./g, "-")}-${value}`;
       return `
-        <label class="theme-option" for="${esc(id)}">
-          <input id="${esc(id)}" type="radio" name="style.theme" data-setting-path="style.theme" value="${esc(value)}" ${value === currentValue ? 'checked' : ''}>
-          <span class="theme-card" data-theme-preview="${esc(value)}"${tipAttrs(body)}>
+        <label class="option-chip"${tooltipAttrs(payload || tooltipPayload(label, label))}>
+          <input id="${esc(id)}" type="radio" name="${esc(path)}" data-setting-path="${esc(path)}" value="${esc(value)}" ${value === currentValue ? "checked" : ""}>
+          <span>${esc(label)}</span>
+        </label>
+      `;
+    }
+
+    function toggleControl(path, checked, title, hint, disabled) {
+      return `
+        <label class="toggle${disabled ? " is-disabled" : ""}"${tooltipAttrs(tooltipPayload(title, hint))}>
+          <span class="toggle-copy">
+            <strong>${esc(title)}</strong>
+            <span>${esc(hint)}</span>
+          </span>
+          <input class="switch" type="checkbox" data-setting-path="${esc(path)}" ${checked ? "checked" : ""} ${disabled ? "disabled" : ""}>
+        </label>
+      `;
+    }
+
+    function themeOption(value, title, body, currentValue) {
+      const id = `theme-${value}`;
+      return `
+        <label class="theme-option">
+          <input id="${esc(id)}" type="radio" name="style.theme" data-setting-path="style.theme" value="${esc(value)}" ${value === currentValue ? "checked" : ""}>
+          <span class="theme-card" data-theme-preview="${esc(value)}"${tooltipAttrs(tooltipPayload(title, body))}>
             <span class="theme-swatch-row">
               <span class="theme-swatch"></span>
               <span class="theme-swatch"></span>
@@ -2022,14 +2526,14 @@
     }
 
     function sectionIdFromHash(hashValue) {
-      const raw = String(hashValue || window.location.hash || '').replace(/^#/, '').trim().toLowerCase();
-      return SECTION_ORDER.includes(raw) ? raw : '';
+      const raw = String(hashValue || window.location.hash || "").replace(/^#/, "").trim().toLowerCase();
+      return SECTION_ORDER.includes(raw) ? raw : "";
     }
 
     function ensureActiveSection(visibleSections) {
       const ids = visibleSections.map((section) => section.id);
       if (!ids.length) {
-        state.activeSection = 'overview';
+        state.activeSection = "overview";
         return;
       }
       if (!ids.includes(state.activeSection)) {
@@ -2042,7 +2546,7 @@
         return;
       }
       try {
-        window.history.replaceState(null, '', `#${sectionId}`);
+        window.history.replaceState(null, "", `#${sectionId}`);
       } catch (_error) {
         return;
       }
@@ -2055,378 +2559,666 @@
       return section.searchText.includes(query);
     }
 
-    function buildSections() {
-      const snapshot = state.snapshot || {};
-      const current = ((snapshot.nodes || {}).current || {});
-      const peer = ((snapshot.nodes || {}).peer || {});
-      const shell = snapshot.current_shell || {};
-      const navigation = snapshot.navigation || {};
-      const content = state.content || {};
-      const irrigationModule = moduleById('irrigation') || {};
-      const turretModule = moduleById('turret_bridge') || {};
-      const sync = state.sync || {};
+    function isMobileSectionLayout() {
+      return window.matchMedia("(max-width: 760px)").matches;
+    }
+
+    function metricCardsOverview() {
+      const host = runtimeHost();
+      const viewer = state.currentViewer || resolveCurrentViewer(state.snapshot || {});
+      const current = currentNode();
+      const peer = peerNode();
+      const sync = state.sync || normalizeSync({});
       const persistence = persistenceInfo();
-      const turretStatus = moduleDisplayState(turretModule);
-      const irrigationStatus = moduleDisplayState(irrigationModule);
-      const syncCards = [
-        {
-          eyebrow: t('syncEnabled'),
-          title: sync.enabled ? t('online') : t('localOnly'),
-          tone: sync.enabled ? 'ok' : 'warn',
-          body: t('syncLead'),
-          metrics: [[t('preferredMode'), state.settings.synchronization.preferred_mode === 'auto' ? t('auto') : t('manualReview')]],
-        },
-        {
-          eyebrow: t('syncState'),
-          title: syncStateLabel(),
-          tone: toneForState(syncStateLabel()),
-          body: sync.last_error || t('settingsHint'),
-          metrics: [[t('peerReachability'), sync.peer_reachable ? t('online') : t('offline')]],
-        },
-      ];
-      const overviewCards = [
-        {
-          eyebrow: t('platform'),
-          title: current.title || 'Raspberry Pi',
-          tone: toneForState(current.health),
-          body: localizedNodeSummary(current, 'localShellActive'),
-          metrics: [
-            [t('runtimeProfile'), shell.runtime_profile || 'unknown'],
-            [t('activeMode'), shell.active_mode || 'manual'],
-            [t('moduleAvailability'), `${(snapshot.module_cards || []).length || 0}`],
-          ],
-        },
-        {
-          eyebrow: t('continuity'),
-          title: peer.title || 'ESP32',
-          tone: toneForState(peer.health),
-          body: localizedNodeSummary(peer, 'peerOwnerOffline'),
-          metrics: [
-            [t('syncState'), syncStateLabel()],
-            [t('peerReachability'), peer.reachable ? t('online') : t('offline')],
-            [t('ownershipSummary'), (((snapshot.summaries || {}).diagnostics || {}).ownership_summary || '-')],
-          ],
-        },
-        {
-          eyebrow: t('storage'),
-          title: String(content.storage || ((snapshot.summaries || {}).content || {}).storage_kind || 'filesystem'),
-          tone: content.content_root_exists === false ? 'fault' : 'ok',
-          body: compactPathLabel(content.content_root || ''),
-          tip: `${t('storagePathTip')} ${String(content.content_root || '').trim()}`,
-          metrics: [
-            ['assets', String(!!content.assets_ready)],
-            ['audio', String(!!content.audio_ready)],
-            ['libraries', String(!!content.libraries_ready)],
-          ],
-        },
-        {
-          eyebrow: t('persistence'),
-          title: persistence.label,
-          tone: persistence.tone,
-          body: t('settingsHint'),
-          tip: persistence.tip,
-          metrics: [
-            [t('lastSaved'), lastSavedLabel()],
-            [t('language'), state.settings.interface.language.toUpperCase()],
-            [t('theme'), t(state.settings.style.theme)],
-          ],
-        },
-      ];
+
+      const onlineNodes = [current, peer].filter((item) => item.health === "online").length;
+      const totalNodes = [current, peer].filter((item) => item.node_id).length;
 
       return [
         {
-          id: 'overview',
-          title: t('overview'),
-          summary: t('overviewLead'),
-          searchText: `${t('overview')} ${t('system')} ${t('platform')} ${t('continuity')} ${t('routeVocabulary')} ${t('labBoundary')}`.toLowerCase(),
-          html: `
-            <section class="card section-panel" id="overview" data-section-id="overview">
-              <div class="section-head"${tipAttrs(t('overviewLead'))}>
-                <div>
-                  <div class="section-kicker">${esc(t('overview'))}</div>
-                  <h2 class="section-title">${esc(t('pageTitle'))}</h2>
-                </div>
-                <span class="inline-chip" data-tone="${persistence.tone}"${tipAttrs(persistence.tip)}>${esc(persistence.label)}</span>
-              </div>
-              <div class="overview-grid">${overviewCards.map((card) => metricCard(card)).join('')}</div>
-              <div class="detail-grid">
-                ${detailCard(t('systemFrame'), t('system'), t('systemLead'), `
-                  <div class="info-stack">
-                    ${infoRow(t('currentShell'), `${current.title || 'Node'} / ${healthLabel(current.health || 'online')}`)}
-                    ${infoRow(t('peerShell'), `${peer.title || 'Peer'} / ${healthLabel(peer.health || 'offline')}`)}
-                    ${infoRow(t('runtimeProfile'), shell.runtime_profile || 'unknown')}
-                    ${infoRow(t('activeMode'), shell.active_mode || 'manual')}
-                    ${infoRow(t('ownershipSummary'), (((snapshot.summaries || {}).diagnostics || {}).ownership_summary || '-'))}
-                  </div>
-                `)}
-                ${detailCard(t('routeVocabulary'), t('shellPromise'), t('settingsHint'), `
-                  <div class="info-stack">
-                    ${infoRow(t('navigationRoutes'), `${navigation.settings || '/settings'} · ${navigation.service || '/service'} · ${navigation.content || '/content'}`)}
-                    ${infoRow(t('reportsPointer'), String(navigation.logs || '/gallery?tab=reports'))}
-                    ${infoRow(t('moduleAvailability'), `${(snapshot.module_cards || []).length || 0}`)}
-                  </div>
-                  <div class="chip-row">
-                    <span class="status-chip" data-tone="${esc(turretStatus.tone)}"${tipAttrs(turretStatus.tip)}>${esc(t('turretShort'))}: ${esc(turretStatus.label)}</span>
-                    <span class="status-chip" data-tone="${esc(irrigationStatus.tone)}"${tipAttrs(irrigationStatus.tip)}>${esc(t('irrigationShort'))}: ${esc(irrigationStatus.label)}</span>
-                    <span class="status-chip" data-tone="${esc(persistence.tone)}"${tipAttrs(persistence.tip)}>${esc(t('settingsShort'))}: ${esc(persistence.label)}</span>
-                  </div>
-                  <p class="section-note">${esc(t('labBoundary'))}</p>
-                `)}
-              </div>
-            </section>
-          `,
+          eyebrow: t("systemStatus"),
+          title: systemStatusTitle(),
+          body: t("systemNarrative"),
+          tone: toneForState(current.health === "online" ? "ready" : current.health),
+          span: "6",
+          tip: tooltipPayload(
+            t("systemStatus"),
+            t("systemNarrative"),
+            [
+              {
+                title: "Runtime",
+                rows: [
+                  { label: t("host"), value: host.title || "-" },
+                  { label: t("viewer"), value: viewer.title || "-" },
+                  { label: t("runtimeProfile"), value: String((((state.snapshot || {}).current_shell || {}).runtime_profile || "-")) }
+                ]
+              }
+            ],
+            t("truthfulState")
+          ),
+          metrics: [
+            [t("host"), host.title || "-"],
+            [t("viewer"), viewer.title || "-"],
+            [t("registryModules"), String(moduleCards().length)]
+          ]
         },
         {
-          id: 'bar',
-          title: t('bar'),
-          summary: t('barLead'),
-          searchText: `${t('bar')} ${t('language')} ${t('desktopControls')} ${t('barLocale')} ${t('barDateTime')} ${t('barTooltips')}`.toLowerCase(),
+          eyebrow: t("currentRuntime"),
+          title: host.title || "-",
+          body: String(host.summary || ""),
+          tone: toneForState(host.server_status || "ready"),
+          span: "3",
+          tip: tooltipPayload(
+            t("currentRuntime"),
+            String(host.summary || ""),
+            [
+              {
+                title: "Runtime",
+                rows: [
+                  { label: t("hostKind"), value: formatHostKind(host.kind) },
+                  { label: t("serverStatus"), value: nodeStateLabel(host.server_status || "online") },
+                  { label: t("serverUrl"), value: String(host.server_url || "-") }
+                ]
+              }
+            ],
+            t("hostStateTip")
+          ),
+          metrics: [
+            [t("hostKind"), formatHostKind(host.kind)],
+            [t("serverStatus"), nodeStateLabel(host.server_status || "online")],
+            [t("serverUrl"), String(host.server_url || "-")]
+          ]
+        },
+        {
+          eyebrow: t("currentViewer"),
+          title: (viewer.title || formatViewerKind(viewer.viewer_kind)),
+          body: viewerLikelyOnHost()
+            ? t("hostViewerSame")
+            : `${t("host")}: ${host.title || "-"} · ${t("viewer")}: ${viewer.title || "-"}`,
+          tone: "ok",
+          span: "3",
+          tip: tooltipPayload(
+            t("currentViewer"),
+            t("viewerStateTip"),
+            [
+              {
+                title: "Viewer",
+                rows: [
+                  { label: t("viewerType"), value: formatViewerKind(viewer.viewer_kind) },
+                  { label: t("currentPage"), value: String(viewer.page || "-") },
+                  { label: t("viewerHeartbeat"), value: viewerHeartbeatLabel() }
+                ]
+              }
+            ]
+          ),
+          metrics: [
+            [t("viewerType"), formatViewerKind(viewer.viewer_kind)],
+            [t("currentPage"), String(viewer.page || "-")],
+            [t("viewerHeartbeat"), viewerHeartbeatLabel()]
+          ]
+        },
+        {
+          eyebrow: t("platformNodes"),
+          title: `${onlineNodes}/${totalNodes} ${t("online").toLowerCase()}`,
+          body: `${current.title || "Raspberry Pi"}: ${nodeStateLabel(current.health)} · ${peer.title || "ESP32"}: ${nodeStateLabel(peer.health)}`,
+          tone: onlineNodes === totalNodes && totalNodes ? "ok" : "warn",
+          span: "6",
+          tip: tooltipPayload(
+            t("platformNodes"),
+            t("nodesLead"),
+            [
+              {
+                title: "Nodes",
+                rows: [
+                  { label: current.title || "Raspberry Pi", value: nodeStateLabel(current.health) },
+                  { label: peer.title || "ESP32", value: nodeStateLabel(peer.health) }
+                ]
+              }
+            ]
+          ),
+          metrics: [
+            [current.title || "Raspberry Pi", nodeStateLabel(current.health)],
+            [peer.title || "ESP32", nodeStateLabel(peer.health)],
+            [t("registryModules"), String(moduleCards().length)]
+          ]
+        },
+        {
+          eyebrow: t("sync"),
+          title: syncStateLabel(sync.state),
+          body: String(sync.summary || ""),
+          tone: toneForState(sync.state),
+          span: "6",
+          tip: tooltipPayload(
+            t("sync"),
+            String(sync.summary || ""),
+            [
+              {
+                title: "Sync",
+                rows: [
+                  { label: t("syncState"), value: syncStateLabel(sync.state) },
+                  { label: t("lastSeen"), value: formatDateTime(sync.last_sync_ms) },
+                  { label: t("optionalDomains"), value: String(sync.domains.length) }
+                ]
+              }
+            ],
+            t("syncTip")
+          ),
+          metrics: [
+            [t("syncState"), syncStateLabel(sync.state)],
+            [t("lastSeen"), sync.last_sync_ms ? formatRelativeTime(sync.last_sync_ms) : t("notYet")],
+            [t("optionalDomains"), String(sync.domains.length)]
+          ]
+        }
+      ];
+    }
+
+    function viewerLikelyOnHost() {
+      const host = runtimeHost();
+      const viewer = state.currentViewer || resolveCurrentViewer(state.snapshot || {});
+      const hostname = String(window.location.hostname || "").toLowerCase();
+      if (hostname === "127.0.0.1" || hostname === "localhost") {
+        return true;
+      }
+      if (host.kind === "desktop_host") {
+        return normalizeViewerKind(viewer.viewer_kind) === "desktop";
+      }
+      if (host.kind === "raspberry_pi_owner") {
+        return normalizeViewerKind(viewer.viewer_kind) === "display";
+      }
+      return false;
+    }
+
+    function renderHostPathCard(entry) {
+      const hostAllowed = viewerLikelyOnHost();
+      const openDisabledReason = !entry.open_supported
+        ? t("openFolderUnsupported")
+        : !hostAllowed
+        ? t("openFolderHostOnly")
+        : "";
+      const openDisabled = Boolean(openDisabledReason);
+      const openTooltip = tooltipPayload(
+        t("openFolder"),
+        openDisabledReason || t("hostFolderTip"),
+        [
+          {
+            title: t("pathTooltipSection"),
+            rows: [
+              { label: t("pathState"), value: storageStateLabel(entry.state) },
+              { label: t("files"), value: String(entry.file_count || 0) }
+            ]
+          }
+        ]
+      );
+      return `
+        <article class="path-card" data-tone="${esc(toneForState(entry.state))}"${tooltipAttrs(tooltipPayload(entry.title, entry.description || entry.path || "", [{ title: t("pathTooltipSection"), rows: [{ label: t("pathState"), value: storageStateLabel(entry.state) }, { label: t("runtime"), value: entry.path || "-" }] }], t("storageTip")))}>
+          <div class="panel-head">
+            <div>
+              <div class="panel-kicker">${esc(t("runtime"))}</div>
+              <h3 class="panel-title">${esc(entry.title)}</h3>
+            </div>
+            <span class="inline-chip" data-tone="${esc(toneForState(entry.state))}">${esc(storageStateLabel(entry.state))}</span>
+          </div>
+          <div class="path-value">${esc(compactPathLabel(entry.path))}</div>
+          <div class="info-stack">
+            ${infoRow(t("pathState"), storageStateLabel(entry.state))}
+            ${infoRow(t("files"), String(entry.file_count || 0))}
+            ${infoRow(t("folders"), String(entry.dir_count || 0))}
+          </div>
+          <div class="path-actions">
+            <button class="ghost-button" type="button" data-action="copy-path" data-path="${esc(entry.path || "")}"${tooltipAttrs(tooltipPayload(t("copyPath"), entry.path || ""))}>${esc(t("copyPath"))}</button>
+            <button class="action-button${openDisabled ? " is-disabled" : ""}" type="button" data-action="open-folder" data-target="${esc(entry.open_target || "")}" ${openDisabled ? 'aria-disabled="true"' : ""}${tooltipAttrs(openTooltip)}>${esc(t("openFolder"))}</button>
+          </div>
+        </article>
+      `;
+    }
+
+    function renderStoragePathCard(entry) {
+      const hostAllowed = viewerLikelyOnHost();
+      const openDisabledReason = !entry.open_supported
+        ? t("openFolderUnsupported")
+        : !hostAllowed
+        ? t("openFolderHostOnly")
+        : "";
+      const openDisabled = Boolean(openDisabledReason);
+      const payload = tooltipPayload(
+        entry.title,
+        entry.description || entry.path || "",
+        [
+          {
+            title: t("pathTooltipSection"),
+            rows: [
+              { label: t("pathState"), value: storageStateLabel(entry.state) },
+              { label: t("files"), value: String(entry.file_count || 0) },
+              { label: t("folders"), value: String(entry.dir_count || 0) }
+            ]
+          },
+          {
+            title: t("locationTooltipSection"),
+            rows: [
+              { label: t("storage"), value: entry.path || "-" }
+            ]
+          }
+        ],
+        t("storageTip")
+      );
+      return `
+        <article class="path-card" data-tone="${esc(toneForState(entry.state))}"${tooltipAttrs(payload)}>
+          <div class="panel-head">
+            <div>
+              <div class="panel-kicker">${esc(t("storage"))}</div>
+              <h3 class="panel-title">${esc(entry.title)}</h3>
+            </div>
+            <span class="inline-chip" data-tone="${esc(toneForState(entry.state))}">${esc(storageStateLabel(entry.state))}</span>
+          </div>
+          <div class="path-value">${esc(compactPathLabel(entry.path))}</div>
+          <div class="info-stack">
+            ${infoRow(t("pathState"), storageStateLabel(entry.state))}
+            ${infoRow(t("files"), String(entry.file_count || 0))}
+            ${infoRow(t("folders"), String(entry.dir_count || 0))}
+          </div>
+          <div class="path-actions">
+            <button class="ghost-button" type="button" data-action="copy-path" data-path="${esc(entry.path || "")}"${tooltipAttrs(tooltipPayload(t("copyPath"), entry.path || ""))}>${esc(t("copyPath"))}</button>
+            <button class="action-button${openDisabled ? " is-disabled" : ""}" type="button" data-action="open-folder" data-target="${esc(entry.open_target || "")}" ${openDisabled ? 'aria-disabled="true"' : ""}${tooltipAttrs(tooltipPayload(t("openFolder"), openDisabledReason || t("hostFolderTip")))}>${esc(t("openFolder"))}</button>
+          </div>
+        </article>
+      `;
+    }
+
+    function renderNodeCard(node, ownerScope, titleOverride) {
+      const modules = moduleByOwner(ownerScope);
+      const isOffline = String(node.health || "").toLowerCase() === "offline";
+      const addTooltip = state.editMode
+        ? tooltipPayload(t("addModule"), t("constructorStaged"))
+        : tooltipPayload(t("addModule"), t("editModeOffTip"));
+      return `
+        <article class="node-card" data-tone="${esc(toneForState(node.health || "unknown"))}"${tooltipAttrs(tooltipPayload(titleOverride || node.title || "-", String(node.summary || ""), [{ title: t("physicalNode"), rows: [{ label: t("role"), value: ownerScopeLabel(ownerScope) }, { label: t("lastSeen"), value: node.last_seen_ms ? formatDateTime(node.last_seen_ms) : t("notYet") }] }], t("nodesLead")))}>
+          <div class="panel-head">
+            <div>
+              <div class="panel-kicker">${esc(t("physicalNode"))}</div>
+              <h3 class="panel-title">${esc(titleOverride || node.title || "-")}</h3>
+            </div>
+            <span class="inline-chip" data-tone="${esc(toneForState(node.health || "unknown"))}">${esc(nodeStateLabel(node.health || "unknown"))}</span>
+          </div>
+          <p class="detail-copy">${esc(String(node.summary || ""))}</p>
+          <div class="info-stack">
+            ${infoRow(t("role"), ownerScopeLabel(ownerScope))}
+            ${infoRow(t("lastSeen"), node.last_seen_ms ? `${formatRelativeTime(node.last_seen_ms)} · ${formatDateTime(node.last_seen_ms)}` : t("notYet"))}
+            ${infoRow(t("shellReady"), node.shell_ready ? t("ready") : t("offline"))}
+            ${infoRow(t("wifiReady"), node.wifi_ready ? t("ready") : t("offline"))}
+            ${infoRow(t("syncReady"), node.sync_ready ? t("ready") : t("offline"))}
+          </div>
+          <div class="module-pill-list">
+            ${modules.length
+              ? modules.map((module) => `<span class="module-pill"${tooltipAttrs(tooltipPayload(module.title, module.summary || "", [{ title: t("moduleState"), rows: [{ label: t("ownershipColumnOwner"), value: ownerScopeLabel(module.owner_scope) }, { label: t("ownershipColumnState"), value: nodeStateLabel(module.state || "unknown") }, { label: t("ownershipColumnRoute"), value: routeModeLabel(module.route_mode || "blocked") }] }]))}>${esc(module.title)}</span>`).join("")
+              : `<span class="module-pill">${esc(t("plannedModules"))}: 0</span>`}
+          </div>
+          <div class="note-box">${esc(isOffline ? t("componentTruthOffline") : t("componentTruthPending"))}</div>
+          <div class="button-row">
+            <button class="action-button${state.editMode ? "" : " is-disabled"}" type="button" data-action="add-module" data-owner-scope="${esc(ownerScope)}" ${state.editMode ? "" : 'aria-disabled="true"'}${tooltipAttrs(addTooltip)}>${esc(t("addModule"))}</button>
+          </div>
+        </article>
+      `;
+    }
+
+    function renderOwnershipCard(module) {
+      return `
+        <article class="ownership-card" data-tone="${esc(toneForState(module.state || "unknown"))}"${tooltipAttrs(tooltipPayload(module.title, module.summary || "", [{ title: t("moduleOwnership"), rows: [{ label: t("ownershipColumnOwner"), value: ownerScopeLabel(module.owner_scope) }, { label: t("ownershipColumnState"), value: nodeStateLabel(module.state || "unknown") }, { label: t("ownershipColumnRoute"), value: routeModeLabel(module.route_mode || "blocked") }] }], t("ownershipLead")))}>
+          <div class="panel-head">
+            <div>
+              <div class="panel-kicker">${esc(t("moduleOwnership"))}</div>
+              <h3 class="panel-title">${esc(module.title)}</h3>
+            </div>
+            <span class="inline-chip" data-tone="${esc(toneForState(module.state || "unknown"))}">${esc(nodeStateLabel(module.state || "unknown"))}</span>
+          </div>
+          <div class="ownership-list">
+            ${infoRow(t("ownershipColumnOwner"), ownerScopeLabel(module.owner_scope))}
+            ${infoRow(t("ownershipColumnRoute"), routeModeLabel(module.route_mode || "blocked"))}
+            ${infoRow(t("ownerAvailable"), module.owner_available ? t("ready") : t("offline"))}
+          </div>
+          <p class="detail-copy">${esc(module.summary || "")}</p>
+        </article>
+      `;
+    }
+
+    function renderModuleCard(module) {
+      return `
+        <article class="module-card" data-tone="${esc(toneForState(module.state || "unknown"))}"${tooltipAttrs(tooltipPayload(module.title, module.summary || "", [{ title: t("moduleState"), rows: [{ label: t("ownershipColumnOwner"), value: ownerScopeLabel(module.owner_scope) }, { label: t("ownershipColumnState"), value: nodeStateLabel(module.state || "unknown") }, { label: t("ownershipColumnRoute"), value: routeModeLabel(module.route_mode || "blocked") }] }]))}>
+          <div class="panel-head">
+            <div>
+              <div class="panel-kicker">${esc(t("moduleRegistry"))}</div>
+              <h3 class="panel-title">${esc(module.title)}</h3>
+            </div>
+            <span class="inline-chip" data-tone="${esc(toneForState(module.state || "unknown"))}">${esc(nodeStateLabel(module.state || "unknown"))}</span>
+          </div>
+          <div class="info-stack">
+            ${infoRow(t("ownershipColumnOwner"), ownerScopeLabel(module.owner_scope))}
+            ${infoRow(t("ownershipColumnRoute"), routeModeLabel(module.route_mode || "blocked"))}
+            ${infoRow(t("ownerAvailable"), module.owner_available ? t("ready") : t("offline"))}
+          </div>
+          <div class="note-box">${esc(module.summary || "")}</div>
+        </article>
+      `;
+    }
+
+    function buildSections() {
+      const snapshot = state.snapshot || {};
+      const host = runtimeHost();
+      const viewer = state.currentViewer || resolveCurrentViewer(snapshot);
+      const current = currentNode();
+      const peer = peerNode();
+      const sync = state.sync || normalizeSync({});
+      const storage = state.storage || normalizeStorage({});
+      const modules = moduleCards();
+      const runtimePaths = runtimeHostPaths();
+      const storageCards = storagePaths();
+      const syncDomains = sync.domains || [];
+
+      return [
+        {
+          id: "appearance",
+          title: t("appearance"),
+          summary: t("appearanceLead"),
+          searchText: `${t("appearance")} ${t("language")} ${t("theme")} ${t("density")} ${t("fullscreen")} ${t("desktopControls")} ${t("advancedDiagnostics")}`.toLowerCase(),
           html: `
-            <section class="card section-panel" id="bar" data-section-id="bar">
-              <div class="section-head"${tipAttrs(t('barLead'))}>
+            <section class="card section-panel" id="appearance" data-section-id="appearance">
+              <div class="section-head"${tooltipAttrs(tooltipPayload(t("appearance"), t("appearanceLead"), [], t("interfaceDefaults")))}>
                 <div>
-                  <div class="section-kicker">${esc(t('bar'))}</div>
-                  <h2 class="section-title">${esc(t('barBehavior'))}</h2>
+                  <div class="section-kicker">${esc(t("appearance"))}</div>
+                  <h2 class="section-title">${esc(t("interfaceDefaults"))}</h2>
                 </div>
-                <span class="inline-chip" data-tone="warn"${tipAttrs(t('barPendingHint'))}>${esc(t('barPreview'))}</span>
+                <span class="inline-chip" data-tone="ok">${esc(t("sharedPreferences"))}</span>
               </div>
               <div class="detail-grid">
-                ${detailCard(t('bar'), t('barBehavior'), t('interfaceLead'), `
+                ${detailCard(t("appearance"), t("sharedPreferences"), tooltipPayload(t("sharedPreferences"), t("appearanceLead")), `
                   <div class="option-row">
-                    ${radioChip('interface.language', 'en', 'EN', state.settings.interface.language)}
-                    ${radioChip('interface.language', 'ru', 'RU', state.settings.interface.language)}
+                    ${radioChip("interface.language", "en", "EN", state.settings.interface.language, tooltipPayload("EN", t("englishLanguageTip")))}
+                    ${radioChip("interface.language", "ru", "RU", state.settings.interface.language, tooltipPayload("RU", t("russianLanguageTip")))}
                   </div>
-                  <div class="toggle-list">
-                    ${toggleControl('interface.fullscreen_enabled', state.settings.interface.fullscreen_enabled, t('fullscreen'), t('barPendingHint'), false)}
-                    ${toggleControl('interface.desktop_controls_enabled', state.settings.interface.desktop_controls_enabled, t('desktopControls'), t('settingsHint'), false)}
+                  <div class="note-stack">
+                    ${toggleControl("interface.fullscreen_enabled", state.settings.interface.fullscreen_enabled, t("fullscreen"), t("fullscreenTip"), false)}
+                    ${toggleControl("interface.desktop_controls_enabled", state.settings.interface.desktop_controls_enabled, t("desktopControls"), t("desktopControlsTip"), false)}
+                    ${toggleControl("interface.show_advanced_diagnostics", state.settings.interface.show_advanced_diagnostics, t("advancedDiagnostics"), t("advancedDiagnosticsTip"), false)}
                   </div>
                 `)}
-                ${detailCard(t('barPreview'), t('runtimeSummary'), t('barPendingHint'), `
-                  <div class="info-stack">
-                    ${infoRow(t('barLocale'), state.settings.interface.language.toUpperCase())}
-                    ${infoRow(t('fullscreen'), state.settings.interface.fullscreen_enabled ? t('enabled') : t('disabled'))}
-                    ${infoRow(t('barDateTime'), t('followsShellLocale'))}
-                    ${infoRow(t('barTooltips'), t('mediumDetailed'))}
-                    ${infoRow(t('syncState'), syncStateLabel())}
+                ${detailCard(t("theme"), t("theme"), tooltipPayload(t("theme"), t("themeDensityTip")), `
+                  <div class="theme-grid">
+                    ${themeOption("meadow", t("meadow"), t("meadowTip"), state.settings.style.theme)}
+                    ${themeOption("dawn", t("dawn"), t("dawnTip"), state.settings.style.theme)}
+                    ${themeOption("studio", t("studio"), t("studioTip"), state.settings.style.theme)}
                   </div>
-                  <p class="section-note">${esc(t('barPendingHint'))}</p>
+                  <div class="option-row" style="margin-top: 6px;">
+                    ${radioChip("style.density", "comfortable", t("comfortable"), state.settings.style.density, tooltipPayload(t("comfortable"), t("comfortableTip")))}
+                    ${radioChip("style.density", "compact", t("compact"), state.settings.style.density, tooltipPayload(t("compact"), t("compactTip")))}
+                  </div>
                 `)}
               </div>
             </section>
-          `,
+          `
         },
         {
-          id: 'interface',
-          title: t('interface'),
-          summary: t('interfaceLead'),
-          searchText: `${t('interface')} ${t('advancedDiagnostics')} ${t('runtimeProfile')} ${t('navigationRoutes')} ${t('reportsPointer')}`.toLowerCase(),
+          id: "runtime",
+          title: t("runtime"),
+          summary: t("runtimeLead"),
+          searchText: `${t("runtime")} ${t("host")} ${t("viewer")} ${t("projectRoot")} ${t("runtimeFolder")} ${t("serverUrl")}`.toLowerCase(),
           html: `
-            <section class="card section-panel" id="interface" data-section-id="interface">
-              <div class="section-head"${tipAttrs(t('interfaceLead'))}>
+            <section class="card section-panel" id="runtime" data-section-id="runtime">
+              <div class="section-head"${tooltipAttrs(tooltipPayload(t("runtime"), t("runtimeLead"), [], t("truthfulState")))}>
                 <div>
-                  <div class="section-kicker">${esc(t('interface'))}</div>
-                  <h2 class="section-title">${esc(t('interface'))}</h2>
+                  <div class="section-kicker">${esc(t("runtime"))}</div>
+                  <h2 class="section-title">${esc(t("runtime"))}</h2>
                 </div>
               </div>
               <div class="detail-grid">
-                ${detailCard(t('shellPromise'), t('system'), t('systemLead'), `
+                ${detailCard(t("currentRuntime"), t("currentRuntime"), tooltipPayload(t("currentRuntime"), String(host.summary || ""), [{ title: t("runtimeTooltipSection"), rows: [{ label: t("host"), value: host.title || "-" }, { label: t("hostKind"), value: formatHostKind(host.kind) }, { label: t("serverUrl"), value: String(host.server_url || "-") }] }], t("hostStateTip")), `
                   <div class="info-stack">
-                    ${infoRow(t('runtimeProfile'), shell.runtime_profile || 'unknown')}
-                    ${infoRow(t('activeMode'), shell.active_mode || 'manual')}
-                    ${infoRow(t('navigationRoutes'), `${navigation.settings || '/settings'} · ${navigation.service || '/service'} · ${navigation.content || '/content'}`)}
-                    ${infoRow(t('reportsPointer'), String(navigation.logs || '/gallery?tab=reports'))}
+                    ${infoRow(t("host"), host.title || "-")}
+                    ${infoRow(t("hostKind"), formatHostKind(host.kind))}
+                    ${infoRow(t("serverStatus"), nodeStateLabel(host.server_status || "online"))}
+                    ${infoRow(t("serverUrl"), String(host.server_url || "-"))}
+                    ${infoRow(t("runtimeProfile"), String((((snapshot || {}).current_shell || {}).runtime_profile || "-")))}
                   </div>
+                  <div class="note-box">${esc(String(host.summary || ""))}</div>
                 `)}
-                ${detailCard(t('interface'), t('runtimeSummary'), t('settingsHint'), `
-                  <div class="toggle-list">
-                    ${toggleControl('interface.show_advanced_diagnostics', state.settings.interface.show_advanced_diagnostics, t('advancedDiagnostics'), t('diagnosticsLead'), false)}
-                  </div>
+                ${detailCard(t("currentViewer"), t("currentViewer"), tooltipPayload(t("currentViewer"), t("viewerStateTip"), [{ title: t("viewerTooltipSection"), rows: [{ label: t("viewer"), value: viewer.title || "-" }, { label: t("viewerType"), value: formatViewerKind(viewer.viewer_kind) }, { label: t("currentPage"), value: String(viewer.page || "-") }] }], t("viewerStateTip")), `
                   <div class="info-stack">
-                    ${infoRow(t('lastSaved'), lastSavedLabel())}
-                    ${infoRow(t('theme'), t(state.settings.style.theme))}
-                    ${infoRow(t('density'), t(state.settings.style.density))}
+                    ${infoRow(t("viewer"), viewer.title || "-")}
+                    ${infoRow(t("viewerType"), formatViewerKind(viewer.viewer_kind))}
+                    ${infoRow(t("currentPage"), String(viewer.page || "-"))}
+                    ${infoRow(t("viewerHeartbeat"), viewerHeartbeatLabel())}
+                    ${infoRow(t("connectivity"), viewerLikelyOnHost() ? t("sameDevice") : t("differentDevice"))}
                   </div>
+                  <div class="note-box">${esc(viewerLikelyOnHost() ? t("hostViewerSame") : t("hostViewerDifferent"))}</div>
                 `)}
               </div>
+              <div class="path-grid">
+                ${runtimePaths.map((entry) => renderHostPathCard(entry)).join("")}
+              </div>
             </section>
-          `,
+          `
         },
         {
-          id: 'synchronization',
-          title: t('synchronization'),
-          summary: t('syncLead'),
-          searchText: `${t('synchronization')} ${t('syncState')} ${t('peerReachability')} ${t('preferredMode')} ${t('preferPeerContinuity')}`.toLowerCase(),
+          id: "nodes",
+          title: t("nodes"),
+          summary: t("nodesLead"),
+          searchText: `${t("nodes")} raspberry pi esp32 ${t("plannedModules")} ${t("lastSeen")} ${t("componentTruthPending")}`.toLowerCase(),
           html: `
-            <section class="card section-panel" id="synchronization" data-section-id="synchronization">
-              <div class="section-head"${tipAttrs(t('syncLead'))}>
+            <section class="card section-panel" id="nodes" data-section-id="nodes">
+              <div class="section-head"${tooltipAttrs(tooltipPayload(t("nodes"), t("nodesLead"), [], t("platformNodes")))}>
                 <div>
-                  <div class="section-kicker">${esc(t('synchronization'))}</div>
-                  <h2 class="section-title">${esc(t('synchronization'))}</h2>
+                  <div class="section-kicker">${esc(t("platformNodes"))}</div>
+                  <h2 class="section-title">${esc(t("nodes"))}</h2>
+                </div>
+              </div>
+              <div class="node-grid">
+                ${renderNodeCard(current, "rpi", current.title || "Raspberry Pi")}
+                ${renderNodeCard(peer, "esp32", peer.title || "ESP32")}
+              </div>
+            </section>
+          `
+        },
+        {
+          id: "sync",
+          title: t("sync"),
+          summary: t("syncLead"),
+          searchText: `${t("sync")} ${t("syncState")} ${t("serviceLink")} ${t("optionalDomains")} ${t("preferredMode")} ${t("preferPeerContinuity")}`.toLowerCase(),
+          html: `
+            <section class="card section-panel" id="sync" data-section-id="sync">
+              <div class="section-head"${tooltipAttrs(tooltipPayload(t("sync"), t("syncLead"), [], t("syncTip")))}>
+                <div>
+                  <div class="section-kicker">${esc(t("sync"))}</div>
+                  <h2 class="section-title">${esc(t("sync"))}</h2>
                 </div>
                 <div class="status-row">
-                  ${syncCards.map((card) => `<span class="status-chip" data-tone="${esc(card.tone)}"${tipAttrs(card.body)}>${esc(card.eyebrow)}: ${esc(card.title)}</span>`).join('')}
+                  <span class="status-chip" data-tone="${esc(toneForState(sync.state))}">${esc(syncStateLabel(sync.state))}</span>
+                  <span class="status-chip" data-tone="${esc(sync.peer_reachable ? "ok" : "warn")}">${esc(t("serviceLink"))}: ${esc(sync.peer_reachable ? t("online") : t("remoteUnavailable"))}</span>
                 </div>
               </div>
-              <div class="sync-grid">
-                ${detailCard(t('runtimeSummary'), t('syncState'), t('syncLead'), `
+              <div class="detail-grid">
+                ${detailCard(t("baseConnectivity"), t("syncState"), tooltipPayload(t("syncState"), String(sync.summary || "")), `
                   <div class="info-stack">
-                    ${infoRow(t('syncEnabled'), String(!!sync.enabled))}
-                    ${infoRow(t('syncState'), syncStateLabel())}
-                    ${infoRow(t('peerReachability'), sync.peer_reachable ? t('online') : t('offline'))}
-                    ${infoRow(t('lastSaved'), lastSavedLabel())}
+                    ${infoRow(t("syncState"), syncStateLabel(sync.state))}
+                    ${infoRow(t("serviceLink"), sync.peer_reachable ? t("online") : t("remoteUnavailable"))}
+                    ${infoRow(t("syncReady"), sync.peer_sync_ready ? t("ready") : t("offline"))}
+                    ${infoRow(t("lastSeen"), sync.last_sync_ms ? `${formatRelativeTime(sync.last_sync_ms)} · ${formatDateTime(sync.last_sync_ms)}` : t("notYet"))}
+                  </div>
+                  ${sync.last_error ? `<div class="note-box">${esc(sync.last_error)}</div>` : `<div class="note-box">${esc(sync.summary || "")}</div>`}
+                `)}
+                ${detailCard(t("optionalDomains"), t("syncDomains"), tooltipPayload(t("syncDomains"), t("syncLead")), `
+                  <div class="status-list">
+                    ${syncDomains.map((domain) => `
+                      <div class="status-row-item"${tooltipAttrs(tooltipPayload(domain.title, domain.summary || "", [{ title: t("syncDomains"), rows: [{ label: t("syncState"), value: syncStateLabel(domain.state) }, { label: t("connectivity"), value: domain.enabled ? t("online") : t("localOnly") }] }]))}>
+                        <strong>${esc(domain.title)}</strong>
+                        <span>${esc(syncStateLabel(domain.state))}</span>
+                      </div>
+                    `).join("")}
                   </div>
                 `)}
-                ${detailCard(t('quickActions'), t('preferredMode'), t('syncLead'), `
+                ${detailCard(t("sharedPreferences"), t("sharedPreferences"), tooltipPayload(t("sharedPreferences"), t("sharedPreferenceIntentTip")), `
                   <div class="option-row">
-                    ${radioChip('synchronization.preferred_mode', 'auto', t('auto'), state.settings.synchronization.preferred_mode)}
-                    ${radioChip('synchronization.preferred_mode', 'manual_review', t('manualReview'), state.settings.synchronization.preferred_mode)}
+                    ${radioChip("synchronization.preferred_mode", "auto", t("auto"), state.settings.synchronization.preferred_mode, tooltipPayload(t("auto"), t("syncAutoTip")))}
+                    ${radioChip("synchronization.preferred_mode", "manual_review", t("manualReview"), state.settings.synchronization.preferred_mode, tooltipPayload(t("manualReview"), t("syncManualTip")))}
                   </div>
-                  <div class="toggle-list">
-                    ${toggleControl('synchronization.prefer_peer_continuity', state.settings.synchronization.prefer_peer_continuity, t('preferPeerContinuity'), t('syncLead'), false)}
-                  </div>
-                  <div class="action-row">
-                    <button class="action-button" type="button" data-action="refresh-runtime">${esc(t('refreshLiveData'))}</button>
-                    <a class="action-button" href="/content">${esc(t('openStorageDiagnostics'))}</a>
+                  <div class="note-stack">
+                    ${toggleControl("synchronization.prefer_peer_continuity", state.settings.synchronization.prefer_peer_continuity, t("preferPeerContinuity"), t("syncContinuityTip"), false)}
                   </div>
                 `)}
               </div>
             </section>
-          `,
+          `
         },
         {
-          id: 'policies',
-          title: t('policies'),
-          summary: t('policiesLead'),
-          searchText: `${t('policies')} ${t('turretPolicies')} ${t('turretSilent')} ${t('turretAnimal')} ${t('turretWater')} ${t('turretPeople')}`.toLowerCase(),
+          id: "storage",
+          title: t("storage"),
+          summary: t("storageLead"),
+          searchText: `${t("storage")} ${t("reportsArchive")} assets audio animations libraries ${t("copyPath")} ${t("openFolder")}`.toLowerCase(),
+          html: `
+            <section class="card section-panel" id="storage" data-section-id="storage">
+              <div class="section-head"${tooltipAttrs(tooltipPayload(t("storage"), t("storageLead"), [], t("storageTip")))}>
+                <div>
+                  <div class="section-kicker">${esc(t("storage"))}</div>
+                  <h2 class="section-title">${esc(t("storage"))}</h2>
+                </div>
+                <span class="inline-chip" data-tone="${esc(toneForState(storage.content_root_state || "unknown"))}">${esc(storageStateLabel(storage.content_root_state || "unknown"))}</span>
+              </div>
+              <p class="section-copy">${esc(storage.summary || t("storageLead"))}</p>
+              <div class="path-grid">
+                ${storageCards.map((entry) => renderStoragePathCard(entry)).join("")}
+              </div>
+            </section>
+          `
+        },
+        {
+          id: "ownership",
+          title: t("ownership"),
+          summary: t("ownershipLead"),
+          searchText: `${t("ownership")} irrigation turret gallery laboratory ${t("platformService")}`.toLowerCase(),
+          html: `
+            <section class="card section-panel" id="ownership" data-section-id="ownership">
+              <div class="section-head"${tooltipAttrs(tooltipPayload(t("ownership"), t("ownershipLead"), [], t("moduleOwnership")))}>
+                <div>
+                  <div class="section-kicker">${esc(t("moduleOwnership"))}</div>
+                  <h2 class="section-title">${esc(t("ownership"))}</h2>
+                </div>
+              </div>
+              <div class="ownership-grid">
+                ${modules.map((module) => renderOwnershipCard(module)).join("")}
+              </div>
+            </section>
+          `
+        },
+        {
+          id: "policies",
+          title: t("policies"),
+          summary: t("policiesLead"),
+          searchText: `${t("policies")} ${t("turretPolicies")} ${t("irrigationDefaults")} ${t("silentObservation")} ${t("animalDeterrence")} ${t("preferDriestZone")}`.toLowerCase(),
           html: `
             <section class="card section-panel" id="policies" data-section-id="policies">
-              <div class="section-head"${tipAttrs(t('policiesLead'))}>
+              <div class="section-head"${tooltipAttrs(tooltipPayload(t("policies"), t("policiesLead"), [], t("sharedPreferences")))}>
                 <div>
-                  <div class="section-kicker">${esc(t('policies'))}</div>
-                  <h2 class="section-title">${esc(t('turretPolicies'))}</h2>
+                  <div class="section-kicker">${esc(t("policies"))}</div>
+                  <h2 class="section-title">${esc(t("policies"))}</h2>
                 </div>
-                <span class="inline-chip" data-tone="${esc(turretStatus.tone)}"${tipAttrs(turretStatus.tip)}>${esc(t('turretShort'))}: ${esc(turretStatus.label)}</span>
-              </div>
-              <div class="perk-grid">
-                ${perkCard('turret_policies.silent_observation', state.settings.turret_policies.silent_observation, t('turretSilent'), t('labBoundary'), false)}
-                ${perkCard('turret_policies.allow_animal_deterrence', state.settings.turret_policies.allow_animal_deterrence, t('turretAnimal'), t('labBoundary'), false)}
-                ${perkCard('turret_policies.allow_auto_water_action', state.settings.turret_policies.allow_auto_water_action, t('turretWater'), t('labBoundary'), false)}
-                ${perkCard('turret_policies.return_to_warm_standby', state.settings.turret_policies.return_to_warm_standby, t('turretStandby'), t('labBoundary'), false)}
-                ${perkCard('turret_policies.do_not_target_people', state.settings.turret_policies.do_not_target_people, t('turretPeople'), t('turretPeopleHint'), true)}
-              </div>
-            </section>
-          `,
-        },
-        {
-          id: 'modules',
-          title: t('modules'),
-          summary: t('modulesLead'),
-          searchText: `${t('modules')} ${t('irrigation')} ${t('irrigationDriest')} ${t('irrigationSensorHealth')} ${t('candidatePath')}`.toLowerCase(),
-          html: `
-            <section class="card section-panel" id="modules" data-section-id="modules">
-              <div class="section-head"${tipAttrs(t('modulesLead'))}>
-                <div>
-                  <div class="section-kicker">${esc(t('modules'))}</div>
-                  <h2 class="section-title">${esc(t('irrigation'))}</h2>
-                </div>
-                <span class="inline-chip" data-tone="${esc(irrigationStatus.tone)}"${tipAttrs(irrigationStatus.tip)}>${esc(t('moduleStatus'))}: ${esc(irrigationStatus.label)}</span>
               </div>
               <div class="detail-grid">
-                ${detailCard(t('moduleStatus'), t('irrigation'), t('irrigationLead'), `
-                  <div class="info-stack">
-                    ${infoRow(t('irrigationOwnerState'), irrigationModule.owner_available ? t('ready') : t('offline'))}
-                    ${infoRow(t('routeMode'), routeModeLabel(irrigationModule.route_mode || 'blocked'))}
-                    ${infoRow(t('peerReachability'), peer.reachable ? t('online') : t('offline'))}
-                  </div>
-                  <div class="toggle-list">
-                    ${toggleControl('irrigation.prefer_driest_zone', state.settings.irrigation.prefer_driest_zone, t('irrigationDriest'), t('irrigationHint'), false)}
-                    ${toggleControl('irrigation.block_automatic_during_service', state.settings.irrigation.block_automatic_during_service, t('irrigationServiceBlock'), t('irrigationHint'), false)}
-                    ${toggleControl('irrigation.require_sensor_health', state.settings.irrigation.require_sensor_health, t('irrigationSensorHealth'), t('irrigationHint'), false)}
-                  </div>
-                `)}
-                <article class="candidate-card"${tipAttrs(t('candidateBody'))}>
-                  <div class="panel-head">
-                    <div>
-                      <div class="panel-kicker">${esc(t('candidatePath'))}</div>
-                      <h3 class="panel-title">${esc(t('laboratory'))} -> ${esc(t('modules'))}</h3>
+                ${detailCard(t("turretPolicies"), t("turretPolicies"), tooltipPayload(t("turretPolicies"), t("policiesLead")), `
+                  <div class="note-stack">
+                    ${toggleControl("turret_policies.silent_observation", state.settings.turret_policies.silent_observation, t("silentObservation"), t("persistentTurretPolicyTip"), false)}
+                    ${toggleControl("turret_policies.allow_animal_deterrence", state.settings.turret_policies.allow_animal_deterrence, t("animalDeterrence"), t("animalDeterrenceTip"), false)}
+                    ${toggleControl("turret_policies.allow_auto_water_action", state.settings.turret_policies.allow_auto_water_action, t("autoWaterAction"), t("autoWaterActionTip"), false)}
+                    ${toggleControl("turret_policies.return_to_warm_standby", state.settings.turret_policies.return_to_warm_standby, t("warmStandby"), t("warmStandbyTip"), false)}
+                    <div class="readonly-row"${tooltipAttrs(tooltipPayload(t("doNotTargetPeople"), t("safetyBaselineTip")))}>
+                      <div>
+                        <strong>${esc(t("doNotTargetPeople"))}</strong>
+                        <span class="detail-copy">${esc(t("safetyBaseline"))}</span>
+                      </div>
+                      <span class="inline-chip" data-tone="ok">${esc(t("ready"))}</span>
                     </div>
                   </div>
-                  <p class="detail-copy">${esc(t('candidateBody'))}</p>
-                  <p class="section-note">${esc(t('labBoundary'))}</p>
-                </article>
+                `)}
+                ${detailCard(t("irrigationDefaults"), t("irrigationDefaults"), tooltipPayload(t("irrigationDefaults"), t("policiesLead")), `
+                  <div class="note-stack">
+                    ${toggleControl("irrigation.prefer_driest_zone", state.settings.irrigation.prefer_driest_zone, t("preferDriestZone"), t("driestZoneTip"), false)}
+                    ${toggleControl("irrigation.block_automatic_during_service", state.settings.irrigation.block_automatic_during_service, t("blockAutoDuringService"), t("serviceBlockTip"), false)}
+                    ${toggleControl("irrigation.require_sensor_health", state.settings.irrigation.require_sensor_health, t("requireSensorHealth"), t("sensorHealthTip"), false)}
+                  </div>
+                `)}
               </div>
             </section>
-          `,
+          `
         },
         {
-          id: 'style',
-          title: t('style'),
-          summary: t('styleLead'),
-          searchText: `${t('style')} ${t('theme')} ${t('density')} ${t('meadow')} ${t('dawn')} ${t('studio')}`.toLowerCase(),
+          id: "modules",
+          title: t("modules"),
+          summary: t("modulesLead"),
+          searchText: `${t("modules")} ${t("moduleRegistry")} ${t("moduleConstructor")} ${t("editConfiguration")} ${t("addModule")}`.toLowerCase(),
           html: `
-            <section class="card section-panel" id="style" data-section-id="style">
-              <div class="section-head"${tipAttrs(t('styleLead'))}>
+            <section class="card section-panel" id="modules" data-section-id="modules">
+              <div class="section-head"${tooltipAttrs(tooltipPayload(t("modules"), t("modulesLead"), [], t("moduleConstructor")))}>
                 <div>
-                  <div class="section-kicker">${esc(t('style'))}</div>
-                  <h2 class="section-title">${esc(t('style'))}</h2>
+                  <div class="section-kicker">${esc(t("moduleRegistry"))}</div>
+                  <h2 class="section-title">${esc(t("modules"))}</h2>
                 </div>
-                <span class="inline-chip" data-tone="ok"${tipAttrs(t('styleLead'))}>${esc(t('theme'))}: ${esc(t(state.settings.style.theme))}</span>
+                <div class="chip-row">
+                  <span class="inline-chip" data-tone="ok">${esc(t("registryModules"))}: ${esc(String(modules.length))}</span>
+                  <span class="inline-chip" data-tone="${state.editMode ? "ok" : "warn"}">${esc(t("editMode"))}: ${esc(state.editMode ? t("ready") : t("stagedOnly"))}</span>
+                </div>
               </div>
               <div class="detail-grid">
-                ${detailCard(t('themePreview'), t('theme'), t('styleLead'), `
-                  <div class="theme-grid">
-                    ${themeOption('meadow', t('meadow'), t('platform'), state.settings.style.theme)}
-                    ${themeOption('dawn', t('dawn'), t('continuity'), state.settings.style.theme)}
-                    ${themeOption('studio', t('studio'), t('persistence'), state.settings.style.theme)}
+                ${detailCard(t("moduleRegistry"), t("moduleRegistry"), tooltipPayload(t("moduleRegistry"), t("modulesLead")), `
+                  <div class="module-grid" style="grid-template-columns: 1fr;">
+                    ${modules.map((module) => renderModuleCard(module)).join("")}
                   </div>
                 `)}
-                ${detailCard(t('surfaceDensity'), t('density'), t('settingsHint'), `
-                  <div class="option-row">
-                    ${radioChip('style.density', 'comfortable', t('comfortable'), state.settings.style.density)}
-                    ${radioChip('style.density', 'compact', t('compact'), state.settings.style.density)}
+                ${detailCard(t("moduleConstructor"), t("moduleConstructor"), tooltipPayload(t("moduleConstructor"), t("modulesLead")), `
+                  <div class="button-row">
+                    <button class="action-button" type="button" data-action="toggle-edit-mode"${tooltipAttrs(tooltipPayload(t("editConfiguration"), t("constructorEnableTip")))}>${esc(t("editConfiguration"))}</button>
+                    <button class="action-button${state.editMode ? "" : " is-disabled"}" type="button" data-action="add-module" data-owner-scope="shared" ${state.editMode ? "" : 'aria-disabled="true"'}${tooltipAttrs(state.editMode ? tooltipPayload(t("addModule"), t("constructorStaged")) : tooltipPayload(t("addModule"), t("editModeOffTip")))}>${esc(t("addModule"))}</button>
                   </div>
+                  <div class="note-box">${esc(t("constructorStaged"))}</div>
+                  <div class="note-box">${esc(t("componentTruthPending"))}</div>
                 `)}
               </div>
             </section>
-          `,
+          `
         },
         {
-          id: 'diagnostics',
-          title: t('diagnostics'),
-          summary: t('diagnosticsLead'),
-          searchText: `${t('diagnostics')} ${t('shellSnapshot')} ${t('contentStatus')} ${t('syncPayload')}`.toLowerCase(),
+          id: "diagnostics",
+          title: t("diagnostics"),
+          summary: t("diagnosticsLead"),
+          searchText: `${t("diagnostics")} ${t("shellSnapshot")} ${t("settingsPayload")} ${t("sync")}`.toLowerCase(),
           html: `
             <section class="card section-panel" id="diagnostics" data-section-id="diagnostics">
-              <div class="section-head"${tipAttrs(t('diagnosticsLead'))}>
+              <div class="section-head"${tooltipAttrs(tooltipPayload(t("diagnostics"), t("diagnosticsLead"), [], t("advancedDiagnostics")))}>
                 <div>
-                  <div class="section-kicker">${esc(t('diagnostics'))}</div>
-                  <h2 class="section-title">${esc(t('diagnostics'))}</h2>
+                  <div class="section-kicker">${esc(t("diagnostics"))}</div>
+                  <h2 class="section-title">${esc(t("diagnostics"))}</h2>
                 </div>
-                <span class="inline-chip" data-tone="${state.settings.interface.show_advanced_diagnostics ? 'ok' : 'warn'}"${tipAttrs(t('diagnosticsLead'))}>${esc(state.settings.interface.show_advanced_diagnostics ? t('ready') : t('blocked'))}</span>
+                <span class="inline-chip" data-tone="${state.settings.interface.show_advanced_diagnostics ? "ok" : "warn"}">${esc(state.settings.interface.show_advanced_diagnostics ? t("ready") : t("stagedOnly"))}</span>
               </div>
-              ${state.runtimeError ? `<p class="muted">${esc(state.runtimeError)}</p>` : ''}
-              <details ${state.settings.interface.show_advanced_diagnostics ? 'open' : ''}>
-                <summary>${esc(t('diagnostics'))}</summary>
+              ${state.runtimeError ? `<div class="note-box">${esc(state.runtimeError)}</div>` : ""}
+              ${state.settings.interface.show_advanced_diagnostics ? `
                 <div class="diagnostics-stack">
-                  ${state.settings.interface.show_advanced_diagnostics ? `
-                    <details open>
-                      <summary>${esc(t('shellSnapshot'))}</summary>
-                      <pre class="code-block">${esc(JSON.stringify(state.snapshot || {}, null, 2))}</pre>
-                    </details>
-                    <details open>
-                      <summary>${esc(t('contentStatus'))}</summary>
-                      <pre class="code-block">${esc(JSON.stringify(state.content || {}, null, 2))}</pre>
-                    </details>
-                    <details open>
-                      <summary>${esc(t('syncPayload'))}</summary>
-                      <pre class="code-block">${esc(JSON.stringify((state.sync || {}).raw || {}, null, 2))}</pre>
-                    </details>
-                  ` : `<p class="muted" style="padding: 0 14px 14px;">${esc(t('diagnosticsHidden'))}</p>`}
+                  <details open>
+                    <summary>${esc(t("shellSnapshot"))}</summary>
+                    <pre class="code-block">${esc(JSON.stringify(state.snapshot || {}, null, 2))}</pre>
+                  </details>
+                  <details open>
+                    <summary>${esc(t("sync"))}</summary>
+                    <pre class="code-block">${esc(JSON.stringify(state.sync || {}, null, 2))}</pre>
+                  </details>
+                  <details open>
+                    <summary>${esc(t("storage"))}</summary>
+                    <pre class="code-block">${esc(JSON.stringify(state.storage || {}, null, 2))}</pre>
+                  </details>
+                  <details open>
+                    <summary>${esc(t("settingsPayload"))}</summary>
+                    <pre class="code-block">${esc(JSON.stringify(state.settings || {}, null, 2))}</pre>
+                  </details>
                 </div>
-              </details>
+              ` : `<div class="note-box">${esc(t("diagnosticsHidden"))}</div>`}
             </section>
-          `,
-        },
+          `
+        }
       ];
     }
 
@@ -2435,15 +3227,11 @@
       return buildSections().filter((section) => matchesSearch(section, query));
     }
 
-    function isMobileSectionLayout() {
-      return window.matchMedia('(max-width: 760px)').matches;
-    }
-
     function renderHero() {
-      document.getElementById('hero').innerHTML = `
+      document.getElementById("hero").innerHTML = `
         <div class="hero-head">
           <div class="hero-copy">
-            <h1>${esc(t('pageTitle'))}</h1>
+            <h1>${esc(t("pageTitle"))}</h1>
           </div>
         </div>
       `;
@@ -2452,49 +3240,30 @@
     function renderRail() {
       const sections = filteredSections();
       ensureActiveSection(sections);
-      const snapshot = state.snapshot || {};
-      const current = ((snapshot.nodes || {}).current || {});
-      const peer = ((snapshot.nodes || {}).peer || {});
-      const persistence = persistenceInfo();
-      document.getElementById('settings-rail').innerHTML = `
+      document.getElementById("settings-rail").innerHTML = `
         <div class="rail-block">
-          <div class="rail-kicker">${esc(t('searchSettings'))}</div>
-          <h2 class="rail-title"${tipAttrs(t('searchLead'))}>${esc(t('searchSettings'))}</h2>
+          <h2 class="rail-title"${tooltipAttrs(tooltipPayload(t("searchSettings"), t("searchLead")))}>${esc(t("searchSettings"))}</h2>
           <div class="search-shell">
-            <input class="search-input" type="search" data-action="search-settings" placeholder="${esc(t('searchPlaceholder'))}" value="${esc(state.searchQuery)}"${tipAttrs(t('searchLead'))}>
+            <input class="search-input" type="search" data-action="search-settings" placeholder="${esc(t("searchPlaceholder"))}" value="${esc(state.searchQuery)}"${tooltipAttrs(tooltipPayload(t("searchSettings"), t("searchLead")))}>
           </div>
-          ${state.searchQuery ? `<button class="ghost-button" type="button" data-action="clear-search"${tipAttrs(t('clearFilter'))}>${esc(t('clearFilter'))}</button>` : ''}
+          ${state.searchQuery ? `<button class="ghost-button" type="button" data-action="clear-search"${tooltipAttrs(tooltipPayload(t("clearFilter"), t("searchEmptyBody")))}>${esc(t("clearFilter"))}</button>` : ""}
         </div>
         <div class="rail-block">
-          <div class="rail-kicker">${esc(t('visibleSections'))}</div>
-          <p class="rail-copy">${esc(t('visibleSections'))}: ${sections.length}</p>
           <div class="rail-nav">
             ${sections.map((section) => `
-              <button class="rail-button" type="button" data-section-target="${esc(section.id)}" data-active="${section.id === state.activeSection ? 'true' : 'false'}"${tipAttrs(section.summary)}>
+              <button class="rail-button" type="button" data-section-target="${esc(section.id)}" data-active="${section.id === state.activeSection ? "true" : "false"}"${tooltipAttrs(tooltipPayload(section.title, section.summary))}>
                 <strong>${esc(section.title)}</strong>
-                <span>${esc(section.summary)}</span>
               </button>
-            `).join('')}
+            `).join("")}
           </div>
         </div>
         <div class="rail-block">
-          <div class="rail-kicker">${esc(t('runtimeSummary'))}</div>
-          <div class="info-stack">
-            ${infoRow(t('currentShell'), current.title || 'Raspberry Pi')}
-            ${infoRow(t('peerShell'), peer.title || 'ESP32')}
-            ${infoRow(t('settingsShort'), persistence.label)}
-            ${infoRow(t('lastSaved'), lastSavedLabel())}
-            ${infoRow(t('syncState'), syncStateLabel())}
-          </div>
-        </div>
-        <div class="rail-block">
-          <div class="rail-kicker">${esc(t('quickActions'))}</div>
           <div class="rail-actions">
-            <a class="action-button" href="/"${tipAttrs(t('backToShell'))}>${esc(t('backToShell'))}</a>
-            <a class="action-button" href="/gallery"${tipAttrs(t('gallery'))}>${esc(t('gallery'))}</a>
-            <a class="action-button" href="/service"${tipAttrs(t('laboratory'))}>${esc(t('laboratory'))}</a>
-            <a class="action-button" href="/gallery?tab=reports"${tipAttrs(t('reports'))}>${esc(t('reports'))}</a>
-            <button class="action-button" type="button" data-action="refresh-runtime"${tipAttrs(t('refreshLiveData'))}>${esc(t('refreshLiveData'))}</button>
+            <a class="action-button" href="/"${tooltipAttrs(tooltipPayload(t("backToShell"), t("toolbarHint")))}>${esc(t("backToShell"))}</a>
+            <a class="action-button" href="/gallery"${tooltipAttrs(tooltipPayload(t("gallery"), t("quickGalleryTip")))}>${esc(t("gallery"))}</a>
+            <a class="action-button" href="/service"${tooltipAttrs(tooltipPayload(t("laboratory"), t("quickLaboratoryTip")))}>${esc(t("laboratory"))}</a>
+            <a class="ghost-button" href="/content"${tooltipAttrs(tooltipPayload(t("openStorageDiagnostics"), t("storageDiagnosticsTip")))}>${esc(t("openStorageDiagnostics"))}</a>
+            <button class="ghost-button" type="button" data-action="refresh-runtime"${tooltipAttrs(tooltipPayload(t("refreshStatus"), t("refreshPageTip")))}>${esc(t("refreshStatus"))}</button>
           </div>
         </div>
       `;
@@ -2504,13 +3273,13 @@
       const sections = filteredSections();
       ensureActiveSection(sections);
       syncHash(state.activeSection);
-      const detail = document.getElementById('settings-detail');
+      const detail = document.getElementById("settings-detail");
       if (!sections.length) {
         detail.innerHTML = `
           <section class="empty-state">
-            <h2>${esc(t('searchEmptyTitle'))}</h2>
-            <p class="muted">${esc(t('searchEmptyBody'))}</p>
-            <button class="action-button" type="button" data-action="clear-search">${esc(t('clearFilter'))}</button>
+            <h2>${esc(t("searchEmptyTitle"))}</h2>
+            <p class="muted">${esc(t("searchEmptyBody"))}</p>
+            <button class="action-button" type="button" data-action="clear-search">${esc(t("clearFilter"))}</button>
           </section>
         `;
         return;
@@ -2518,14 +3287,14 @@
       const renderedSections = isMobileSectionLayout()
         ? sections.filter((section) => section.id === state.activeSection)
         : sections;
-      detail.innerHTML = renderedSections.map((section) => section.html).join('');
+      detail.innerHTML = renderedSections.map((section) => section.html).join("");
       if (state.pendingScrollId) {
         const targetId = state.pendingScrollId;
-        state.pendingScrollId = '';
+        state.pendingScrollId = "";
         window.requestAnimationFrame(() => {
           const element = document.getElementById(targetId);
           if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            element.scrollIntoView({ behavior: "smooth", block: "start" });
           }
         });
       }
@@ -2538,7 +3307,7 @@
       renderRail();
       renderDetail();
       if (hadSearchFocus) {
-        const input = document.querySelector('[data-action="search-settings"]');
+        const input = document.querySelector("[data-action='search-settings']");
         if (input instanceof HTMLInputElement) {
           input.focus();
           input.setSelectionRange(input.value.length, input.value.length);
@@ -2546,40 +3315,58 @@
       }
     }
 
-    async function refreshRuntime() {
-      try {
-        const [snapshot, contentStatus, syncPayload] = await Promise.all([
-          fetchJson('/api/v1/shell/snapshot'),
-          fetchJson('/api/v1/content/status'),
-          fetchSyncJson(),
-        ]);
-        state.snapshot = snapshot;
-        state.content = contentStatus;
-        state.sync = normalizeSyncPayload(syncPayload);
-        state.runtimeError = '';
-      } catch (error) {
-        state.runtimeError = `Settings runtime load error: ${error}`;
+    async function copyText(text, successLabel) {
+      const value = String(text || "").trim();
+      if (!value) {
+        return;
       }
-      render();
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(value);
+        } else {
+          const field = document.createElement("textarea");
+          field.value = value;
+          field.style.position = "fixed";
+          field.style.opacity = "0";
+          document.body.appendChild(field);
+          field.select();
+          document.execCommand("copy");
+          field.remove();
+        }
+        showToast(t("copySuccess"), successLabel || value, "ok");
+      } catch (error) {
+        showToast(t("fault"), String(error), "fault");
+      }
     }
 
-    document.addEventListener('input', (event) => {
+    async function openFolder(targetId) {
+      try {
+        const payload = await fetchJson(`/api/v1/host/open?target=${encodeURIComponent(targetId)}`, {
+          method: "POST"
+        });
+        showToast(t("openFolderQueued"), String(payload.message || targetId), payload.accepted ? "ok" : "warn");
+      } catch (error) {
+        showToast(t("openFolderBlocked"), String(error), "warn");
+      }
+    }
+
+    document.addEventListener("input", (event) => {
       const target = event.target;
       if (!(target instanceof HTMLInputElement)) {
         return;
       }
-      if (target.dataset.action === 'search-settings') {
-        state.searchQuery = String(target.value || '').trim().toLowerCase();
+      if (target.dataset.action === "search-settings") {
+        state.searchQuery = String(target.value || "").trim().toLowerCase();
         render(true);
       }
     });
 
-    document.addEventListener('change', (event) => {
+    document.addEventListener("change", (event) => {
       const target = event.target;
       if (!(target instanceof HTMLInputElement)) {
         return;
       }
-      if (target.dataset.action === 'search-settings') {
+      if (target.dataset.action === "search-settings") {
         return;
       }
       const path = target.dataset.settingPath;
@@ -2587,19 +3374,27 @@
         return;
       }
       const nextSettings = clone(state.settings);
-      setDeepValue(nextSettings, path, target.type === 'checkbox' ? target.checked : target.value);
+      setDeepValue(nextSettings, path, target.type === "checkbox" ? target.checked : target.value);
       saveSettings(nextSettings).catch((error) => {
         state.runtimeError = `Settings save error: ${error}`;
         render();
       });
     });
 
-    document.addEventListener('click', (event) => {
-      const target = event.target instanceof HTMLElement ? event.target.closest('[data-action], [data-section-target]') : null;
+    document.addEventListener("click", (event) => {
+      const target = event.target instanceof HTMLElement
+        ? event.target.closest("[data-action], [data-section-target]")
+        : null;
       if (!target) {
         return;
       }
-      const sectionTarget = target.getAttribute('data-section-target');
+
+      if (target.getAttribute("aria-disabled") === "true") {
+        event.preventDefault();
+        return;
+      }
+
+      const sectionTarget = target.getAttribute("data-section-target");
       if (sectionTarget) {
         state.activeSection = sectionTarget;
         state.pendingScrollId = sectionTarget;
@@ -2607,18 +3402,55 @@
         return;
       }
 
-      const action = target.getAttribute('data-action');
-      if (action === 'refresh-runtime') {
+      const action = target.getAttribute("data-action");
+      if (!action) {
+        return;
+      }
+
+      if (action === "refresh-runtime") {
         refreshRuntime().catch(() => {});
         return;
       }
-      if (action === 'clear-search') {
-        state.searchQuery = '';
+
+      if (action === "clear-search") {
+        state.searchQuery = "";
         render();
+        return;
+      }
+
+      if (action === "copy-current-url") {
+        copyText(window.location.href, window.location.href);
+        return;
+      }
+
+      if (action === "copy-server-url") {
+        copyText(String(runtimeHost().server_url || window.location.origin), String(runtimeHost().server_url || window.location.origin));
+        return;
+      }
+
+      if (action === "copy-path") {
+        copyText(target.getAttribute("data-path") || "", target.getAttribute("data-path") || "");
+        return;
+      }
+
+      if (action === "open-folder") {
+        openFolder(target.getAttribute("data-target") || "");
+        return;
+      }
+
+      if (action === "toggle-edit-mode") {
+        state.editMode = !state.editMode;
+        showToast(t("editMode"), state.editMode ? t("ready") : t("stagedOnly"), state.editMode ? "ok" : "warn");
+        render();
+        return;
+      }
+
+      if (action === "add-module") {
+        showToast(t("moduleConstructor"), t("constructorStaged"), "warn");
       }
     });
 
-    window.addEventListener('hashchange', () => {
+    window.addEventListener("hashchange", () => {
       const sectionId = sectionIdFromHash(window.location.hash);
       if (!sectionId) {
         return;
@@ -2628,11 +3460,12 @@
       render();
     });
 
-    window.addEventListener('resize', () => {
+    window.addEventListener("resize", () => {
       render();
     });
 
     async function initialize() {
+      bindTooltipEvents();
       const initialSection = sectionIdFromHash(window.location.hash);
       if (initialSection) {
         state.activeSection = initialSection;

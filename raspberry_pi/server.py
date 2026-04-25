@@ -14,25 +14,13 @@ from bridge_state import BridgeState
 from settings_store import SettingsStore
 from shell_snapshot_facade import ShellSnapshotFacade
 from shell_viewer_presence import ShellViewerPresence
+from storage_status import build_content_status, open_host_path_target
 from sync_client import SyncClient
 
 try:
     import segno
 except ImportError:
     segno = None
-
-
-def build_content_status(content_root: Path) -> dict[str, object]:
-    return {
-        "storage": "filesystem",
-        "content_root": str(content_root),
-        "content_root_exists": content_root.exists(),
-        "assets_ready": (content_root / "assets").is_dir(),
-        "audio_ready": (content_root / "audio").is_dir(),
-        "animations_ready": (content_root / "animations").is_dir(),
-        "libraries_ready": (content_root / "libraries").is_dir(),
-    }
-
 
 def build_entry_qr_svg(target_url: str) -> bytes:
     if segno is None:
@@ -145,7 +133,9 @@ def _detect_runtime_profile(config: BridgeConfig) -> str:
 
 
 def build_server(config: BridgeConfig, state: BridgeState, sync_client: SyncClient) -> ThreadingHTTPServer:
-    web_root = Path(__file__).resolve().parent / "web"
+    runtime_root = Path(__file__).resolve().parent
+    project_root = runtime_root.parent
+    web_root = runtime_root / "web"
     content_root = Path(config.content_root)
     content_root_resolved = content_root.resolve()
     runtime_profile = _detect_runtime_profile(config)
@@ -154,6 +144,8 @@ def build_server(config: BridgeConfig, state: BridgeState, sync_client: SyncClie
     shell_snapshot_facade = ShellSnapshotFacade(
         state,
         content_root,
+        project_root=project_root,
+        runtime_root=runtime_root,
         runtime_profile=runtime_profile,
         viewer_provider=viewer_presence.active_viewers,
     )
@@ -417,6 +409,27 @@ def build_server(config: BridgeConfig, state: BridgeState, sync_client: SyncClie
 
                 self._json_response(
                     settings_store.update(settings_payload)
+                )
+                return
+
+            if parsed.path == "/api/v1/host/open":
+                target_id = self._param(params, "target").strip().lower()
+                accepted, message, path = open_host_path_target(
+                    target_id,
+                    project_root=project_root,
+                    runtime_root=runtime_root,
+                    content_root=content_root,
+                )
+                status = HTTPStatus.OK if accepted else HTTPStatus.BAD_REQUEST
+                self._json_response(
+                    {
+                        "command": "host_open",
+                        "accepted": accepted,
+                        "message": message,
+                        "target": target_id,
+                        "path": path,
+                    },
+                    status,
                 )
                 return
 

@@ -28,11 +28,16 @@ class ShellSnapshotFacadeTests(unittest.TestCase):
 
         self.assertEqual("shell-snapshot.v1", snapshot["schema_version"])
         self.assertIn("current_shell", snapshot)
+        self.assertIn("runtime", snapshot)
+        self.assertIn("viewers", snapshot)
         self.assertIn("nodes", snapshot)
+        self.assertIn("sync", snapshot)
+        self.assertIn("storage", snapshot)
         self.assertIn("module_cards", snapshot)
         self.assertIn("navigation", snapshot)
         self.assertIn("summaries", snapshot)
         self.assertEqual("raspberry_pi", snapshot["current_shell"]["node_type"])
+        self.assertEqual("raspberry_pi_owner", snapshot["runtime"]["host"]["kind"])
         self.assertEqual("/gallery", snapshot["navigation"]["gallery"]["path"])
         self.assertEqual("reports", snapshot["navigation"]["gallery"]["default_tab"])
         self.assertEqual("/service", snapshot["navigation"]["laboratory"]["path"])
@@ -44,6 +49,8 @@ class ShellSnapshotFacadeTests(unittest.TestCase):
         self.assertTrue(snapshot["nodes"]["current"]["shell_ready"])
         self.assertTrue(snapshot["nodes"]["current"]["wifi_ready"])
         self.assertTrue(snapshot["nodes"]["current"]["sync_ready"])
+        self.assertEqual("ready", snapshot["storage"]["content_root_state"])
+        self.assertIn("paths", snapshot["runtime"]["host"])
 
     def test_snapshot_can_include_runtime_profile_and_viewers(self) -> None:
         facade = ShellSnapshotFacade(
@@ -73,9 +80,13 @@ class ShellSnapshotFacadeTests(unittest.TestCase):
         snapshot = facade.build_snapshot()
 
         self.assertEqual("desktop_smoke", snapshot["current_shell"]["runtime_profile"])
+        self.assertEqual("desktop_host", snapshot["runtime"]["host"]["kind"])
         self.assertEqual(2, len(snapshot["viewers"]))
         self.assertEqual("phone", snapshot["viewers"][0]["viewer_kind"])
         self.assertEqual("desktop", snapshot["viewers"][1]["viewer_kind"])
+        self.assertFalse(snapshot["nodes"]["current"]["reachable"])
+        self.assertEqual("offline", snapshot["nodes"]["current"]["health"])
+        self.assertFalse(snapshot["nodes"]["current"]["shell_ready"])
 
     def test_irrigation_card_is_blocked_without_peer_owner(self) -> None:
         snapshot = self.facade.build_snapshot()
@@ -121,6 +132,7 @@ class ShellSnapshotFacadeTests(unittest.TestCase):
         self.assertTrue(snapshot["nodes"]["peer"]["shell_ready"])
         self.assertTrue(snapshot["nodes"]["peer"]["wifi_ready"])
         self.assertTrue(snapshot["nodes"]["peer"]["sync_ready"])
+        self.assertEqual("ready", snapshot["sync"]["state"])
 
 
 if __name__ == "__main__":

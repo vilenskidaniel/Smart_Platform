@@ -123,6 +123,12 @@
 
 ## Первые обязательные endpoint-группы
 
+Для пользовательского shell и особенно `Settings` главным контрактом является
+`GET /api/v1/shell/snapshot` плюс `GET /api/v1/settings`. Остальные endpoint
+остаются специализированными surfaces: они могут питать snapshot внутри backend
+или открываться как service/diagnostics views, но клиент `Settings` не должен
+собирать truthful-state картину из разрозненных `content` и `sync` запросов.
+
 - `/api/v1/system`
 - `/api/v1/shell/snapshot`
 - `/api/v1/modules`
@@ -135,36 +141,61 @@
 - `/api/v1/reports/note`
 - `/api/v1/content/status`
 - `/api/v1/settings`
+- `/api/v1/host/open?target={whitelisted_target}`
 - `/api/v1/sync/heartbeat`
 - `/api/v1/sync/state`
 - `/api/v1/sync/modules/push`
 
 ## Content Status Snapshot
 
-Оба узла должны уметь честно сообщать, готов ли их локальный слой хранения heavy-content.
-
-```json
-{
-  "storage": "sd",
-  "sd_ready": true,
-  "assets_ready": true,
-  "audio_ready": false,
-  "animations_ready": false,
-  "libraries_ready": true
-}
-```
-
-Для `Raspberry Pi` вместо `sd_ready` может использоваться:
+Оба узла должны уметь честно сообщать, готов ли их storage слой heavy-content.
+Для `Settings` эта информация должна приходить как `snapshot.storage`; прямой
+`GET /api/v1/content/status` остается service/storage diagnostics endpoint.
 
 ```json
 {
   "storage": "filesystem",
+  "storage_kind": "filesystem",
   "content_root": "/opt/smart-platform/content",
   "content_root_exists": true,
-  "assets_ready": true,
-  "audio_ready": true,
-  "animations_ready": true,
-  "libraries_ready": true
+  "content_root_state": "ready",
+  "paths": [
+    {
+      "id": "gallery_reports",
+      "title": "Reports Archive",
+      "path": "/opt/smart-platform/content/gallery/reports",
+      "state": "ready",
+      "exists": true,
+      "file_count": 12,
+      "dir_count": 2,
+      "copy_supported": true,
+      "open_supported": true,
+      "open_target": "gallery_reports"
+    }
+  ]
+}
+```
+
+Для `ESP32` `storage_kind` может быть `sd`, а отдельные paths могут указывать
+на SD-backed content slices. `LittleFS` не считается главным хранилищем heavy
+content.
+
+Legacy boolean поля вроде `assets_ready`, `audio_ready`, `animations_ready` и
+`libraries_ready` можно сохранять как compatibility summary, но UI не должен
+подменять ими component/path-level readiness.
+
+## Host Path Actions
+
+`POST /api/v1/host/open?target={whitelisted_target}` открывает папку на host,
+где запущен backend. Это не viewer-side file open. Endpoint обязан принимать
+только whitelisted target ids из snapshot storage/runtime paths.
+
+```json
+{
+  "command": "host_open",
+  "accepted": true,
+  "target": "content_root",
+  "path": "/opt/smart-platform/content"
 }
 ```
 

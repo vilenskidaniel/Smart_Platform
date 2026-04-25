@@ -9,6 +9,7 @@
 - `laptop_ui_testing_chat_bootstrap_prompt.md` — laptop smoke, launch flow, local browser testing;
 - `smart_platform_home_bar_chat_bootstrap_prompt.md` — home page, shared top bar, launcher cards, tooltip/fullscreen behavior;
 - `gallery_settings_sync_chat_bootstrap_prompt.md` — cross-node continuity для `Gallery` и `Settings`;
+- `settings_architecture_refactor_chat_bootstrap_prompt.md` — Settings page architecture refactor: runtime/viewer/node model, shared Smart Bar status/tooltip behavior, sync/storage/preferences separation, module/component configuration;
 - остальные prompt-файлы — по своему модульному блоку.
 
 Если задача уже ушла в другой product-level блок, лучше открыть новый чат, чем продолжать смешивать несколько больших поверхностей в одном.
