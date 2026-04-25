@@ -1,8 +1,8 @@
 {
   "schema_version": "settings.v1",
-  "updated_at_ms": 1777121952263,
+  "updated_at_ms": 1777132895545,
   "interface": {
-    "language": "ru",
+    "language": "en",
     "desktop_controls_enabled": true,
     "fullscreen_enabled": false,
     "show_advanced_diagnostics": true
@@ -14,6 +14,27 @@
   "synchronization": {
     "preferred_mode": "auto",
     "prefer_peer_continuity": true
+  },
+  "keyboard": {
+    "turret_manual_enabled": true,
+    "base_power_percent": 50,
+    "shift_power_percent": 100,
+    "bindings": {
+      "aim_up": "ArrowUp",
+      "aim_down": "ArrowDown",
+      "aim_left": "ArrowLeft",
+      "aim_right": "ArrowRight",
+      "irrigation_zone_1": "Digit1",
+      "irrigation_zone_2": "Digit2",
+      "irrigation_zone_3": "Digit3",
+      "irrigation_zone_4": "Digit4",
+      "irrigation_zone_5": "Digit5",
+      "piezo": "KeyQ",
+      "strobe": "KeyW",
+      "water": "KeyE",
+      "capture": "Space",
+      "power_modifier": "Shift"
+    }
   },
   "turret_policies": {
     "silent_observation": true,

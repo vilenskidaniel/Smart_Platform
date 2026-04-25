@@ -328,7 +328,7 @@
       id: "client",
       icon: "desktop",
       label: "Desktop",
-      detail: "Desktop or laptop browser detected. Keyboard and mouse input are expected, and hover hints plus shortcut navigation should stay available.",
+      detail: "Desktop or laptop browser detected. Keyboard and mouse input are expected. Action shortcuts are reserved for Turret Manual; elsewhere letters remain typing keys.",
     };
   }
 
@@ -365,7 +365,7 @@
         id: "input",
         icon: "keyboard",
         label: "Touch + Keys",
-        detail: "The browser reports both touch and keyboard or mouse input. Keyboard shortcuts are enabled: H Home, I Irrigation, T Turret, G Gallery, R Reports, L Laboratory, S Settings.",
+        detail: "The browser reports both touch and keyboard or mouse input. Action shortcuts are reserved for Turret Manual; elsewhere letters remain typing keys.",
       };
     }
 
@@ -374,7 +374,7 @@
         id: "input",
         icon: "keyboard",
         label: "Keys + Mouse",
-        detail: "Keyboard and mouse input are available. Shortcut navigation is enabled: H Home, I Irrigation, T Turret, G Gallery, R Reports, L Laboratory, S Settings.",
+        detail: "Keyboard and mouse input are available. Action shortcuts are reserved for Turret Manual; elsewhere letters remain typing keys.",
       };
     }
 
@@ -469,23 +469,7 @@
     }
 
     window.__smartPlatformEntryShortcutsInstalled = true;
-    document.addEventListener("keydown", (event) => {
-      if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) {
-        return;
-      }
-      if (ignoreShortcutTarget(event.target)) {
-        return;
-      }
-
-      const shortcut = SHORTCUTS.find((item) => item.code === event.code);
-      if (!shortcut) {
-        return;
-      }
-
-      event.preventDefault();
-      setHint(panel, `Keyboard shortcut ${shortcut.key} -> ${shortcut.label}`);
-      window.location.href = shortcut.path;
-    });
+    setHint(panel, "Keyboard action shortcuts are reserved for Turret Manual. Letter keys stay available for normal text input elsewhere.");
   }
 
   async function runLayoutAction(context, panel) {

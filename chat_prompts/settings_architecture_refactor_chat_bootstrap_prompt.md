@@ -21,6 +21,22 @@
 
 Уникальную полезную информацию из этих prompt-файлов нужно сохранить, но при конфликтах приоритет имеют требования из этого нового prompt и решения, принятые в текущем обсуждении.
 
+Актуальные решения после UI cleanup:
+
+- видимый header Settings короткий: только `Settings` / `Настройки`;
+- Overview как отдельный верхний dashboard удалён из Settings, потому что краткий статус уже живёт в bar-панели;
+- hover tooltip появляется примерно через `500 ms` и закрывается/отменяется при движении курсора больше `3 px`;
+- helper text не дублируется под control, если он уже есть в tooltip/status-sheet;
+- `EN` и `RU` являются рабочими локалями, а `HE`, `DE`, `FR`, `ES`, `ZH`, `AR` могут быть selectable TODO-заглушками до отдельного translation-модуля;
+- `Modules` — функциональные hardware-level системы (`Турель`, `Ирригация`, `Питание`);
+- `Components` — конкретные железные элементы с инженерными полями: питание, распиновка, допуски, режимы, статус проверки;
+- `System Services` содержит software-сущности вроде `Shell`, `Sync Core`, `Storage Service`; их нельзя смешивать с hardware modules/components;
+- `Constructor` — отдельный modal wizard для черновика модуля или компонента; сначала UI-модель, затем сохранение в JSON/config через приложение;
+- storage cards сортируются от глобального к прикладному: project root, plant library, video, audio, reports, gallery, assets, animations, content root;
+- storage actions включают `Copy path`, `Open folder`, `Open in app`, cleanup preview и подтвержденное удаление, а backend обязан проверять, что путь не выходит за разрешенный root;
+- keyboard action keys работают только на `Turret Manual`; вне control-page клавиши остаются обычным вводом текста;
+- базовая мощность action key по умолчанию `50%`, при удержании `Shift` — `100%`, оба значения переназначаются в Settings.
+
 Сохранить из старых prompt-файлов следующие правила:
 
 - активный source of truth — только локальный репозиторий `Smart_Platform`;
@@ -317,6 +333,14 @@ Fullscreen, language, theme, density, Smart Bar behavior и другие shared 
 - tooltip behavior, если будет настраиваться.
 
 ---
+
+## Историческая структура Settings Ниже
+
+Следующий раздел оставлен как context/history старого refactor-плана. При
+конфликте использовать актуальные решения выше: короткий header, без отдельного
+Overview dashboard, секции `Appearance`, `Runtime`, `Platform Nodes`, `Sync`,
+`Storage`, `Modules`, `Components`, `System Services`, `Policies`, `Constructor`,
+`Diagnostics`.
 
 ## Предлагаемая структура Settings
 

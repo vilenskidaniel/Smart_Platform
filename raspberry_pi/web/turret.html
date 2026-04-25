@@ -144,9 +144,23 @@
 
   <script src="/static/smart_bar.js"></script>
   <script>
+    let turretKeyboardSettings = null;
+    const activeKeyboardActions = new Set();
+
     async function fetchJson(url, options) {
       const response = await fetch(url, options);
       return response.json();
+    }
+
+    async function loadKeyboardSettings() {
+      try {
+        const settings = await fetchJson('/api/v1/settings', { cache: 'no-store' });
+        turretKeyboardSettings = settings.keyboard || null;
+        return settings;
+      } catch (_error) {
+        turretKeyboardSettings = null;
+        return null;
+      }
     }
 
     function badgeClass(state) {
@@ -328,6 +342,65 @@
       await refresh();
     }
 
+    function ignoreKeyboardTarget(target) {
+      if (!(target instanceof HTMLElement)) return false;
+      const tag = target.tagName.toLowerCase();
+      return tag === 'input' || tag === 'textarea' || tag === 'select' || target.isContentEditable;
+    }
+
+    function keyboardActionForCode(code, bindings) {
+      const movement = [bindings.aim_up, bindings.aim_down, bindings.aim_left, bindings.aim_right];
+      if (movement.includes(code)) return { id: 'motion', title: 'manual motion' };
+      if (code === bindings.piezo) return { id: 'audio', title: 'piezo audio' };
+      if (code === bindings.strobe) return { id: 'strobe', title: 'strobe' };
+      if (code === bindings.water) return { id: 'water', title: 'water spray' };
+      if (code === bindings.capture) return { id: 'camera', title: 'video capture gate' };
+      return null;
+    }
+
+    async function handleTurretKeyboard(event, enabled) {
+      if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey || ignoreKeyboardTarget(event.target)) {
+        return;
+      }
+      const settings = turretKeyboardSettings || {};
+      const bindings = {
+        aim_up: 'ArrowUp',
+        aim_down: 'ArrowDown',
+        aim_left: 'ArrowLeft',
+        aim_right: 'ArrowRight',
+        piezo: 'KeyQ',
+        strobe: 'KeyW',
+        water: 'KeyE',
+        capture: 'Space',
+        ...((settings.bindings) || {})
+      };
+      if (settings.turret_manual_enabled === false) {
+        return;
+      }
+      const modeText = document.getElementById('mode-badge')?.textContent || '';
+      if (!modeText.includes('manual')) {
+        return;
+      }
+      const action = keyboardActionForCode(event.code, bindings);
+      if (!action) {
+        return;
+      }
+      const key = `${action.id}:${event.code}`;
+      if (enabled && activeKeyboardActions.has(key)) {
+        return;
+      }
+      event.preventDefault();
+      if (enabled) {
+        activeKeyboardActions.add(key);
+      } else {
+        activeKeyboardActions.delete(key);
+      }
+      const power = event.shiftKey ? (settings.shift_power_percent || 100) : (settings.base_power_percent || 50);
+      await fetchJson(`/api/v1/turret/runtime/subsystem?id=${encodeURIComponent(action.id)}&enabled=${enabled ? '1' : '0'}`, { method: 'POST' });
+      document.getElementById('interlock-summary').innerHTML += `<br>key: ${action.title}, power intent: ${power}%`;
+      await refresh();
+    }
+
     for (const button of document.querySelectorAll('button[data-mode]')) {
       button.addEventListener('click', () => {
         postAndRefresh(`/api/v1/turret/runtime/mode?value=${button.dataset.mode}`);
@@ -344,7 +417,15 @@
       postAndRefresh('/api/v1/sync/refresh');
     });
 
-    refresh().catch(err => {
+    document.addEventListener('keydown', (event) => {
+      handleTurretKeyboard(event, true).catch(() => {});
+    });
+
+    document.addEventListener('keyup', (event) => {
+      handleTurretKeyboard(event, false).catch(() => {});
+    });
+
+    loadKeyboardSettings().finally(() => refresh()).catch(err => {
       document.getElementById('event-log').textContent = `Ошибка загрузки: ${err}`;
     });
     setInterval(() => refresh().catch(() => {}), 2500);

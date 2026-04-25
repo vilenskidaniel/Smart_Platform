@@ -31,6 +31,10 @@ def _as_int(value: Any, default: int) -> int:
         return default
 
 
+def _clamp_int(value: Any, default: int, minimum: int, maximum: int) -> int:
+    return max(minimum, min(maximum, _as_int(value, default)))
+
+
 def _deep_merge(base: dict[str, Any], patch: dict[str, Any]) -> dict[str, Any]:
     merged: dict[str, Any] = {}
     for key, value in base.items():
@@ -52,25 +56,50 @@ def normalize_settings(raw: Any, *, updated_at_ms: int | None = None) -> dict[st
     interface = payload.get("interface") if isinstance(payload.get("interface"), dict) else {}
     style = payload.get("style") if isinstance(payload.get("style"), dict) else {}
     synchronization = payload.get("synchronization") if isinstance(payload.get("synchronization"), dict) else {}
+    keyboard = payload.get("keyboard") if isinstance(payload.get("keyboard"), dict) else {}
+    keyboard_bindings = keyboard.get("bindings") if isinstance(keyboard.get("bindings"), dict) else {}
     turret = payload.get("turret_policies") if isinstance(payload.get("turret_policies"), dict) else {}
     irrigation = payload.get("irrigation") if isinstance(payload.get("irrigation"), dict) else {}
+    languages = {"en", "ru", "he", "de", "fr", "es", "zh", "ar"}
+    themes = {"meadow", "dawn", "studio", "midnight", "sunlit", "night", "minimal", "contrast"}
 
     return {
         "schema_version": "settings.v1",
         "updated_at_ms": updated_at_ms if updated_at_ms is not None else _as_int(payload.get("updated_at_ms"), _now_ms()),
         "interface": {
-            "language": _as_choice(interface.get("language"), {"en", "ru"}, "en"),
+            "language": _as_choice(interface.get("language"), languages, "en"),
             "desktop_controls_enabled": _as_bool(interface.get("desktop_controls_enabled"), True),
             "fullscreen_enabled": _as_bool(interface.get("fullscreen_enabled"), False),
             "show_advanced_diagnostics": _as_bool(interface.get("show_advanced_diagnostics"), False),
         },
         "style": {
-            "theme": _as_choice(style.get("theme"), {"meadow", "dawn", "studio"}, "meadow"),
+            "theme": _as_choice(style.get("theme"), themes, "meadow"),
             "density": _as_choice(style.get("density"), {"comfortable", "compact"}, "comfortable"),
         },
         "synchronization": {
             "preferred_mode": _as_choice(synchronization.get("preferred_mode"), {"auto", "manual_review"}, "auto"),
             "prefer_peer_continuity": _as_bool(synchronization.get("prefer_peer_continuity"), True),
+        },
+        "keyboard": {
+            "turret_manual_enabled": _as_bool(keyboard.get("turret_manual_enabled"), True),
+            "base_power_percent": _clamp_int(keyboard.get("base_power_percent"), 50, 1, 100),
+            "shift_power_percent": _clamp_int(keyboard.get("shift_power_percent"), 100, 1, 100),
+            "bindings": {
+                "aim_up": str(keyboard_bindings.get("aim_up") or "ArrowUp"),
+                "aim_down": str(keyboard_bindings.get("aim_down") or "ArrowDown"),
+                "aim_left": str(keyboard_bindings.get("aim_left") or "ArrowLeft"),
+                "aim_right": str(keyboard_bindings.get("aim_right") or "ArrowRight"),
+                "irrigation_zone_1": str(keyboard_bindings.get("irrigation_zone_1") or "Digit1"),
+                "irrigation_zone_2": str(keyboard_bindings.get("irrigation_zone_2") or "Digit2"),
+                "irrigation_zone_3": str(keyboard_bindings.get("irrigation_zone_3") or "Digit3"),
+                "irrigation_zone_4": str(keyboard_bindings.get("irrigation_zone_4") or "Digit4"),
+                "irrigation_zone_5": str(keyboard_bindings.get("irrigation_zone_5") or "Digit5"),
+                "piezo": str(keyboard_bindings.get("piezo") or "KeyQ"),
+                "strobe": str(keyboard_bindings.get("strobe") or "KeyW"),
+                "water": str(keyboard_bindings.get("water") or "KeyE"),
+                "capture": str(keyboard_bindings.get("capture") or "Space"),
+                "power_modifier": str(keyboard_bindings.get("power_modifier") or "Shift"),
+            },
         },
         "turret_policies": {
             "silent_observation": _as_bool(turret.get("silent_observation"), True),

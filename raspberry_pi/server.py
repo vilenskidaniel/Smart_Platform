@@ -14,7 +14,7 @@ from bridge_state import BridgeState
 from settings_store import SettingsStore
 from shell_snapshot_facade import ShellSnapshotFacade
 from shell_viewer_presence import ShellViewerPresence
-from storage_status import build_content_status, open_host_path_target
+from storage_status import build_content_status, cleanup_host_path_target, open_host_path_target
 from sync_client import SyncClient
 
 try:
@@ -288,7 +288,7 @@ def build_server(config: BridgeConfig, state: BridgeState, sync_client: SyncClie
                 self._json_response(state.build_laboratory_session())
                 return
             if parsed.path == "/api/v1/content/status":
-                self._json_response(build_content_status(content_root))
+                self._json_response(build_content_status(content_root, project_root=project_root))
                 return
             if parsed.path == "/api/v1/settings":
                 self._json_response(settings_store.load())
@@ -431,6 +431,20 @@ def build_server(config: BridgeConfig, state: BridgeState, sync_client: SyncClie
                     },
                     status,
                 )
+                return
+
+            if parsed.path == "/api/v1/content/cleanup":
+                target_id = self._param(params, "target").strip().lower()
+                confirm = self._bool_param(params, "confirm", False)
+                payload = cleanup_host_path_target(
+                    target_id,
+                    project_root=project_root,
+                    runtime_root=runtime_root,
+                    content_root=content_root,
+                    confirm=confirm,
+                )
+                status = HTTPStatus.OK if payload.get("accepted") else HTTPStatus.BAD_REQUEST
+                self._json_response(payload, status)
                 return
 
             if parsed.path == "/api/v1/laboratory/session/context":

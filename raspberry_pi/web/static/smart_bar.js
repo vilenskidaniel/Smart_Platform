@@ -72,7 +72,7 @@
 
   function normalizeBarLanguage(value) {
     const normalized = String(value || "").trim().toLowerCase();
-    return normalized === "en" || normalized === "ru" ? normalized : "";
+    return ["en", "ru", "he", "de", "fr", "es", "zh", "ar"].includes(normalized) ? normalized : "";
   }
 
   function readCachedSettings() {
@@ -187,6 +187,10 @@
 
   function fullscreenNavigationPending() {
     return readStorage(FULLSCREEN_PENDING_KEY) === "1";
+  }
+
+  function keyboardNavigationShortcutsEnabled() {
+    return false;
   }
 
   function setFullscreenNavigationPending(pending) {
@@ -1684,7 +1688,7 @@
     const fullscreenPending = fullscreenRestorePending();
     const controls = [
       { id: "home", href: "/", icon: "home", title: "Smart Platform Home", detail: "Return to the Smart Platform launcher." },
-      { id: "input", icon: "keyboard", title: "Input Helpers", detail: desktopControlsEnabled ? "Desktop keyboard shortcuts and hover helpers are enabled." : "Desktop keyboard shortcuts and hover helpers are disabled.", active: desktopControlsEnabled },
+      { id: "input", icon: "keyboard", title: "Input Helpers", detail: desktopControlsEnabled ? "Turret Manual action keys and hover helpers are enabled. Text fields keep normal typing behavior." : "Turret Manual action keys and hover helpers are disabled.", active: desktopControlsEnabled },
       {
         id: "fullscreen",
         icon: "fullscreen",
@@ -2055,6 +2059,10 @@
           if (tagName === "input" || tagName === "textarea" || tagName === "select" || target.isContentEditable) {
             return;
           }
+        }
+
+        if (!keyboardNavigationShortcutsEnabled()) {
+          return;
         }
 
         const destination = ROUTES[event.code];

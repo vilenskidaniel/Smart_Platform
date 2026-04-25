@@ -140,6 +140,7 @@
 - `/api/v1/reports/testcase`
 - `/api/v1/reports/note`
 - `/api/v1/content/status`
+- `/api/v1/content/cleanup?target={whitelisted_target}&confirm=0|1`
 - `/api/v1/settings`
 - `/api/v1/host/open?target={whitelisted_target}`
 - `/api/v1/sync/heartbeat`
@@ -161,16 +162,21 @@
   "content_root_state": "ready",
   "paths": [
     {
-      "id": "gallery_reports",
-      "title": "Reports Archive",
-      "path": "/opt/smart-platform/content/gallery/reports",
+      "id": "audio",
+      "title": "Audio",
+      "path": "/opt/smart-platform/content/audio",
       "state": "ready",
       "exists": true,
       "file_count": 12,
       "dir_count": 2,
+      "total_bytes": 73400320,
       "copy_supported": true,
       "open_supported": true,
-      "open_target": "gallery_reports"
+      "open_target": "audio",
+      "app_supported": true,
+      "app_url": "/gallery?tab=media&kind=audio",
+      "cleanup_supported": true,
+      "cleanup_reason": ""
     }
   ]
 }
@@ -184,6 +190,10 @@ Legacy boolean поля вроде `assets_ready`, `audio_ready`, `animations_re
 `libraries_ready` можно сохранять как compatibility summary, но UI не должен
 подменять ими component/path-level readiness.
 
+Рекомендуемый порядок user-facing storage cards: `project_root`, `libraries`
+или plant library, `video`, `audio`, `gallery_reports`, `gallery`, `assets`,
+`animations`, `content_root`.
+
 ## Host Path Actions
 
 `POST /api/v1/host/open?target={whitelisted_target}` открывает папку на host,
@@ -196,6 +206,28 @@ Legacy boolean поля вроде `assets_ready`, `audio_ready`, `animations_re
   "accepted": true,
   "target": "content_root",
   "path": "/opt/smart-platform/content"
+}
+```
+
+`POST /api/v1/content/cleanup?target={whitelisted_target}&confirm=0|1`
+используется storage cards в `Settings`:
+
+- `confirm=0` возвращает preview по файлам, папкам и байтам;
+- `confirm=1` удаляет содержимое выбранного slice после подтверждения в UI;
+- endpoint обязан отказать, если target не cleanup-enabled, не находится внутри
+  `content_root`, равен самому `content_root` или указывает на project/runtime root;
+- удаляется содержимое директории, а не сама директория target.
+
+```json
+{
+  "command": "content_cleanup",
+  "accepted": true,
+  "preview": true,
+  "target": "audio",
+  "path": "/opt/smart-platform/content/audio",
+  "file_count": 12,
+  "dir_count": 2,
+  "total_bytes": 73400320
 }
 ```
 

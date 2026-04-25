@@ -26,6 +26,11 @@
 - не переносить большие куски между `Raspberry Pi` и `ESP32` как будто это один и тот же implementation generation;
 - не строить fullscreen/tooltips так, чтобы первый клик пользователя тратился на побочный effect и ломал основное действие;
 - не оставлять browser-native tooltip параллельно custom tooltip;
+- hover tooltip во всех shell-поверхностях появляется с задержкой около `500 ms` и закрывается/отменяется при сдвиге курсора больше `3 px`;
+- выбранный язык должен применяться ко всему видимому тексту; дополнительные локали могут быть TODO-заглушками, если переводной модуль еще не заполнен;
+- hardware modules, hardware components, software services и storage slices не смешиваются в одном списке;
+- destructive storage actions идут только через preview/confirm flow и backend root-boundary checks;
+- keyboard action shortcuts работают только на странице ручного управления турелью, а не как глобальная навигация по буквам;
 - если пользователь ограничил поверхность, например “только PC версия”, сначала решить именно этот slice;
 - после regression сначала восстанавливать рабочее поведение на live page, а уже потом расширять scope.
 

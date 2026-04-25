@@ -34,7 +34,7 @@ class ShellSnapshotFacade:
         system_snapshot = self._state.build_system_snapshot()
         sync_status = self._state.build_sync_status()
         platform_log = self._state.build_platform_log(limit=20)
-        storage_status = build_content_status(self._content_root)
+        storage_status = build_content_status(self._content_root, project_root=self._project_root)
         local_node = system_snapshot["local_node"]
         peer_node = system_snapshot["peer_node"]
         modules = system_snapshot["modules"]
