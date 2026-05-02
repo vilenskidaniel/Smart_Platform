@@ -1,5 +1,11 @@
 # Raspberry Pi Turret Hardware And IO Map
 
+Статус документа:
+
+- supporting hardware map, а не замена workbook и не верхнеуровневый product spec;
+- читать после `docs/README.md`, `26_v1_product_spec.md`, `37_turret_product_context_map.md`, `05_ui_shell_and_navigation.md` и `43_field_onboarding_and_operations.md`;
+- если turret-owner hardware model, readiness boundaries или laboratory relationship расходятся с каноническим слоем, приоритет у primary docs и workbook, а этот файл нужно дочищать или сокращать.
+
 Этот документ фиксирует software-relevant карту `Raspberry Pi` turret-owner узла.
 
 Он нужен, чтобы turret runtime, shell, `Laboratory` и safety rules опирались не на разрозненные заметки,

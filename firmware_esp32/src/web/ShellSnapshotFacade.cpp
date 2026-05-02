@@ -24,6 +24,19 @@ bool isDegradedShellState(core::ModuleState state) {
     return state == core::ModuleState::Degraded || state == core::ModuleState::Locked;
 }
 
+const char* shellStateName(core::ModuleState state) {
+    if (state == core::ModuleState::Fault) {
+        return "fault";
+    }
+    if (state == core::ModuleState::Degraded) {
+        return "degraded";
+    }
+    if (state == core::ModuleState::Locked) {
+        return "locked";
+    }
+    return nullptr;
+}
+
 }  // namespace
 
 ShellSnapshotFacade::ShellSnapshotFacade(core::SystemCore& systemCore,
@@ -161,7 +174,7 @@ String ShellSnapshotFacade::buildNavigationJson() const {
     json += "{";
     json += "\"home\":\"/\",";
     json += "\"gallery\":{\"path\":\"/gallery\",\"route_mode\":\"virtual\",\"owner_scope\":\"shared\",\"tabs\":[\"plants\",\"media\",\"reports\"],\"default_tab\":\"reports\"},";
-    json += "\"laboratory\":{\"available\":true,\"route_mode\":\"local\",\"path\":\"/service\",\"user_facing_title\":\"Laboratory\",\"internal_stage_name\":\"Service/Test v1\"},";
+    json += "\"laboratory\":{\"available\":true,\"route_mode\":\"local\",\"path\":\"/service\",\"user_facing_title\":\"Laboratory\",\"internal_stage_name\":\"Laboratory\"},";
     json += "\"settings\":\"/settings\",";
     json += "\"service\":\"/service\",";
     json += "\"content\":\"/content\",";
@@ -191,8 +204,26 @@ String ShellSnapshotFacade::buildSummariesJson() const {
 }
 
 String ShellSnapshotFacade::buildFaultSummaryJson() const {
-    bool hasFault = systemCore_.globalBlockReason() != core::BlockReason::None;
+    const core::BlockReason globalBlockReason = systemCore_.globalBlockReason();
+    bool hasFault = globalBlockReason != core::BlockReason::None;
     bool hasDegraded = false;
+
+    String activeFailures;
+    activeFailures.reserve(640);
+    activeFailures += "[";
+    bool firstFailure = true;
+
+    if (globalBlockReason != core::BlockReason::None) {
+        activeFailures += "{";
+        activeFailures += "\"id\":";
+        appendJsonEscaped(activeFailures, "global_block");
+        activeFailures += ",\"shell_state\":";
+        appendJsonEscaped(activeFailures, "fault");
+        activeFailures += ",\"reason\":";
+        appendJsonEscaped(activeFailures, core::blockReasonToString(globalBlockReason));
+        activeFailures += "}";
+        firstFailure = false;
+    }
 
     for (size_t index = 0; index < systemCore_.registry().count(); ++index) {
         const core::ModuleDescriptor* module = systemCore_.registry().at(index);
@@ -200,16 +231,35 @@ String ShellSnapshotFacade::buildFaultSummaryJson() const {
             continue;
         }
 
+        const char* stateName = shellStateName(module->state);
+        if (stateName == nullptr) {
+            continue;
+        }
+
         if (isFaultState(module->state)) {
             hasFault = true;
-        }
-        if (isDegradedShellState(module->state)) {
+        } else if (isDegradedShellState(module->state)) {
             hasDegraded = true;
         }
+
+        if (!firstFailure) {
+            activeFailures += ",";
+        }
+        activeFailures += "{";
+        activeFailures += "\"id\":";
+        appendJsonEscaped(activeFailures, module->id);
+        activeFailures += ",\"shell_state\":";
+        appendJsonEscaped(activeFailures, stateName);
+        activeFailures += ",\"reason\":";
+        appendJsonEscaped(activeFailures, core::blockReasonToString(module->blockReason));
+        activeFailures += "}";
+        firstFailure = false;
     }
 
+    activeFailures += "]";
+
     String json;
-    json.reserve(192);
+    json.reserve(832);
     json += "{";
     json += "\"has_fault\":";
     json += hasFault ? "true" : "false";
@@ -225,6 +275,8 @@ String ShellSnapshotFacade::buildFaultSummaryJson() const {
         appendJsonEscaped(json, "System shell is healthy");
     }
 
+    json += ",\"active_failures\":";
+    json += activeFailures;
     json += "}";
     return json;
 }
@@ -235,7 +287,7 @@ String ShellSnapshotFacade::buildDiagnosticsSummaryJson() const {
     json += "{";
     json += "\"sync_state\":";
     appendJsonEscaped(json, syncSummaryState());
-    json += ",\"ownership_summary\":\"ESP32 owns irrigation, Raspberry Pi owns turret\"";
+    json += ",\"ownership_summary\":\"I/O node owns irrigation, compute node owns turret\"";
     json += ",\"content_ready\":";
     json += storageManager_.sdReady() ? "true" : "false";
     json += "}";
@@ -280,7 +332,7 @@ String ShellSnapshotFacade::buildContentSummaryJson() const {
 
 String ShellSnapshotFacade::buildModuleCardJson(const core::ModuleDescriptor& module) const {
     String json;
-    json.reserve(384);
+    json.reserve(448);
     json += "{";
     json += "\"id\":";
     appendJsonEscaped(json, module.id);
@@ -288,6 +340,10 @@ String ShellSnapshotFacade::buildModuleCardJson(const core::ModuleDescriptor& mo
     appendJsonEscaped(json, module.title);
     json += ",\"product_block\":";
     appendJsonEscaped(json, productBlock(module));
+    json += ",\"owner_scope\":";
+    appendJsonEscaped(json, ownerScope(module));
+    json += ",\"owner_title\":";
+    appendJsonEscaped(json, ownerTitle(module));
     json += ",\"owner_node_id\":";
     appendJsonEscaped(json, ownerNodeId(module));
     json += ",\"owner_available\":";
@@ -317,6 +373,9 @@ String ShellSnapshotFacade::buildModuleSummary(const core::ModuleDescriptor& mod
     }
     if (module.state == core::ModuleState::Degraded) {
         return String("Module is degraded: ") + core::blockReasonToString(module.blockReason);
+    }
+    if (sameText(ownerScope(module), "shared")) {
+        return "Shared platform service is available on the current host.";
     }
     if (!ownerIsLocal(module)) {
         return ownerAvailable(module) ? "Peer-owned page is available" : "Peer owner is not available";
@@ -354,7 +413,7 @@ bool ShellSnapshotFacade::ownerAvailable(const core::ModuleDescriptor& module) c
 }
 
 bool ShellSnapshotFacade::ownerIsLocal(const core::ModuleDescriptor& module) const {
-    return !sameText(module.owner, "rpi");
+    return !sameText(ownerScope(module), "compute_node");
 }
 
 const char* ShellSnapshotFacade::nodeTitle(const core::NodeHealth& node) const {
@@ -377,6 +436,27 @@ const char* ShellSnapshotFacade::nodeHealth(const core::NodeHealth& node) const 
     return "online";
 }
 
+const char* ShellSnapshotFacade::ownerScope(const core::ModuleDescriptor& module) const {
+    if (sameText(module.owner, "esp32") || sameText(module.owner, "io_node")) {
+        return "io_node";
+    }
+    if (sameText(module.owner, "rpi") || sameText(module.owner, "raspberry_pi") || sameText(module.owner, "compute_node")) {
+        return "compute_node";
+    }
+    return "shared";
+}
+
+const char* ShellSnapshotFacade::ownerTitle(const core::ModuleDescriptor& module) const {
+    const char* scope = ownerScope(module);
+    if (sameText(scope, "io_node")) {
+        return "I/O node";
+    }
+    if (sameText(scope, "compute_node")) {
+        return "Compute node";
+    }
+    return "Platform Service";
+}
+
 const char* ShellSnapshotFacade::ownerNodeId(const core::ModuleDescriptor& module) const {
     return ownerIsLocal(module) ? systemCore_.localNode().nodeId : systemCore_.peerNode().nodeId;
 }
@@ -389,12 +469,12 @@ const char* ShellSnapshotFacade::productBlock(const core::ModuleDescriptor& modu
         return "turret";
     }
     if (sameText(module.id, "strobe_bench") || sameText(module.id, "service_mode")) {
-        return "service_test";
+        return "laboratory";
     }
     if (sameText(module.id, "irrigation_service")) {
-        return "service_test";
+        return "laboratory";
     }
-    return "system_shell";
+    return "platform_shell";
 }
 
 const char* ShellSnapshotFacade::routeMode(const core::ModuleDescriptor& module) const {

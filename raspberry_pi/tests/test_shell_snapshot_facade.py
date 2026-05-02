@@ -42,10 +42,21 @@ class ShellSnapshotFacadeTests(unittest.TestCase):
         self.assertEqual("reports", snapshot["navigation"]["gallery"]["default_tab"])
         self.assertEqual("/service", snapshot["navigation"]["laboratory"]["path"])
         self.assertEqual("Laboratory", snapshot["navigation"]["laboratory"]["user_facing_title"])
+        self.assertEqual("Laboratory", snapshot["navigation"]["laboratory"]["internal_stage_name"])
         self.assertEqual("/settings", snapshot["navigation"]["settings"])
         self.assertEqual("/service", snapshot["navigation"]["service"])
         self.assertEqual("/service", snapshot["navigation"]["service_test"]["path"])
+        self.assertEqual(
+            "I/O node owns irrigation, compute node owns turret",
+            snapshot["summaries"]["diagnostics"]["ownership_summary"],
+        )
         self.assertEqual("gallery.reports", snapshot["summaries"]["activity"]["primary_viewer"])
+        self.assertTrue(
+            any(
+                item["reason"] == "owner_unavailable" and item["shell_state"] == "locked"
+                for item in snapshot["summaries"]["faults"]["active_failures"]
+            )
+        )
         self.assertTrue(snapshot["nodes"]["current"]["shell_ready"])
         self.assertTrue(snapshot["nodes"]["current"]["wifi_ready"])
         self.assertTrue(snapshot["nodes"]["current"]["sync_ready"])
@@ -92,12 +103,18 @@ class ShellSnapshotFacadeTests(unittest.TestCase):
         snapshot = self.facade.build_snapshot()
         irrigation = next(card for card in snapshot["module_cards"] if card["id"] == "irrigation")
         irrigation_service = next(card for card in snapshot["module_cards"] if card["id"] == "irrigation_service")
+        settings = next(card for card in snapshot["module_cards"] if card["id"] == "settings")
 
         self.assertEqual("blocked", irrigation["route_mode"])
         self.assertFalse(irrigation["owner_available"])
+        self.assertEqual("io_node", irrigation["owner_scope"])
+        self.assertEqual("I/O node", irrigation["owner_title"])
         self.assertEqual("blocked", irrigation_service["route_mode"])
         self.assertFalse(irrigation_service["owner_available"])
-        self.assertEqual("service_test", irrigation_service["product_block"])
+        self.assertEqual("io_node", irrigation_service["owner_scope"])
+        self.assertEqual("laboratory", irrigation_service["product_block"])
+        self.assertEqual("shared", settings["owner_scope"])
+        self.assertEqual("platform_shell", settings["product_block"])
         self.assertFalse(snapshot["nodes"]["peer"]["shell_ready"])
         self.assertFalse(snapshot["nodes"]["peer"]["wifi_ready"])
 

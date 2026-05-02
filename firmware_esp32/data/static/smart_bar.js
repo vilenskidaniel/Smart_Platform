@@ -938,6 +938,8 @@
           return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 3.8a8.3 8.3 0 1 0 4.7 14.9A8.8 8.8 0 0 1 15.5 3.8Z"></path><path d="M16.8 8.2h.01M18.8 11.4h.01"></path></svg>';
         }
         return '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2.2M12 19.8V22M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M2 12h2.2M19.8 12H22M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6"></path></svg>';
+      case "alert":
+        return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4.2 20 19H4z"></path><path d="M12 9v4.6"></path><circle cx="12" cy="16.8" r="0.9" fill="currentColor" stroke="none"></circle></svg>';
       case "wifi":
         if (opts.variant === "offline") {
           return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 9.5a11 11 0 0 1 15 0"></path><path d="M7.5 12.5a7 7 0 0 1 9 0"></path><path d="M10.5 15.5a3 3 0 0 1 3 0"></path><circle cx="12" cy="19" r="1" fill="currentColor" stroke="none"></circle><path d="M4 4l16 16"></path></svg>';
@@ -1341,10 +1343,93 @@
     };
   }
 
+  function failureTitle(rawId) {
+    return String(rawId || "unknown")
+      .split(/[_-]+/)
+      .filter(Boolean)
+      .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+      .join(" ");
+  }
+
+  function failureReason(rawReason) {
+    return String(rawReason || "none").replace(/[_-]+/g, " ");
+  }
+
+  function failureStateLabel(rawState) {
+    const state = String(rawState || "").trim().toLowerCase();
+    if (state === "locked") {
+      return "Locked";
+    }
+    if (state === "degraded") {
+      return "Degraded";
+    }
+    if (state === "fault") {
+      return "Fault";
+    }
+    return "Attention";
+  }
+
+  function shellFailuresToken(snapshot) {
+    const faults = (((snapshot || {}).summaries || {}).faults || {});
+    const activeFailures = Array.isArray(faults.active_failures)
+      ? faults.active_failures.filter((item) => item && typeof item === "object")
+      : [];
+
+    if (!activeFailures.length) {
+      const legacyState = faults.has_fault ? "fault" : faults.has_degraded ? "attention" : "";
+      if (!legacyState) {
+        return null;
+      }
+
+      return {
+        id: "system-failures",
+        icon: "alert",
+        value: "!",
+        title: "Active Failures",
+        state: legacyState,
+        detail: String(faults.message || "The shell reports active failures without per-item details yet.")
+      };
+    }
+
+    const hasFault = activeFailures.some((item) => String(item.shell_state || "").trim().toLowerCase() === "fault");
+    const hasAttention = activeFailures.some((item) => {
+      const state = String(item.shell_state || "").trim().toLowerCase();
+      return state === "locked" || state === "degraded";
+    });
+    const detail = activeFailures
+      .slice(0, 2)
+      .map((item) => `${failureTitle(item.id)}: ${failureReason(item.reason)}.`)
+      .join(" ");
+
+    return {
+      id: "system-failures",
+      icon: "alert",
+      value: String(activeFailures.length),
+      title: "Active Failures",
+      state: hasFault ? "fault" : hasAttention ? "attention" : "online",
+      detail: detail || String(faults.message || "Shell-level failures currently affect routing or readiness."),
+      tooltip: {
+        title: "Active Failures",
+        subtitle: activeFailures.length === 1 ? "1 shell-level issue" : `${activeFailures.length} shell-level issues`,
+        description: String(faults.message || "Shell-level failures currently affect routing or readiness."),
+        sections: [
+          {
+            title: "Failures",
+            rows: activeFailures.slice(0, 6).map((item) => ({
+              label: failureTitle(item.id),
+              value: `${failureStateLabel(item.shell_state)} / ${failureReason(item.reason)}`
+            }))
+          }
+        ]
+      }
+    };
+  }
+
   function systemTokens(snapshot) {
     const smokeRuntime = isSmokeRuntime(snapshot);
     const current = ((snapshot || {}).nodes || {}).current || {};
     const diagnostics = (((snapshot || {}).summaries || {}).diagnostics || {});
+    const failuresToken = shellFailuresToken(snapshot);
     const syncState = String(diagnostics.sync_state || "unknown");
     const locale = preferredLocale();
     const now = new Date();
@@ -1352,7 +1437,7 @@
     const syncReady = !smokeRuntime && syncState === "ready";
     const syncPending = !smokeRuntime && syncState === "pending";
 
-    return [
+    const items = [
       {
         id: "system-wifi",
         icon: "wifi",
@@ -1380,7 +1465,14 @@
           : syncPending
           ? "Peer link is visible, but sync is still pending."
           : `Sync is not ready. Current state: ${syncState}.`
-      },
+      }
+    ];
+
+    if (failuresToken) {
+      items.push(failuresToken);
+    }
+
+    items.push(
       {
         id: "system-volume",
         icon: "volume",
@@ -1415,7 +1507,9 @@
         state: "neutral",
         detail: `Client local date rendered for ${locale}.`
       }
-    ];
+    );
+
+    return items;
   }
 
   function tooltipPayloadForItem(item) {

@@ -31,60 +31,60 @@ def build_laboratory_readiness(
     preflight = [
         _item(
             "local_shell_ready",
-            "Local shell is open",
+            "Локальный shell открыт",
             _READY if local_shell_ready else _BLOCKED,
-            "This shell is open and ready for the next check."
+            "Текущий shell открыт и готов к следующей проверке."
             if local_shell_ready
-            else "Open the current shell before starting the next test.",
-            "Stay on the local shell and confirm the page is reachable before touching more hardware.",
+            else "Откройте текущий shell перед началом следующей проверки.",
+            "Оставайтесь в локальном shell и подтвердите, что страница доступна, прежде чем трогать следующее оборудование.",
         ),
         _item(
             "reports_archive",
-            "Reports can be saved",
+            "Краткая история `Reports` сохраняется",
             _READY if reports_persistent else _ATTENTION,
-            "Gallery > Reports already saves to persistent storage."
+            "Краткая история в `Gallery > Reports` уже сохраняется в постоянное хранилище."
             if reports_persistent
-            else "Reports still use a temporary local log on this node.",
-            "You can continue, but move to Raspberry Pi persistent storage if the results must survive restart.",
+            else "Краткая история в `Gallery > Reports` пока ведется во временном локальном журнале этого узла.",
+            "Продолжать можно и без этого, но продуктовую историю лучше держать в постоянном хранилище. Инженерные свидетельства сессии при этом остаются внутри `Laboratory`.",
         ),
         _item(
             "safe_start_mode",
-            "System starts safely",
+            "Система стартует безопасно",
             _status_for_mode(active_mode, emergency_latched, fault_latched),
             _mode_summary(active_mode, emergency_latched, fault_latched),
             _mode_action(active_mode, emergency_latched, fault_latched),
         ),
         _item(
             "actuators_idle",
-            "Sensitive outputs are idle",
+            "Чувствительные выходы простаивают",
             _BLOCKED if emergency_latched or fault_latched else (_ATTENTION if active_actuators else _READY),
-            "Motion, strobe, water, and audio are idle."
+            "Движение, строб, вода и аудио находятся в покое."
             if not active_actuators and not emergency_latched and not fault_latched
-            else "Some sensitive channels are still active: " + ", ".join(active_actuators)
+            else "Некоторые чувствительные каналы все еще активны: " + ", ".join(active_actuators)
             if active_actuators
-            else "Emergency or fault is still latched, so the session is not in a clean start state.",
-            "Return to safe idle and make sure motion, strobe, water, and audio are all inactive.",
+            else "Аварийное состояние или fault все еще защелкнуты, поэтому сессия не находится в чистом стартовом состоянии.",
+            "Вернитесь в безопасный простой и убедитесь, что движение, строб, вода и аудио полностью неактивны.",
         ),
         _item(
             "peer_owner_link",
-            "ESP32 link is ready",
+            "Связь с ESP32 готова",
             _READY if peer_ready else _ATTENTION,
-            "ESP32 is reachable, so peer-owned laboratory slices can open through owner handoff."
+            "ESP32 доступна, поэтому laboratory-срезы на стороне владельца могут открываться через передачу управления."
             if peer_ready
-            else "ESP32 is not ready yet, so stay on local Raspberry Pi slices for now.",
-            "You can keep testing local Raspberry Pi slices now. Bring ESP32 online before strobe bench or irrigation checks.",
+            else "ESP32 пока не готова, поэтому сейчас оставайтесь на локальных срезах Raspberry Pi.",
+            "Пока можно продолжать только с локальными срезами Raspberry Pi. Поднимите ESP32 перед проверками стендового строба или полива.",
         ),
     ]
 
     bringup_sequence = [
         _step(
             "shell_smoke",
-            "Open shell and reports",
+            "Открыть shell и `Laboratory`",
             "shared",
             "/",
             preflight[0]["status"],
-            "Check that the shell opens, Laboratory is reachable, and Reports can be reviewed.",
-            "Start every physical session by confirming the shell path before deeper hardware work.",
+            "Проверьте, что shell открывается, `Laboratory` доступен и каркас laboratory-сессии отвечает.",
+            "Начинайте каждую физическую сессию с входа в shell и `Laboratory`, прежде чем переходить к более глубоким аппаратным проверкам.",
         ),
         _step(
             "rpi_display_checks",
@@ -92,53 +92,53 @@ def build_laboratory_readiness(
             "rpi",
             "/service?tool=rpi_touch_display",
             _READY if local_shell_ready else _BLOCKED,
-            "Run the owner-side screen pass: color patterns, fullscreen check, and touch grid.",
-            "Use this step for the local display pass before or between deeper module checks.",
+            "Выполните проверку экранов на стороне владельца: цветовые шаблоны, полноэкранный режим и сенсорную сетку.",
+            "Используйте этот шаг для локальной проверки дисплея до или между более глубокими модульными проверками.",
         ),
         _step(
             "peer_link_smoke",
-            "Check peer link",
+            "Проверить связь с peer-узлом",
             "shared",
             "/service",
             _READY if peer_ready else _ATTENTION,
-            "Verify heartbeat, sync, and owner-aware handoff before opening ESP32-owned slices.",
-            "Use this step to confirm ESP32 really appears as the owner from the current shell.",
+            "Проверьте heartbeat, синхронизацию и передачу управления с учетом владельца, прежде чем открывать ESP32-срезы.",
+            "Используйте этот шаг, чтобы подтвердить, что из текущего shell ESP32 действительно видна как владелец.",
         ),
         _step(
             "esp32_strobe_bench",
-            "ESP32 / Strobe Bench",
+            "ESP32 / Стендовый строб",
             "esp32",
             "/service?tool=strobe_bench",
             _READY if peer_ready else _BLOCKED,
-            "Run the short pulse and preset pass before integrated turret tests.",
-            "Start with the lowest-energy pulse and keep the emergency chain available.",
+            "Выполните короткие импульсы и базовые пресеты перед интегрированными тестами турели.",
+            "Начинайте с импульса минимальной энергии и держите аварийную цепь доступной.",
         ),
         _step(
             "esp32_irrigation_service",
-            "ESP32 / Irrigation Service",
+            "ESP32 / Инженерный срез полива",
             "esp32",
             "/service?tool=irrigation_service",
             _READY if peer_ready else _BLOCKED,
-            "Check zone commands, sensor simulation, and owner handoff without fake local irrigation ownership.",
-            "Run dry and short-duration cases first, then move to water-path checks after service control looks stable.",
+            "Проверьте команды зон, имитацию сенсоров и передачу управления владельцу без ложного локального владения поливом.",
+            "Сначала прогоняйте сухие и короткие сценарии, а затем переходите к проверке водяного контура, когда инженерное управление выглядит стабильным.",
         ),
         _step(
             "turret_service_lane",
-            "Raspberry Pi / Turret Service",
+            "Raspberry Pi / Инженерный срез турели",
             "rpi",
             "/service?tool=turret_service",
             _status_for_turret_lane(active_mode, emergency_latched, fault_latched),
-            "Check local turret runtime, interlock visibility, and service scenarios from the Raspberry Pi owner shell.",
-            "Confirm emergency visibility, safe idle, and owner-side action gating before integrated turret IO tests.",
+            "Проверьте локальное состояние турели, видимость interlock и инженерные сценарии из shell владельца на Raspberry Pi.",
+            "Подтвердите видимость аварийного состояния, безопасный простой и блокировку действий на стороне владельца перед интегрированными тестами turret IO.",
         ),
         _step(
-            "reports_review",
-            "Review reports",
+            "session_review",
+            "Разобрать laboratory-сессию",
             "shared",
-            "/gallery?tab=reports",
-            _READY if reports_persistent else _ATTENTION,
-            "Review the saved evidence before moving to the next bundle of checks.",
-            "Use Reports as the session history instead of relying only on the live log.",
+            "/service",
+            _READY if local_shell_ready else _BLOCKED,
+            "Проверьте контекст сессии, заметки и результаты `pass / warn / fail` внутри `Laboratory` перед следующим пакетом проверок.",
+            "Опирайтесь на сессию `Laboratory` как на основной инженерный след. `Gallery > Reports` используйте только для краткой продуктовой истории.",
         ),
     ]
 
@@ -177,26 +177,26 @@ def _status_for_mode(active_mode: str, emergency_latched: bool, fault_latched: b
 
 def _mode_summary(active_mode: str, emergency_latched: bool, fault_latched: bool) -> str:
     if emergency_latched or active_mode == "emergency":
-        return "Emergency is latched. Stop physical bring-up until it is cleared."
+        return "Аварийное состояние защелкнуто. Остановите физический вывод оборудования, пока оно не будет снято."
     if fault_latched or active_mode == "fault":
-        return "Fault is latched. Clear it before the next hardware test."
+        return "Fault защелкнут. Снимите его перед следующей аппаратной проверкой."
     if active_mode == "automatic":
-        return "Automatic mode is active. Return to manual or service-safe mode first."
+        return "Активен автоматический режим. Сначала вернитесь в ручной или инженерно-безопасный режим."
     if active_mode == "service_test":
-        return "Service/test mode is active and suitable for isolated module checks."
-    return "Manual mode is active, which is a good baseline for step-by-step testing."
+        return "Активен `service_test`, и он подходит для изолированных модульных проверок."
+    return "Активен ручной режим, и это хорошая база для пошагового тестирования."
 
 
 def _mode_action(active_mode: str, emergency_latched: bool, fault_latched: bool) -> str:
     if emergency_latched or active_mode == "emergency":
-        return "Clear the emergency state before reconnecting any sensitive branch."
+        return "Снимите аварийное состояние перед повторным подключением любой чувствительной ветки."
     if fault_latched or active_mode == "fault":
-        return "Resolve the fault, clear the latch, and return to manual."
+        return "Устраните fault, снимите защелку и вернитесь в ручной режим."
     if active_mode == "automatic":
-        return "Switch back to manual before continuing with isolated tests."
+        return "Переключитесь обратно в ручной режим, прежде чем продолжать изолированные тесты."
     if active_mode == "service_test":
-        return "Stay in service/test while you run isolated module slices."
-    return "Stay in manual while you work through the bring-up order."
+        return "Оставайтесь в `service_test`, пока выполняете изолированные laboratory-срезы."
+    return "Оставайтесь в ручном режиме, пока проходите порядок вывода оборудования."
 
 
 def _status_for_turret_lane(active_mode: str, emergency_latched: bool, fault_latched: bool) -> str:
@@ -219,12 +219,12 @@ def _combine_statuses(statuses: list[str]) -> str:
 
 def _overall_summary(overall_status: str, preflight: list[dict[str, Any]]) -> str:
     if overall_status == _READY:
-        return "Readiness looks good. Follow the bring-up order below."
+        return "Готовность выглядит хорошо. Следуйте порядку вывода оборудования ниже."
     if overall_status == _BLOCKED:
         blockers = [item["title"] for item in preflight if item["status"] == _BLOCKED]
-        return "Testing is blocked. Clear these items first: " + ", ".join(blockers)
+        return "Тестирование заблокировано. Сначала разберите эти пункты: " + ", ".join(blockers)
     warnings = [item["title"] for item in preflight if item["status"] == _ATTENTION]
-    return "You can continue, but watch these items: " + ", ".join(warnings)
+    return "Продолжать можно, но держите под контролем эти пункты: " + ", ".join(warnings)
 
 
 def _next_action(preflight: list[dict[str, Any]], bringup_sequence: list[dict[str, Any]]) -> dict[str, Any]:

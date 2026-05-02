@@ -1,5 +1,11 @@
 # Current Shell To Role Mapping
 
+Статус документа:
+
+- supporting refactoring map, а не primary product spec;
+- читать после `docs/README.md`, `05_ui_shell_and_navigation.md`, `27_platform_shell_v1_spec.md` и `31_platform_shell_class_map.md`;
+- если mapping или vocabulary расходятся с каноническим слоем, приоритет у primary docs, а этот файл нужно дочищать или сокращать.
+
 Этот документ связывает:
 
 - текущий shell-код;
@@ -12,8 +18,8 @@
 
 Сейчас shell уже работает, но реализован как bootstrap-монолит:
 
-- на `ESP32` почти все собрано в `WebShellServer`;
-- на `Raspberry Pi` почти все собрано в `server.py` и частично в `BridgeState`.
+- в always-on `I/O` baseline today (`ESP32`) почти все собрано в `WebShellServer`;
+- в turret compute baseline today (`Raspberry Pi`) почти все собрано в `server.py` и частично в `BridgeState`.
 
 Это нормально для ранних этапов, но уже плохо масштабируется:
 
@@ -24,8 +30,8 @@
 
 ## 2. Mapping по ролям
 
-| Целевая роль | Что ее покрывает сейчас на `ESP32` | Что ее покрывает сейчас на `Raspberry Pi` | Состояние |
-|---|---|---|---|
+| Целевая роль | Что ее покрывает сейчас в always-on `I/O` baseline today (`ESP32`) | Что ее покрывает сейчас в turret compute baseline today (`Raspberry Pi`) | Состояние |
+| --- | --- | --- | --- |
 | `ShellSnapshotFacade` | `SystemCore::buildSystemSnapshotJson()`, `WebShellServer::buildModulesJson()`, `buildDiagnosticsJson()`, `buildSyncStateJson()`, `StorageManager::buildContentStatusJson()` | `BridgeState::build_system_snapshot()`, `build_platform_log()`, `build_sync_status()`, частично `build_turret_status()` | Есть, но размазано |
 | `ShellNavigationCoordinator` | `WebShellServer::buildFederatedRouteInfoJson()`, `canonicalPathForModuleId()`, часть `handleFederatedHandoffPage()` | `BridgeState::build_module_route_info()`, handoff page в `server.py` | Есть, но смешано с transport |
 | `ShellHomePresenter` | `data/index.html` + fallback `buildIndexHtml()` | `web/index.html` | Есть, но зависит от сырого API |
@@ -38,8 +44,7 @@
 Важно:
 
 - `ShellLogPresenter` в текущем software baseline остается transitional adapter-слоем;
-- product target viewer для глубокой истории действий теперь фиксируется как `Gallery > Reports`;
-- `ShellContentPresenter` тоже остается service/storage diagnostics surface и не должен считаться user-facing заменой `Gallery`;
+- product semantics для `Gallery > Reports`, `Laboratory` и `Content Storage` уже зафиксированы в канонических документах и здесь не переопределяются;
 - `ShellSettingsPresenter` должен читать truthful runtime/platform состояние из `GET /api/v1/shell/snapshot`, а persistent preferences из `GET /api/v1/settings`.
 
 ## 3. Что уже выглядит удачно
@@ -49,6 +54,7 @@
 Это сейчас самый чистый кусок shell.
 
 Почему:
+
 - есть отдельная страница;
 - есть отдельный status endpoint;
 - смысл понятен пользователю;
@@ -63,6 +69,7 @@
 ### 3. `ShellLogPresenter`
 
 Страница логов еще не доведена как UI, но логический слой уже понятен:
+
 - shell показывает журнал;
 - backend логирования живет отдельно.
 
@@ -70,7 +77,8 @@
 
 Но по product target:
 
-- глубокая история действий из `Laboratory` и ручных режимов должна уходить в `Gallery > Reports`;
+- короткая история реальных действий из product-режимов и ручных runtime-событий должна уходить в `Gallery > Reports`;
+- лабораторные session notes, state-table сравнения и console-trace должны оставаться в `Laboratory`;
 - shell может оставлять только короткий activity summary и быстрый вход в `Reports`.
 
 ## 4. Что сейчас самое смешанное
@@ -79,13 +87,15 @@
 
 Это сейчас самый размазанный слой.
 
-На `ESP32` snapshot-смысл разделен между:
+В always-on `I/O` baseline today (`ESP32`) snapshot-смысл разделен между:
+
 - `SystemCore`;
 - `WebShellServer`;
 - `StorageManager`;
 - частично `PlatformEventLog`.
 
-На `Raspberry Pi` он размазан между:
+В turret compute baseline today (`Raspberry Pi`) он размазан между:
+
 - `BridgeState`;
 - `server.py`;
 - turret-specific builders.
@@ -117,12 +127,14 @@
 ### `ShellSnapshotFacade`
 
 Почему именно он:
+
 - он не должен ломать transport;
 - он нужен сразу всем shell-страницам;
 - он уменьшит дублирование между `ESP32` и `Raspberry Pi`;
 - он позволит перестать собирать shell-картину кусками в разных местах.
 
 Что это даст:
+
 - `WebShellServer` и `server.py` смогут стать тоньше;
 - `Home`, shell summaries, `Gallery > Reports` entrypoints и `Content Storage` начнут получать более ровный набор данных;
 - следующий рефакторинг не будет “переписыванием всего shell”.
@@ -134,6 +146,7 @@
 ### `ShellNavigationCoordinator`
 
 Потому что:
+
 - federated handoff уже есть;
 - ownership-модель уже стабилизировалась;
 - эту логику лучше централизовать до того, как shell-страницы начнут множиться.
@@ -155,7 +168,7 @@
 
 1. спроектировать shell-level snapshot schema;
 2. определить, какие данные в него входят всегда;
-3. сделать skeleton `ShellSnapshotFacade` для `ESP32` и `Raspberry Pi`;
+3. сделать skeleton `ShellSnapshotFacade` для двух node baselines today (`ESP32` и `Raspberry Pi`);
 4. не переписывать все страницы сразу, а сначала перевести на него
    `Главную` и `Диагностику`.
 

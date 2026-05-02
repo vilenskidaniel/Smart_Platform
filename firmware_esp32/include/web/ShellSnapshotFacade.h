@@ -35,6 +35,8 @@ private:
 
     const char* nodeTitle(const core::NodeHealth& node) const;
     const char* nodeHealth(const core::NodeHealth& node) const;
+    const char* ownerScope(const core::ModuleDescriptor& module) const;
+    const char* ownerTitle(const core::ModuleDescriptor& module) const;
     const char* ownerNodeId(const core::ModuleDescriptor& module) const;
     const char* productBlock(const core::ModuleDescriptor& module) const;
     const char* routeMode(const core::ModuleDescriptor& module) const;

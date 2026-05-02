@@ -284,10 +284,18 @@ Legacy alias для совместимости:
     "has_fault": false,
     "has_degraded": true,
     "message": "Some modules are degraded or blocked"
+    "message": "Some modules are degraded or blocked",
+    "active_failures": [
+      {
+        "id": "SAF-NET-01",
+        "shell_state": "degraded",
+        "reason": "owner_unavailable"
+      }
+    ]
   },
   "diagnostics": {
     "sync_state": "local_only",
-    "ownership_summary": "ESP32 owns irrigation, Raspberry Pi owns turret",
+    "ownership_summary": "I/O node owns irrigation, compute node owns turret",
     "content_ready": true
   },
   "activity": {
@@ -302,6 +310,7 @@ Legacy alias для совместимости:
     "libraries_ready": true
   }
 }
+  - `navigation.gallery.default_tab` отражает текущую shell-preference software baseline, а не жесткую product-норму для всех будущих реализаций;
 ```
 
 ## Минимальные правила
@@ -328,6 +337,12 @@ Legacy alias для совместимости:
    `state`, `block_reason` и `summary`.
 8. Для user-facing истории действий snapshot должен давать только краткую
    activity summary и pointer на `Gallery > Reports`, а не сам mixed feed отчетов.
+9. `ownership_summary` должен предпочитать role-first формулировку; физический
+  board profile при необходимости добавляется отдельно через `node_type`,
+  `owner_node_id` или расширенный `owner_title`.
+10. `summaries.faults` должен содержать не только общие флаги, но и краткий
+  список shell-visible active failures, достаточный для bar-layer и `Home`
+  без ухода в deep diagnostics.
 
 ## Связанные документы
 

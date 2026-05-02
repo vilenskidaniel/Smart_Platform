@@ -1,74 +1,35 @@
 # Stage 20 - Turret Event Log And Driver Shell
 
-Этот этап усиливает `Raspberry Pi`-сторону `Smart Platform` без привязки к конкретному железу.
+Статус документа:
 
-## Что сделано
+- stage-doc и implementation snapshot, а не primary product truth;
+- читать после `docs/README.md`, `37_turret_product_context_map.md`, `39_design_decisions_and_screen_map.md` и `47_acceptance_and_validation_matrix.md`;
+- если описание turret engineering surfaces или runtime expectations расходится с каноническим слоем, приоритет у primary docs, а этот файл нужно дочищать или сокращать.
 
-- Добавлен `TurretEventLog` как локальный кольцевой журнал событий.
-- Добавлен `TurretDriverLayer` как каркас будущих аппаратных binding'ов.
-- `TurretRuntime` теперь:
-  - пишет события о смене режима, interlock'ов, флагов и подсистем;
-  - отправляет runtime snapshot в driver layer;
-  - получает безопасное место для будущего hardware apply.
-- `BridgeState` теперь отдает:
-  - runtime;
-  - event log;
-  - driver bindings.
-- Страница `/turret` показывает:
-  - режимы;
-  - interlock;
-  - подсистемы;
-  - публикуемые модули;
-  - sync-статус;
-  - driver bindings;
-  - журнал событий.
+Этот документ сохраняем как короткий implementation snapshot того этапа, где у turret-runtime появились собственный event log и отдельный driver boundary.
 
-## Какие файлы появились
+## Какой historical delta здесь остается
 
-- `raspberry_pi/turret_event_log.py`
-- `raspberry_pi/turret_driver_layer.py`
-- `docs/20_turret_event_log_and_driver_shell.md`
+- добавлен `TurretEventLog` как локальный кольцевой журнал событий;
+- добавлен `TurretDriverLayer` как каркас будущих hardware bindings;
+- `TurretRuntime` начал:
+  - писать события о смене режима, interlock и runtime-флагов;
+  - передавать runtime snapshot в driver layer;
+- `BridgeState` начал отдавать runtime, event log и driver bindings как отдельные данные;
+- страница `/turret` впервые показала не только итоговый state, но и журнал событий вместе с driver bindings.
 
-## Какие файлы изменились
+## Что этот этап реально доказал
 
-- `raspberry_pi/turret_runtime.py`
-- `raspberry_pi/bridge_state.py`
-- `raspberry_pi/server.py`
-- `raspberry_pi/web/turret.html`
-- `raspberry_pi/README.md`
-- `shared_contracts/api_contracts.md`
+1. Runtime trace можно отделить от итогового UI-state до появления реального железа.
+2. Граница для будущих driver adapters может появиться раньше, чем конкретные GPIO, SPI, I2C и serial bindings.
+3. Shell и turret-owner page можно развивать поверх event log и driver boundary, не переписывая каждый раз runtime.
 
-## Что это дает прямо сейчас
+## Что уже не нужно брать отсюда как канон
 
-1. Все важные переходы turret runtime начинают оставлять след.
-2. Тестировщики видят не только итоговый state, но и цепочку действий.
-3. Появляется честное место подключения реальных драйверов:
-   - без переписывания shell;
-   - без переписывания runtime;
-   - без переписывания sync.
+- подробные turret engineering expectations как product truth;
+- stub-binding модель как целевой hardware layer;
+- список следующих шагов как актуальный roadmap.
 
-## Что пока остается заглушкой
+## Зачем файл сохраняем
 
-- `TurretDriverLayer` еще не знает GPIO, SPI, I2C или serial-схемы.
-- Binding'и `motion / strobe / water / audio` пока работают как `stub`.
-- `vision` пока считается логическим runtime-профилем, а не реальной камерой.
-
-## Почему это хороший этап до аппаратной карты
-
-Сейчас можно безопасно доделывать платформу и тестовый UX:
-
-- журналирование;
-- shell;
-- API;
-- ownership;
-- sync;
-- приоритеты режимов.
-
-А когда появится список компонентов и схемы, мы просто заменим stub-binding'и
-на реальные адаптеры, не ломая уже согласованную архитектуру.
-
-## Следующий логичный шаг
-
-- вынести turret event log в общий log-контур платформы;
-- начать service/test сценарии для turret runtime;
-- затем подключать реальные hardware adapter'ы по мере готовности компонентной карты.
+Как след первого этапа, где turret-runtime получил собственный trace-layer и отдельную точку подключения будущих hardware drivers.

@@ -1,8 +1,14 @@
 # Platform Shell V1 Class Map
 
+Статус документа:
+
+- supporting refactoring map, а не primary product spec;
+- читать после `docs/README.md`, `05_ui_shell_and_navigation.md`, `27_platform_shell_v1_spec.md` и `33_shell_snapshot_schema.md`;
+- если карта классов или vocabulary расходятся с каноническим слоем, приоритет у primary docs, а этот файл нужно дочищать или сокращать.
+
 Этот документ нужен, чтобы `Platform Shell v1` не продолжал жить как один
-разросшийся `WebShellServer` на `ESP32` и один большой `server.py` на
-`Raspberry Pi`.
+разросшийся `WebShellServer` в today-baseline always-on `I/O` node (`ESP32`) и
+один большой `server.py` в today-baseline turret compute node (`Raspberry Pi`).
 
 Он не заставляет нас немедленно переписывать runtime. Его задача проще:
 
@@ -18,7 +24,7 @@
 - одинаковые страницы;
 - одинаковые смыслы `locked/degraded/fault`;
 - одинаковый federated handoff;
-- разные runtime-источники данных на `ESP32` и `Raspberry Pi`.
+- разные runtime-источники данных в двух node baselines today (`ESP32` и `Raspberry Pi`).
 
 Значит, мы не проектируем две разные shell-системы. Мы проектируем один набор
 крупных ролей, который потом реализуется двумя адаптерами.
@@ -27,19 +33,21 @@
 
 - названия `ShellLogPresenter` и `ShellContentPresenter` в этом документе описывают
   текущий software baseline, а не конечный product vocabulary;
-- глубокая история действий должна уходить в `Gallery > Reports`,
-  а `Content Storage` остается service/storage diagnostics surface.
+- продуктовая семантика `Gallery > Reports`, `Laboratory` и service/storage diagnostics уже зафиксирована в `05_ui_shell_and_navigation.md`, `27_platform_shell_v1_spec.md` и `40_platform_shell_navigation_alignment.md`;
+- здесь мы фиксируем только разбиение ролей и границы ответственности, не пересказывая заново navigation truth.
 
 ## 2. Целевые крупные классы
 
 ### 1. `ShellSnapshotFacade`
 
 Назначение:
+
 - превращает runtime-данные узла в понятный shell snapshot;
 - собирает `node status`, `module registry`, `owner summary`,
   `content status`, краткую диагностику и краткие логи.
 
 Граница ответственности:
+
 - не рисует HTML;
 - не знает про конкретные кнопки интерфейса;
 - не запускает пользовательские команды модулей.
@@ -47,11 +55,13 @@
 ### 2. `ShellNavigationCoordinator`
 
 Назначение:
+
 - решает, что открывать локально, а что вести через handoff;
 - знает `canonical_url`, `owner_available`, `federated_access`;
 - определяет поведение пунктов `Полив`, `Турель`, `Gallery`, `Laboratory`.
 
 Граница ответственности:
+
 - не хранит runtime-состояние модуля;
 - не рендерит страницы;
 - не подменяет собой владельца peer-owned модуля.
@@ -59,11 +69,13 @@
 ### 3. `ShellHomePresenter`
 
 Назначение:
+
 - формирует главную страницу shell;
 - показывает карточки узлов, быстрые входы в разделы, предупреждения,
   handoff-подсказки и общий статус системы.
 
 Граница ответственности:
+
 - не должен знать детали transport-слоя;
 - не должен самостоятельно лезть в модули;
 - получает только уже подготовленные shell-данные.
@@ -71,11 +83,13 @@
 ### 4. `ShellSettingsPresenter`
 
 Назначение:
+
 - отвечает за страницу `Настройки`;
 - показывает язык, тему, базовые сетевые параметры, shell base URL,
   задел под будущую авторизацию.
 
 Граница ответственности:
+
 - не владеет peer sync;
 - не хранит тяжелую бизнес-логику модулей;
 - работает только с shell-level настройками.
@@ -83,36 +97,43 @@
 ### 5. `ShellDiagnosticsPresenter`
 
 Назначение:
+
 - отвечает за shell-level diagnostics summary;
 - показывает heartbeat, sync state, ownership summary, capability flags,
   fault/degraded причины и storage readiness.
 
 Граница ответственности:
+
 - не запускает ремонтные действия;
-- не подменяет service/test раздел;
+- не подменяет `Laboratory` workspace и его инженерные карточки;
 - показывает только диагностическую картину.
 
 ### 6. `ShellLogPresenter`
 
 Назначение:
+
 - отвечает за короткий shell activity summary и transitional log surfaces;
 - показывает локальные события, синхронизированные события и ручные действия высокого уровня;
 - умеет отбирать краткий набор активности, нужный пользователю shell,
   и подготавливать быстрый вход в `Gallery > Reports`.
 
 Граница ответственности:
+
 - не является самим логгером платформы;
 - не решает вопросы хранения и репликации логов;
+- не подменяет `Laboratory` session/evidence слой;
 - только представляет их в shell.
 
 ### 7. `ShellContentPresenter`
 
 Назначение:
+
 - отвечает за service/storage страницу `Content Storage`;
 - показывает состояние `LittleFS`, `SD`, mirrored content root и `/libraries`;
 - помогает понять, доступен ли тяжелый контент на текущем узле.
 
 Граница ответственности:
+
 - не управляет синхронизацией контента;
 - не хранит библиотеки сам;
 - не подменяет user-facing `Gallery`;
@@ -121,11 +142,13 @@
 ### 8. `ShellHttpAdapter`
 
 Назначение:
+
 - это тонкий transport-слой shell;
 - регистрирует маршруты, принимает HTTP-запросы, отдает страницы и JSON;
 - связывает runtime-адаптеры с presenter-слоем.
 
 Граница ответственности:
+
 - не должен быть местом, где живет вся shell-логика;
 - не должен разрастаться в монолит business/UI/runtime слоя;
 - должен делегировать работу перечисленным выше сущностям.
@@ -134,8 +157,8 @@
 
 Сейчас в проекте:
 
-- на `ESP32` почти вся shell-логика физически сидит в `WebShellServer`;
-- на `Raspberry Pi` почти вся shell-логика физически сидит в `server.py`.
+- в always-on `I/O` baseline today (`ESP32`) почти вся shell-логика физически сидит в `WebShellServer`;
+- в turret compute baseline today (`Raspberry Pi`) почти вся shell-логика физически сидит в `server.py`.
 
 Это допустимо для bootstrap-этапа, но уже неудобно для контроля глубины.
 

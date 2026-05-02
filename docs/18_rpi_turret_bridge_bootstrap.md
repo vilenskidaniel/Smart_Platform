@@ -1,107 +1,13 @@
 # Stage 18 - Raspberry Pi Turret Bridge Bootstrap
 
-Этот этап добавляет первую живую сторону `Raspberry Pi` в `Smart Platform`.
+Статус документа:
 
-## Что сделано
+- compatibility-stub для архивного historical snapshot;
+- активная архивная копия перенесена в `docs/archive/18_rpi_turret_bridge_bootstrap.md`;
+- этот путь оставлен временно, чтобы не ломать старые ссылки и чужие заметки.
 
-- Поднят минимальный локальный web server на `Python stdlib`.
-- Добавлен shell в стиле `ESP32`.
-- Добавлена страница `/turret`.
-- Появилась локальная модель узла `Raspberry Pi`.
-- Появилась локальная модель модулей:
-  - `turret_bridge`
-  - `strobe`
-- Появился фоновый sync-клиент, который:
-  - шлет heartbeat в `ESP32`;
-  - шлет push-состояние `turret_bridge` и `strobe`;
-  - читает `ESP32` snapshot и зеркалит peer-модули.
+Что делать теперь:
 
-## Какие файлы появились
-
-- `app.py`
-- `bridge_config.py`
-- `bridge_state.py`
-- `server.py`
-- `sync_client.py`
-- `web/index.html`
-- `web/turret.html`
-
-## Почему используется Python stdlib
-
-На этом этапе это сознательный выбор.
-
-Причины:
-
-- не тянуть лишние зависимости;
-- быстрее получить рабочий bootstrap;
-- проще запускать на разных системах;
-- не блокировать следующий этап из-за выбора web-фреймворка.
-
-`TODO(stage-rpi-web-framework)`
-
-Позже можно решить, нужен ли более удобный framework, но foundation лучше сначала проверить на простом и прозрачном коде.
-
-## Что уже можно делать
-
-1. Запустить локальный shell `Raspberry Pi`.
-2. Открыть страницу `/turret`.
-3. Менять локальный mode:
-   - `manual`
-   - `automatic`
-   - `laboratory`
-   - `emergency`
-4. Переключать состояние:
-   - `turret_bridge`
-   - `strobe`
-5. Принудительно запускать sync.
-6. Смотреть, как `ESP32` начинает видеть peer-узел и удаленные turret-модули.
-
-## Что пока еще заглушка
-
-- реальной камеры нет;
-- машинного зрения нет;
-- наведения нет;
-- реальных actuator driver'ов нет;
-- локальная turret-страница пока имитирует runtime вручную.
-
-Это намеренная стадия.
-
-Нам сначала нужно проверить:
-
-- что shell действительно одинаков по виду и логике;
-- что sync-контракт живет в обе стороны;
-- что ownership модулей не ломается;
-- что `ESP32` и `Raspberry Pi` начинают видеть друг друга как peer-узлы.
-
-## Полезные маршруты
-
-### Shell
-
-- `/`
-- `/turret`
-
-### API
-
-- `/api/v1/system`
-- `/api/v1/shell/snapshot`
-- `/api/v1/modules`
-- `/api/v1/turret/status`
-- `/api/v1/turret/mode`
-- `/api/v1/turret/module`
-- `/api/v1/settings`
-- `/api/v1/sync/state`
-
-Важно: `/api/v1/shell/snapshot` является главным shell-level контрактом для
-`Settings`, `Home` и bar-level summaries. Sync/content endpoint остаются
-service/backend surfaces и не должны заново становиться основным источником
-смысла для страницы настроек.
-
-## Что дальше
-
-`TODO(stage-rpi-runtime-integration)`
-
-Следующий логичный шаг:
-
-- подключить реальную модель turret runtime;
-- вынести ручные имитации состояния в отдельный service/test профиль;
-- начать готовить bridge к настоящим actuator и vision-модулям.
+1. Для активного reading order возвращаться в `docs/README.md`.
+2. Для historical context открывать `docs/archive/18_rpi_turret_bridge_bootstrap.md`.
+3. Для текущей turret-owner truth использовать `26_v1_product_spec.md`, `05_ui_shell_and_navigation.md`, `37_turret_product_context_map.md` и related supporting docs.

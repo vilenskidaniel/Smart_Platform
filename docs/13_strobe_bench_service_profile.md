@@ -1,88 +1,36 @@
-# Strobe Bench Service Profile
+# Strobe Bench Laboratory Profile
+
+Статус документа:
+
+- supporting stage-doc для engineering profile, а не самостоятельный product spec;
+- читать после `docs/README.md`, `50_laboratory_v1_workspace_spec.md`, `39_design_decisions_and_screen_map.md` и `46_safety_risk_and_failure_matrix.md`;
+- если описание `strobe_bench` расходится с канонической моделью `Laboratory`, приоритет у primary docs, а этот файл нужно дочищать или сокращать.
 
 Этот документ фиксирует текущий software-stage для `strobe_bench` внутри `Smart_Platform`.
 
-## Главная идея
+Имя файла остается историческим. Текущая каноническая трактовка этого контура — laboratory/engineering profile, а не отдельная user-facing страница старого типа.
 
-В системе существуют две разные роли одного семейства `strobe`:
+## Какой historical delta здесь остается
 
-- `strobe`
-  - turret/product profile
-  - владелец: `Raspberry Pi`
-  - используется как action-channel турели
-  - продуктовый доступ идет через `FPV/manual` слой турели
-- `strobe_bench`
-  - service/bench profile
-  - владелец: `ESP32`
-  - используется для локальной лабораторной проверки и безопасного bring-up
-  - доступ идет через `/service/strobe`
+- в системе окончательно разведены два разных профиля одного семейства `strobe`:
+  - turret/product `strobe` на стороне `Raspberry Pi`;
+  - laboratory/bench `strobe_bench` на стороне `ESP32`;
+- для `strobe_bench` появился отдельный `ESP32` controller с engineering-gated командами `arm`, `disarm`, `stop`, `abort`, `pulse`, `burst`, `loop`, `continuous on`, `preset`;
+- появились API surfaces `strobe_bench/status`, `presets`, `arm`, `disarm`, `stop`, `abort`, `pulse`, `burst`, `loop`, `continuous`, `preset`;
+- compatibility route `/service/strobe` впервые стал глубоким laboratory-slice с вкладками `Overview`, `Pulse`, `Burst`, `Loop`, `Continuous`, `Presets`, живым статусом и safe preset запуском.
 
-Это разделение остается обязательным: `ESP32` не подменяет owner-side боевой `strobe`, а обслуживает только локальный сервисный контур.
+## Что этот этап реально доказал
 
-## Что уже реализовано
+1. `strobe_bench` можно держать как owner-side engineering profile внутри общего `Laboratory`, не подменяя turret product-path.
+2. Bench-команды и live status можно собрать в один app-like slice вместо набора разрозненных POST-методов.
+3. Ownership boundary между боевым `strobe` и bench-profile остается честной уже на этом этапе.
 
-- отдельный `ESP32` controller для bench-режима;
-- безопасный старт пина управления;
-- service-gated команды:
-  - `arm`
-  - `disarm`
-  - `stop`
-  - `abort`
-  - `pulse`
-  - `burst`
-  - `loop`
-  - `continuous on`
-  - `preset`
-- API-маршруты:
-  - `/api/v1/strobe_bench/status`
-  - `/api/v1/strobe_bench/presets`
-  - `/api/v1/strobe_bench/arm`
-  - `/api/v1/strobe_bench/disarm`
-  - `/api/v1/strobe_bench/stop`
-  - `/api/v1/strobe_bench/abort`
-  - `/api/v1/strobe_bench/pulse`
-  - `/api/v1/strobe_bench/burst`
-  - `/api/v1/strobe_bench/loop`
-  - `/api/v1/strobe_bench/continuous`
-  - `/api/v1/strobe_bench/preset`
-- tab-based service page `/service/strobe`
-  - `Overview`
-  - `Pulse`
-  - `Burst`
-  - `Loop`
-  - `Continuous`
-  - `Presets`
-- live status window без reload страницы;
-- окно последнего ответа команды и история текущей сессии;
-- safe preset запуск прямо из service-страницы;
-- отображение `strobe_bench` в общем `Laboratory` контуре.
+## Что уже не нужно брать отсюда как канон
 
-## Что это означает для Laboratory
+- compatibility route `/service/strobe` как финальную IA-модель;
+- текущий набор вкладок и команд как окончательную форму `Laboratory / Strobe`;
+- open items как активный roadmap всего `Laboratory`.
 
-`strobe_bench` больше не является просто набором отдельных POST-команд.
+## Зачем файл сохраняем
 
-Текущая страница уже считается первым углубленным laboratory slice внутри `Laboratory`:
-
-- переключение между вкладками происходит внутри одной страницы;
-- пользователь одновременно видит controls, поля ввода и живой статус;
-- `burst` теперь доведен до UI-уровня, а не только существует в controller;
-- donor-режимы `loop` и timed `continuous on` теперь тоже живут внутри platform laboratory surface, а не остаются в старом bench-repo;
-- инженерный сервисный контур остается отделенным от продуктового `FPV/manual` доступа к боевому `strobe`.
-
-## Что пока еще не закрыто
-
-- сохранение подобранных bench-параметров как рабочего профиля;
-- перенос этих параметров в общий profile/preset contract платформы;
-- отдельный platform-level event log именно для `strobe_bench`;
-- owner-side handoff между turret product-layer и service-layer;
-- более глубокие диагностические сценарии beyond `pulse/burst/loop/continuous/preset`.
-
-## Правило безопасности
-
-`strobe_bench` не должен размывать ownership boundary.
-
-Это означает:
-
-- `ESP32` управляет только bench/service профилем;
-- turret `strobe` на `ESP32` остается только видимым shell-объектом, а не локально-владельческим модулем;
-- любые будущие автоматические turret-команды по боевому `strobe` должны идти только через `Raspberry Pi`.
+Как след первого глубокого owner-side `Laboratory` slice для `strobe_bench`, где bench-profile впервые стал частью общего workspace, а не отдельным donor-side bench-flow.

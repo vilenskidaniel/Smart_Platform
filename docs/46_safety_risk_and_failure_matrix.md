@@ -1,14 +1,14 @@
-# Safety Risk And Failure Matrix
+# Матрица рисков, отказов и безопасности
 
-Этот документ собирает то, что нельзя оставлять разорванным между product-docs, testing notes и legacy `ТЗ`.
+Этот документ собирает то, что нельзя оставлять разорванным между продуктовыми документами, заметками по тестированию и старым `ТЗ`.
 
-Здесь должен жить единый safety-layer для:
+Здесь должен жить единый слой безопасности для:
 
-- interlock logic;
-- risk buckets;
-- failure modes;
-- operator-visible warnings;
-- degradation and shutdown expectations.
+- логики блокировок;
+- классов рисков;
+- режимов отказа;
+- предупреждений, видимых оператору;
+- ожиданий по деградации и остановке.
 
 ## 1. Цель документа
 
@@ -17,133 +17,133 @@
 - что может пойти не так;
 - какой узел это обнаруживает;
 - кто имеет право блокировать действие;
-- как это отражается в shell, `Laboratory` и `Gallery > Reports`;
-- какой safe fallback обязателен.
+- как это отражается в shell, в сессионном и рабочем слое `Laboratory` и, когда уместно, в `Gallery > Reports`;
+- какой безопасный запасной режим обязателен.
 
-## 2. Основные safety buckets
+## 2. Основные классы рисков
 
-### 2.1 Power And Interlock
+### 2.1 Питание и блокировки
 
-- emergency power interlock;
-- turret-sensitive power groups;
-- safe startup / safe shutdown;
-- actuator isolation.
+- аварийная блокировка питания;
+- силовые группы, чувствительные для турели;
+- безопасный запуск и безопасное выключение;
+- изоляция актуаторов.
 
-### 2.2 Water Risks
+### 2.2 Риски водяного контура
 
-- irrigation water path faults;
-- turret water path faults;
-- запрет смешивания owner-логики двух водяных каналов;
-- leak / dry-run / pressure-related warnings.
+- отказы водяного контура полива;
+- отказы водяного контура турели;
+- запрет смешивания логики владельца двух водяных каналов;
+- предупреждения о протечке, сухом ходе и давлении.
 
-### 2.3 Motion, Light And Audio Risks
+### 2.3 Риски движения, света и звука
 
-- motion overtravel or unavailable actuator;
-- strobe misuse or unsafe activation;
-- audio misuse or wrong mode activation;
-- service vs product command collisions.
+- выход движения за пределы или недоступный актуатор;
+- неправильное использование строба или небезопасная активация;
+- неправильное использование звука или включение неверного режима;
+- конфликт инженерных и продуктовых команд.
 
-### 2.4 Sensor And Vision Risks
+### 2.4 Риски сенсоров и зрения
 
-- missing or noisy sensor;
-- camera absence;
-- range-sensor mismatch;
-- invalid readings affecting automatic behavior.
+- отсутствующий или шумный сенсор;
+- отсутствие камеры;
+- несовпадение профиля дальномера;
+- недостоверные показания, влияющие на автоматическое поведение.
 
-### 2.5 Network And Ownership Risks
+### 2.5 Сетевые риски и риски владения
 
-- peer loss;
-- stale snapshot;
-- wrong owner execution path;
-- operator confusion during degraded state.
+- потеря peer-узла;
+- устаревший снимок состояния;
+- неправильный путь исполнения на стороне владельца;
+- путаница для оператора в деградированном состоянии.
 
-## 3. Failure Matrix Skeleton
+## 3. Шаблон матрицы отказов
 
-Для каждого failure-case здесь позже нужно фиксировать:
+Для каждого случая отказа здесь позже нужно фиксировать:
 
 - `failure_id`;
-- affected module / family;
-- owner node;
-- trigger;
-- detection source;
-- shell-visible state;
+- затронутый модуль или семейство;
+- узел-владелец;
+- триггер;
+- источник обнаружения;
+- состояние, видимое в shell;
 - `block_reason`;
-- allowed fallback;
-- required operator action;
-- report/evidence expectation.
+- допустимый запасной режим;
+- требуемое действие оператора;
+- ожидание по фиксации результата.
 
 ## 4. Ближайшая задача заполнения
 
-Сюда нужно мигрировать из legacy `ТЗ`, workbook и текущих product docs:
+Сюда нужно мигрировать из старого `ТЗ`, workbook и текущих продуктовых документов:
 
-- risk и mitigation fragments;
-- safety observations вокруг turret power, strobe, water и service modes;
-- operator-visible failure semantics, которые сейчас частично размазаны по нескольким документам.
+- фрагменты рисков и мер снижения;
+- наблюдения по безопасности вокруг питания турели, строба, воды и инженерных режимов;
+- видимую оператору семантику отказов, которая сейчас частично размазана по нескольким документам.
 
-## 5. Канонические Safety Principles
+## 5. Канонические принципы безопасности
 
-1. Owner node принимает решение об исполнении опасного действия.
-2. Peer shell может отображать и объяснять состояние, но не обходить owner-side блокировки.
-3. Emergency interlock сильнее software intent.
-4. `Laboratory` не должен автоматически превращать service-tuned параметры в product defaults.
-5. Любой опасный или неясный случай должен попадать в report/evidence path.
-6. Manual power context for bench-sensitive laboratory slices must stay explicit; software must not pretend it knows adjustable supply capabilities when the operator declared battery-only power.
+1. Узел-владелец принимает решение об исполнении опасного действия.
+2. Shell на соседнем узле может отображать и объяснять состояние, но не обходить блокировки на стороне владельца.
+3. Аварийная блокировка сильнее программного намерения.
+4. `Laboratory` не должен автоматически превращать инженерно настроенные параметры в продуктовые значения по умолчанию.
+5. Любой опасный или неясный случай должен попадать в контур фиксации результата; пользовательская запись в `Gallery > Reports` нужна только если событие имеет продуктовый смысл.
+6. Для чувствительных лабораторных срезов выбранный оператором контекст питания должен оставаться явным; программное обеспечение не должно делать вид, будто знает возможности регулируемого источника, если оператор указал работу только от батареи.
 
-## 6. Базовая Failure Matrix Для `v1`
+## 6. Базовая матрица отказов для `v1`
 
-| Failure ID | Scope | Trigger | Owner | Shell State | Block Reason | Allowed Fallback | Required Operator Action | Evidence |
+| Идентификатор отказа | Область | Триггер | Владелец | Состояние shell | Причина блокировки | Допустимый запасной режим | Требуемое действие оператора | Фиксация результата |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `SAF-PWR-01` | turret power | emergency interlock active | `Raspberry Pi` | `locked` | `safety_interlock` | observation-only shell | проверить interlock и силовую группу | report-card + event |
-| `SAF-PWR-02` | storage/power | storage unavailable or unstable power causes unsafe writes | local owner | `degraded` | `module_fault` | local read-only or reduced logging | проверить питание и storage path | warning report |
-| `SAF-PWR-03` | laboratory bench power | operator selected battery context or adjustable PSU is unavailable for a voltage-sensitive slice | active laboratory owner | `degraded` or `locked` | `power_profile_guard` | keep hint/status view or low-risk non-calibration checks only | выбрать правильный power context или вернуться к bench PSU | laboratory power warning report |
-| `SAF-WTR-01` | irrigation water path | pump runs but moisture does not rise | `ESP32` | `fault` for zone | `module_fault` | stop irrigation for affected zone | проверить dry-run, leak, sensor validity | irrigation failure report |
-| `SAF-WTR-02` | turret water path | turret water actuator unavailable or unsafe | `Raspberry Pi` | `degraded` or `locked` | `module_fault` | sound/light only defense set | проверить `SEAFLO`, pressure path, interlock | turret action report |
-| `SAF-STB-01` | strobe | product strobe requested in forbidden mode or without readiness | `Raspberry Pi` | `locked` | `service_mode_required` or `module_fault` | no strobe action | проверить mode, owner readiness, interlock | blocked-action report |
-| `SAF-STB-02` | strobe_bench | service pulse/burst requested outside safe bench state | `ESP32` | `locked` | `service_session_active` or `service_mode_required` | status-only bench view | arm/disarm explicitly and confirm bench state | bench report |
-| `SAF-MOT-01` | motion | servo/driver unavailable or overtravel risk | `Raspberry Pi` | `fault` or `degraded` | `module_fault` | freeze movement, allow observation | проверить motion family and calibration | turret motion report |
-| `SAF-SNS-01` | irrigation sensing | sensor absent, noisy or invalid | `ESP32` | `degraded` | `module_offline` or `module_fault` | manual-only zone handling | проверить sensor pack and calibration | sensor warning report |
-| `SAF-CAM-01` | camera | camera missing or stream unavailable | `Raspberry Pi` | `degraded` or `locked` | `module_offline` | disable automatic targeting, allow limited local diagnostics | проверить camera path | readiness report |
-| `SAF-RNG-01` | range | owner-side range unavailable or mismatched profile | `Raspberry Pi` | `degraded` | `module_offline` | camera/manual-only fallback | подтвердить `TFmini Plus` or selected profile | range report |
-| `SAF-NET-01` | peer sync | peer heartbeat lost during cross-node flow | local shell | `degraded` | `owner_unavailable` or `peer_sync_pending` | stay local, keep blocked peer routes visible | дождаться peer or continue local-only | sync warning report |
-| `SAF-SVC-01` | service vs product | service session active while product command arrives | owner node | `locked` | `service_session_active` | keep current service context | завершить service session or abort it explicitly | service collision report |
+| `SAF-PWR-01` | питание турели | активна аварийная блокировка | `Raspberry Pi` | `locked` | `safety_interlock` | только наблюдение в shell | проверить interlock и силовую группу | карточка отчета и событие |
+| `SAF-PWR-02` | хранилище и питание | хранилище недоступно или нестабильное питание делает запись небезопасной | локальный владелец | `degraded` | `module_fault` | локальный режим только для чтения или сокращенное журналирование | проверить питание и путь к хранилищу | предупреждающий отчет |
+| `SAF-PWR-03` | лабораторное стендовое питание | оператор выбрал питание от батареи или регулируемый источник недоступен для чувствительного по напряжению среза | активный владелец laboratory-среза | `degraded` или `locked` | `power_profile_guard` | оставить только подсказки и статус либо разрешить лишь низкорисковые некалибровочные проверки | выбрать правильный контекст питания или вернуться к bench PSU | лабораторное предупреждение в сессии |
+| `SAF-WTR-01` | водяной контур полива | насос работает, но влажность не растет | `ESP32` | `fault` для зоны | `module_fault` | остановить полив затронутой зоны | проверить сухой ход, протечку и достоверность сенсора | отчет об отказе полива |
+| `SAF-WTR-02` | водяной контур турели | водяной актуатор турели недоступен или небезопасен | `Raspberry Pi` | `degraded` или `locked` | `module_fault` | оставить только световую и звуковую защиту | проверить `SEAFLO`, линию давления и interlock | отчет о действии турели |
+| `SAF-STB-01` | строб | продуктовый строб запрошен в запрещенном режиме или без готовности | `Raspberry Pi` | `locked` | `service_mode_required` или `module_fault` | не выполнять действие строба | проверить режим, готовность владельца и interlock | отчет о заблокированном действии |
+| `SAF-STB-02` | `strobe_bench` | лабораторный импульс или серия вспышек запрошены вне безопасного стендового состояния | `ESP32` | `locked` | `service_session_active` или `service_mode_required` | только просмотр стендового статуса | явно выполнить arm/disarm и подтвердить состояние стенда | лабораторное предупреждение по стенду |
+| `SAF-MOT-01` | движение | сервопривод или драйвер недоступен либо есть риск выхода за пределы | `Raspberry Pi` | `fault` или `degraded` | `module_fault` | заморозить движение и разрешить только наблюдение | проверить семейство движения и калибровку | отчет о движении турели |
+| `SAF-SNS-01` | сенсоры полива | сенсор отсутствует, шумит или выдает недостоверные данные | `ESP32` | `degraded` | `module_offline` или `module_fault` | разрешить только ручную работу с зоной | проверить комплект сенсоров и калибровку | отчет-предупреждение по сенсору |
+| `SAF-CAM-01` | камера | камера отсутствует или поток недоступен | `Raspberry Pi` | `degraded` или `locked` | `module_offline` | отключить автоматическое наведение и разрешить ограниченную локальную диагностику | проверить путь камеры | отчет о готовности |
+| `SAF-RNG-01` | дальномер | дальномер владельца недоступен или профиль не совпадает | `Raspberry Pi` | `degraded` | `module_offline` | перейти к режиму только камеры и ручного управления | подтвердить `TFmini Plus` или выбранный профиль | отчет по дальномеру |
+| `SAF-NET-01` | синхронизация peer-узла | heartbeat соседнего узла потерян во время межузлового сценария | локальный shell | `degraded` | `owner_unavailable` или `peer_sync_pending` | остаться в локальном режиме и держать peer-маршруты видимыми, но заблокированными | дождаться peer-узла или продолжить только локально | отчет-предупреждение о синхронизации |
+| `SAF-SVC-01` | инженерный и продуктовый режимы | во время инженерной сессии приходит продуктовая команда | узел-владелец | `locked` | `service_session_active` | сохранить текущий инженерный контекст | завершить инженерную сессию или явно прервать ее | заметка о коллизии в `Laboratory` или отчет о заблокированном действии |
 
-## 7. Owner-Wise Safety Notes
+## 7. Заметки по владельцам
 
 ### 7.1 `ESP32`
 
-- владеет irrigation safety decisions;
-- владеет `strobe_bench` service safety;
-- не имеет права локально исполнять turret product actions как owner;
+- принимает решения по безопасности irrigation;
+- отвечает за лабораторную безопасность `strobe_bench`;
+- не имеет права локально исполнять продуктовые действия турели как владелец;
 - должен сохранять честную деградацию при потере `Raspberry Pi`.
 
 ### 7.2 `Raspberry Pi`
 
-- владеет turret action-family safety;
-- учитывает camera, range, motion, water and strobe readiness;
-- обязан уважать physical interlock поверх любого software state.
+- отвечает за безопасность семейства действий турели;
+- учитывает готовность камеры, дальномера, движения, воды и строба;
+- обязан уважать физическую блокировку поверх любого программного состояния.
 
-## 8. Operator-Facing Warning Model
+## 8. Модель предупреждений для оператора
 
 При проблеме пользователь или оператор должны видеть не только красный статус, но и:
 
-- какой family затронут;
-- какой owner это обнаружил;
+- какое семейство затронуто;
+- какой владелец это обнаружил;
 - что сейчас разрешено делать;
 - какой следующий шаг нужен для восстановления;
-- попадет ли событие в `Gallery > Reports`.
+- где именно останется фиксация результата: в слое сессии `Laboratory` или, если событие продуктового уровня, в `Gallery > Reports`.
 
-Это лучше legacy-подхода, где многие риски только назывались, но не переводились в shell-visible semantics.
+Это лучше старого подхода, где многие риски только назывались, но не переводились в видимую в shell семантику.
 
 ## 9. Что Реально Мигрировано Из Legacy `ТЗ`
 
 Сохранены как полезные знания:
 
-- раздельные риски для water, light, sound, movement и sensing;
-- связь между критическими ситуациями и operator notification;
-- необходимость installation / maintenance awareness.
+- раздельные риски для воды, света, звука, движения и сенсоров;
+- связь между критическими ситуациями и уведомлением оператора;
+- необходимость учитывать установку и обслуживание.
 
 Не перенесено как норма:
 
 - абстрактные финансовые и организационные риски без влияния на инженерную реализацию;
-- слабая security-модель как допустимый baseline;
-- старое смешение product, service and safety semantics.
+- слабая модель безопасности как допустимая база;
+- старое смешение продуктовой, инженерной и семантики безопасности.

@@ -38,6 +38,17 @@ class LaboratoryPageStaticTests(unittest.TestCase):
         self.assertIn("/api/v1/reports/testcase", html)
         self.assertIn("/api/v1/reports/note", html)
 
+    def test_laboratory_page_uses_russian_core_labels(self) -> None:
+        html = (PROJECT_ROOT / "web" / "service.html").read_text(encoding="utf-8")
+
+        self.assertIn("<h1>Лаборатория</h1>", html)
+        self.assertIn('id="active-category-chip">Обзор</span>', html)
+        self.assertIn('title: "Обзор"', html)
+        self.assertIn('title: "Свидетельства"', html)
+        self.assertIn("<h3>Каркас сессии</h3>", html)
+        self.assertIn("<h3>Готовность</h3>", html)
+        self.assertIn('data-evidence-result="pass">Пройдено</button>', html)
+
 
 if __name__ == "__main__":
     unittest.main()

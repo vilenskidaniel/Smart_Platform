@@ -1,8 +1,20 @@
 # Platform Shell V1 Spec
 
+Статус документа:
+
+- supporting shell-spec, а не верхнеуровневый primary product truth;
+- читать после `docs/README.md`, `26_v1_product_spec.md`, `05_ui_shell_and_navigation.md` и `40_platform_shell_navigation_alignment.md`;
+- если описание shell behavior или vocabulary расходится с каноническим слоем, приоритет у primary docs, а этот файл нужно дочищать или сокращать.
+
 Этот документ открывает помодульную проработку `v1`.
 
 Он описывает только продуктовый блок `Platform Shell`.
+
+Важно:
+
+- product-level состав shell surfaces, vocabulary и navigation behavior уже зафиксированы в `05_ui_shell_and_navigation.md` и `40_platform_shell_navigation_alignment.md`;
+- этот документ не должен пересказывать их заново как второй канон;
+- здесь фиксируем только то, что shell обязан обеспечить на implementation-уровне, чтобы каноническая модель действительно материализовалась в продукте.
 
 ## 1. Назначение
 
@@ -18,111 +30,47 @@
 
 После его завершения пользователь должен уметь:
 
-1. Открыть shell на `ESP32` или `Raspberry Pi`.
+1. Открыть shell на текущем physical baseline узле: always-on `I/O` node (`ESP32`) или turret compute node (`Raspberry Pi`).
 2. Узнать состояние обоих узлов.
 3. Увидеть одни и те же продуктовые разделы.
 4. Понять, какой раздел локальный, а какой peer-owned.
 5. Без путаницы перейти к владельцу нужного раздела.
 6. Открыть `Настройки`, `Gallery` и `Laboratory`.
-7. Из shell быстро попасть в `Gallery > Reports` как в главный viewer истории действий.
+7. Из shell быстро попасть в `Gallery > Reports` как в главный viewer краткой рабочей истории реальных действий системы.
 8. Понять причину `locked/degraded/fault`.
 9. Узнать, готово ли content-хранилище на текущем узле и какие content-источники доступны.
 
-## 3. Обязательные shell surfaces
+## 3. Что именно shell обязан материализовать
+
+Полный состав поверхностей и их пользовательское поведение уже определены в каноническом слое. Для `Platform Shell v1` здесь фиксируем только implementation-level обязательства, без повторного пересказа всей navigation-модели.
 
 ### `Главная`
 
-Показывает:
+Shell обязан материализовать каноническую домашнюю страницу так, чтобы она действительно работала как launcher продукта, а не как техническая панель.
 
-- карточку `ESP32`;
-- карточку `Raspberry Pi`;
-- доступность `Полив`;
-- доступность `Турель`;
-- быстрый переход в `Laboratory`;
-- быстрый переход в `Gallery`;
-- активные предупреждения;
-- handoff-подсказки.
+Критично на implementation-уровне:
+
+- показывать оба узла и их честную доступность без смены архитектуры при деградации;
+- показывать handoff-подсказки и block reasons прямо в shell-слое;
+- выводить активные предупреждения и короткие shell summaries без переноса пользователя в service-only поверхности.
 
 ### `Настройки`
 
-В `v1` достаточно:
-
-- язык;
-- глобальный переключатель `EN / RU`;
-- тема;
-- базовые сетевые параметры;
-- базовые owner/shell адреса;
-- задел под будущую авторизацию.
-
-Важно:
-
-- `Settings` — отдельная persistent page;
-- `Settings` не должны дублировать лабораторные тестовые controls;
-- лабораторные эксперименты не должны неявно подчиняться пользовательским product-settings, кроме обязательных safety/hardware interlocks.
-
-Default language:
-
-- `EN`
+Подробная модель `Settings` живет в отдельном canonical/deep слое. Для shell здесь фиксируем только то, что `Settings` обязаны быть отдельной persistent page и получать truthful state shell/platform уровня, а не дублировать laboratory controls.
 
 ### Activity Summary
 
-Показывает:
+Shell обязан давать короткую summary недавней активности, аварий и ручных действий высокого уровня, но не подменять собой `Gallery > Reports`, `Laboratory` или служебные diagnostic surfaces.
 
-- короткую shell-level summary недавней активности;
-- важные аварии;
-- ручные действия высокого уровня;
-- быстрый вход в `Gallery > Reports`.
+## 4. Shell-level routing expectations
 
-Важно:
+Подробное поведение переходов `Home -> Irrigation`, `Home -> Turret`, `Gallery` и `Laboratory` уже зафиксировано в канонических документах. На уровне этой спецификации остается только implementation-level правило:
 
-- отдельная продуктовая страница `Diagnostics` больше не считается обязательной shell-сущностью;
-- отдельная верхнеуровневая страница `Logs` тоже больше не считается обязательной user-facing shell-сущностью;
-- shell-level diagnostics должны жить в summary-cards на `Главной`, в коротких activity summaries и в `Laboratory`;
-- глубокая история действий и отчетов должна открываться через `Gallery > Reports`.
-
-## 4. Поведение `Главная -> Полив`
-
-- если `ESP32` доступен, раздел активен;
-- если пользователь уже на `ESP32`, переход локальный;
-- если пользователь на `Raspberry Pi`, shell предлагает owner-aware handoff к irrigation-owner;
-- если `ESP32` недоступен, раздел виден, но заблокирован или деградирован.
-
-## 5. Поведение `Главная -> Турель`
-
-- если `Raspberry Pi` доступен, раздел активен;
-- если пользователь уже на `Raspberry Pi`, переход локальный;
-- если пользователь на `ESP32`, shell предлагает handoff к turret-owner;
-- если `Raspberry Pi` недоступен, раздел виден, но заблокирован.
-
-## 6. Поведение `Gallery`
-
-`Gallery` в shell открывается как shared virtual explorer без одного owner.
-
-Это означает:
-
-- shell открывает одну user-facing страницу `Gallery`;
-- локальный узел всегда может показать свой local content slice;
-- peer-content подключается как дополнительный источник, а не как owner всей страницы;
-- если peer-owner недоступен, `Gallery` не скрывается и не ломается, а помечает недоступные source-groups;
-- `Gallery > Reports` считается каноническим user-facing просмотрщиком истории действий из `Laboratory` и ручных режимов;
-- storage/service route вроде `Content Storage` можно держать отдельно как internal diagnostics surface, но не как замену `Gallery`.
-
-## 7. Поведение `Laboratory`
-
-`Platform Shell v1` не должен исполнять тестовые команды сам.
-
-Он должен:
-
-- показывать доступные test/service страницы;
-- разделять локальные и peer-owned сервисные страницы;
-- честно отправлять пользователя к владельцу модуля.
-
-Важно:
-
-- `Laboratory` является каноническим именем инженерного контура, который включает diagnostics и test-bench slices;
-- user-facing имя этого контура: `Laboratory`;
-- внутренний route/stage-term может оставаться `/service` и legacy alias `service_test`;
-- `Laboratory` должна ощущаться tab-based app-like страницей, а не набором backend-route экранов.
+- shell всегда показывает продуктовый раздел даже при недоступности owner;
+- shell выбирает один из трех честных режимов маршрута: local, handoff, blocked/degraded;
+- shell не подменяет `Gallery` service/storage diagnostics-поверхностями;
+- shell не подменяет `Laboratory` просмотрщиком `Reports` или backend-маршрутов;
+- shell не исполняет peer-owned команды так, будто сам является owner.
 
 ## 8. Что считается ошибкой дизайна
 
@@ -132,9 +80,10 @@ Default language:
 - пользователь не понимает, почему раздел серый;
 - shell скрывает peer-owned разделы полностью;
 - shell открывает peer-owned команды так, будто он их хозяин;
-- shell заставляет пользователя читать внутренние runtime-термины для простой навигации;
+- shell заставляет пользователя читать внутренние термины времени выполнения для простой навигации;
 - shell показывает `Content Storage` как главный пользовательский контент-раздел вместо `Gallery`;
-- shell разводит `Diagnostics` и `Laboratory` как две разные верхнеуровневые страницы, хотя для пользователя это одна сущность.
+- shell разводит `Diagnostics` и `Laboratory` как две разные верхнеуровневые страницы, хотя для пользователя это одна сущность;
+- shell трактует `Gallery > Reports` как приемник laboratory-консоли, таблиц состояния и всех промежуточных инженерных наблюдений.
 
 ## 9. Минимальные данные, которые нужны shell
 
@@ -154,24 +103,25 @@ Default language:
 
 Этого достаточно для `v1`.
 
-## 9.1. Canonical Surface Map
+## 9.1. Каноническая карта поверхностей
 
-Чтобы следующий implementation-чат не домысливал навигацию заново, фиксируем базовую карту surface-level маршрутов.
+Чтобы следующий implementation-чат не домысливал навигацию заново, фиксируем базовую карту маршрутов верхнего уровня.
 
-| User-facing surface | Backing module or layer | Owner scope | Canonical path | Route mode | Primary evidence path |
+| Пользовательская поверхность | Базовый модуль или слой | Область владения | Канонический путь | Режим маршрута | Основной путь фиксации результата |
 | --- | --- | --- | --- | --- | --- |
-| `Home / Platform Shell` | `platform_shell` | `shared` | `/` | local shell | activity summary + `Gallery > Reports` |
-| `Irrigation` | `irrigation` | `io_node` | `/irrigation` | local or handoff | irrigation reports / gallery reports |
-| `Turret` | `turret_bridge` | `compute_node` | `/turret` | local or handoff | turret reports / gallery reports |
-| `Gallery` | shared virtual section | `shared` | `/gallery` | virtual shared explorer | `Plants`, `Media`, `Reports` |
-| `Reports` quick entry | `logs` summary path | `shared` | `/gallery?tab=reports` | shared viewer shortcut | canonical history viewer |
-| `Laboratory` | `laboratory` + owner-specific service slices | `shared entry + owner execution` | `/service` | local workspace + owner-aware tools | readiness + `Gallery > Reports` |
-| `Settings` | `settings` | `shared` | `/settings` | local persistent page | settings audit trail later |
+| `Home / Platform Shell` | `platform_shell` | `shared` | `/` | локальный shell | сводка активности и `Gallery > Reports` |
+| `Irrigation` | `irrigation` | `io_node` | `/irrigation` | локально или через передачу управления | результат выполнения и `Gallery > Reports`, если действие входит в системную историю |
+| `Turret` | `turret_bridge` | `compute_node` | `/turret` | локально или через передачу управления | результат выполнения и `Gallery > Reports`, если действие входит в системную историю |
+| `Gallery` | общая виртуальная секция | `shared` | `/gallery` | общий виртуальный обозреватель | `Plants`, `Media`, `Reports` |
+| Быстрый вход в `Reports` | путь сводки `logs` | `shared` | `/gallery?tab=reports` | общий ярлык просмотра | канонический просмотрщик краткой операционной истории |
+| `Laboratory` | `laboratory` и owner-специфичные инженерные срезы | `shared entry + owner execution` | `/service` | локальное рабочее пространство и инструменты с учетом владельца | готовность и laboratory-сессия со свидетельствами |
+| `Settings` | `settings` | `shared` | `/settings` | локальная постоянная страница | журнал настроек позднее |
 
 Важно:
 
-- не каждая user-facing surface обязана иметь отдельный runtime module id один-к-одному;
-- но каждая поверхность обязана иметь canonical path, owner semantics и понятный evidence path.
+- не каждая пользовательская поверхность обязана иметь отдельный идентификатор runtime-модуля один-к-одному;
+- но каждая поверхность обязана иметь канонический путь, семантику владельца и понятный путь фиксации результата;
+- `Gallery > Reports` не является путем фиксации результата по умолчанию для `Laboratory`; это просмотрщик краткой рабочей истории, а не журнал инженерного рабочего пространства.
 
 ## 10. Что пока не обязательно
 

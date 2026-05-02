@@ -1,19 +1,30 @@
-# Shared Content and SD Strategy
+# Стратегия общего контента и `SD`
+
+Статус документа:
+
+- supporting storage-strategy doc, а не primary product spec для `Gallery`;
+- читать после `docs/51_gallery_v1_content_and_reports_spec.md`, `docs/50_laboratory_v1_workspace_spec.md` и `docs/52_settings_v1_persistent_system_spec.md`;
+- если content vocabulary или границы `Gallery`, `Reports`, `Laboratory` и `Settings` расходятся с каноническим слоем, приоритет у primary docs, а этот файл нужно дочищать или сокращать.
 
 Этот документ фиксирует единое правило хранения тяжелого контента для `Smart Platform v1`.
+
+Важно:
+
+- подробная user-facing структура `Gallery`, модель `Reports` и граница с evidence-layer `Laboratory` уже зафиксированы в `docs/51_gallery_v1_content_and_reports_spec.md`;
+- здесь держим только storage-model, mirrored content rules и owner-truth, которые нужны для реализации этой канонической модели.
 
 ## 1. Что считаем тяжелым контентом
 
 В отдельное хранилище выносим:
 
 - `/assets` — изображения, иконки и крупные графические наборы;
-- `/audio` — звуки, озвучку, сигналы и будущие audio-профили;
+- `/audio` — звуки, озвучку, сигналы и будущие звуковые профили;
 - `/animations` — анимации, видеофрагменты и другие тяжелые медиа;
 - `/libraries` — крупные библиотеки данных:
   - каталог растений
   - сценарии полива
   - справочники и шаблоны
-- `/gallery` — глобальная галерея платформы и связанные media/report артефакты.
+- `/gallery` — глобальная галерея платформы и связанные медиа- и отчетные артефакты.
 
 ## 2. Где это хранится
 
@@ -22,15 +33,15 @@
 - легкий shell и fallback-страницы остаются в `LittleFS`;
 - физический `TF Micro SD Card Module` используется как SPI-расширение хранения на `ESP32`;
 - тяжелый контент и большие библиотеки данных лежат на `SD`;
-- mirrored copy `Gallery` тоже относится к storage на `SD`;
+- зеркальная копия `Gallery` тоже относится к хранилищу на `SD`;
 - `SD` также используется как приемник резервных копий turret-файлов при sync-передаче с `Raspberry Pi`;
 - shell не должен зависеть от наличия тяжелого контента для самого факта запуска.
 
 ### На `Raspberry Pi`
 
-- тот же layout должен существовать в локальной файловой системе;
+- та же структура каталогов должна существовать в локальной файловой системе;
 - `Raspberry Pi` хранит зеркальную копию тех же каталогов;
-- `Gallery` и media/report flow тоже должны иметь локальную mirror-копию;
+- `Gallery` и поток медиа- и отчетных данных тоже должны иметь локальную зеркальную копию;
 - shell и runtime могут читать эти данные напрямую.
 
 ## 3. Почему модель именно такая
@@ -38,9 +49,9 @@
 - `ESP32` не стоит перегружать крупными файлами в `LittleFS`;
 - у платы `ESP32` слишком маленький встроенный объем памяти для тяжелых ассетов и зеркальных копий;
 - `Raspberry Pi` удобнее использовать как более вместительный узел для зеркала и синхронизации;
-- одинаковые пути на обеих сторонах не плодят разные URL и не усложняют UI.
+- одинаковые пути на обеих сторонах не плодят разные URL и не усложняют интерфейс.
 
-## 4. Единый layout
+## 4. Единая структура каталогов
 
 Обе стороны должны понимать один и тот же набор путей:
 
@@ -52,113 +63,38 @@
 
 Это правило относится и к локальному обслуживанию файлов, и к будущей синхронизации между узлами.
 
-## 5. `Gallery` как content tree
+## 5. `Gallery` как дерево контента
 
-User-facing `Gallery` — это отдельная глобальная страница shell.
-Это общий explorer всего сохраняемого контента платформы.
+`Gallery` как user-facing страница и структура вкладок уже подробно описаны в `docs/51_gallery_v1_content_and_reports_spec.md`.
 
-Важно:
+Для storage-strategy здесь фиксируем только то, что обязательно для реализации этой модели:
 
-- весь пользовательский сохраняемый content должен открываться через `Gallery`;
-- `Gallery` не имеет одного owner на уровне shell-page;
-- explorer собирается как shared virtual section;
-- каждый файл, media-артефакт или report при этом хранит metadata о своем фактическом source/storage owner;
-- если доступен только один узел, `Gallery` должна открывать local slice и явно маркировать отсутствие peer-source.
-
-Storage-модель должна поддерживать ее вкладочную структуру:
-
-1. `Plants`
-2. `Media`
-3. `Reports`
-
-### `Plants`
-
-Содержит:
-
-- каталог растений;
-- описания;
-- параметры ухода;
-- plant-related reference data.
-
-### `Media`
-
-Содержит:
-
-- видео с камеры;
-- изображения с камеры;
-- записи при активации турели;
-- фото растений;
-- пользовательские видео из `Manual FPV`;
-- пользовательские фото из `Manual FPV`.
-- explorer-доступ в видео- и фото-режимах.
-
-### `Reports`
-
-Содержит:
-
-- экспортированные логи;
-- сервисные снимки;
-- диагностические отчеты;
-- другие сохраняемые артефакты `Laboratory`;
-- каноническую историю действий из `Laboratory` и ручных режимов.
-- explorer-доступ в текстовом, фото- или видео-режиме.
-
-Для `Reports` storage/layout должен поддерживать metadata, достаточную для UI-ленты:
-
-- тип сущности;
-- событие;
-- время;
-- длительность инцидента, если применимо;
-- фильтрацию по типу данных;
-- хронологическую сортировку mixed-type карточек.
-
-Для action/history entries дополнительно фиксируем обязательный минимум metadata:
-
-- `source_surface`
-- `source_mode`
-- `action_type`
-- `owner_node_id`
-- `started_at`
-- `duration_ms`, если применимо
-- `result`
-- `parameter_summary`
-
-Это нужно, чтобы `Gallery > Reports` умела показывать не только dump-файлы,
-но и человечески читаемую историю действий, например:
-
-- перемещение сервоприводов в координаты;
-- запуск `strobe` с ключевыми параметрами;
-- включение `sprayer` с длительностью и контуром;
-- сохранение фото или видео из `Manual FPV`.
-
-Практическое правило:
-
-- backend platform logs могут оставаться внутренним transport/storage слоем;
-- но user-facing история действий должна материализоваться в report-entry формат,
-  пригодный для mixed feed в `Gallery > Reports`.
-
-`Content Storage` при этом можно сохранять как internal/service поверхность для проверки storage readiness,
-но она не должна подменять user-facing `Gallery`.
+- весь user-facing content path материализуется через общее дерево `/gallery`, а не через разрозненные owner-specific storage worlds;
+- `Gallery` остается shared/virtual page, но каждый объект хранения сохраняет truthful metadata о фактическом owner/source/storage node;
+- mirrored storage должен поддерживать вкладки `Plants`, `Media` и `Reports`, не смешивая их в один raw dump;
+- storage-слой для `Reports` обязан хранить метаданные, достаточные для короткой mixed-source ленты действий;
+- laboratory session bundle, console output, state-table rows и циклы `pass / warn / fail` по умолчанию остаются в evidence-layer `Laboratory`, а не уходят в `Reports`;
+- `Content Storage` может существовать как внутренняя diagnostics surface для readiness, path operations и low-level inspection, но не как user-facing замена `Gallery`.
 
 ## 6. Что уже делаем на этом этапе
 
-- `ESP32` отдает shell из `LittleFS`, а heavy-content ищет на `SD`;
-- `Raspberry Pi` отдает heavy-content из локального `content_root`;
-- обе стороны должны уметь отдавать storage readiness в `GET /api/v1/shell/snapshot`;
-- `GET /api/v1/content/status` остается прямым service endpoint для глубокой storage-диагностики;
-- reference-схема библиотек зафиксирована в [content_library_contract.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/shared_contracts/content_library_contract.md).
+- `ESP32` отдает shell из `LittleFS`, а тяжелый контент ищет на `SD`;
+- `Raspberry Pi` отдает тяжелый контент из локального `content_root`;
+- обе стороны должны уметь отдавать готовность хранилища в `GET /api/v1/shell/snapshot`;
+- `GET /api/v1/content/status` остается прямым служебным API-методом для глубокой диагностики хранилища;
+- опорная схема библиотек зафиксирована в [content_library_contract.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/shared_contracts/content_library_contract.md).
 
 Важно:
 
 - `Settings` не собирает основную картину из `GET /api/v1/content/status`, а читает `snapshot.storage`;
-- прямой `GET /api/v1/content/status` нужен для service/storage диагностики;
-- этот endpoint не считается заменой user-facing `Gallery`.
+- прямой `GET /api/v1/content/status` нужен для служебной диагностики хранилища;
+- этот API-метод не считается заменой пользовательской `Gallery`.
 
 ## 7. Что пока остается неполным
 
 - точный pinout и реальное подключение `SD` к `ESP32` еще требуют аппаратного подтверждения на целевой плате;
 - автоматическая синхронизация между `ESP32 SD` и `Raspberry Pi` пока не реализована;
-- большие библиотеки растений и сценариев пока описаны как contract/layout, а не как production dataset.
+- большие библиотеки растений и сценариев пока описаны как контракт и структура, а не как производственный набор данных.
 
 ## 8. Практическое правило для следующих этапов
 
@@ -177,4 +113,4 @@ Storage-модель должна поддерживать ее вкладочн
 - может расти по объему;
 - должен одинаково жить на `ESP32` и `Raspberry Pi`;
 
-его нужно проектировать под mirrored content storage.
+его нужно проектировать под зеркальное хранилище контента.

@@ -40,11 +40,13 @@ class LaboratoryReadinessTests(unittest.TestCase):
         peer_item = next(item for item in readiness["preflight"] if item["id"] == "peer_owner_link")
         display_step = next(step for step in readiness["bringup_sequence"] if step["id"] == "rpi_display_checks")
         strobe_step = next(step for step in readiness["bringup_sequence"] if step["id"] == "esp32_strobe_bench")
+        session_step = next(step for step in readiness["bringup_sequence"] if step["id"] == "session_review")
         self.assertEqual("attention", peer_item["status"])
-        self.assertIn("local Raspberry Pi slices", peer_item["action"])
+        self.assertIn("локальными срезами Raspberry Pi", peer_item["action"])
         self.assertEqual("ready", display_step["status"])
         self.assertEqual("/service?tool=rpi_touch_display", display_step["route"])
         self.assertEqual("blocked", strobe_step["status"])
+        self.assertEqual("/service", session_step["route"])
 
     def test_readiness_turns_green_when_peer_and_archive_are_ready(self) -> None:
         with _temporary_dir() as temp_dir:
@@ -77,9 +79,11 @@ class LaboratoryReadinessTests(unittest.TestCase):
             reports_item = next(item for item in readiness["preflight"] if item["id"] == "reports_archive")
             display_step = next(step for step in readiness["bringup_sequence"] if step["id"] == "rpi_display_checks")
             peer_step = next(step for step in readiness["bringup_sequence"] if step["id"] == "peer_link_smoke")
+            session_step = next(step for step in readiness["bringup_sequence"] if step["id"] == "session_review")
             self.assertEqual("ready", reports_item["status"])
             self.assertEqual("ready", display_step["status"])
             self.assertEqual("ready", peer_step["status"])
+            self.assertEqual("ready", session_step["status"])
 
     def test_readiness_blocks_when_emergency_is_latched(self) -> None:
         state = BridgeState(

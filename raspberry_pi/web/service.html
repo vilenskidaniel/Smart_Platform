@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Smart Platform / Laboratory</title>
+  <title>Smart Platform / Лаборатория</title>
   <link rel="stylesheet" href="/static/operator_hud.css">
   <style>
     :root {
@@ -660,9 +660,9 @@
       <div class="lab-shell">
         <header class="top-row">
           <div class="title-block">
-            <div class="eyebrow">Owner-aware engineering workspace</div>
-            <h1>Laboratory</h1>
-            <p class="muted">Единая зона для bring-up, сервисных сценариев, дисплейных проверок и evidence. Это не Settings и не старый набор отдельных service pages.</p>
+            <div class="eyebrow">Инженерное рабочее пространство с учетом владельца</div>
+            <h1>Лаборатория</h1>
+            <p class="muted">Единая зона для порядка вывода оборудования, сервисных сценариев, дисплейных проверок и инженерных свидетельств. Это не раздел настроек и не старый набор разрозненных инженерных страниц.</p>
           </div>
           <div class="status-strip" id="top-status"></div>
         </header>
@@ -679,13 +679,13 @@
             <div class="rail-section">
               <div class="section-head">
                 <h3>Срезы</h3>
-                <span class="chip" id="active-category-chip">Overview</span>
+                <span class="chip" id="active-category-chip">Обзор</span>
               </div>
               <div class="rail-section" id="slice-rail"></div>
             </div>
             <div class="tile compact">
               <strong>Граница смысла</strong>
-              <p class="meta">Laboratory проверяет и протоколирует. Persistent политики остаются в Settings, а результаты живут в Gallery > Reports.</p>
+              <p class="meta">Лаборатория проверяет и протоколирует. Постоянные политики остаются в Settings, а краткие продуктовые итоги живут в Gallery > Reports.</p>
             </div>
           </aside>
 
@@ -709,53 +709,53 @@
     const STORAGE_ACTIVE_TOOL_KEY = "smart-platform.laboratory.active-tool.v2";
 
     const CATEGORIES = [
-      { id: "overview", title: "Overview", summary: "Preflight, сессия, порядок работ" },
-      { id: "light", title: "Light", summary: "Strobe, LED and light output checks" },
-      { id: "drives", title: "Drives", summary: "Servos, motion, experimental drives" },
-      { id: "water", title: "Water", summary: "Spray, irrigation, valves, pumps" },
-      { id: "audio", title: "Audio", summary: "Piezo, ultrasonic, voice path" },
-      { id: "sensors", title: "Sensors", summary: "Range, motion, environment" },
-      { id: "camera", title: "Camera", summary: "Camera and vision path" },
-      { id: "displays", title: "Displays", summary: "Raspberry Pi display qualification" },
-      { id: "experimental", title: "Experimental", summary: "Local-only lab profiles" },
-      { id: "evidence", title: "Evidence", summary: "Reports and notes" }
+      { id: "overview", title: "Обзор", summary: "Готовность, сессия, порядок работ" },
+      { id: "light", title: "Свет", summary: "Строб, светодиод и проверки светового выхода" },
+      { id: "drives", title: "Приводы", summary: "Сервоприводы, движение, экспериментальные приводы" },
+      { id: "water", title: "Вода", summary: "Распыление, полив, клапаны, насосы" },
+      { id: "audio", title: "Аудио", summary: "Пьезо, ультразвук, голосовой тракт" },
+      { id: "sensors", title: "Датчики", summary: "Дальность, движение, окружение" },
+      { id: "camera", title: "Камера", summary: "Камера и контур зрения" },
+      { id: "displays", title: "Дисплеи", summary: "Проверка дисплея Raspberry Pi" },
+      { id: "experimental", title: "Экспериментальное", summary: "Локальные laboratory-профили" },
+      { id: "evidence", title: "Свидетельства", summary: "Отчеты и заметки" }
     ];
 
     const SLICES = [
-      { id: "overview", category: "overview", title: "Preflight", owner: "shared", moduleId: "overview", kind: "overview", status: "ready" },
-      { id: "bringup", category: "overview", title: "Bring-up order", owner: "shared", moduleId: "laboratory", kind: "bringup", status: "ready" },
-      { id: "turret_service", category: "overview", title: "Turret Service Lane", owner: "rpi", moduleId: "turret_bridge", kind: "turret-service", status: "online" },
-      { id: "strobe", category: "light", title: "Strobe", owner: "rpi", moduleId: "turret_bridge", kind: "turret-subsystem", subsystemId: "strobe", status: "online" },
-      { id: "strobe_bench", category: "light", title: "ESP32 Strobe Bench", owner: "esp32", moduleId: "strobe_bench", kind: "peer", status: "blocked", route: "/federated/handoff?module_id=strobe_bench" },
-      { id: "led", category: "light", title: "LED", owner: "esp32", moduleId: "strobe_bench", kind: "planned", status: "blocked", route: "/federated/handoff?module_id=strobe_bench" },
-      { id: "servos", category: "drives", title: "Servos", owner: "rpi", moduleId: "turret_bridge", kind: "turret-subsystem", subsystemId: "motion", status: "online" },
-      { id: "stepper", category: "drives", title: "Stepper Motor / Drives", owner: "lab", moduleId: "stepper_lab", kind: "experimental", status: "planned" },
-      { id: "sprayer", category: "water", title: "Sprayer / Water", owner: "rpi", moduleId: "turret_bridge", kind: "turret-subsystem", subsystemId: "water", status: "online" },
-      { id: "irrigation", category: "water", title: "Irrigation Service", owner: "esp32", moduleId: "irrigation_service", kind: "peer", status: "blocked", route: "/federated/handoff?module_id=irrigation_service" },
-      { id: "soil", category: "water", title: "Soil Moisture + Valves + Peristaltic", owner: "esp32", moduleId: "irrigation", kind: "peer", status: "blocked", route: "/federated/handoff?module_id=irrigation" },
-      { id: "piezo", category: "audio", title: "Piezo / Ultrasonic", owner: "rpi", moduleId: "turret_bridge", kind: "turret-subsystem", subsystemId: "audio", status: "online" },
-      { id: "voice", category: "audio", title: "Voice / Speaker", owner: "lab", moduleId: "audio_lab", kind: "experimental", status: "planned" },
-      { id: "lidar", category: "sensors", title: "Lidar", owner: "rpi", moduleId: "turret_bridge", kind: "turret-subsystem", subsystemId: "range", status: "online" },
-      { id: "motion_sensor", category: "sensors", title: "Motion Sensor", owner: "lab", moduleId: "motion_sensor_lab", kind: "experimental", status: "planned" },
-      { id: "environment", category: "sensors", title: "Air Temperature / Humidity", owner: "esp32", moduleId: "environment_lab", kind: "peer", status: "blocked" },
-      { id: "camera", category: "camera", title: "Camera", owner: "rpi", moduleId: "turret_bridge", kind: "turret-subsystem", subsystemId: "camera", status: "online" },
-      { id: "vision", category: "camera", title: "Vision Pipeline", owner: "rpi", moduleId: "turret_bridge", kind: "turret-subsystem", subsystemId: "vision", status: "online" },
-      { id: "rpi_touch_display", category: "displays", title: "Raspberry Pi Touch Display", owner: "rpi", moduleId: "display_lab", kind: "display", status: "online" },
-      { id: "hc_sr04", category: "experimental", title: "HC-SR04 Range Profile", owner: "lab", moduleId: "hc_sr04_lab", kind: "experimental", status: "planned" },
-      { id: "custom_module", category: "experimental", title: "Custom Module Intake", owner: "lab", moduleId: "custom_module_lab", kind: "experimental", status: "planned" },
-      { id: "reports", category: "evidence", title: "Reports", owner: "shared", moduleId: "laboratory", kind: "evidence", status: "ready" }
+      { id: "overview", category: "overview", title: "Готовность", owner: "shared", moduleId: "overview", kind: "overview", status: "ready" },
+      { id: "bringup", category: "overview", title: "Порядок вывода", owner: "shared", moduleId: "laboratory", kind: "bringup", status: "ready" },
+      { id: "turret_service", category: "overview", title: "Инженерный контур турели", owner: "rpi", moduleId: "turret_bridge", kind: "turret-service", status: "online" },
+      { id: "strobe", category: "light", title: "Строб", owner: "rpi", moduleId: "turret_bridge", kind: "turret-subsystem", subsystemId: "strobe", status: "online" },
+      { id: "strobe_bench", category: "light", title: "ESP32 / Стендовый строб", owner: "esp32", moduleId: "strobe_bench", kind: "peer", status: "blocked", route: "/federated/handoff?module_id=strobe_bench" },
+      { id: "led", category: "light", title: "Светодиод", owner: "esp32", moduleId: "strobe_bench", kind: "planned", status: "blocked", route: "/federated/handoff?module_id=strobe_bench" },
+      { id: "servos", category: "drives", title: "Сервоприводы", owner: "rpi", moduleId: "turret_bridge", kind: "turret-subsystem", subsystemId: "motion", status: "online" },
+      { id: "stepper", category: "drives", title: "Шаговый двигатель / приводы", owner: "lab", moduleId: "stepper_lab", kind: "experimental", status: "planned" },
+      { id: "sprayer", category: "water", title: "Распыление / вода", owner: "rpi", moduleId: "turret_bridge", kind: "turret-subsystem", subsystemId: "water", status: "online" },
+      { id: "irrigation", category: "water", title: "Инженерный срез полива", owner: "esp32", moduleId: "irrigation_service", kind: "peer", status: "blocked", route: "/federated/handoff?module_id=irrigation_service" },
+      { id: "soil", category: "water", title: "Влажность почвы + клапаны + перистальтика", owner: "esp32", moduleId: "irrigation", kind: "peer", status: "blocked", route: "/federated/handoff?module_id=irrigation" },
+      { id: "piezo", category: "audio", title: "Пьезо / ультразвук", owner: "rpi", moduleId: "turret_bridge", kind: "turret-subsystem", subsystemId: "audio", status: "online" },
+      { id: "voice", category: "audio", title: "Голос / динамик", owner: "lab", moduleId: "audio_lab", kind: "experimental", status: "planned" },
+      { id: "lidar", category: "sensors", title: "Лидар", owner: "rpi", moduleId: "turret_bridge", kind: "turret-subsystem", subsystemId: "range", status: "online" },
+      { id: "motion_sensor", category: "sensors", title: "Датчик движения", owner: "lab", moduleId: "motion_sensor_lab", kind: "experimental", status: "planned" },
+      { id: "environment", category: "sensors", title: "Температура и влажность воздуха", owner: "esp32", moduleId: "environment_lab", kind: "peer", status: "blocked" },
+      { id: "camera", category: "camera", title: "Камера", owner: "rpi", moduleId: "turret_bridge", kind: "turret-subsystem", subsystemId: "camera", status: "online" },
+      { id: "vision", category: "camera", title: "Контур зрения", owner: "rpi", moduleId: "turret_bridge", kind: "turret-subsystem", subsystemId: "vision", status: "online" },
+      { id: "rpi_touch_display", category: "displays", title: "Сенсорный дисплей Raspberry Pi", owner: "rpi", moduleId: "display_lab", kind: "display", status: "online" },
+      { id: "hc_sr04", category: "experimental", title: "Профиль дальномера HC-SR04", owner: "lab", moduleId: "hc_sr04_lab", kind: "experimental", status: "planned" },
+      { id: "custom_module", category: "experimental", title: "Прием нового модуля", owner: "lab", moduleId: "custom_module_lab", kind: "experimental", status: "planned" },
+      { id: "reports", category: "evidence", title: "Отчеты", owner: "shared", moduleId: "laboratory", kind: "evidence", status: "ready" }
     ];
 
     const PATTERNS = [
-      ["white", "White"],
-      ["black", "Black"],
-      ["red", "Red"],
-      ["green", "Green"],
-      ["blue", "Blue"],
-      ["gradient", "Gradient"],
-      ["grayscale", "Grayscale"],
-      ["checker", "Checker"],
-      ["grid", "Grid"]
+      ["white", "Белый"],
+      ["black", "Черный"],
+      ["red", "Красный"],
+      ["green", "Зеленый"],
+      ["blue", "Синий"],
+      ["gradient", "Градиент"],
+      ["grayscale", "Градации серого"],
+      ["checker", "Шахматка"],
+      ["grid", "Сетка"]
     ];
 
     const state = {
@@ -769,7 +769,7 @@
       activeTool: "overview",
       pattern: "white",
       touchCells: new Set(),
-      lastMessage: "Laboratory загружается.",
+      lastMessage: "Лаборатория загружается.",
       lastPayload: null,
       busy: false,
       draft: readDraft(),
@@ -781,8 +781,8 @@
         const payload = JSON.parse(localStorage.getItem(STORAGE_DRAFT_KEY) || "{}");
         return {
           operator: String(payload.operator || "local-operator"),
-          objective: String(payload.objective || "Bring-up pass"),
-          hardware: String(payload.hardware || "desktop smoke / local host"),
+          objective: String(payload.objective || "Локальный прогон порядка вывода"),
+          hardware: String(payload.hardware || "настольная проверка / локальный узел"),
           external: String(payload.external || ""),
           power: ["bench_psu", "battery"].includes(payload.power) ? payload.power : "bench_psu",
           view: ["browser", "fullscreen"].includes(payload.view) ? payload.view : "browser",
@@ -792,8 +792,8 @@
       } catch (_error) {
         return {
           operator: "local-operator",
-          objective: "Bring-up pass",
-          hardware: "desktop smoke / local host",
+          objective: "Локальный прогон порядка вывода",
+          hardware: "настольная проверка / локальный узел",
           external: "",
           power: "bench_psu",
           view: "browser",
@@ -848,37 +848,37 @@
 
     function statusLabel(status) {
       const labels = {
-        ready: "Ready",
-        online: "Online",
-        active: "Active",
-        service: "Laboratory",
-        attention: "Attention",
-        degraded: "Degraded",
-        blocked: "Blocked",
-        locked: "Locked",
-        fault: "Fault",
-        error: "Error",
-        offline: "Offline",
-        planned: "Planned",
-        idle: "Idle"
+        ready: "Готово",
+        online: "Онлайн",
+        active: "Активно",
+        service: "Лаборатория",
+        attention: "Внимание",
+        degraded: "Ограничено",
+        blocked: "Заблокировано",
+        locked: "Заблокировано",
+        fault: "Неисправность",
+        error: "Ошибка",
+        offline: "Не в сети",
+        planned: "Запланировано",
+        idle: "Простой"
       };
-      return labels[String(status || "offline").toLowerCase()] || String(status || "unknown");
+      return labels[String(status || "offline").toLowerCase()] || String(status || "неизвестно");
     }
 
     function modeLabel(mode) {
-      if (mode === "service_test") return "Laboratory";
-      if (mode === "automatic") return "Automatic";
-      if (mode === "manual") return "Manual";
-      if (mode === "emergency") return "Emergency";
-      if (mode === "fault") return "Fault";
-      return mode || "unknown";
+      if (mode === "service_test") return "Инженерный";
+      if (mode === "automatic") return "Автоматический";
+      if (mode === "manual") return "Ручной";
+      if (mode === "emergency") return "Авария";
+      if (mode === "fault") return "Неисправность";
+      return mode || "неизвестно";
     }
 
     function ownerLabel(owner) {
       if (owner === "rpi") return "Raspberry Pi";
       if (owner === "esp32") return "ESP32";
-      if (owner === "lab") return "Laboratory-local";
-      return "Shared";
+      if (owner === "lab") return "Локально в Лаборатории";
+      return "Общий";
     }
 
     function activeSlice() {
@@ -896,6 +896,7 @@
         rpi_display_checks: "rpi_touch_display",
         peer_link_smoke: "bringup",
         shell_smoke: "overview",
+        session_review: "overview",
         reports_review: "reports",
         esp32_strobe_bench: "strobe_bench",
         esp32_irrigation_service: "irrigation"
@@ -1030,18 +1031,18 @@
       const session = state.session || {};
       const mode = state.turret?.runtime?.active_mode || state.snapshot?.current_shell?.active_mode || "unknown";
       document.getElementById("top-status").innerHTML = `
-        <span class="status-chip ${statusClass(readiness.overall_status || "idle")}"><strong>Ready</strong> ${esc(statusLabel(readiness.overall_status || "idle"))}</span>
-        <span class="status-chip ${statusClass(current.health || "offline")}"><strong>Current</strong> ${esc(current.title || "Current host")}</span>
-        <span class="status-chip ${statusClass(peer.health || "offline")}"><strong>Peer</strong> ${esc(peer.title || "Peer")} · ${esc(statusLabel(peer.health || "offline"))}</span>
-        <span class="status-chip ${statusClass(mode === "service_test" ? "service" : "online")}"><strong>Mode</strong> ${esc(modeLabel(mode))}</span>
-        <span class="status-chip ${statusClass(session.status || "idle")}"><strong>Session</strong> ${esc(statusLabel(session.status || "idle"))}</span>
+        <span class="status-chip ${statusClass(readiness.overall_status || "idle")}\"><strong>Готовность</strong> ${esc(statusLabel(readiness.overall_status || "idle"))}</span>
+        <span class="status-chip ${statusClass(current.health || "offline")}\"><strong>Текущий</strong> ${esc(current.title || "Текущий узел")}</span>
+        <span class="status-chip ${statusClass(peer.health || "offline")}\"><strong>Удаленный</strong> ${esc(peer.title || "Удаленный узел")} · ${esc(statusLabel(peer.health || "offline"))}</span>
+        <span class="status-chip ${statusClass(mode === "service_test" ? "service" : "online")}\"><strong>Режим</strong> ${esc(modeLabel(mode))}</span>
+        <span class="status-chip ${statusClass(session.status || "idle")}\"><strong>Сессия</strong> ${esc(statusLabel(session.status || "idle"))}</span>
       `;
     }
 
     function renderRails() {
       document.getElementById("slice-count").textContent = String(SLICES.length);
       document.getElementById("active-category-chip").textContent =
-        CATEGORIES.find((item) => item.id === state.activeCategory)?.title || "Category";
+        CATEGORIES.find((item) => item.id === state.activeCategory)?.title || "Раздел";
       document.getElementById("category-rail").innerHTML = CATEGORIES.map((category) => `
         <button type="button" class="nav-button ${category.id === state.activeCategory ? "active" : ""}" data-category="${esc(category.id)}">
           <strong>${esc(category.title)}</strong>
@@ -1112,9 +1113,9 @@
             ${subtitle ? `<p class="muted">${esc(subtitle)}</p>` : ""}
           </div>
           <div class="chip-row">
-            <span class="status-chip ${statusClass(status)}"><strong>Status</strong> ${esc(statusLabel(status))}</span>
-            <span class="chip"><strong>Module</strong> ${esc(slice.moduleId || slice.id)}</span>
-            <span class="chip"><strong>Power</strong> ${esc(state.draft.power)}</span>
+            <span class="status-chip ${statusClass(status)}"><strong>Состояние</strong> ${esc(statusLabel(status))}</span>
+            <span class="chip"><strong>Модуль</strong> ${esc(slice.moduleId || slice.id)}</span>
+            <span class="chip"><strong>Питание</strong> ${esc(state.draft.power)}</span>
           </div>
         </div>
       `;
@@ -1127,34 +1128,34 @@
       const peer = state.snapshot?.nodes?.peer || {};
       document.getElementById("main-panel").innerHTML = `
         <div class="workspace">
-          ${workspaceHeader(slice, "Начинаем с честной готовности: что можно тестировать сейчас, а что ждёт owner/peer board.")}
+          ${workspaceHeader(slice, "Начинаем с честной готовности: что можно тестировать сейчас, а что ждет локального или удаленного владельца.")}
           <div class="grid-3">
             <article class="tile tile-hero">
-              <div class="eyebrow">Next action</div>
-              <h3>${esc(next.title || "Loading")}</h3>
-              <p class="muted">${esc(next.action || readiness.summary || "Readiness summary is loading.")}</p>
+              <div class="eyebrow">Следующий шаг</div>
+              <h3>${esc(next.title || "Загрузка")}</h3>
+              <p class="muted">${esc(next.action || readiness.summary || "Сводка готовности загружается.")}</p>
               <span class="status-chip ${statusClass(next.status || readiness.overall_status || "idle")}">${esc(statusLabel(next.status || readiness.overall_status || "idle"))}</span>
             </article>
             <article class="tile">
-              <div class="eyebrow">Current owner</div>
-              <h3>${esc(current.title || "Current host")}</h3>
-              <p class="muted">${esc(current.summary || "Current shell state is loading.")}</p>
+              <div class="eyebrow">Текущий владелец</div>
+              <h3>${esc(current.title || "Текущий узел")}</h3>
+              <p class="muted">${esc(current.summary || "Состояние текущего shell загружается.")}</p>
               <span class="status-chip ${statusClass(current.health || "offline")}">${esc(statusLabel(current.health || "offline"))}</span>
             </article>
             <article class="tile">
-              <div class="eyebrow">Peer owner</div>
-              <h3>${esc(peer.title || "Peer")}</h3>
-              <p class="muted">${esc(peer.summary || "Peer state is loading.")}</p>
+              <div class="eyebrow">Удаленный владелец</div>
+              <h3>${esc(peer.title || "Удаленный узел")}</h3>
+              <p class="muted">${esc(peer.summary || "Состояние удаленного узла загружается.")}</p>
               <span class="status-chip ${statusClass(peer.health || "offline")}">${esc(statusLabel(peer.health || "offline"))}</span>
             </article>
           </div>
           <div class="grid-2">
             <article class="tile">
-              <h3>Preflight</h3>
+              <h3>Готовность</h3>
               <div class="scenario-steps">${renderStepLines(readiness.preflight || [])}</div>
             </article>
             <article class="tile">
-              <h3>Runtime overview</h3>
+              <h3>Текущее состояние</h3>
               ${renderRuntimeSummary()}
             </article>
           </div>
@@ -1178,7 +1179,7 @@
                 <h3>${esc(step.title)}</h3>
                 <p class="muted">${esc(step.summary)}</p>
                 <p class="meta">${esc(step.action)}</p>
-                <button type="button" class="action-button ghost" data-route="${esc(step.route || "/service")}">Open route</button>
+                  <button type="button" class="action-button ghost" data-route="${esc(step.route || "/service")}">Открыть маршрут</button>
               </article>
             `).join("")}
           </div>
@@ -1192,37 +1193,37 @@
       const product = runtime.product_view || {};
       document.getElementById("main-panel").innerHTML = `
         <div class="workspace">
-          ${workspaceHeader(slice, subsystem.summary || "Owner-side turret runtime controls with honest interlocks.")}
+          ${workspaceHeader(slice, subsystem.summary || "Контур турели на стороне владельца с честными interlock и без скрытых обходов.")}
           <div class="grid-3">
             <article class="tile">
-              <h3>Runtime mode</h3>
+              <h3>Режим работы</h3>
               <div class="segmented three">
                 ${modeButton("manual", runtime.active_mode)}
                 ${modeButton("service_test", runtime.active_mode)}
                 ${modeButton("automatic", runtime.active_mode)}
               </div>
               <div class="action-row">
-                <button type="button" class="action-button danger" data-interlock="emergency">Emergency</button>
-                <button type="button" class="action-button warn" data-interlock="fault">Fault</button>
-                <button type="button" class="action-button ghost" data-interlock="clear">Clear</button>
+                <button type="button" class="action-button danger" data-interlock="emergency">Авария</button>
+                <button type="button" class="action-button warn" data-interlock="fault">Неисправность</button>
+                <button type="button" class="action-button ghost" data-interlock="clear">Сброс</button>
               </div>
             </article>
             <article class="tile">
               <h3>${esc(subsystem.title || slice.title)}</h3>
               ${renderKv({
-                State: statusLabel(subsystem.state || "offline"),
-                Enabled: subsystem.enabled ? "yes" : "no",
-                "Block reason": subsystem.block_reason || "none",
-                Profile: subsystem.profile_label || subsystem.profile || "runtime"
+                Состояние: statusLabel(subsystem.state || "offline"),
+                Включено: subsystem.enabled ? "да" : "нет",
+                "Причина блокировки": subsystem.block_reason || "нет",
+                Профиль: subsystem.profile_label || subsystem.profile || "runtime"
               })}
               <div class="action-row">
                 <button type="button" class="action-button primary" data-subsystem="${esc(slice.subsystemId)}" data-enabled="${subsystem.enabled ? "0" : "1"}">
-                  ${subsystem.enabled ? "Disable" : "Enable"}
+                  ${subsystem.enabled ? "Выключить" : "Включить"}
                 </button>
               </div>
             </article>
             <article class="tile">
-              <h3>Policy gates</h3>
+              <h3>Флаги логики</h3>
               <div class="action-row">
                 ${flagButton("automation_ready", runtime.automation_ready)}
                 ${flagButton("target_locked", runtime.target_locked)}
@@ -1233,25 +1234,25 @@
           </div>
           <div class="grid-2">
             <article class="tile">
-              <h3>Service scenarios</h3>
+              <h3>Инженерные сценарии</h3>
               <div class="grid-auto">
                 ${(state.scenarios?.scenarios || []).map((scenario) => `
                   <article class="tile compact">
                     <div class="eyebrow">${esc(scenario.category)}</div>
                     <strong>${esc(scenario.title)}</strong>
                     <p class="meta">${esc(scenario.description)}</p>
-                    <button type="button" class="action-button ghost" data-scenario="${esc(scenario.id)}">Run</button>
+                    <button type="button" class="action-button ghost" data-scenario="${esc(scenario.id)}">Запустить</button>
                   </article>
                 `).join("")}
               </div>
             </article>
             <article class="tile">
-              <h3>Product view</h3>
+              <h3>Продуктовый обзор</h3>
               ${renderKv({
-                Overview: product.overview?.summary || "no product view yet",
-                "Manual console": product.manual_console?.summary || "n/a",
-                Automatic: product.automatic_defense?.summary || "n/a",
-                "Service lane": product.service_lane?.summary || "n/a"
+                Обзор: product.overview?.summary || "продуктовый обзор пока недоступен",
+                "Ручная консоль": product.manual_console?.summary || "н/д",
+                Автоматика: product.automatic_defense?.summary || "н/д",
+                "Инженерный контур": product.service_lane?.summary || "н/д"
               })}
             </article>
           </div>
@@ -1266,28 +1267,28 @@
       const subsystems = runtime.subsystems || [];
       document.getElementById("main-panel").innerHTML = `
         <div class="workspace">
-          ${workspaceHeader(slice, "Единая сервисная полоса турели: режим, interlock, флаги, сценарии и подсистемы без ухода на старую service page.")}
+          ${workspaceHeader(slice, "Единый инженерный контур турели: режим, interlock, флаги, сценарии и подсистемы без ухода на старую отдельную страницу.")}
           <div class="grid-3">
             <article class="tile tile-hero">
-              <h3>Mode and interlock</h3>
+              <h3>Режим и interlock</h3>
               <div class="segmented three">
                 ${modeButton("manual", runtime.active_mode)}
                 ${modeButton("service_test", runtime.active_mode)}
                 ${modeButton("automatic", runtime.active_mode)}
               </div>
               <div class="action-row">
-                <button type="button" class="action-button danger" data-interlock="emergency">Emergency</button>
-                <button type="button" class="action-button warn" data-interlock="fault">Fault</button>
-                <button type="button" class="action-button ghost" data-interlock="clear">Clear</button>
+                <button type="button" class="action-button danger" data-interlock="emergency">Авария</button>
+                <button type="button" class="action-button warn" data-interlock="fault">Неисправность</button>
+                <button type="button" class="action-button ghost" data-interlock="clear">Сброс</button>
               </div>
               ${renderKv({
-                Mode: modeLabel(runtime.active_mode),
-                Emergency: interlocks.emergency_latched ? "latched" : "clear",
-                Fault: interlocks.fault_latched ? interlocks.fault_reason || "latched" : "clear"
+                Режим: modeLabel(runtime.active_mode),
+                Авария: interlocks.emergency_latched ? "защелкнута" : "снята",
+                Неисправность: interlocks.fault_latched ? interlocks.fault_reason || "защелкнута" : "снята"
               })}
             </article>
             <article class="tile">
-              <h3>Automation gates</h3>
+              <h3>Флаги автоматики</h3>
               <div class="action-row">
                 ${flagButton("automation_ready", runtime.automation_ready)}
                 ${flagButton("target_locked", runtime.target_locked)}
@@ -1296,12 +1297,12 @@
               <p class="meta">Флаги не являются Settings. Это laboratory/runtime switches для проверки gating-логики.</p>
             </article>
             <article class="tile">
-              <h3>Quick evidence</h3>
-              <p class="muted">Сохраняет текущий service lane в Gallery > Reports с лабораторным контекстом.</p>
+              <h3>Быстрая фиксация</h3>
+              <p class="muted">Сохраняет текущий инженерный контур в Gallery > Reports вместе с контекстом laboratory-сессии.</p>
               <div class="action-row">
-                <button type="button" class="action-button primary" data-evidence-result="pass" data-case-default="turret-service-lane">Pass</button>
-                <button type="button" class="action-button warn" data-evidence-result="warn" data-case-default="turret-service-lane">Warn</button>
-                <button type="button" class="action-button danger" data-evidence-result="fail" data-case-default="turret-service-lane">Fail</button>
+                <button type="button" class="action-button primary" data-evidence-result="pass" data-case-default="turret-service-lane">Пройдено</button>
+                <button type="button" class="action-button warn" data-evidence-result="warn" data-case-default="turret-service-lane">Предупреждение</button>
+                <button type="button" class="action-button danger" data-evidence-result="fail" data-case-default="turret-service-lane">Сбой</button>
               </div>
             </article>
           </div>
@@ -1312,10 +1313,10 @@
                   <strong>${esc(subsystem.title || subsystem.id)}</strong>
                   <span class="status-chip ${statusClass(subsystem.state)}">${esc(statusLabel(subsystem.state))}</span>
                 </div>
-                <p class="meta">${esc(subsystem.note || subsystem.block_reason || "runtime subsystem")}</p>
+                <p class="meta">${esc(subsystem.note || subsystem.block_reason || "runtime-подсистема")}</p>
                 <div class="action-row">
                   <button type="button" class="action-button ${subsystem.enabled ? "primary" : "ghost"}" data-subsystem="${esc(subsystem.id)}" data-enabled="${subsystem.enabled ? "0" : "1"}">
-                    ${subsystem.enabled ? "Disable" : "Enable"}
+                    ${subsystem.enabled ? "Выключить" : "Включить"}
                   </button>
                 </div>
               </article>
@@ -1323,20 +1324,20 @@
           </div>
           <div class="grid-2">
             <article class="tile">
-              <h3>Service scenarios</h3>
+              <h3>Инженерные сценарии</h3>
               <div class="grid-auto">
                 ${(state.scenarios?.scenarios || []).map((scenario) => `
                   <article class="tile compact">
                     <div class="eyebrow">${esc(scenario.category)}</div>
                     <strong>${esc(scenario.title)}</strong>
                     <p class="meta">${esc(scenario.description)}</p>
-                    <button type="button" class="action-button ghost" data-scenario="${esc(scenario.id)}">Run</button>
+                    <button type="button" class="action-button ghost" data-scenario="${esc(scenario.id)}">Запустить</button>
                   </article>
                 `).join("")}
               </div>
             </article>
             <article class="tile">
-              <h3>Runtime JSON</h3>
+              <h3>Снимок runtime</h3>
               <div class="terminal">${esc(JSON.stringify(state.lastPayload || runtime, null, 2))}</div>
             </article>
           </div>
@@ -1350,22 +1351,22 @@
 
     function flagButton(name, enabled) {
       const title = {
-        automation_ready: "Automation",
-        target_locked: "Target",
-        vision_tracking: "Tracking"
+        automation_ready: "Автоматика",
+        target_locked: "Цель",
+        vision_tracking: "Сопровождение"
       }[name] || name;
-      return `<button type="button" class="action-button ${enabled ? "primary" : "ghost"}" data-flag="${esc(name)}" data-value="${enabled ? "0" : "1"}">${esc(title)} ${enabled ? "On" : "Off"}</button>`;
+      return `<button type="button" class="action-button ${enabled ? "primary" : "ghost"}" data-flag="${esc(name)}" data-value="${enabled ? "0" : "1"}">${esc(title)} ${enabled ? "Вкл" : "Выкл"}</button>`;
     }
 
     function renderDisplaySlice(slice) {
       document.getElementById("main-panel").innerHTML = `
         <div class="workspace">
-          ${workspaceHeader(slice, "Owner-side display qualification: color patterns, fullscreen check, and 12-zone touch pass.")}
+          ${workspaceHeader(slice, "Проверка дисплея на стороне владельца: цветовые шаблоны, полноэкранный режим и проход по 12 сенсорным зонам.")}
           <div class="grid-2">
             <article class="tile">
               <div class="section-head">
-                <h3>Pattern bench</h3>
-                <button type="button" class="action-button ghost" id="display-fullscreen">Fullscreen pattern</button>
+                <h3>Стенд шаблонов</h3>
+                <button type="button" class="action-button ghost" id="display-fullscreen">Во весь экран</button>
               </div>
               <div class="pattern-stage" id="pattern-stage" data-pattern="${esc(state.pattern)}">
                 <span class="pattern-label">${esc(PATTERNS.find(([id]) => id === state.pattern)?.[1] || state.pattern)}</span>
@@ -1377,22 +1378,22 @@
               </div>
             </article>
             <article class="tile">
-              <h3>Touch grid</h3>
-              <p class="muted">Нажимай зоны по физическому экрану. Для evidence достаточно сохранить pass/warn/fail с заметкой.</p>
+              <h3>Сетка касаний</h3>
+              <p class="muted">Нажимайте зоны на физическом экране. Для инженерных свидетельств достаточно сохранить результат и заметку.</p>
               <div class="touch-grid">
                 ${Array.from({ length: 12 }, (_, index) => `
                   <button type="button" class="touch-cell ${state.touchCells.has(index) ? "active" : ""}" data-touch="${index}">${index + 1}</button>
                 `).join("")}
               </div>
               <div class="action-row">
-                <button type="button" class="action-button ghost" id="touch-reset">Reset touch</button>
-                <button type="button" class="action-button primary" data-evidence-result="pass" data-case-default="display-touch-grid">Record pass</button>
-                <button type="button" class="action-button warn" data-evidence-result="warn" data-case-default="display-touch-grid">Record warn</button>
+                <button type="button" class="action-button ghost" id="touch-reset">Сбросить касания</button>
+                <button type="button" class="action-button primary" data-evidence-result="pass" data-case-default="display-touch-grid">Пройдено</button>
+                <button type="button" class="action-button warn" data-evidence-result="warn" data-case-default="display-touch-grid">Предупреждение</button>
               </div>
               ${renderKv({
-                Pattern: PATTERNS.find(([id]) => id === state.pattern)?.[1] || state.pattern,
-                "Touched zones": `${state.touchCells.size} / 12`,
-                Owner: "Raspberry Pi display path"
+                Шаблон: PATTERNS.find(([id]) => id === state.pattern)?.[1] || state.pattern,
+                "Затронутые зоны": `${state.touchCells.size} / 12`,
+                Владелец: "Raspberry Pi / дисплейный контур"
               })}
             </article>
           </div>
@@ -1405,26 +1406,26 @@
       const available = peer.reachable && peer.sync_ready;
       document.getElementById("main-panel").innerHTML = `
         <div class="workspace">
-          ${workspaceHeader(slice, "Peer-owned slice stays visible, but local shell does not fake ownership.")}
+          ${workspaceHeader(slice, "Срез владельца peer-узла остается видимым, но локальный shell не подменяет собой владение.")}
           <div class="grid-2">
             <article class="tile tile-hero">
-              <h3>${available ? "Peer owner is available" : "Waiting for peer owner"}</h3>
-              <p class="muted">${esc(peer.summary || "ESP32 owner state is not available yet.")}</p>
-              <span class="status-chip ${statusClass(available ? "ready" : "blocked")}">${esc(available ? "Ready for handoff" : "Blocked")}</span>
+              <h3>${available ? "Удаленный владелец доступен" : "Ожидание удаленного владельца"}</h3>
+              <p class="muted">${esc(peer.summary || "Состояние владельца ESP32 пока недоступно.")}</p>
+              <span class="status-chip ${statusClass(available ? "ready" : "blocked")}\">${esc(available ? "Готово к передаче" : "Заблокировано")}</span>
               <div class="action-row">
                 <button type="button" class="action-button ${available ? "primary" : "ghost"}" data-route="${esc(slice.route || `/federated/handoff?module_id=${slice.moduleId}`)}">
-                  Open owner handoff
+                  Открыть передачу управления
                 </button>
               </div>
             </article>
             <article class="tile">
-              <h3>Why this is blocked</h3>
-              <p class="muted">Water/irrigation branches live on the peer owner. Laboratory can describe the slice, record notes, and keep the route ready, but commands must go through owner-aware handoff.</p>
+              <h3>Почему это заблокировано</h3>
+              <p class="muted">Ветви воды и полива живут у владельца peer-узла. Лаборатория может описывать срез, записывать заметки и держать маршрут готовым, но команды должны идти через передачу управления с учетом владельца.</p>
               ${renderKv({
-                Owner: ownerLabel(slice.owner),
-                Reachable: peer.reachable ? "yes" : "no",
-                "Sync ready": peer.sync_ready ? "yes" : "no",
-                Route: slice.route || "not assigned"
+                Владелец: ownerLabel(slice.owner),
+                Доступность: peer.reachable ? "да" : "нет",
+                "Готовность sync": peer.sync_ready ? "да" : "нет",
+                Маршрут: slice.route || "не назначен"
               })}
             </article>
           </div>
@@ -1436,32 +1437,32 @@
       const benchSensitive = ["hc_sr04", "stepper", "custom_module"].includes(slice.id);
       document.getElementById("main-panel").innerHTML = `
         <div class="workspace">
-          ${workspaceHeader(slice, "Laboratory-local skeleton: видимая зона будущего теста без притворства, что product feature уже готова.")}
+          ${workspaceHeader(slice, "Локальный каркас Laboratory: видимая зона будущего теста без притворства, что продуктовая функция уже готова.")}
           <div class="grid-2">
             <article class="tile tile-hero">
-              <div class="eyebrow">Planned skeleton</div>
+              <div class="eyebrow">Запланированный каркас</div>
               <h3>${esc(slice.title)}</h3>
               <p class="muted">${experimentalHint(slice.id)}</p>
               <span class="status-chip ${statusClass(slice.status || "planned")}">${esc(statusLabel(slice.status || "planned"))}</span>
             </article>
             <article class="tile">
-              <h3>Engineering fields</h3>
+              <h3>Инженерные поля</h3>
               ${renderKv({
-                "Power context": state.draft.power,
-                "Bench-sensitive": benchSensitive ? "yes" : "no",
-                "Owner": ownerLabel(slice.owner),
-                "Promotion path": "explicit review/apply to Settings later"
+                "Контекст питания": state.draft.power,
+                "Требует стенда": benchSensitive ? "да" : "нет",
+                "Владелец": ownerLabel(slice.owner),
+                "Путь переноса": "явная проверка и применение в Settings позже"
               })}
-              <p class="meta">Если это battery-context, PSU-dependent calibration должна оставаться advisory или blocked, а не silently applied.</p>
+              <p class="meta">Если это батарейный контекст, зависящая от лабораторного БП калибровка должна оставаться только рекомендательной или заблокированной, а не применяться молча.</p>
             </article>
           </div>
           <div class="tile">
-            <h3>Future control skeleton</h3>
+            <h3>Каркас будущих органов управления</h3>
             <div class="field-grid">
-              <label>Profile name<input class="field" value="${esc(slice.title)}" disabled></label>
-              <label>Expected range<input class="field" value="${slice.id === "motion_sensor" ? "up to 20 m wake testing" : "TBD"}" disabled></label>
-              <label>Pinout<input class="field" value="TBD" disabled></label>
-              <label>Power rail<input class="field" value="${benchSensitive ? "Bench PSU preferred" : "TBD"}" disabled></label>
+              <label>Имя профиля<input class="field" value="${esc(slice.title)}" disabled></label>
+              <label>Ожидаемый диапазон<input class="field" value="${slice.id === "motion_sensor" ? "до 20 м для проверки пробуждения" : "будет определено"}" disabled></label>
+              <label>Распиновка<input class="field" value="будет определено" disabled></label>
+              <label>Линия питания<input class="field" value="${benchSensitive ? "предпочтителен лабораторный БП" : "будет определено"}" disabled></label>
             </div>
           </div>
         </div>
@@ -1470,29 +1471,29 @@
 
     function experimentalHint(sliceId) {
       const hints = {
-        hc_sr04: "HC-SR04-class range lives under Lidar as a laboratory-only profile, not as replacement for TFmini Plus.",
-        stepper: "Stepper drives are isolated lab experiments and must not redefine turret pan/tilt baseline.",
-        motion_sensor: "Motion wake should support future animal feeder and turret wake scenarios without using illogical light-sensor assumptions.",
-        custom_module: "Intake area for future modules/components before they are promoted into platform registry.",
-        voice: "Speaker/voice path belongs to audio qualification before it becomes a product policy."
+        hc_sr04: "Профиль класса HC-SR04 живет внутри лидара как laboratory-only профиль и не заменяет TFmini Plus.",
+        stepper: "Шаговые приводы остаются изолированными лабораторными экспериментами и не должны переопределять базовую механику поворота и наклона турели.",
+        motion_sensor: "Контур пробуждения по движению должен поддерживать будущие сценарии кормления животных и вывода турели без нелогичных предположений о датчике света.",
+        custom_module: "Зона приема для будущих модулей и компонентов до их переноса в реестр платформы.",
+        voice: "Тракт динамика и голоса относится к аудиоквалификации до того, как он станет продуктовой политикой."
       };
-      return hints[sliceId] || "This slice is visible so future hardware can be added without breaking the tab model.";
+      return hints[sliceId] || "Этот срез остается видимым, чтобы новое железо можно было добавить без поломки модели вкладок.";
     }
 
     function renderEvidenceWorkspace(slice) {
       document.getElementById("main-panel").innerHTML = `
         <div class="workspace">
-          ${workspaceHeader(slice, "Evidence is the bridge between Laboratory actions and Gallery > Reports.")}
+          ${workspaceHeader(slice, "Свидетельства связывают действия в Лаборатории с краткой историей в Gallery > Reports.")}
           <div class="grid-2">
             <article class="tile">
-              <h3>Record result</h3>
+              <h3>Зафиксировать результат</h3>
               ${renderEvidenceForm(true)}
             </article>
             <article class="tile">
-              <h3>Recent reports</h3>
+              <h3>Недавние отчеты</h3>
               ${renderReports()}
               <div class="action-row">
-                <button type="button" class="action-button ghost" data-route="/gallery?tab=reports">Open Gallery Reports</button>
+                <button type="button" class="action-button ghost" data-route="/gallery?tab=reports">Открыть отчеты Gallery</button>
               </div>
             </article>
           </div>
@@ -1505,12 +1506,12 @@
       const runtime = state.turret?.runtime || {};
       const interlocks = runtime.interlocks || {};
       return renderKv({
-        Mode: modeLabel(runtime.active_mode),
-        Emergency: interlocks.emergency_latched ? "latched" : "clear",
-        Fault: interlocks.fault_latched ? interlocks.fault_reason || "latched" : "clear",
-        "Active subsystems": (runtime.summary?.active_subsystems || []).join(", ") || "none",
-        Camera: runtime.summary?.camera_available ? "available" : "unavailable",
-        Range: runtime.summary?.range_available ? "available" : "unavailable"
+        Режим: modeLabel(runtime.active_mode),
+        Авария: interlocks.emergency_latched ? "защелкнута" : "снята",
+        Неисправность: interlocks.fault_latched ? interlocks.fault_reason || "защелкнута" : "снята",
+        "Активные подсистемы": (runtime.summary?.active_subsystems || []).join(", ") || "нет",
+        Камера: runtime.summary?.camera_available ? "доступна" : "недоступна",
+        Дальность: runtime.summary?.range_available ? "доступна" : "недоступна"
       });
     }
 
@@ -1524,7 +1525,7 @@
     }
 
     function renderStepLines(items) {
-      if (!items.length) return `<p class="meta">Loading...</p>`;
+      if (!items.length) return `<p class="meta">Загрузка...</p>`;
       return items.map((item) => `
         <div class="step-line">
           <span class="dot ${esc(item.status || "offline")}"></span>
@@ -1554,29 +1555,29 @@
       state.draft.view = context.view_mode || state.draft.view;
       document.getElementById("session-panel").innerHTML = `
         <div class="section-head">
-          <h3>Session Backbone</h3>
+          <h3>Каркас сессии</h3>
           <span class="status-chip ${statusClass(session.status || "idle")}">${esc(statusLabel(session.status || "idle"))}</span>
         </div>
         <div class="field-grid">
-          <label>Operator<input id="lab-operator" class="field" value="${esc(state.draft.operator)}"></label>
-          <label>Hardware profile<input id="lab-hardware" class="field" value="${esc(state.draft.hardware)}"></label>
+          <label>Оператор<input id="lab-operator" class="field" value="${esc(state.draft.operator)}"></label>
+          <label>Аппаратный профиль<input id="lab-hardware" class="field" value="${esc(state.draft.hardware)}"></label>
         </div>
-        <label>Objective<input id="lab-objective" class="field" value="${esc(state.draft.objective)}"></label>
-        <label>External module<input id="lab-external" class="field" value="${esc(state.draft.external)}" placeholder="optional"></label>
+        <label>Цель<input id="lab-objective" class="field" value="${esc(state.draft.objective)}"></label>
+        <label>Внешний модуль<input id="lab-external" class="field" value="${esc(state.draft.external)}" placeholder="не обязательно"></label>
         <div class="segmented">
-          <button type="button" class="action-button segment ${state.draft.power === "bench_psu" ? "primary" : "ghost"}" data-power="bench_psu">Bench PSU</button>
-          <button type="button" class="action-button segment ${state.draft.power === "battery" ? "primary" : "ghost"}" data-power="battery">Battery</button>
+          <button type="button" class="action-button segment ${state.draft.power === "bench_psu" ? "primary" : "ghost"}" data-power="bench_psu">Лабораторный БП</button>
+          <button type="button" class="action-button segment ${state.draft.power === "battery" ? "primary" : "ghost"}" data-power="battery">Аккумулятор</button>
         </div>
         <div class="segmented">
-          <button type="button" class="action-button segment ${state.draft.view === "browser" ? "primary" : "ghost"}" data-view="browser">Browser</button>
-          <button type="button" class="action-button segment ${state.draft.view === "fullscreen" ? "primary" : "ghost"}" data-view="fullscreen">Fullscreen</button>
+          <button type="button" class="action-button segment ${state.draft.view === "browser" ? "primary" : "ghost"}" data-view="browser">Браузер</button>
+          <button type="button" class="action-button segment ${state.draft.view === "fullscreen" ? "primary" : "ghost"}" data-view="fullscreen">Во весь экран</button>
         </div>
         <div class="action-row">
-          <button type="button" class="action-button primary" id="session-start" ${session.status === "active" ? "disabled" : ""}>Start</button>
-          <button type="button" class="action-button ghost" id="session-update" ${session.status !== "active" ? "disabled" : ""}>Update</button>
-          <button type="button" class="action-button warn" id="session-finish" ${session.status !== "active" ? "disabled" : ""}>Finish</button>
+          <button type="button" class="action-button primary" id="session-start" ${session.status === "active" ? "disabled" : ""}>Старт</button>
+          <button type="button" class="action-button ghost" id="session-update" ${session.status !== "active" ? "disabled" : ""}>Обновить</button>
+          <button type="button" class="action-button warn" id="session-finish" ${session.status !== "active" ? "disabled" : ""}>Завершить</button>
         </div>
-        <p class="footer-note">${esc(active.session_id ? `Active: ${active.session_id}` : "No active session yet. Draft context is still kept locally.")}</p>
+        <p class="footer-note">${esc(active.session_id ? `Активна: ${active.session_id}` : "Активной сессии пока нет. Черновой контекст все еще хранится локально.")}</p>
       `;
     }
 
@@ -1585,13 +1586,13 @@
       const next = readiness.next_action || {};
       document.getElementById("readiness-panel").innerHTML = `
         <div class="section-head">
-          <h3>Readiness</h3>
+          <h3>Готовность</h3>
           <span class="status-chip ${statusClass(readiness.overall_status || "idle")}">${esc(statusLabel(readiness.overall_status || "idle"))}</span>
         </div>
-        <p class="muted">${esc(readiness.summary || "Readiness is loading.")}</p>
+        <p class="muted">${esc(readiness.summary || "Готовность загружается.")}</p>
         <div class="tile compact">
-          <div class="eyebrow">Next</div>
-          <strong>${esc(next.title || "Loading")}</strong>
+          <div class="eyebrow">Далее</div>
+          <strong>${esc(next.title || "Загрузка")}</strong>
           <p class="meta">${esc(next.action || "")}</p>
         </div>
         <div class="scenario-steps">${renderStepLines((readiness.preflight || []).slice(0, 5))}</div>
@@ -1601,24 +1602,24 @@
     function renderEvidencePanel() {
       document.getElementById("evidence-panel").innerHTML = `
         <div class="section-head">
-          <h3>Evidence</h3>
+          <h3>Свидетельства</h3>
           <span class="chip">${esc(activeSlice().title)}</span>
         </div>
         ${renderEvidenceForm(false)}
-        <h3>Recent</h3>
+        <h3>Недавнее</h3>
         ${renderReports()}
       `;
     }
 
     function renderEvidenceForm(full) {
       return `
-        <label>Case id<input id="evidence-case" class="field" value="${esc(state.draft.caseId || defaultCaseId())}"></label>
-        <label>Note<textarea id="evidence-note" class="field" placeholder="Что проверили, что увидели, что поправить дальше">${esc(state.draft.note)}</textarea></label>
+        <label>Код кейса<input id="evidence-case" class="field" value="${esc(state.draft.caseId || defaultCaseId())}"></label>
+        <label>Заметка<textarea id="evidence-note" class="field" placeholder="Что проверили, что увидели, что поправить дальше">${esc(state.draft.note)}</textarea></label>
         <div class="action-row">
-          <button type="button" class="action-button primary" data-evidence-result="pass">Pass</button>
-          <button type="button" class="action-button warn" data-evidence-result="warn">Warn</button>
-          <button type="button" class="action-button danger" data-evidence-result="fail">Fail</button>
-          <button type="button" class="action-button ghost" id="${full ? "record-note-main" : "record-note-side"}">Note</button>
+          <button type="button" class="action-button primary" data-evidence-result="pass">Пройдено</button>
+          <button type="button" class="action-button warn" data-evidence-result="warn">Предупреждение</button>
+          <button type="button" class="action-button danger" data-evidence-result="fail">Сбой</button>
+          <button type="button" class="action-button ghost" id="${full ? "record-note-main" : "record-note-side"}">Заметка</button>
         </div>
         <p class="footer-note">${esc(state.lastMessage)}</p>
       `;
@@ -1627,7 +1628,7 @@
     function renderReports() {
       const entries = state.reports?.entries || [];
       if (!entries.length) {
-        return `<p class="meta">No reports loaded yet.</p>`;
+        return `<p class="meta">Отчеты пока не загружены.</p>`;
       }
       return `<div class="recent-list">${entries.slice(0, 6).map((entry) => `
         <article class="report-line">
@@ -1683,8 +1684,8 @@
       document.querySelectorAll("[data-pattern]").forEach((button) => {
         button.addEventListener("click", async () => {
           state.pattern = button.dataset.pattern;
-          state.lastMessage = `Pattern selected: ${state.pattern}`;
-          await recordLabEvent("display_pattern_selected", `Display pattern selected: ${state.pattern}`, "display-pattern");
+          state.lastMessage = `Выбран шаблон: ${state.pattern}`;
+          await recordLabEvent("display_pattern_selected", `Выбран шаблон дисплея: ${state.pattern}`, "display-pattern");
           render();
         });
       });
@@ -1693,7 +1694,7 @@
           const index = Number(button.dataset.touch);
           if (state.touchCells.has(index)) state.touchCells.delete(index);
           else state.touchCells.add(index);
-          state.lastMessage = `Touch zones: ${state.touchCells.size}/12`;
+          state.lastMessage = `Касания: ${state.touchCells.size}/12`;
           render();
         });
       });
@@ -1734,7 +1735,7 @@
       document.getElementById("session-finish")?.addEventListener("click", finishSession);
       document.getElementById("touch-reset")?.addEventListener("click", () => {
         state.touchCells.clear();
-        state.lastMessage = "Touch grid reset.";
+        state.lastMessage = "Сетка касаний сброшена.";
         render();
       });
       document.getElementById("display-fullscreen")?.addEventListener("click", () => {
@@ -1749,9 +1750,9 @@
       try {
         const payload = await post(url);
         state.lastPayload = payload;
-        state.lastMessage = payload.message || payload.command || "Command accepted.";
+        state.lastMessage = payload.message || payload.command || "Команда принята.";
       } catch (error) {
-        state.lastMessage = `Command rejected: ${error.message}`;
+        state.lastMessage = `Команда отклонена: ${error.message}`;
       } finally {
         state.busy = false;
         await refresh();
@@ -1786,7 +1787,7 @@
 
     async function finishSession() {
       collectDraft();
-      const summary = state.draft.note || `Finished ${activeSlice().title} pass`;
+      const summary = state.draft.note || `Завершен прогон: ${activeSlice().title}`;
       await runCommand(`/api/v1/laboratory/session/finish?summary_note=${qs(summary)}`);
     }
 
@@ -1808,7 +1809,7 @@
       collectDraft();
       const slice = activeSlice();
       const payload = {
-        note: state.draft.note || `${slice.title}: operator note`,
+        note: state.draft.note || `${slice.title}: заметка оператора`,
         module_id: slice.moduleId || slice.id,
         board: ownerLabel(slice.owner),
         case_id: state.draft.caseId || defaultCaseId(),
@@ -1832,7 +1833,7 @@
         const result = await post(`/api/v1/laboratory/event?${queryFromObject(payload)}`);
         state.lastPayload = result;
       } catch (error) {
-        state.lastMessage = `Event was not recorded: ${error.message}`;
+        state.lastMessage = `Событие не записано: ${error.message}`;
       }
     }
 
@@ -1848,7 +1849,7 @@
 
     bootstrapToolFromUrl();
     refresh().catch((error) => {
-      state.lastMessage = `Laboratory failed to load: ${error.message}`;
+      state.lastMessage = `Лаборатория не смогла загрузиться: ${error.message}`;
       render();
     });
     window.setInterval(() => refresh().catch(() => {}), 7000);

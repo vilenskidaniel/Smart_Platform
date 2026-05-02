@@ -1,48 +1,50 @@
 # Laboratory Testing Readiness
 
-## Purpose
+Статус документа:
 
-This note captures the minimum readiness layer we need before sequential hardware bring-up starts.
+- supporting readiness-doc, а не primary product truth;
+- читать после `docs/50_laboratory_v1_workspace_spec.md`, `docs/51_gallery_v1_content_and_reports_spec.md`, `docs/52_settings_v1_persistent_system_spec.md`, `docs/46_safety_risk_and_failure_matrix.md` и `docs/47_acceptance_and_validation_matrix.md`;
+- если readiness-layer расходится с каноническими границами `Laboratory`, `Gallery > Reports` или `Settings`, приоритет у primary docs, а этот файл нужно дочищать или сокращать.
 
-It is not a replacement for the broader testing strategy in `docs/07_testing_strategy.md`.
-It is the coordination layer that keeps real board-by-board testing repeatable instead of turning
-into ad-hoc operator memory.
+## Назначение
 
-## Current Position
+Этот документ фиксирует минимальный coordination-layer для readiness, preflight и bring-up внутри `Laboratory`.
 
-### Product target
+Он не заменяет:
 
-- `Laboratory` should guide bring-up, not only host separate module pages.
-- each hardware test session should start from explicit preflight visibility;
-- the operator should know which board/module to connect next;
-- `Gallery > Reports` should collect the evidence of each pass, fail, and warning.
+- общую testing-strategy из `docs/07_testing_strategy.md`;
+- deep-spec границ между `Laboratory`, `Gallery > Reports` и `Settings` из документов `50-52`;
+- safety и acceptance truth из `docs/46_safety_risk_and_failure_matrix.md` и `docs/47_acceptance_and_validation_matrix.md`.
 
-### Software baseline
+Здесь фиксируем только тот coordination-gap, без которого реальные board-by-board проходы быстро превращаются в ad-hoc operator memory:
 
-- `Laboratory` already acts as an owner-aware workspace;
-- `Gallery > Reports` already exists as a persistent baseline on Raspberry Pi;
-- there was no explicit readiness/preflight layer before this step.
+- явную предварительную проверку внутри `Laboratory`;
+- канонический порядок bring-up;
+- owner-aware blocked visibility;
+- session/evidence continuity внутри `Laboratory`;
+- handoff подтвержденных результатов в `Settings` без смешивания с user-facing history.
 
 ## What We Need Before Smooth Hardware Testing
 
 1. A visible preflight state inside `Laboratory`.
 2. A canonical bring-up order for `shared`, `ESP32`, and `Raspberry Pi` steps.
 3. Honest visibility for blocked peer-owned slices.
-4. Persistent session evidence in `Gallery > Reports`.
+4. Persistent session evidence inside `Laboratory` itself.
 5. A way to grow into testcase pass/fail recording without rebuilding the shell again.
 6. A stable path for experimental modules such as `HC-SR04`-class range sensors and stepper drives.
 7. A visible manual power context for bench-sensitive slices such as strobe qualification.
 8. Usable behavior both in normal phone-browser mode and in fullscreen app-like mode.
+9. A clear handoff from confirmed laboratory results into `Settings`.
 
 ## Minimum Bring-Up Order
 
-1. Shell and reports smoke.
+1. Shell and readiness smoke.
 2. Peer link and owner handoff.
 3. `ESP32 / Strobe Bench`.
 4. `ESP32 / Irrigation Service`.
 5. `Raspberry Pi / Turret Service`.
 6. `Laboratory / Experimental Profiles` (`HC-SR04`-class range, stepper drives).
-7. `Gallery > Reports` review before the next testcase bundle.
+7. `Laboratory` session review before the next testcase bundle.
 
 ## Smartphone Entry Flow
 
@@ -123,13 +125,13 @@ We adapt those strengths into the web shell like this:
 
 - connection visibility becomes top-bar board chips on `Home` and `Laboratory`;
 - recommended next action becomes `Laboratory` readiness;
-- persistent operator/session trace continues to move into `Gallery > Reports`.
+- persistent operator/session trace continues to move into the `Laboratory` session bundle.
 
 This order is intentionally board-aware:
 
 - `ESP32` owned slices should not be tested through a pretending peer shell;
 - `Raspberry Pi` turret work should not hide emergency/fault/interlock state;
-- reports review should happen between bundles, not only at the end of the whole bench session.
+- session review should happen between bundles, not only at the end of the whole bench session.
 
 ## Readiness Baseline Added In This Step
 
@@ -150,11 +152,13 @@ This order is intentionally board-aware:
   - `POST /api/v1/laboratory/session/update`
   - `POST /api/v1/laboratory/session/finish`
   - `POST /api/v1/laboratory/event`
+- `POST /api/v1/laboratory/event` по умолчанию создает запись только внутри laboratory session/evidence слоя и не должен сам по себе превращаться в `Gallery > Reports` entry без явного product-level export;
 - shared `Laboratory` hub now includes a visible `Session Backbone` block above the category rail flow;
 - the operator can record `pass`, `warn`, `fail`, and note entries from the active slice without leaving the hub;
 - the display page now records explicit display-lab evidence instead of keeping everything only in a local page log;
-- report entries now carry laboratory context fields such as session id, operator, objective, hardware profile, external module, power context, view mode, and active slice;
-- mirrored shells can keep a local draft session if Raspberry Pi backend session API is not available, but explicit report actions still forward the same laboratory metadata.
+- session entries carry laboratory context fields such as session id, operator, objective, hardware profile, external module, power context, view mode, and active slice;
+- mirrored shells can keep a local draft session if Raspberry Pi backend session API is not available, while preserving the same laboratory metadata model;
+- `Gallery > Reports` is not the default sink for these engineering records; it remains reserved for short user-facing history of real system actions.
 
 ## Smartphone Smoke Checklist
 
@@ -194,7 +198,7 @@ Use this exact order for the first physical browser passes.
 - Enter `Laboratory` and confirm the same board visibility is preserved.
 - Open at least one peer-owned slice through the shell contract and confirm the handoff feels intentional rather than browser-like.
 - Confirm browser mode and fullscreen mode both preserve the same owner and power context semantics.
-- End the pass by opening `Gallery > Reports` and checking that the session evidence is visible for review.
+- End the pass by reviewing the `Laboratory` session bundle and checking that the recorded evidence is visible without leaving the workspace.
 
 ### Evidence To Capture During Each Pass
 
@@ -208,7 +212,7 @@ Use this exact order for the first physical browser passes.
 - which power context was selected for the session;
 - whether browser and fullscreen modes changed density without losing context;
 - which slice or deep page produced the evidence;
-- which case id was used for the explicit report action;
+- which case id or session action was used for the explicit laboratory entry;
 - which controls felt missing, redundant, or too dense for the phone;
 - which step felt confusing enough that we should later turn it into explicit UI guidance.
 
@@ -268,7 +272,7 @@ Mark the pass as:
 - `warn` if the page works but there is drift, edge discomfort, dense layout, or visible scaling compromise;
 - `fail` if touch misses zones, geometry is clearly wrong, or the operator loses practical control in one of the two view modes.
 
-### Card C. Evidence Bundle To Save Right After The Pass
+### Card C. Evidence Bundle To Save In The Laboratory Session Right After The Pass
 
 Capture at least these facts:
 
@@ -282,6 +286,8 @@ Capture at least these facts:
 - result for phone pass: `pass`, `warn`, or `fail`;
 - result for display pass: `pass`, `warn`, or `fail`;
 - short list of concrete issues, not only general impressions.
+
+If the pass also created useful media artifacts, they may later be attached through `Gallery > Media`, but the engineering result itself should stay anchored to the `Laboratory` session record.
 
 Recommended short wording for operator notes:
 
@@ -340,7 +346,7 @@ compatibility, but new work should target the unified `/service` workspace first
 ### Step 2. Add evidence-oriented next actions
 
 - let `next_action` point not only to the next route, but also to the expected evidence bundle;
-- make it easier to move from a completed pass into `Gallery > Reports` review;
+- make it easier to move from a completed pass into `Laboratory` session review and, only when relevant, into explicit media attachment or settings promotion;
 - keep the action phrasing short enough for in-UI chips or compact cards.
 
 ### Step 3. Split local-only and dual-board operator guidance more cleanly

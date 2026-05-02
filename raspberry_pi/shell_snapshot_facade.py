@@ -93,7 +93,7 @@ class ShellSnapshotFacade:
                     "route_mode": "local",
                     "path": "/service",
                     "user_facing_title": "Laboratory",
-                    "internal_stage_name": "Service/Test v1",
+                    "internal_stage_name": "Laboratory",
                 },
                 "settings": "/settings",
                 "service": "/service",
@@ -110,7 +110,7 @@ class ShellSnapshotFacade:
                 "faults": self._fault_summary(modules, system_snapshot.get("global_block_reason", "none")),
                 "diagnostics": {
                     "sync_state": sync_state,
-                    "ownership_summary": "ESP32 owns irrigation, Raspberry Pi owns turret",
+                    "ownership_summary": "I/O node owns irrigation, compute node owns turret",
                     "content_ready": bool(storage_status["content_root_exists"]),
                 },
                 "activity": self._activity_summary(platform_log),
@@ -250,21 +250,25 @@ class ShellSnapshotFacade:
 
     def _owner_scope(self, module: dict[str, Any]) -> str:
         owner = str(module.get("owner", "shared")).strip().lower()
-        if owner in {"esp32", "rpi", "shared"}:
-            return owner
+        if owner in {"esp32", "io_node"}:
+            return "io_node"
+        if owner in {"rpi", "raspberry_pi", "compute_node"}:
+            return "compute_node"
+        if owner == "shared":
+            return "shared"
         return "shared"
 
     def _owner_title(self, owner_scope: str) -> str:
-        if owner_scope == "esp32":
-            return "ESP32"
-        if owner_scope == "rpi":
-            return "Raspberry Pi"
+        if owner_scope == "io_node":
+            return "I/O node"
+        if owner_scope == "compute_node":
+            return "Compute node"
         return "Platform Service"
 
     def _owner_available(self, module: dict[str, Any], owner_scope: str) -> bool:
         if owner_scope == "shared":
             return True
-        if owner_scope == "rpi" and self._runtime_profile == "desktop_smoke":
+        if owner_scope == "compute_node" and self._runtime_profile == "desktop_smoke":
             return False
         return bool(module.get("owner_available", False))
 
@@ -292,15 +296,15 @@ class ShellSnapshotFacade:
         if module_id == "irrigation":
             return "irrigation"
         if module_id == "irrigation_service":
-            return "service_test"
+            return "laboratory"
         if module_id in {"turret_bridge", "strobe"}:
             return "turret"
         if module_id in {"strobe_bench", "service_mode"}:
-            return "service_test"
-        return "system_shell"
+            return "laboratory"
+        return "platform_shell"
 
     def _route_mode(self, module: dict[str, Any], owner_scope: str, owner_available: bool) -> str:
-        if owner_scope == "esp32":
+        if owner_scope == "io_node":
             return "handoff" if owner_available else "blocked"
         return "local"
 
@@ -315,15 +319,37 @@ class ShellSnapshotFacade:
             return f"Module is degraded: {block_reason}"
         if owner_scope == "shared":
             return "Shared platform service is available on the current host."
-        if owner_scope == "esp32":
+        if owner_scope == "io_node":
             return "Peer-owned page is available" if owner_available else "Peer owner is not available"
         if self._runtime_profile == "desktop_smoke":
             return "Preview path from desktop host; owner device is offline"
         return "Owner-side module is ready"
 
     def _fault_summary(self, modules: list[dict[str, Any]], global_block_reason: str) -> dict[str, Any]:
-        has_fault = global_block_reason != "none" or any(module.get("state") == "fault" for module in modules)
-        has_degraded = any(module.get("state") in {"degraded", "locked"} for module in modules)
+        active_failures: list[dict[str, str]] = []
+        if global_block_reason != "none":
+            active_failures.append(
+                {
+                    "id": "global_block",
+                    "shell_state": "fault",
+                    "reason": str(global_block_reason),
+                }
+            )
+
+        for module in modules:
+            shell_state = str(module.get("state", "offline")).strip().lower()
+            if shell_state not in {"fault", "degraded", "locked"}:
+                continue
+            active_failures.append(
+                {
+                    "id": str(module.get("id", "unknown") or "unknown"),
+                    "shell_state": shell_state,
+                    "reason": str(module.get("block_reason", "none") or "none"),
+                }
+            )
+
+        has_fault = any(item["shell_state"] == "fault" for item in active_failures)
+        has_degraded = any(item["shell_state"] in {"degraded", "locked"} for item in active_failures)
         if has_fault:
             message = "Some modules require attention"
         elif has_degraded:
@@ -334,6 +360,7 @@ class ShellSnapshotFacade:
             "has_fault": has_fault,
             "has_degraded": has_degraded,
             "message": message,
+            "active_failures": active_failures,
         }
 
     def _sync_summary(self, state_value: str) -> str:

@@ -1,71 +1,37 @@
-# Stage 21 - Platform Log And Turret Scenarios
+# Stage 21 - Platform Log And Turret Engineering Scenarios
 
-Этот этап поднимает более общую картину на стороне `Raspberry Pi`.
+Статус документа:
 
-## Что сделано
+- stage-doc и implementation snapshot, а не primary product truth;
+- читать после `docs/README.md`, `07_testing_strategy.md`, `37_turret_product_context_map.md`, `41_laboratory_testing_readiness.md` и `47_acceptance_and_validation_matrix.md`;
+- если описание engineering scenarios, logs или product-level flows расходится с каноническим слоем, приоритет у primary docs, а этот файл нужно дочищать или сокращать.
 
-- Добавлен `PlatformEventLog` как общий журнал узла.
-- Turret events теперь зеркалятся в platform log.
-- Добавлен каталог и runner для `turret service scenarios`.
-- Общий shell `/` теперь показывает последние записи platform log.
-- Страница `/turret` теперь умеет запускать dry-run сценарии.
-- Добавлены первые `unittest` для runtime и сценариев.
+Этот документ сохраняем как короткий implementation snapshot того этапа, где у `Raspberry Pi` появились node-level platform log и повторяемые dry-run engineering scenarios.
 
-## Какие файлы появились
+## Какой historical delta здесь остается
 
-- `raspberry_pi/platform_event_log.py`
-- `raspberry_pi/turret_service_scenarios.py`
-- `raspberry_pi/tests/test_turret_runtime_and_scenarios.py`
-- `docs/21_platform_log_and_turret_scenarios.md`
+- добавлен `PlatformEventLog` как общий журнал узла, в который начали зеркалиться turret events;
+- добавлен compatibility-named scenario pack `turret_service_scenarios` и его runner;
+- shell `/` начал показывать последние записи platform log;
+- страница `/turret` получила запуск dry-run сценариев;
+- появились первые `unittest` для runtime и сценариев;
+- появились API surfaces:
+  - `GET /api/v1/logs`
+  - `GET /api/v1/turret/scenarios`
+  - `POST /api/v1/turret/scenarios/run?id=...`
 
-## Какие файлы изменились
+## Что этот этап реально доказал
 
-- `raspberry_pi/turret_event_log.py`
-- `raspberry_pi/bridge_state.py`
-- `raspberry_pi/server.py`
-- `raspberry_pi/web/index.html`
-- `raspberry_pi/web/turret.html`
-- `shared_contracts/api_contracts.md`
-- `docs/07_testing_strategy.md`
+1. Узловую картину можно собирать не только из модульных статусов, но и из общего platform log.
+2. Engineering scenarios можно запускать как повторяемый browser-driven слой еще до реальных hardware bindings.
+3. Runtime, log и scenario pack можно связать первыми unit-тестами до живой двухузловой обкатки.
 
-## Новый API
+## Что уже не нужно брать отсюда как канон
 
-- `GET /api/v1/logs`
-- `GET /api/v1/turret/scenarios`
-- `POST /api/v1/turret/scenarios/run?id=...`
+- compatibility-name `turret_service_scenarios` как обязательный будущий vocabulary;
+- список дальнейших улучшений логов и сценариев как актуальный roadmap;
+- локальный dry-run stage как замену canonical `Laboratory` flows.
 
-## Что теперь можно проверять в браузере
+## Зачем файл сохраняем
 
-1. Как turret runtime пишет события в локальный журнал.
-2. Как эти события попадают в общий platform log.
-3. Как service/test сценарий меняет runtime без ручной цепочки кликов.
-4. Как shell показывает свежую картину узла целиком, а не только модульные статусы.
-
-## Первые сценарии
-
-- `service_safe_idle`
-- `auto_target_gate_probe`
-- `emergency_recovery_probe`
-
-Все они сейчас dry-run и не трогают реальное железо.
-
-## Почему это важный шаг
-
-До этого у нас уже были:
-
-- runtime;
-- event log турели;
-- driver shell.
-
-Но не было хорошей “сборки картины” на уровне всего узла. Теперь shell начинает работать ближе к реальной платформе:
-
-- есть общий журнал;
-- есть сценарии для тестировщиков;
-- есть unit-тесты;
-- есть место для будущего объединения логов `ESP32` и `Raspberry Pi`.
-
-## Что дальше
-
-- вынести platform log в двусторонний sync между узлами;
-- добавить экспорт логов;
-- расширить service/test сценарии и привязать их к будущим реальным binding'ам.
+Как след первого этапа, где у платформы появился node-level log layer и повторяемые dry-run engineering scenarios для turret-owner стороны.

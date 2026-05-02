@@ -56,6 +56,13 @@ class SettingsPageStaticTests(unittest.TestCase):
         self.assertIn('body[data-shell-theme="contrast"]', script)
         self.assertIn('body[data-shell-density="compact"]', script)
 
+    def test_smart_bar_consumes_active_failures_from_shell_snapshot(self) -> None:
+        script = (PROJECT_ROOT / "web" / "static" / "smart_bar.js").read_text(encoding="utf-8")
+
+        self.assertIn("function shellFailuresToken(snapshot)", script)
+        self.assertIn("faults.active_failures", script)
+        self.assertIn('id: "system-failures"', script)
+
 
 if __name__ == "__main__":
     unittest.main()

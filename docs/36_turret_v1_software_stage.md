@@ -4,57 +4,62 @@
 
 - `Turret v1`
 
+Статус документа:
+
+- stage-doc и implementation snapshot, а не primary product truth;
+- читать после `docs/README.md`, `26_v1_product_spec.md`, `05_ui_shell_and_navigation.md`, `37_turret_product_context_map.md` и `39_design_decisions_and_screen_map.md`;
+- если описание расходится с каноническим слоем, приоритет у primary docs, а этот файл нужно дочищать или сокращать.
+
 Важно:
 
-- здесь фиксируется именно software-level контур `Turret v1` на `Raspberry Pi`;
+- здесь фиксируется именно software-level контур `Turret v1` на turret compute node today-baseline `Raspberry Pi`;
 - реальная камера, FPV, дальномер и hardware-backed actuator bindings остаются следующим этапом;
 - это не отменяет старые bootstrap-документы, а поднимает turret-owner
   до первого законченного продуктового состояния.
 
-## Что Теперь Считаем Закрытым
+Дополнительно:
 
-На этом этапе `Turret` уже не считается просто bootstrap-страницей runtime.
+- продуктовая роль `Turret`, operator UX, owner-aware shell semantics и границы `Laboratory` уже закреплены в канонических документах;
+- этот stage-doc фиксирует только implementation-delta, который впервые материализовал эту модель в текущем software baseline.
 
-Теперь модуль уже умеет:
+## Какой Implementation-Delta Фиксируем На Этом Этапе
 
-- показывать product-level страницу `/turret`;
-- жить как turret-owner на `Raspberry Pi`;
-- отдельно держать service/test страницу `/service/turret`;
-- публиковать manual/automatic/service summary, а не только внутренние флаги;
-- показывать `camera` и `range` availability как часть owner-side модели;
-- держать action channels `motion`, `strobe`, `water`, `audio` с safety-gates;
-- писать события в `platform log` и `TurretEventLog`;
-- показываться в shell как локальный product-module с owner-aware handoff на `ESP32`.
+На этом этапе в software baseline зафиксированы такие практические сдвиги:
+
+- route `/turret`, shell snapshot и owner-page title уже материализуют утвержденную product-role `Turret`;
+- turret runtime отдает product-facing summaries вместо набора только внутренних runtime-флагов;
+- owner-side turret engineering slice встроен в общий `Laboratory`, а не живет как отдельная product IA;
+- readiness по `camera`, `range`, `vision` и action families уже участвует в честной owner-side модели;
+- turret события начинают формировать platform-level и turret-specific activity layer, пригодный для shell и дальнейшего UX.
 
 ## Что Реализовано
 
-### 1. Product Turret Page
+### 1. Implementation Surface `/turret`
 
 Страница `/turret` теперь показывает:
 
 - общий turret state;
 - manual console summary;
 - automatic defense summary;
-- service lane state;
+- engineering lane state;
 - `camera / range / vision` availability;
 - action channels и их readiness;
 - dry-run automation signals;
 - последние turret events.
 
-Это закрывает требование из UI-документа:
-
-- думать `manual / automatic / service`, camera/range availability и actions,
-  а не только набором runtime-подсистем.
+На implementation-уровне это переводит turret-owner page из runtime-centric поверхности в product-facing summary surface.
 
 ### 2. Laboratory Contour
 
-Появилась отдельная страница:
+Появился owner-side turret engineering contour внутри общего `Laboratory` workspace.
+
+Current software-stage compatibility surface может все еще использовать отдельный route:
 
 - `/service/turret`
 
 Она дает:
 
-- service/test сценарии;
+- engineering-сценарии;
 - sensor availability toggles;
 - automation flags;
 - actuator probes;
@@ -63,6 +68,11 @@
 
 Это позволяет держать продуктовую страницу модульной и понятной,
 не превращая ее в инженерную консоль.
+
+Важно:
+
+- целевая продуктовая модель — turret-oriented owner-side срез внутри `Laboratory`, а не отдельная user-facing service-page;
+- compatibility route допустим как переходный implementation-layer, но не как главный способ мыслить структуру продукта.
 
 ### 3. Turret Product Snapshot
 
@@ -99,7 +109,7 @@
 
 ### 5. Shell And Registry Integration
 
-Сторона `Raspberry Pi` теперь показывает user-facing title:
+Сторона turret compute node today-baseline `Raspberry Pi` теперь показывает user-facing title:
 
 - `Turret`
 
@@ -111,7 +121,7 @@
 
 - shell snapshot;
 - owner page;
-- ESP32-side turret card;
+- `I/O`-side turret card;
 - product wording в документации.
 
 ## Что Проверено
@@ -138,16 +148,9 @@
 - real range sensor integration;
 - real `motion / strobe / water / audio` driver bindings;
 - hardware qualification turret IO path;
-- richer owner-side service exposure внутри общего `Laboratory`;
+- richer owner-side engineering exposure внутри общего `Laboratory`;
 - живая двухузловая обкатка `ESP32 + Raspberry Pi` на реальном железе.
 
 ## Практический Итог
 
-`Turret v1` как третий модульный software-stage можно считать завершенным.
-
-Дальше правильнее идти не обратно в общий shell-refactor и не сразу в глубину turret hardware,
-а в следующий product block:
-
-1. `Laboratory`
-2. затем возвращаться к cross-module integration
-3. после этого переходить к live hardware qualification
+Этот документ можно считать implementation snapshot того момента, когда `Turret v1` впервые получил связный owner-aware software baseline с product-facing summaries, engineering slice внутри `Laboratory` и platform-level activity layer.

@@ -1,5 +1,11 @@
 # Shell Snapshot Schema
 
+Статус документа:
+
+- supporting contract-map, а не самостоятельный product spec;
+- читать после `docs/README.md`, `05_ui_shell_and_navigation.md`, `27_platform_shell_v1_spec.md` и `40_platform_shell_navigation_alignment.md`;
+- если snapshot-структура или shell vocabulary расходятся с каноническим слоем, приоритет у primary docs, а этот файл нужно дочищать или сокращать.
+
 Этот документ фиксирует shell-level snapshot как общий truthful state source
 для `Home`, `Settings`, shell summaries и owner-aware navigation.
 
@@ -9,6 +15,11 @@
 - прекратить сборку shell-картины разрозненными кусками;
 - отделить `runtime host`, `current viewer`, `platform nodes`, `sync` и `storage`;
 - дать опору для `ShellSnapshotFacade`.
+
+Важно:
+
+- user-facing состав shell surfaces, navigation semantics и vocabulary уже определены в `05_ui_shell_and_navigation.md`, `27_platform_shell_v1_spec.md` и `40_platform_shell_navigation_alignment.md`;
+- этот документ не повторяет product behavior, а фиксирует только структуру данных, достаточную для материализации уже утвержденного shell.
 
 ## 1. Зачем нужен отдельный shell snapshot
 
@@ -27,21 +38,20 @@
 
 - `Главная` страница не домысливала runtime model;
 - `Settings` не склеивал truthful state из четырех разных endpoint;
-- обе стороны (`ESP32` и `Raspberry Pi`) показывали одну и ту же картину;
+- оба node baselines today (`ESP32` и `Raspberry Pi`) показывали одну и ту же картину;
 - `desktop_smoke` не притворялся `Raspberry Pi online`;
 - owner-aware handoff и shell summaries жили на одном contract.
 
 ## 2. Что должен покрывать shell snapshot
 
-Минимально он должен быть достаточен для:
+Минимально он должен быть достаточен для materialization тех shell surfaces и переходов, которые уже закреплены в каноническом слое:
 
 1. `Главная`
 2. shell-level status summaries
-3. shell-level навигации
-4. owner-aware handoff
-5. входа в `Gallery`
-6. краткого activity summary
-7. truthful state модели страницы `Settings`
+3. owner-aware navigation и handoff
+4. входа в `Gallery`
+5. краткого activity summary
+6. truthful state модели страницы `Settings`
 
 Важно:
 
@@ -189,11 +199,18 @@
     "faults": {
       "has_fault": false,
       "has_degraded": true,
-      "message": "Some modules are degraded or blocked"
+      "message": "Some modules are degraded or blocked",
+      "active_failures": [
+        {
+          "id": "SAF-NET-01",
+          "shell_state": "degraded",
+          "reason": "owner_unavailable"
+        }
+      ]
     },
     "diagnostics": {
       "sync_state": "local_only",
-      "ownership_summary": "ESP32 owns irrigation, Raspberry Pi owns turret",
+      "ownership_summary": "I/O node owns irrigation, compute node owns turret",
       "content_ready": true
     },
     "activity": {
@@ -210,6 +227,12 @@
   }
 }
 ```
+
+Важно:
+
+- `navigation.gallery.default_tab` в этом примере отражает текущую shell-preference software baseline, а не неизменяемую product truth;
+- каноническое требование active docs — существование вкладок `Plants`, `Media`, `Reports` и отдельного quick entry в `Gallery > Reports`, а не жесткая фиксация одного универсального default-tab на все будущие реализации;
+- `summaries.faults` должен давать shell-visible картину interlock и активных отказов так, чтобы `Home` и bar-layer могли объяснить `locked` или `degraded` без ухода в deep diagnostics.
 
 ## 4. Что в snapshot должно быть всегда
 
@@ -368,8 +391,8 @@ Compatibility alias:
 ## 9. Первый порядок внедрения
 
 1. Сначала описать contract и skeleton facade.
-2. Затем собрать `Shell Snapshot v1` на `ESP32`.
-3. Затем собрать такой же `Shell Snapshot v1` на `Raspberry Pi`.
+2. Затем собрать `Shell Snapshot v1` в always-on `I/O` baseline today (`ESP32`).
+3. Затем собрать такой же `Shell Snapshot v1` в turret compute baseline today (`Raspberry Pi`).
 4. После этого перевести на него:
    - `Главную`
    - `Settings`

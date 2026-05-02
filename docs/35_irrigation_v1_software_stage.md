@@ -2,33 +2,38 @@
 
 Этот документ фиксирует завершение второго пункта модульной очереди:
 
+Статус документа:
+
+- stage-doc и implementation snapshot, а не primary product truth;
+- читать после `docs/README.md`, `26_v1_product_spec.md`, `05_ui_shell_and_navigation.md` и актуальных irrigation-related supporting docs;
+- если описание расходится с каноническим слоем, приоритет у primary docs, а этот файл нужно дочищать или сокращать.
+
 - `Irrigation v1`
 
 Важно:
 
-- здесь фиксируется именно software-level контур `Irrigation v1` на `ESP32`;
+- здесь фиксируется именно software-level контур `Irrigation v1` на owner-side `I/O` node today-baseline `ESP32`;
 - реальный hardware path, калибровка датчиков и live water qualification остаются следующим этапом;
 - это не отменяет старый bootstrap-документ, а поднимает модуль до первого законченного продуктового состояния.
 
-## Что Теперь Считаем Закрытым
+Дополнительно:
 
-На этом этапе `Irrigation` уже не считается просто "первым dry-run модулем".
+- продуктовая роль `Irrigation`, shell semantics, границы `Laboratory` и общая owner-aware модель уже закреплены в канонических документах;
+- этот stage-doc фиксирует только implementation-delta, который материализовал эту модель в текущем software baseline.
 
-Теперь модуль уже умеет:
+## Какой Implementation-Delta Фиксируем На Этом Этапе
 
-- показывать product-level страницу `/irrigation`;
-- жить как irrigation-owner на `ESP32`;
-- работать с зонами, датчиками и состояниями, а не только с насосом и клапанами;
-- запускать ручной полив;
-- выполнять базовый automatic baseline;
-- иметь отдельную service/test страницу `/service/irrigation`;
-- проводить сервисную проверку зон и датчиков;
-- писать события в общий `platform log`;
-- показываться в shell как локальный product-module и как отдельный service entry point.
+На этом этапе в software baseline зафиксированы такие практические сдвиги:
+
+- route `/irrigation`, module registry и shell snapshot уже материализуют утвержденную product-role `Irrigation`;
+- owner-side controller мыслит зонами, датчиками и состояниями, а не только насосом и клапанами;
+- owner-side irrigation engineering slice встроен в общий `Laboratory` и больше не требует отдельной product IA;
+- базовый automatic flow и manual/service actions уже работают в одной truthful owner-model;
+- события irrigation-path начинают попадать в общий platform-level activity слой.
 
 ## Что Реализовано
 
-### 1. Product Irrigation Page
+### 1. Implementation Surface `/irrigation`
 
 Страница `/irrigation` теперь показывает:
 
@@ -42,13 +47,15 @@
 
 ### 2. Laboratory Contour
 
-Появилась отдельная страница:
+Появился owner-side irrigation engineering contour внутри общего `Laboratory` workspace.
+
+Current software-stage compatibility surface может все еще использовать отдельный route:
 
 - `/service/irrigation`
 
 Она дает:
 
-- вход и выход из `Laboratory`;
+- вход в irrigation-oriented engineering controls через `Laboratory`;
 - service pulse по зоне;
 - sensor profiles:
   - `dry`
@@ -56,7 +63,12 @@
   - `fault`
   - `restore`
 
-Это закрывает требование "сервисная проверка зон и датчиков" без превращения продуктовой страницы в инженерный backend.
+На implementation-уровне это отделяет owner-side инженерные controls от продуктовой страницы, не превращая `/irrigation` в инженерный backend.
+
+Важно:
+
+- целевая модель для следующих документов и следующих чатов — не отдельная user-facing service-page, а irrigation-oriented карточка или срез внутри общего `Laboratory`;
+- compatibility route допустим как переходный implementation-layer, но не как главная продуктовая структура.
 
 ### 3. Sensor And Environment Layer
 
@@ -85,16 +97,16 @@
 
 ### 5. Shell And Registry Integration
 
-Сторона `ESP32` теперь держит:
+Сторона owner-side `I/O` node today-baseline `ESP32` теперь держит:
 
 - `irrigation` как product module;
-- `irrigation_service` как отдельный `Laboratory` module.
+- irrigation-oriented engineering surface как owner-side `Laboratory` slice.
 
 Это отражается:
 
 - в module registry;
 - в shell snapshot;
-- в service section общего shell;
+- в owner-aware semantics общего `Laboratory`;
 - в owner-aware federated shell на `Raspberry Pi`.
 
 ## Что Проверено
@@ -126,11 +138,4 @@
 
 ## Практический Итог
 
-`Irrigation v1` как второй модульный software-stage можно считать завершенным.
-
-Дальше правильнее идти не обратно в большой shell-refactor и не сразу в hardware detail,
-а в следующий product block:
-
-1. `Turret v1`
-2. затем `Laboratory` как отдельный блок общего уровня
-3. после этого возвращаться к cross-module integration и hardware qualification
+Этот документ можно считать implementation snapshot того момента, когда `Irrigation v1` впервые получил связный software baseline поверх owner-aware shell, `Laboratory` и platform activity layer.

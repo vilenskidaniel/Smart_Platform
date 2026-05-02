@@ -1,4 +1,4 @@
-# Acceptance And Validation Matrix
+# Матрица приемки и валидации
 
 Этот документ нужен, чтобы перевести сценарии и обещания проекта в проверяемую матрицу.
 
@@ -6,128 +6,128 @@
 
 - `docs/07_testing_strategy.md`;
 - `docs/41_laboratory_testing_readiness.md`;
-- product-level `v1` expectations;
-- будущими hardware bring-up сессиями.
+- продуктовыми ожиданиями `v1`;
+- будущими аппаратными сессиями вывода оборудования.
 
 ## 1. Цель документа
 
-Каждый важный продуктовый или safety сценарий должен иметь:
+Каждый важный продуктовый или сценарий безопасности должен иметь:
 
-- понятный `acceptance target`;
-- owner и preconditions;
+- понятную цель приемки;
+- владельца и предусловия;
 - способ проверки;
-- expected evidence;
+- ожидаемую фиксацию результата;
 - место, где результат будет виден пользователю или оператору.
 
-## 2. Основные validation группы
+## 2. Основные группы валидации
 
-### 2.1 Shell And Handoff
+### 2.1 Shell и передача управления
 
-- truthful board visibility;
-- honest blocked states;
-- owner-aware routing;
-- consistent mobile entry.
+- правдивую видимость плат;
+- честные заблокированные состояния;
+- маршрутизацию с учетом владельца;
+- согласованный мобильный вход.
 
 ### 2.2 Irrigation
 
-- zone control;
-- environment and soil readings;
-- manual irrigation;
-- basic automatic behavior;
-- local-first operation without peer.
+- управление зонами;
+- показания среды и почвы;
+- ручной полив;
+- базовое автоматическое поведение;
+- локальную работу без peer-узла.
 
 ### 2.3 Turret
 
-- manual FPV entry;
-- readiness of camera / range / action family;
-- degraded behavior when owner dependencies are missing;
-- safety and policy enforcement.
+- ручной вход в FPV;
+- готовность камеры, дальномера и семейства действий;
+- деградированное поведение при отсутствии зависимостей владельца;
+- соблюдение правил безопасности и политик.
 
-### 2.4 Gallery And Reports
+### 2.4 `Gallery` и `Reports`
 
-- local and mixed content visibility;
-- report card generation;
-- evidence from `Laboratory` and manual actions;
-- owner-aware content degradation.
+- видимость локального и смешанного контента;
+- генерацию карточек отчетов;
+- карточки продуктовой истории и заметки;
+- деградацию контента с учетом владельца.
 
-### 2.5 Laboratory And Bring-Up
+### 2.5 `Laboratory` и вывод оборудования
 
-- preflight visibility;
-- module-by-module qualification;
-- experimental profile handling;
-- pass / fail / warning evidence.
+- видимость предварительной проверки;
+- покомпонентную квалификацию;
+- работу с экспериментальными профилями;
+- фиксацию `pass / fail / warn` внутри слоя сессии `Laboratory`.
 
-### 2.6 Safety And Failure Handling
+### 2.6 Безопасность и обработка отказов
 
-- emergency path;
-- interlock reflection;
-- fault and locked states;
-- safe fallback behavior.
+- аварийный путь;
+- отражение блокировок;
+- состояния `fault` и `locked`;
+- безопасное запасное поведение.
 
-## 3. Test Case Skeleton
+## 3. Шаблон приемочного кейса
 
-Для каждого acceptance item здесь позже нужно фиксировать:
+Для каждого приемочного пункта здесь позже нужно фиксировать:
 
 - `case_id`;
-- target module or flow;
-- required hardware profile;
-- preconditions;
-- execution steps;
-- expected shell behavior;
-- expected report/evidence output;
-- pass / fail notes.
+- целевой модуль или сценарий;
+- требуемый аппаратный профиль;
+- предусловия;
+- шаги выполнения;
+- ожидаемое поведение shell;
+- ожидаемую фиксацию результата;
+- заметки по `pass / fail`.
 
 ## 4. Ближайшая задача заполнения
 
-Сюда нужно мигрировать из legacy `ТЗ` и текущих readiness notes:
+Сюда нужно мигрировать из старого `ТЗ` и текущих заметок о готовности:
 
 - приемочные критерии;
 - сценарии проверки продукта глазами пользователя и оператора;
-- hardware-assisted validation rules, которые сейчас еще не собраны в единую traceable matrix.
+- правила валидации с участием оборудования, которые сейчас еще не собраны в единую трассируемую матрицу.
 
-## 5. Базовая Acceptance Matrix Для `v1`
+## 5. Базовая матрица приемки для `v1`
 
-| Case ID | Target | Required Hardware | Preconditions | Expected Shell Behavior | Expected Evidence |
+| Идентификатор кейса | Цель | Требуемое оборудование | Предусловия | Ожидаемое поведение shell | Ожидаемая фиксация результата |
 | --- | --- | --- | --- | --- | --- |
-| `ACC-SHELL-01` | single-board `ESP32` entry | `ESP32` only | shell reachable | `ESP32` shown as current board, peer shown as absent, peer-owned routes visible but blocked | report or session note for shell smoke |
-| `ACC-SHELL-02` | single-board `Raspberry Pi` entry | `Raspberry Pi` only | shell reachable | `Raspberry Pi` shown as current board, `Irrigation` visible but degraded/locked | shell smoke report |
-| `ACC-SHELL-03` | dual-board handoff | both boards | peer sync active | peer-owned routes open through owner-aware handoff, not fake local ownership | handoff report |
-| `ACC-SHELL-04` | blocked-state explanation | any single-board degraded view | peer-owned route tapped while owner missing | blocked module stays visible and returns explanation instead of fake success | shell note or warning report |
-| `ACC-SHELL-05` | theme and language continuity | one or both boards | shell reachable, `Settings` available | theme/language change updates shell chrome without breaking IA or owner semantics | shell note or UI smoke report |
-| `ACC-SHELL-06` | mobile/fullscreen continuity | phone browser | shell opened on mobile | `Home`, `Gallery`, `Laboratory` stay readable without browser-like breakdown; fullscreen entry remains usable where expected | UI smoke report |
-| `ACC-IRR-01` | irrigation zone visibility | `ESP32` + at least one zone profile | irrigation module online | zones and sensor state visible with honest missing-data markers | irrigation status report |
-| `ACC-IRR-02` | manual irrigation action | `ESP32` irrigation path | zone configured, service lock absent | manual action available only through owner, state changes visible in shell | action report |
-| `ACC-IRR-03` | irrigation degraded sensing | `ESP32` with missing sensor | one sensor absent or invalid | affected zone remains visible and degraded, not silently removed | warning report |
-| `ACC-TUR-01` | manual turret entry | `Raspberry Pi`, camera baseline | local turret shell reachable | manual/FPV entry available with truthful readiness state | manual session report |
-| `ACC-TUR-02` | turret degraded readiness | `Raspberry Pi` without one critical family | camera/range/action family partially absent | turret remains visible, unavailable family shown as degraded/locked | readiness report |
-| `ACC-GAL-01` | local gallery slice | one board only | local content exists | `Gallery` opens local slice and marks missing peer content | gallery report |
-| `ACC-GAL-02` | mixed reports feed | both boards | reports/events exist on one or both nodes | `Gallery > Reports` shows mixed feed with source and result metadata | reports feed evidence |
-| `ACC-GAL-03` | quick report capture | one or both boards | `Gallery > Reports` open | testcase and operator note capture create visible report cards in chronological feed | report card evidence |
-| `ACC-LAB-01` | laboratory preflight | one or both boards | `Laboratory` reachable | preflight shows what can be tested now and what waits for peer | readiness report |
-| `ACC-LAB-02` | experimental profile isolation | `Laboratory` with `HC-SR04` or stepper profile | experimental slice enabled | experimental slice visible as laboratory-only, not product-ready | lab report |
-| `ACC-LAB-03` | laboratory workspace continuity | one or both boards | `Laboratory` opened from shell | status ribbon, category rail, module rail and active workspace stay visible without full navigation reset between slices | laboratory UI smoke report |
-| `ACC-LAB-04` | laboratory browser/fullscreen continuity | phone browser | `Laboratory` opened on mobile | normal browser mode and fullscreen app-like mode both preserve owner/status context while reallocating space for controls | laboratory UI smoke report |
-| `ACC-LAB-05` | laboratory power context guard | bench-sensitive slice | operator selected `Bench PSU` or `LiFePO4 battery` before opening the slice | voltage-dependent calibration flow stays advisory or blocked when battery context is selected | laboratory power warning or pass report |
-| `ACC-LAB-06` | display slice owner truth | `ESP32` only or `Raspberry Pi` only | `Laboratory / Displays` opened | `ESP32`-only session shows the display slice as blocked; `Raspberry Pi` session opens color-pattern and touch-grid checks without leaving owner-aware context | display lab smoke report |
-| `ACC-LAB-07` | phone plus owner-display physical pass | phone browser + `Raspberry Pi` display | `Raspberry Pi` shell reachable, `Laboratory / Displays` opens, operator can use browser and fullscreen modes | phone shell keeps board context readable, `Displays` runs pattern checks and `12-zone` touch pass, and both view modes stay practically usable | physical display checklist report with `pass / warn / fail` result |
-| `ACC-LAB-08` | laboratory session backbone | one or both boards | `Laboratory` opened, operator fills session context | hub shows session status, objective, hardware profile, and finish controls without breaking owner-aware flow | session-start and session-finish evidence in `Gallery > Reports` |
-| `ACC-LAB-09` | laboratory evidence metadata continuity | one or both boards | active slice records `pass`, `warn`, `fail`, or note | report entry keeps active slice, power context, view mode, and session metadata instead of only freeform note text | report entry with laboratory metadata fields |
-| `ACC-SAFE-01` | interlock reflection | turret-sensitive branch + interlock | interlock engaged | shell and owner module show locked state with explicit reason | safety report |
-| `ACC-SAFE-02` | service collision handling | service session active | product command attempted | product command blocked with explicit reason | collision report |
+| `ACC-SHELL-01` | вход в одноплатный `ESP32` | только `ESP32` | shell доступен | `ESP32` показан как текущая плата, peer отсутствует, маршруты peer-владения видимы, но заблокированы | отчет или заметка сессии о быстрой проверке shell |
+| `ACC-SHELL-02` | вход в одноплатный `Raspberry Pi` | только `Raspberry Pi` | shell доступен | `Raspberry Pi` показан как текущая плата, `Irrigation` виден, но находится в состоянии `degraded` или `locked` | отчет о быстрой проверке shell |
+| `ACC-SHELL-03` | передача управления в двухплатном режиме | обе платы | активна синхронизация peer-узла | peer-owned маршруты открываются через передачу управления, а не через ложное локальное владение | отчет о передаче управления |
+| `ACC-SHELL-04` | объяснение заблокированного состояния | любой деградированный одноплатный вид | выполнено нажатие на peer-owned маршрут при отсутствии владельца | заблокированный модуль остается видимым и возвращает объяснение вместо ложного успеха | заметка shell или отчет-предупреждение |
+| `ACC-SHELL-05` | непрерывность темы и языка | одна или обе платы | shell доступен, доступен `Settings` | смена темы и языка обновляет оболочку без разрушения IA и семантики владельца | заметка shell или отчет о быстрой проверке интерфейса |
+| `ACC-SHELL-06` | непрерывность мобильного и полноэкранного режима | браузер телефона | shell открыт на телефоне | `Home`, `Gallery`, `Laboratory` остаются читаемыми без браузерного развала; полноэкранный вход остается пригодным там, где это ожидается | отчет о быстрой проверке интерфейса |
+| `ACC-IRR-01` | видимость зон полива | `ESP32` и хотя бы один профиль зоны | модуль полива в сети | зоны и состояние сенсоров видимы с честными маркерами отсутствующих данных | отчет о состоянии полива |
+| `ACC-IRR-02` | ручное действие полива | контур полива `ESP32` | зона настроена, инженерной блокировки нет | ручное действие доступно только через владельца, изменения состояния видны в shell | отчет о действии |
+| `ACC-IRR-03` | деградированное состояние сенсоров полива | `ESP32` с отсутствующим сенсором | один сенсор отсутствует или недостоверен | затронутая зона остается видимой и деградированной, а не исчезает молча | отчет-предупреждение |
+| `ACC-TUR-01` | ручной вход в турель | `Raspberry Pi`, базовая камера | локальный shell турели доступен | ручной вход и FPV доступны с правдивым состоянием готовности | отчет о ручной сессии |
+| `ACC-TUR-02` | деградированная готовность турели | `Raspberry Pi` без одного критического семейства | камера, дальномер или семейство действий частично отсутствуют | турель остается видимой, недоступное семейство показано как `degraded` или `locked` | отчет о готовности |
+| `ACC-GAL-01` | локальный срез галереи | одна плата | локальный контент существует | `Gallery` открывает локальный срез и маркирует отсутствие peer-контента | отчет по галерее |
+| `ACC-GAL-02` | смешанная лента отчетов | обе платы | отчеты и события существуют на одном или обоих узлах | `Gallery > Reports` показывает смешанную ленту с метаданными источника и результата | фиксация ленты отчетов |
+| `ACC-GAL-03` | видимость заметок и карточек отчета | одна или обе платы | открыт `Gallery > Reports` | заметка оператора и карточки продуктовой истории остаются видимыми в хронологической ленте с семантикой источника и результата | фиксация карточки отчета |
+| `ACC-LAB-01` | предварительная проверка в laboratory | одна или обе платы | `Laboratory` доступен | предварительная проверка показывает, что можно тестировать сейчас и что ждет peer-узел | отчет о готовности |
+| `ACC-LAB-02` | изоляция экспериментального профиля | `Laboratory` с профилем `HC-SR04` или stepper | экспериментальный срез включен | экспериментальный срез виден как сугубо laboratory-срез, а не как продуктово готовый | лабораторный отчет |
+| `ACC-LAB-03` | непрерывность рабочего пространства laboratory | одна или обе платы | `Laboratory` открыт из shell | статусная лента, рейка категорий, рейка модулей и активное рабочее пространство остаются видимыми без полного сброса навигации между срезами | отчет о быстрой проверке интерфейса laboratory |
+| `ACC-LAB-04` | непрерывность laboratory в браузере и полноэкранном режиме | браузер телефона | `Laboratory` открыт на телефоне | обычный браузерный режим и полноэкранный режим сохраняют контекст владельца и статуса при перераспределении места под органы управления | отчет о быстрой проверке интерфейса laboratory |
+| `ACC-LAB-05` | защита по контексту питания в laboratory | чувствительный к стендовому питанию срез | оператор выбрал `Bench PSU` или батарею `LiFePO4` перед открытием среза | калибровочный сценарий, зависящий от напряжения, остается советующим или блокируется при выборе батареи | лабораторный отчет-предупреждение о питании или отчет об успешном проходе |
+| `ACC-LAB-06` | правдивость владельца для среза дисплеев | только `ESP32` или только `Raspberry Pi` | открыт `Laboratory / Displays` | в сессии только с `ESP32` срез дисплеев показан как заблокированный; в сессии с `Raspberry Pi` открываются проверки цветовых шаблонов и сенсорной сетки без выхода из контекста владельца | отчет о быстрой проверке дисплеев |
+| `ACC-LAB-07` | физический проход дисплея с телефоном и дисплеем владельца | браузер телефона и дисплей `Raspberry Pi` | shell `Raspberry Pi` доступен, открыт `Laboratory / Displays`, оператор может использовать браузерный и полноэкранный режимы | shell на телефоне сохраняет читаемый контекст платы, `Displays` выполняет проверки шаблонов и проход по `12-zone` touch, а оба режима просмотра остаются практически пригодными | физический чек-лист дисплея в сессии `Laboratory` с результатом `pass / warn / fail` |
+| `ACC-LAB-08` | каркас laboratory-сессии | одна или обе платы | `Laboratory` открыт, оператор заполнил контекст сессии | узел показывает статус сессии, цель, аппаратный профиль и элементы завершения, не ломая контекст владельца | фиксация старта и завершения в слое сессии `Laboratory` |
+| `ACC-LAB-09` | непрерывность метаданных laboratory-артефактов | одна или обе платы | активный срез записывает `pass`, `warn`, `fail` или заметку | запись результата сохраняет активный срез, контекст питания, режим просмотра и метаданные сессии вместо одного только свободного текста | laboratory-запись результата с полями метаданных сессии |
+| `ACC-SAFE-01` | отражение аварийной блокировки | ветка, чувствительная к турели, и interlock | interlock активирован | shell и модуль владельца показывают состояние `locked` с явной причиной | отчет по безопасности |
+| `ACC-SAFE-02` | обработка инженерной коллизии | инженерная сессия активна | предпринята продуктовая команда | продуктовая команда блокируется с явной причиной | отчет о коллизии |
 
-## 6. Validation Execution Rules
+## 6. Правила выполнения валидации
 
-Каждый acceptance case должен выполняться так, чтобы осталось понятное evidence trail:
+Каждый приемочный кейс должен выполняться так, чтобы оставался понятный след результата:
 
 - кто запускал кейс;
 - на каком узле выполнялась проверка;
-- какие hardware families были подключены;
-- какой был session context: objective, hardware profile, external module при наличии;
-- какой power context и какой view mode были активны в момент записи evidence;
+- какие аппаратные семейства были подключены;
+- какой был контекст сессии: цель, аппаратный профиль, внешний модуль при наличии;
+- какой контекст питания и какой режим просмотра были активны в момент записи результата;
 - какой был итог: pass, fail или warn;
-- где смотреть артефакт в `Gallery > Reports` или service-history.
+- где смотреть артефакт: в слое сессии `Laboratory` или, если событие продуктового уровня, в `Gallery > Reports`.
 
-## 7. Minimal Preconditions Vocabulary
+## 7. Минимальный словарь предусловий
 
 Для удобства следующих implementation и testing чатов используем такие precondition-группы:
 
@@ -135,31 +135,31 @@
 - `shell_ready`;
 - `peer_visible`;
 - `sync_ready`;
-- `service_session_inactive`;
+- `engineering_session_inactive`;
 - `interlock_clear`;
 - `required_family_online`;
 - `storage_writable`.
 
-## 8. Что Считается Достаточной Валидацией
+## 8. Что считается достаточной валидацией
 
-Для `v1` validation не обязана сразу быть fully automated.
+Для `v1` валидация не обязана сразу быть полностью автоматизированной.
 
-Но acceptance model считается рабочей только если:
+Но модель приемки считается рабочей только если:
 
 - кейсы можно повторить пошагово;
 - они используют одинаковые статусы и причины блокировки, что и shell;
 - результат не остается только в устной памяти оператора;
-- кейсы покрывают single-board, dual-board, degraded и service-safe состояния.
+- кейсы покрывают одноплатные, двухплатные, деградированные и инженерно-безопасные состояния.
 
 ## 9. Что Реально Взято Из Legacy `ТЗ`
 
 Сохранены как полезные знания:
 
-- продукт нужно проверять именно сценариями, а не только слоем unit tests;
-- installation, operation и failure handling должны иметь приемочные критерии;
+- продукт нужно проверять именно сценариями, а не только слоем модульных тестов;
+- установка, эксплуатация и обработка отказов должны иметь приемочные критерии;
 - ручные и автоматические ветки должны проверяться отдельно.
 
-Не перенесено как обязательный baseline:
+Не перенесено как обязательная база:
 
-- слишком общая prose-формулировка "модульные, интеграционные, системные тесты" без traceable cases;
-- старый style acceptance без связи с owner-aware shell и reports model.
+- слишком общая формулировка "модульные, интеграционные, системные тесты" без трассируемых кейсов;
+- старый стиль приемки без связи с shell, учитывающим владельца, и моделью `Reports`.

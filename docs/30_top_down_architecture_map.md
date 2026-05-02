@@ -2,6 +2,12 @@
 
 Этот документ нужен, чтобы не теряться в глубине реализации.
 
+Статус документа:
+
+- supporting map, а не primary product spec;
+- читать после `docs/README.md` и canonical core, когда уже понятны продуктовая модель и navigation vocabulary;
+- не использовать как самостоятельный источник product-level терминологии, если она уже зафиксирована в `26_v1_product_spec.md` и `05_ui_shell_and_navigation.md`.
+
 Он фиксирует:
 
 - какие крупные сущности вообще существуют;
@@ -9,6 +15,11 @@
 - какие классы уже есть;
 - какие классы мы планируем;
 - в каком порядке их имеет смысл наполнять.
+
+Важно:
+
+- актуальный execution-order и крупный product roadmap уже живут в `docs/09_master_design_plan.md`;
+- этот документ сохраняем как role-first architecture snapshot, а не как второй мастер-план проекта.
 
 ## 1. Главный принцип
 
@@ -25,19 +36,12 @@
 3. skeleton и короткие обязанности;
 4. только потом глубокая реализация.
 
-## 2. Сколько больших этапов реально осталось
+## 2. Что здесь действительно фиксируется
 
-Если смотреть не по мелким техническим слоям, а по крупным продуктовым работам, то от текущей точки остаются примерно 7 больших шагов:
+Здесь не ведем live-roadmap по этапам. Этот файл нужен только для двух вещей:
 
-1. зафиксировать skeleton архитектуры и имена крупных классов;
-2. довести `Platform Shell v1` до понятного продуктового состояния;
-3. довести `Irrigation v1` как локальный автономный контур `ESP32`;
-4. довести `Turret v1` как turret-owner на `Raspberry Pi`;
-5. довести `Gallery v1` как глобальный content explorer;
-6. довести `Laboratory / Laboratory` как отдельный тестовый контур;
-7. пройти hardware/power/wake интеграцию и живую обкатку.
-
-То есть этапов еще много, но они уже должны управляться не десятками внутренних сущностей, а этими шестью крупными направлениями.
+- держать role-first карту крупных сущностей, ownership и skeleton-level ролей;
+- не давать текущему physical baseline (`ESP32` и `Raspberry Pi`) подменять собой язык всей архитектуры.
 
 ## 3. Верхний уровень продукта
 
@@ -51,20 +55,27 @@
 
 Все остальное — это platform services или implementation layers.
 
-## 4. Карта ownership
+Важно:
 
-### `ESP32`
+- `Settings` остается отдельной user-facing persistent page, но не считается самостоятельным продуктовым блоком;
+- логическая архитектурная карта не должна зависеть от vendor-названий плат там, где речь идет о ролях, ownership и пользовательских поверхностях.
+
+## 4. Логическая Карта Ownership
+
+Сначала фиксируем роли. Уже потом привязываем их к сегодняшнему железу.
+
+### `Always-On I/O Node`
 
 Роль:
 
 - always-on sentinel;
 - владелец `Irrigation`;
-- локальный `Laboratory` для своей зоны;
+- локальное выполнение `Laboratory`-карточек для своей зоны и своих подключенных компонентов;
 - power/wake supervisor;
 - хранение локальных данных на `SD`;
 - fallback shell.
 
-### `Raspberry Pi`
+### `Turret Compute Node`
 
 Роль:
 
@@ -72,17 +83,25 @@
 - vision/analysis node;
 - heavy-content mirror;
 - быстрый к жизни вычислительный узел для турели;
-- владелец turret-family service/test сценариев.
+- владелец turret-family runtime и engineering-сценариев.
 
-### Shared Virtual Sections
+### Shared And Virtual Surfaces
 
 - `Gallery` не привязывается к одному owner как shell-page;
 - shell открывает общую explorer-страницу, а ownership у файлов и отчетов остается на уровне источников данных;
-- `Laboratory` остается user-facing именем единого diagnostics/test-bench контура, даже если внутренний route пока `/service`.
+- `Laboratory` остается user-facing именем единой инженерной среды тестирования и квалификации компонентов, даже если внутренний route пока `/service`;
+- `Settings` остается общей persistent surface для system-level choices и не должен смешиваться с naming-моделью физических узлов.
+
+### Физический Baseline Today
+
+- `ESP32` сегодня является физической реализацией роли `Always-On I/O Node`;
+- `Raspberry Pi` сегодня является физической реализацией роли `Turret Compute Node`.
+
+Если физическое распределение позже изменится, логические product-roles, ownership-модель и названия крупных архитектурных сущностей не должны переписываться заново.
 
 ## 5. Что уже реально существует
 
-### Уже есть на `ESP32`
+### Уже есть в always-on `I/O` baseline today (`ESP32`)
 
 - `SystemCore`
 - `PlatformEventLog`
@@ -92,7 +111,7 @@
 - `StrobeBenchController`
 - `StorageManager`
 
-### Уже есть на `Raspberry Pi`
+### Уже есть в turret compute baseline today (`Raspberry Pi`)
 
 - `BridgeState`
 - `SyncClient`
@@ -105,36 +124,35 @@
 
 ## 6. Какие крупные классы стоит считать целевыми
 
-### `ESP32` target skeleton
+Ниже идут именно логические target names.
 
-- `Esp32DutyNodeBlueprint`
+Названия файлов skeleton пока могут оставаться board-labeled, но названия крупных ролей и coordinator-классов лучше уже переводить в role-first модель.
+
+### Always-on `I/O` node target skeleton
+
+- `AlwaysOnIoNodeBlueprint`
 - `LocalTriggerHubBlueprint`
 - `PeerWakeCoordinatorBlueprint`
 - `PowerSupervisorBlueprint`
 - `IrrigationCoordinatorBlueprint`
-- `ServiceTestCoordinatorBlueprint`
+- `LocalLaboratoryCoordinatorBlueprint`
 - `ContentStorageCoordinatorBlueprint`
 - `PeerShellClientBlueprint`
 
-### `Raspberry Pi` target skeleton
+### Turret compute node target skeleton
 
-- `RaspberryPiTurretNodeBlueprint`
+- `TurretComputeNodeBlueprint`
 - `TurretStandbyManagerBlueprint`
 - `VisionSessionManagerBlueprint`
 - `TargetDecisionEngineBlueprint`
 - `TurretActionCoordinatorBlueprint`
-- `TurretServiceCoordinatorBlueprint`
+- `TurretLaboratoryCoordinatorBlueprint`
 - `ContentMirrorCoordinatorBlueprint`
 - `PeerStateBridgeBlueprint`
 
-## 7. Почему это лучше текущего хаоса глубины
+## 7. Зачем файл сохраняем
 
-Такой подход дает:
-
-- понятную карту, что вообще существует;
-- контроль глубины проработки;
-- возможность обсуждать архитектуру без чтения десятков runtime-деталей;
-- более безопасную работу из других чатов и по отдельным модулям.
+Этот supporting-map нужен, чтобы другие чаты могли быстро понять role-first архитектурную карту, не перечитывая десятки runtime-деталей и не подменяя ее физическим baseline-языком.
 
 ## 8. Где смотреть skeleton
 
@@ -144,15 +162,7 @@ Skeleton-файлы для этого этапа:
 - [raspberry_pi_blueprint.py](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/skeletons/raspberry_pi_blueprint.py)
 - [README.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/skeletons/README.md)
 
-## 9. Следующий правильный ход
-
-После этого документа уже можно безопасно идти не во все стороны сразу, а по одному крупному блоку:
-
-1. уточнить skeleton для `Platform Shell v1`;
-2. затем для `Irrigation v1`;
-3. затем для `Turret v1`;
-4. затем для `Gallery v1`;
-5. затем для `Laboratory / Laboratory`.
+## 9. Где смотреть следующий уровень детализации
 
 Для `Platform Shell v1` следующий уровень детализации уже вынесен отдельно:
 

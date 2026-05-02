@@ -1,5 +1,11 @@
 # ESP32 Hardware And IO Map
 
+Статус документа:
+
+- supporting hardware map, а не замена workbook и не верхнеуровневый product spec;
+- читать после `docs/README.md`, `26_v1_product_spec.md`, `04_sync_and_ownership.md`, `05_ui_shell_and_navigation.md` и `43_field_onboarding_and_operations.md`;
+- если hardware-role, ownership или laboratory boundaries расходятся с каноническим слоем, приоритет у primary docs и workbook, а этот файл нужно дочищать или сокращать.
+
 Этот документ фиксирует software-relevant карту `ESP32`-узла.
 
 Он не дублирует workbook как список железа, а объясняет:
@@ -25,7 +31,7 @@
 - `irrigation`;
 - `soil_moisture` / valve / peristaltic chain;
 - local environment pack;
-- `strobe_bench` service profile;
+- `strobe_bench` laboratory profile;
 - local `Laboratory` slices.
 
 ### 2.2 Storage And Persistence
@@ -47,13 +53,13 @@
 - logic rail expectations;
 - actuator isolation points;
 - irrigation power path;
-- service-test power cautions.
+- предупреждения по питанию для инженерных тестов.
 
 ### 2.5 Degradation And Safety Hooks
 
 - поведение при отсутствии peer;
 - поведение при отсутствии датчика;
-- service-only families, которые не должны притворяться product modules.
+- семейства только для обслуживания, которые не должны притворяться продуктовыми модулями.
 
 ## 3. Что не должно смешиваться в этом документе
 
@@ -63,11 +69,11 @@
 
 ## 4. Ближайшая задача заполнения
 
-Сюда нужно мигрировать из legacy `ТЗ`, workbook и donor firmware-практики:
+Сюда нужно мигрировать из старого `ТЗ`, workbook и донорских практик прошивки:
 
-- software-relevant `ESP32` hardware ownership;
-- `I/O` границы по irrigation и service-contour;
-- power и bring-up observations, влияющие на код, shell и diagnostics.
+- аппаратное владение `ESP32`, значимое для программной логики;
+- границы `I/O` для irrigation и обслуживающего контура;
+- наблюдения по питанию и выводу оборудования, влияющие на код, shell и диагностику.
 
 ## 5. Каноническая роль `ESP32`
 
@@ -76,15 +82,15 @@
 Он нужен как owner-side узел для:
 
 - `Irrigation`;
-- локальной sensor acquisition;
-- локального `SD` slice и backup-oriented storage tasks;
+- локального съема данных с сенсоров;
+- локального `SD`-среза и задач резервно-ориентированного хранения;
 - части diagnostics;
-- service-only `strobe_bench` профиля;
-- локального shell presence при отсутствии `Raspberry Pi`.
+- профиля `strobe_bench`, используемого только для обслуживания;
+- локального присутствия shell при отсутствии `Raspberry Pi`.
 
 Отсюда следуют два правила:
 
-- `ESP32` не подменяет owner-side turret runtime;
+- `ESP32` не подменяет runtime турели на стороне владельца;
 - `ESP32` не владеет turret water path и боевым `strobe`.
 
 ## 6. Owner Hardware Families
@@ -100,26 +106,26 @@
 - local status / diagnostics outputs;
 - local `SD` storage module.
 
-### 6.2 Service And Laboratory Families
+### 6.2 Семейства обслуживания и `Laboratory`
 
 На `ESP32` также допускаются:
 
-- `strobe_bench` как service-only profile;
-- отдельные sensor and actuator qualification slices внутри `Laboratory`;
-- serial/USB diagnostics path;
-- локальный fallback diagnostics UI.
+- `strobe_bench` как профиль только для обслуживания;
+- отдельные срезы квалификации сенсоров и актуаторов внутри `Laboratory`;
+- путь диагностики через `serial/USB`;
+- локальный резервный диагностический интерфейс.
 
-### 6.3 Confirmed `ESP32` hardware map for `v1`
+### 6.3 Подтвержденная аппаратная карта `ESP32` для `v1`
 
-| Family | Product or service role | Owner path | Interface class | Power class | Current certainty |
+| Семейство | Продуктовая или служебная роль | Путь владельца | Класс интерфейса | Класс питания | Текущая подтвержденность |
 | --- | --- | --- | --- | --- | --- |
-| Soil moisture zones | product sensing | `Irrigation` | filtered analog inputs | `3.3V` sensing rail | confirmed baseline: `5` plant zones, exact pin map still open |
-| Environment pack | product sensing | `Irrigation` | `I2C` / digital sensor bus | `3.3V` logic rail | confirmed family, exact pack still evolving |
-| Peristaltic pump | product irrigation actuator | `Irrigation` | switched actuator output | isolated irrigation motor rail | confirmed baseline |
-| Valve cascade | product irrigation actuator | `Irrigation` | switched low-side outputs | irrigation actuator rail | confirmed baseline |
-| `SD` module | product storage | `Gallery`, history, sync intake | `SPI` | `3.3V` logic rail | confirmed baseline |
-| `strobe_bench` output | service-only actuator | `Laboratory / Strobe` | isolated bench switch path | external bench power path | confirmed baseline |
-| Local status indicators | diagnostics / lightweight feedback | shell and service | simple GPIO / low-current outputs | logic rail | optional |
+| Зоны влажности почвы | продуктовые сенсоры | `Irrigation` | фильтрованные аналоговые входы | шина сенсоров `3.3V` | подтвержденная база: `5` зон растений, точная карта пинов еще открыта |
+| Пакет сенсоров среды | продуктовые сенсоры | `Irrigation` | шина `I2C` или цифровых сенсоров | логическая шина `3.3V` | семейство подтверждено, точный набор еще уточняется |
+| Перистальтический насос | продуктовый актуатор полива | `Irrigation` | коммутируемый выход актуатора | изолированная силовая линия полива | подтвержденная база |
+| Каскад клапанов | продуктовый актуатор полива | `Irrigation` | коммутируемые выходы низкой стороны | силовая линия актуаторов полива | подтвержденная база |
+| Модуль `SD` | продуктовое хранилище | `Gallery`, история, прием синхронизации | `SPI` | логическая шина `3.3V` | подтвержденная база |
+| Выход `strobe_bench` | актуатор только для обслуживания | `Laboratory / Strobe` | изолированный коммутируемый путь стенда | внешний стендовый путь питания | подтвержденная база |
+| Локальные статусные индикаторы | диагностика и легкая обратная связь | shell и обслуживание | простые GPIO или слаботочные выходы | логическая шина | необязательно |
 
 ## 8.4 Current IO planning status
 
@@ -166,10 +172,10 @@
 
 Для `ESP32` допустимы:
 
-- low-side switched valve outputs;
-- управление peristaltic pump через отдельный силовой switch-path;
-- service-only bench outputs;
-- локальные status LEDs или подобные lightweight indicators.
+- коммутируемые выходы низкой стороны для клапанов;
+- управление peristaltic pump через отдельный силовой коммутируемый путь;
+- стендовые выходы только для обслуживания;
+- локальные status LED или подобные легкие индикаторы.
 
 Каноническое правило:
 
