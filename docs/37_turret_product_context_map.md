@@ -89,7 +89,8 @@
 
 - live video;
 - crosshair;
-- green auto-detection box;
+- truthful vision/target gate, hidden while vision/target tracking is simulated,
+  offline, or inactive;
 - статус readiness важных элементов.
 
 Для `strobe` фиксируем правило доступа:
@@ -108,13 +109,13 @@ User-facing имя:
 
 Внутренний stage-name:
 
-- `Service/Test v1`
+- `Laboratory`
 
 Alias-имена той же сущности:
 
 - `Diagnostics`
 - `Test Bench`
-- `Service/Test`
+- `Laboratory`
 
 Именно здесь живут:
 
@@ -198,7 +199,7 @@ Alias-имена той же сущности:
 
 - live video;
 - crosshair;
-- auto-detection box;
+- soft vision/target gate only when the vision stack is active;
 - верхняя правая строка статусов:
   - `arm / emergency power`
   - `manual`

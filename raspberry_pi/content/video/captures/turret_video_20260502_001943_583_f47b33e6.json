@@ -1,0 +1,16 @@
+{
+  "schema_version": "turret-capture-artifact.v1",
+  "capture_id": "turret_video_20260502_001943_583_f47b33e6",
+  "kind": "video",
+  "phase": "video_stop",
+  "status": "captured",
+  "created_at_utc": "2026-05-02T00:19:43.583696Z",
+  "started_at_utc": "2026-05-02T00:19:43.583696Z",
+  "stopped_at_utc": "2026-05-02T00:20:13.585512Z",
+  "duration_ms": 30002,
+  "source_surface": "turret_manual_fpv",
+  "module_id": "turret_bridge",
+  "camera_binding": "placeholder_until_physical_camera",
+  "power_percent": 50,
+  "artifact_note": "Metadata placeholder created before real video stream recording is wired."
+}

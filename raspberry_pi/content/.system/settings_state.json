@@ -1,19 +1,79 @@
 {
   "schema_version": "settings.v1",
-  "updated_at_ms": 1777132895545,
+  "updated_at_ms": 1777727223004,
   "interface": {
-    "language": "en",
+    "language": "ru",
     "desktop_controls_enabled": true,
-    "fullscreen_enabled": false,
+    "fullscreen_enabled": true,
     "show_advanced_diagnostics": true
   },
   "style": {
-    "theme": "meadow",
-    "density": "comfortable"
+    "theme": "contrast",
+    "density": "compact"
   },
   "synchronization": {
     "preferred_mode": "auto",
-    "prefer_peer_continuity": true
+    "prefer_peer_continuity": false,
+    "poll_interval_seconds": 5,
+    "selected_domains": {
+      "service_link": true,
+      "module_state": true,
+      "shared_preferences": true,
+      "reports_history": true,
+      "plant_library": true,
+      "media_content": true,
+      "component_registry": true,
+      "software_versions": true
+    }
+  },
+  "component_field_options": {
+    "component_kind": [
+      "sensor",
+      "actuator",
+      "power",
+      "controller"
+    ],
+    "assigned_module": [
+      "turret",
+      "irrigation",
+      "power",
+      "cat_feeder"
+    ],
+    "node_role": [
+      "compute_node",
+      "io_node",
+      "shared"
+    ],
+    "power_profile": [
+      "3.3V",
+      "5V",
+      "5-6V",
+      "12V",
+      "PWM",
+      "I2C/ADC"
+    ],
+    "pinout": [
+      "TBD",
+      "CSI ribbon",
+      "ESP32 GPIO TBD",
+      "PWM TBD",
+      "relay/MOSFET TBD",
+      "I2C/ADC TBD"
+    ],
+    "tolerance": [
+      "50-100%",
+      "sensor health",
+      "calibration required",
+      "angle limits TBD",
+      "voltage/current limits"
+    ],
+    "operating_modes": [
+      "sample",
+      "manual aim",
+      "preview, capture, evidence",
+      "pulse, deterrence",
+      "zone open/close"
+    ]
   },
   "keyboard": {
     "turret_manual_enabled": true,
@@ -41,6 +101,7 @@
     "allow_animal_deterrence": true,
     "allow_auto_water_action": true,
     "return_to_warm_standby": true,
+    "max_recording_seconds": 30,
     "do_not_target_people": true
   },
   "irrigation": {

@@ -46,7 +46,7 @@
 - думать `manual / automatic / service`, camera/range availability и actions,
   а не только набором runtime-подсистем.
 
-### 2. Service/Test Contour
+### 2. Laboratory Contour
 
 Появилась отдельная страница:
 
@@ -138,7 +138,7 @@
 - real range sensor integration;
 - real `motion / strobe / water / audio` driver bindings;
 - hardware qualification turret IO path;
-- richer owner-side service exposure внутри общего `Service/Test v1`;
+- richer owner-side service exposure внутри общего `Laboratory`;
 - живая двухузловая обкатка `ESP32 + Raspberry Pi` на реальном железе.
 
 ## Практический Итог
@@ -148,6 +148,6 @@
 Дальше правильнее идти не обратно в общий shell-refactor и не сразу в глубину turret hardware,
 а в следующий product block:
 
-1. `Service/Test v1`
+1. `Laboratory`
 2. затем возвращаться к cross-module integration
 3. после этого переходить к live hardware qualification

@@ -24,14 +24,14 @@
 Перед работой в этом чате сначала читать:
 
 1. `docs/05_ui_shell_and_navigation.md`
-2. `docs/40_system_shell_navigation_alignment.md`
+2. `docs/40_platform_shell_navigation_alignment.md`
 3. `docs/39_design_decisions_and_screen_map.md`
-4. `briefs/web_shell_ui.md`
+4. `briefs/platform_shell_ui.md`
 5. актуальные home and page templates в `raspberry_pi/web/` и `firmware_esp32/data/`
 
 ## Главные Правила Для Этого Чата
 
-1. Домашняя страница называется `Smart Platform`, а не `System Shell`.
+1. Домашняя страница называется `Smart Platform`, а не `Platform Shell`.
 2. Верхняя bar-панель несет правдивые статусы и быстрые controls.
 3. Отдельный блок `Entry Context` на home screen не возвращается.
 4. Подробные статусы не должны жить россыпью больших карточек на главной странице.
@@ -62,7 +62,7 @@
 
 ## Что Нельзя Делать
 
-- возвращать на лицо интерфейса `System Shell` как название домашней страницы;
+- возвращать на лицо интерфейса `Platform Shell` как название домашней страницы;
 - выводить на home screen `node_id`, `base_url`, raw booleans и другие служебные поля;
 - путать состояния модулей, current client и controlling boards;
 - делать все элементы одинаковыми pill-кнопками;

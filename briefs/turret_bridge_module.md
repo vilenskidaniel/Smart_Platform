@@ -79,7 +79,7 @@
 
 - `strobe` должен быть доступен в двух разных контурах:
   - как turret action в `manual FPV`
-  - как отдельный laboratory slice в `Service/Test`
+  - как отдельный laboratory slice в `Laboratory`
 - `audio` сейчас не углубляется вместе со `strobe`;
 - для `audio` сначала нужен отдельный briefing по hardware, mounting и power:
   - [38_turret_audio_briefing.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/docs/38_turret_audio_briefing.md)

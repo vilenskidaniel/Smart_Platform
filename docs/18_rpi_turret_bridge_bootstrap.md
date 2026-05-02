@@ -48,7 +48,7 @@
 3. Менять локальный mode:
    - `manual`
    - `automatic`
-   - `service_test`
+   - `laboratory`
    - `emergency`
 4. Переключать состояние:
    - `turret_bridge`

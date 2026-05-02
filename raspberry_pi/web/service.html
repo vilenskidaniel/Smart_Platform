@@ -1,2291 +1,1857 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Smart Platform / Laboratory</title>
+  <link rel="stylesheet" href="/static/operator_hud.css">
   <style>
     :root {
-      --bg: #e8efe4;
-      --panel: rgba(251, 253, 248, 0.92);
-      --ink: #1f2c23;
-      --muted: #647566;
-      --line: #cad5c7;
-      --accent: #2f5d42;
-      --ok: #2f7d4d;
-      --warn: #9b6a1e;
-      --fault: #9f3434;
-      --locked: #6c7479;
-      --active: #2b5f96;
-      --planned: #5e6775;
-      --partial: #7b5c1f;
-      --shadow: 0 20px 42px rgba(24, 39, 29, 0.1);
-      --radius: 24px;
+      --page-bg: #09110d;
+      --card-bg: rgba(9, 18, 13, 0.76);
+      --card-bg-soft: rgba(13, 28, 19, 0.64);
+      --card-bg-strong: rgba(5, 12, 8, 0.88);
+      --line-soft: rgba(194, 224, 203, 0.16);
+      --line-strong: rgba(194, 224, 203, 0.34);
+      --text-main: #edf8ee;
+      --text-soft: rgba(237, 248, 238, 0.68);
+      --text-dim: rgba(237, 248, 238, 0.48);
+      --accent: #9ac58f;
+      --accent-strong: #c5e7b7;
+      --blue: #95c8ff;
+      --warn: #d4b46a;
+      --fault: #ff6d72;
+      --ok: #8ddc9a;
+      --locked: #7b8585;
+      --radius: 26px;
+      --radius-sm: 18px;
+      --shadow: 0 28px 70px rgba(0, 0, 0, 0.34);
       --mono: "Consolas", "SFMono-Regular", monospace;
       --sans: "Segoe UI", "Trebuchet MS", sans-serif;
     }
 
     * { box-sizing: border-box; }
 
+    html { min-height: 100%; }
+
     body {
       margin: 0;
-      min-height: 100vh;
-      color: var(--ink);
+      min-height: 100dvh;
+      color: var(--text-main);
       font-family: var(--sans);
       background:
-        radial-gradient(circle at top left, rgba(72, 111, 79, 0.18), transparent 34%),
-        radial-gradient(circle at bottom right, rgba(34, 99, 107, 0.12), transparent 28%),
-        linear-gradient(180deg, #f3f8ef 0%, var(--bg) 100%);
+        radial-gradient(circle at 14% 18%, rgba(120, 190, 124, 0.18), transparent 28%),
+        radial-gradient(circle at 88% 12%, rgba(101, 178, 209, 0.12), transparent 28%),
+        linear-gradient(135deg, #111f17 0%, var(--page-bg) 72%);
     }
 
-    body.fullscreen-app {
+    body[data-shell-theme] {
       background:
-        radial-gradient(circle at top left, rgba(47, 93, 66, 0.22), transparent 30%),
-        linear-gradient(180deg, #eff5ea 0%, #e2eae0 100%);
+        radial-gradient(circle at 14% 18%, rgba(120, 190, 124, 0.18), transparent 28%),
+        radial-gradient(circle at 88% 12%, rgba(101, 178, 209, 0.12), transparent 28%),
+        linear-gradient(135deg, #111f17 0%, var(--page-bg) 72%);
     }
 
-    .shell {
-      max-width: 1480px;
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+      color: inherit;
+    }
+
+    button {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .lab-page {
+      width: min(1740px, 100%);
       margin: 0 auto;
-      padding: 22px 16px 36px;
-      display: grid;
-      gap: 16px;
-    }
-
-    .hero,
-    .category-shell,
-    .module-shell,
-    .work,
-    .card,
-    .box {
-      border-radius: var(--radius);
-      border: 1px solid rgba(47, 93, 66, 0.09);
-      box-shadow: var(--shadow);
-      background: var(--panel);
-      backdrop-filter: blur(14px);
-    }
-
-    .hero {
-      display: grid;
-      gap: 16px;
-      padding: 22px;
-      color: #f4fbf5;
-      background: linear-gradient(135deg, rgba(35, 73, 52, 0.99), rgba(73, 112, 82, 0.9));
-    }
-
-    .hero-top,
-    .row,
-    .category-head,
-    .module-head,
-    .work-top,
-    .tool-top,
-    .segmented,
-    .control-strip {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .hero h1 {
-      margin: 0;
-      font-size: clamp(32px, 5vw, 46px);
-      line-height: 1;
-    }
-
-    .hero p {
-      margin: 8px 0 0;
-      max-width: 920px;
-      color: rgba(244, 251, 245, 0.84);
-      line-height: 1.55;
-    }
-
-    .device-ribbon,
-    .summary-grid,
-    .category-rail,
-    .module-list,
-    .box-grid,
-    .mini-grid,
-    .detail-grid,
-    .checklist,
-    .step-list {
+      padding: var(--shell-safe-top, 96px) clamp(12px, 1.8vw, 28px) 22px;
       display: grid;
       gap: 14px;
     }
 
-    .device-ribbon,
-    .summary-grid,
-    .mini-grid {
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    .lab-frame {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(201, 237, 216, 0.14);
+      border-radius: var(--stage-radius, 30px);
+      background:
+        linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+        radial-gradient(circle at 30% 16%, rgba(72, 130, 96, 0.24), transparent 26%),
+        linear-gradient(135deg, #17291f 0%, #08120d 64%, #050907 100%);
+      background-size: 42px 42px, 42px 42px, 100% 100%, 100% 100%;
+      box-shadow: var(--shadow);
+      isolation: isolate;
     }
 
-    .category-rail {
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    .lab-frame::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, rgba(154, 197, 143, 0.05), transparent 34%, rgba(149, 200, 255, 0.04));
+      pointer-events: none;
+      z-index: 0;
     }
 
-    .module-list {
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    .lab-shell {
+      position: relative;
+      z-index: 1;
+      min-height: calc(100dvh - var(--shell-safe-top, 96px) - 34px);
+      padding: clamp(14px, 1.6vw, 24px);
+      display: grid;
+      gap: 14px;
+      grid-template-rows: auto 1fr;
     }
 
-    .box-grid,
-    .detail-grid {
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    .top-row,
+    .row,
+    .status-strip,
+    .mode-row,
+    .action-row,
+    .chip-row,
+    .section-head {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
     }
 
-    .device-chip,
-    .card,
-    .box,
-    .check,
-    .mini-card,
-    .category-button,
-    .module-button,
-    .segment-button {
-      border: 1px solid var(--line);
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(243, 247, 240, 0.96));
-      color: var(--ink);
-      border-radius: 18px;
+    .top-row,
+    .section-head {
+      justify-content: space-between;
     }
 
-    .device-chip {
-      padding: 14px 16px;
+    .title-block {
       display: grid;
       gap: 8px;
-      border-color: rgba(255, 255, 255, 0.16);
-      background: rgba(255, 255, 255, 0.11);
-      color: #f4fbf5;
+      min-width: min(100%, 420px);
     }
 
-    .device-chip strong { font-size: 15px; line-height: 1.2; }
-    .device-chip p { margin: 0; color: rgba(244, 251, 245, 0.84); line-height: 1.45; font-size: 13px; }
-
-    .card,
-    .box,
-    .category-shell,
-    .module-shell,
-    .work { padding: 16px; }
-
-    .card h2,
-    .box strong,
-    .side h2,
-    .work h2,
-    .category-shell h2 { margin: 0; line-height: 1.12; }
-
-    .meta { color: var(--muted); font-size: 13px; line-height: 1.5; }
-
-    .category-button,
-    .module-button,
-    .segment-button,
-    a.button,
-    button {
-      appearance: none;
-      border-radius: 18px;
-      padding: 12px 14px;
-      cursor: pointer;
-      font: inherit;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease, border-color 140ms ease;
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
     }
 
-    .category-button:hover,
-    .module-button:hover,
-    .segment-button:hover,
-    a.button:hover,
-    button:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 12px 24px rgba(25, 39, 29, 0.12);
+    h1 {
+      font-size: clamp(38px, 5vw, 70px);
+      line-height: 0.92;
+      letter-spacing: -0.07em;
     }
 
-    .category-button,
-    .module-button {
-      width: 100%;
-      text-align: left;
-      align-items: stretch;
-      justify-content: flex-start;
-      min-height: 112px;
+    h2 {
+      font-size: clamp(24px, 2.2vw, 34px);
+      line-height: 1;
+      letter-spacing: -0.04em;
     }
 
-    .module-button { min-height: 118px; }
-
-    .category-button.active,
-    .module-button.active {
-      border-color: rgba(43, 95, 150, 0.34);
-      box-shadow: inset 0 0 0 1px rgba(43, 95, 150, 0.18);
-      background: linear-gradient(180deg, rgba(225, 237, 247, 0.96), rgba(238, 244, 246, 0.98));
+    h3 {
+      font-size: 18px;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
     }
 
-    .category-stack,
-    .module-stack { display: grid; gap: 8px; width: 100%; }
-    .category-stack small,
-    .module-stack small { color: var(--muted); font-size: 12px; line-height: 1.4; }
-
-    .layout {
-      display: grid;
-      gap: 16px;
-      grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
-    }
-
-    .frame {
-      width: 100%;
-      min-height: 840px;
-      border: 1px solid var(--line);
-      border-radius: 22px;
-      background: #eef4ec;
-    }
-
-    .log {
-      margin-top: 18px;
-      min-height: 220px;
-      padding: 16px;
-      border-radius: 20px;
-      overflow: auto;
-      white-space: pre-wrap;
-      background: #172119;
-      color: #e4f1e5;
-      font-family: var(--mono);
-      font-size: 12px;
+    .muted,
+    .meta {
+      color: var(--text-soft);
       line-height: 1.45;
-      border: 1px solid rgba(14, 24, 18, 0.46);
     }
 
-    .pill,
-    .badge {
+    .meta {
+      font-size: 13px;
+    }
+
+    .eyebrow {
+      color: var(--accent-strong);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+
+    .chip,
+    .status-chip,
+    .nav-button,
+    .slice-button,
+    .action-button,
+    .field,
+    .panel,
+    .tile,
+    .terminal,
+    .pattern-stage,
+    .touch-cell {
+      border: 1px solid var(--line-soft);
+      background: var(--card-bg);
+      border-radius: var(--radius-sm);
+    }
+
+    .chip,
+    .status-chip {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      border-radius: 999px;
+      min-height: 36px;
       padding: 8px 12px;
+      white-space: nowrap;
+      color: var(--text-soft);
+      background: rgba(9, 18, 13, 0.62);
+    }
+
+    .status-chip strong,
+    .chip strong {
+      color: var(--text-main);
+    }
+
+    .state-ready,
+    .state-online,
+    .state-active,
+    .state-service {
+      border-color: rgba(141, 220, 154, 0.30);
+      color: var(--ok);
+    }
+
+    .state-attention,
+    .state-degraded,
+    .state-warn {
+      border-color: rgba(212, 180, 106, 0.34);
+      color: var(--warn);
+    }
+
+    .state-blocked,
+    .state-locked,
+    .state-fault,
+    .state-error {
+      border-color: rgba(255, 109, 114, 0.32);
+      color: var(--fault);
+    }
+
+    .state-offline,
+    .state-planned,
+    .state-idle {
+      border-color: rgba(123, 133, 133, 0.30);
+      color: var(--locked);
+    }
+
+    .workspace-grid {
+      display: grid;
+      grid-template-columns: minmax(240px, 300px) minmax(0, 1fr) minmax(280px, 360px);
+      gap: 14px;
+      min-height: 0;
+    }
+
+    .panel {
+      padding: 16px;
+      background: rgba(7, 16, 11, 0.62);
+      box-shadow: 0 18px 42px rgba(0, 0, 0, 0.18);
+      min-width: 0;
+    }
+
+    .rail,
+    .side-stack,
+    .main-stack {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+      min-width: 0;
+    }
+
+    .rail {
+      position: sticky;
+      top: calc(var(--shell-safe-top, 96px) + 12px);
+      max-height: calc(100dvh - var(--shell-safe-top, 96px) - 48px);
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .rail-section {
+      display: grid;
+      gap: 8px;
+    }
+
+    .nav-button,
+    .slice-button,
+    .action-button {
+      appearance: none;
+      width: 100%;
+      min-height: 42px;
+      padding: 11px 13px;
+      color: var(--text-soft);
+      cursor: pointer;
+      text-align: left;
+      transition: border-color 130ms ease, transform 130ms ease, background 130ms ease, box-shadow 130ms ease;
+    }
+
+    .nav-button:hover,
+    .slice-button:hover,
+    .action-button:hover {
+      transform: translateY(-1px);
+      border-color: var(--line-strong);
+      background: rgba(16, 36, 25, 0.74);
+    }
+
+    .nav-button.active,
+    .slice-button.active,
+    .action-button.primary {
+      color: var(--accent-strong);
+      border-color: rgba(197, 231, 183, 0.44);
+      background: linear-gradient(180deg, rgba(64, 97, 71, 0.34), rgba(8, 18, 12, 0.72));
+      box-shadow: var(--control-glow);
+    }
+
+    .action-button {
+      width: auto;
+      min-height: 40px;
+      text-align: center;
+      justify-content: center;
+    }
+
+    .action-button.danger {
+      color: #ffd7d9;
+      border-color: rgba(255, 109, 114, 0.38);
+      background: rgba(86, 19, 23, 0.42);
+    }
+
+    .action-button.warn {
+      color: #ffe7a8;
+      border-color: rgba(212, 180, 106, 0.42);
+      background: rgba(80, 55, 16, 0.42);
+    }
+
+    .action-button.ghost {
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .action-button:disabled {
+      cursor: not-allowed;
+      opacity: 0.46;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .main-panel {
+      min-height: 680px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .workspace {
+      display: grid;
+      gap: 14px;
+      align-content: start;
+    }
+
+    .grid-2,
+    .grid-3,
+    .grid-auto {
+      display: grid;
+      gap: 12px;
+    }
+
+    .grid-2 {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .grid-3 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .grid-auto {
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+
+    .tile {
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+      align-content: start;
+      min-width: 0;
+      background: var(--card-bg-soft);
+    }
+
+    .tile.compact {
+      gap: 7px;
+      padding: 12px;
+    }
+
+    .tile-hero {
+      background:
+        radial-gradient(circle at 24% 10%, rgba(154, 197, 143, 0.18), transparent 34%),
+        rgba(7, 16, 11, 0.70);
+    }
+
+    .kv {
+      display: grid;
+      gap: 8px;
+    }
+
+    .kv-row {
+      display: grid;
+      grid-template-columns: minmax(95px, 0.7fr) minmax(0, 1fr);
+      gap: 10px;
+      align-items: baseline;
+      padding-top: 8px;
+      border-top: 1px solid rgba(194, 224, 203, 0.10);
+    }
+
+    .kv-row:first-child {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .kv-key {
+      color: var(--text-dim);
       font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.03em;
-      text-transform: uppercase;
-      border: 1px solid transparent;
-    }
-
-    .pill {
-      color: inherit;
-      background: rgba(255, 255, 255, 0.12);
-      border-color: rgba(255, 255, 255, 0.18);
-    }
-
-    .state-online { background: rgba(47, 125, 77, 0.12); color: var(--ok); border-color: rgba(47, 125, 77, 0.18); }
-    .state-degraded { background: rgba(155, 106, 30, 0.12); color: var(--warn); border-color: rgba(155, 106, 30, 0.18); }
-    .state-locked, .state-offline { background: rgba(108, 116, 121, 0.12); color: var(--locked); border-color: rgba(108, 116, 121, 0.18); }
-    .state-fault { background: rgba(159, 52, 52, 0.12); color: var(--fault); border-color: rgba(159, 52, 52, 0.18); }
-    .state-service { background: rgba(47, 93, 66, 0.12); color: var(--accent); border-color: rgba(47, 93, 66, 0.18); }
-    .state-active { background: rgba(43, 95, 150, 0.12); color: var(--active); border-color: rgba(43, 95, 150, 0.18); }
-    .state-partial { background: rgba(123, 92, 31, 0.14); color: var(--partial); border-color: rgba(123, 92, 31, 0.18); }
-    .state-planned { background: rgba(94, 103, 117, 0.12); color: var(--planned); border-color: rgba(94, 103, 117, 0.18); }
-
-    .primary {
-      color: #f4fbf5;
-      background: rgba(255, 255, 255, 0.14);
-      border: 1px solid rgba(255, 255, 255, 0.18);
-    }
-
-    .secondary { color: var(--ink); background: rgba(47, 93, 66, 0.08); }
-    .ghost { color: inherit; background: transparent; border: 1px solid rgba(255, 255, 255, 0.18); }
-
-    .segment-label {
-      color: rgba(244, 251, 245, 0.82);
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
     }
 
-    .segment-button.active {
-      color: #f4fbf5;
-      background: rgba(47, 93, 66, 0.9);
-      border-color: rgba(47, 93, 66, 0.28);
-    }
-
-    .detail-list { margin: 10px 0 0; padding-left: 18px; color: var(--ink); }
-    .detail-list li { margin: 0 0 6px; line-height: 1.45; }
-    .mini-card { padding: 14px; }
-    .check { padding: 14px; }
-    .check p { margin: 8px 0 0; color: var(--muted); line-height: 1.5; }
-    .code { color: var(--ink); font-family: var(--mono); font-size: 12px; }
-
-    .notice {
-      padding: 14px 16px;
-      border-radius: 18px;
-      border: 1px solid rgba(155, 106, 30, 0.22);
-      background: rgba(155, 106, 30, 0.08);
-      color: var(--ink);
-      line-height: 1.5;
+    .kv-value {
+      color: var(--text-main);
+      min-width: 0;
+      overflow-wrap: anywhere;
     }
 
     .field-grid {
       display: grid;
-      gap: 12px;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
     }
 
-    .field {
+    label {
       display: grid;
       gap: 6px;
+      color: var(--text-soft);
+      font-size: 13px;
     }
 
-    .field label {
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      color: var(--muted);
-    }
-
-    .field input,
-    .field textarea {
+    .field,
+    textarea {
       width: 100%;
-      border: 1px solid var(--line);
-      border-radius: 14px;
       padding: 11px 12px;
-      font: inherit;
-      color: var(--ink);
-      background: rgba(255, 255, 255, 0.9);
+      outline: 0;
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
     }
 
-    .field textarea {
-      min-height: 92px;
+    textarea {
+      min-height: 82px;
       resize: vertical;
     }
 
-    .status-note {
-      min-height: 18px;
-      margin-top: 10px;
-      color: var(--muted);
+    .segmented {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .segmented.three {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .segment {
+      min-height: 40px;
+      border-radius: 999px;
+      text-align: center;
+    }
+
+    .terminal {
+      min-height: 220px;
+      max-height: 360px;
+      padding: 14px;
+      overflow: auto;
+      color: rgba(230, 248, 231, 0.82);
+      font-family: var(--mono);
+      font-size: 12px;
+      white-space: pre-wrap;
+      background: rgba(2, 7, 4, 0.74);
+    }
+
+    .pattern-stage {
+      position: relative;
+      min-height: 340px;
+      overflow: hidden;
+      background: #ffffff;
+    }
+
+    .pattern-stage::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: #ffffff;
+    }
+
+    .pattern-stage[data-pattern="white"]::before { background: #ffffff; }
+    .pattern-stage[data-pattern="black"]::before { background: #000000; }
+    .pattern-stage[data-pattern="red"]::before { background: #cb3034; }
+    .pattern-stage[data-pattern="green"]::before { background: #2f9443; }
+    .pattern-stage[data-pattern="blue"]::before { background: #215ed1; }
+    .pattern-stage[data-pattern="gradient"]::before { background: linear-gradient(90deg, #000000, #ffffff); }
+    .pattern-stage[data-pattern="grayscale"]::before {
+      background: linear-gradient(90deg, #000 0%, #222 14%, #555 28%, #888 42%, #aaa 56%, #ccc 72%, #e8e8e8 86%, #fff 100%);
+    }
+    .pattern-stage[data-pattern="checker"]::before {
+      background:
+        linear-gradient(45deg, #1d1d1d 25%, transparent 25%, transparent 75%, #1d1d1d 75%),
+        linear-gradient(45deg, #1d1d1d 25%, transparent 25%, transparent 75%, #1d1d1d 75%);
+      background-color: #fafafa;
+      background-position: 0 0, 22px 22px;
+      background-size: 44px 44px;
+    }
+    .pattern-stage[data-pattern="grid"]::before {
+      background:
+        linear-gradient(rgba(33, 94, 209, 0.24) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(33, 94, 209, 0.24) 1px, transparent 1px),
+        #fefefe;
+      background-size: 48px 48px, 48px 48px, 100% 100%;
+    }
+
+    .pattern-label {
+      position: absolute;
+      left: 16px;
+      bottom: 16px;
+      z-index: 1;
+      color: #101a13;
+      background: rgba(255, 255, 255, 0.72);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-weight: 800;
+    }
+
+    .touch-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(54px, 1fr));
+      gap: 8px;
+    }
+
+    .touch-cell {
+      min-height: 66px;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      color: var(--text-soft);
+      font-weight: 800;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .touch-cell.active {
+      color: #061009;
+      background: var(--accent-strong);
+      box-shadow: var(--control-glow);
+    }
+
+    .scenario-steps {
+      display: grid;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .step-line {
+      display: grid;
+      grid-template-columns: 18px minmax(0, 1fr);
+      gap: 8px;
+      align-items: start;
+      color: var(--text-soft);
+      font-size: 13px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      margin-top: 4px;
+      border-radius: 50%;
+      background: var(--locked);
+      box-shadow: 0 0 0 4px rgba(123, 133, 133, 0.12);
+    }
+
+    .dot.ready,
+    .dot.online,
+    .dot.active,
+    .dot.service {
+      background: var(--ok);
+      box-shadow: 0 0 0 4px rgba(141, 220, 154, 0.12);
+    }
+
+    .dot.attention,
+    .dot.degraded {
+      background: var(--warn);
+      box-shadow: 0 0 0 4px rgba(212, 180, 106, 0.12);
+    }
+
+    .dot.blocked,
+    .dot.locked,
+    .dot.fault,
+    .dot.error {
+      background: var(--fault);
+      box-shadow: 0 0 0 4px rgba(255, 109, 114, 0.12);
+    }
+
+    .recent-list {
+      display: grid;
+      gap: 8px;
+      max-height: 260px;
+      overflow: auto;
+    }
+
+    .report-line {
+      padding: 10px;
+      border: 1px solid rgba(194, 224, 203, 0.10);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .footer-note {
+      color: var(--text-dim);
       font-size: 12px;
       line-height: 1.45;
     }
 
-    .disabled-link { pointer-events: none; opacity: 0.56; }
-
-    body.fullscreen-app .shell {
-      max-width: none;
-      padding: 12px 12px 20px;
+    .hidden {
+      display: none !important;
     }
 
-    body.fullscreen-app .hero {
-      position: sticky;
-      top: 0;
-      z-index: 30;
-      border-top-left-radius: 0;
-      border-top-right-radius: 0;
-      padding: 14px 16px;
-      gap: 10px;
+    @media (max-width: 1250px) {
+      .workspace-grid {
+        grid-template-columns: minmax(220px, 270px) minmax(0, 1fr);
+      }
+
+      .side-stack {
+        grid-column: 1 / -1;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
     }
 
-    body.fullscreen-app .hero p,
-    body.fullscreen-app .summary-grid { display: none; }
+    @media (max-width: 860px) {
+      .lab-page {
+        padding-left: 8px;
+        padding-right: 8px;
+      }
 
-    body.fullscreen-app .category-shell {
-      position: sticky;
-      top: 78px;
-      z-index: 28;
-    }
+      .lab-shell {
+        min-height: auto;
+      }
 
-    body.fullscreen-app .module-shell {
-      position: sticky;
-      top: 140px;
-      z-index: 24;
-      padding: 12px 14px;
-    }
+      .workspace-grid,
+      .grid-2,
+      .grid-3,
+      .field-grid,
+      .side-stack {
+        grid-template-columns: 1fr;
+      }
 
-    body.fullscreen-app .module-list {
-      grid-auto-flow: column;
-      grid-auto-columns: minmax(220px, 280px);
-      overflow-x: auto;
-      padding-bottom: 4px;
-    }
+      .rail {
+        position: static;
+        max-height: none;
+        padding-right: 0;
+      }
 
-    body.fullscreen-app .frame { min-height: calc(100vh - 280px); }
-
-    @media (max-width: 1120px) {
-      .frame { min-height: 720px; }
-    }
-
-    @media (max-width: 760px) {
-      .shell { padding: 16px 12px 24px; }
-      .hero,
-      .category-shell,
-      .module-shell,
-      .work,
-      .card,
-      .box { padding: 16px; }
-      .category-rail { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .module-list { grid-template-columns: 1fr; }
-      .frame { min-height: 620px; }
+      .rail-section.horizontal {
+        grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+      }
     }
   </style>
 </head>
 <body>
-  <div class="shell">
-    <section class="hero">
-      <div class="hero-top">
-        <div>
-          <div class="row">
-            <span class="pill" id="shell-pill">shell: loading</span>
-            <span class="pill" id="mode-pill">mode: loading</span>
-            <span class="pill" id="peer-pill">peer: loading</span>
-            <span class="pill" id="view-pill">view: browser</span>
+  <main class="lab-page operator-hud">
+    <section class="lab-frame">
+      <div class="lab-shell">
+        <header class="top-row">
+          <div class="title-block">
+            <div class="eyebrow">Owner-aware engineering workspace</div>
+            <h1>Laboratory</h1>
+            <p class="muted">Единая зона для bring-up, сервисных сценариев, дисплейных проверок и evidence. Это не Settings и не старый набор отдельных service pages.</p>
           </div>
-          <h1>Laboratory</h1>
-          <p>
-            Category-first workspace for phone bring-up. The first rail stays human-friendly,
-            the second rail stays hardware-specific, and the active slice keeps owner, power,
-            readiness, and evidence context on the same page.
-          </p>
-        </div>
-        <div class="row">
-          <button class="primary" id="fullscreen-btn" type="button">Fullscreen</button>
-          <a class="button ghost" href="/">Back To Shell</a>
-        </div>
-      </div>
-      <div class="control-strip">
-        <div class="row">
-          <span class="segment-label">Power Context</span>
-          <div class="segmented" id="power-context"></div>
-        </div>
-        <div class="row">
-          <span class="segment-label">Preset Path</span>
-          <span class="pill">Laboratory -> Review -> Settings -> Manual / FPV</span>
-        </div>
-      </div>
-      <div class="device-ribbon" id="device-ribbon">Loading device status...</div>
-      <div class="summary-grid" id="summary-grid"></div>
-    </section>
+          <div class="status-strip" id="top-status"></div>
+        </header>
 
-    <section class="card">
-      <div class="tool-top">
-        <div>
-          <h2>Session Backbone</h2>
-          <p class="meta" id="session-shell-summary">Laboratory session context is loading...</p>
-        </div>
-        <div class="row" id="session-shell-badges"></div>
-      </div>
-      <div class="detail-grid" style="margin-top: 16px;">
-        <article class="box">
-          <strong>Session Context</strong>
-          <p class="meta">These fields define what this engineering pass is actually testing. On Raspberry Pi they sync into backend session state. On mirrored shells they stay local but still travel with explicit report actions.</p>
-          <div class="field-grid" style="margin-top: 14px;">
-            <div class="field">
-              <label for="session-operator">Operator</label>
-              <input id="session-operator" type="text" placeholder="local-operator">
+        <section class="workspace-grid">
+          <aside class="rail panel">
+            <div class="rail-section">
+              <div class="section-head">
+                <h3>Категории</h3>
+                <span class="chip" id="slice-count">0</span>
+              </div>
+              <div class="rail-section horizontal" id="category-rail"></div>
             </div>
-            <div class="field">
-              <label for="session-objective">Objective</label>
-              <input id="session-objective" type="text" placeholder="display qualification / owner handoff / smoke pass">
+            <div class="rail-section">
+              <div class="section-head">
+                <h3>Срезы</h3>
+                <span class="chip" id="active-category-chip">Overview</span>
+              </div>
+              <div class="rail-section" id="slice-rail"></div>
             </div>
-            <div class="field">
-              <label for="session-hardware">Hardware Profile</label>
-              <input id="session-hardware" type="text" placeholder="rpi5 + 8-inch HDMI touch / bench PSU / phone model">
+            <div class="tile compact">
+              <strong>Граница смысла</strong>
+              <p class="meta">Laboratory проверяет и протоколирует. Persistent политики остаются в Settings, а результаты живут в Gallery > Reports.</p>
             </div>
-            <div class="field">
-              <label for="session-external-module">External Module</label>
-              <input id="session-external-module" type="text" placeholder="optional third-party add-on or bench adapter">
-            </div>
-          </div>
-          <div class="field" style="margin-top: 12px;">
-            <label for="session-finish-note">Finish Note</label>
-            <input id="session-finish-note" type="text" placeholder="short summary when closing the current pass">
-          </div>
-          <div class="row" style="margin-top: 12px; justify-content: flex-start;">
-            <button class="secondary" id="session-start-btn" type="button">Start Session</button>
-            <button class="secondary" id="session-update-btn" type="button">Update Session</button>
-            <button class="secondary" id="session-finish-btn" type="button">Finish Session</button>
-          </div>
-          <div class="status-note" id="session-shell-feedback"></div>
-        </article>
-        <article class="box">
-          <strong>Evidence Capture</strong>
-          <p class="meta" id="evidence-summary">Active slice evidence will be recorded into Gallery &gt; Reports with current power, view, and session context.</p>
-          <div class="field-grid" style="margin-top: 14px;">
-            <div class="field">
-              <label for="evidence-case-id">Case ID</label>
-              <input id="evidence-case-id" type="text" placeholder="module-smoke">
-            </div>
-            <div class="field">
-              <label for="evidence-module">Current Slice</label>
-              <input id="evidence-module" type="text" readonly>
-            </div>
-          </div>
-          <div class="field" style="margin-top: 12px;">
-            <label for="evidence-note">Operator Note</label>
-            <textarea id="evidence-note" placeholder="what was actually observed on the phone / screen / owner handoff / control density"></textarea>
-          </div>
-          <div class="row" style="margin-top: 12px; justify-content: flex-start;">
-            <button class="secondary" id="evidence-pass-btn" type="button">Record Pass</button>
-            <button class="secondary" id="evidence-warn-btn" type="button">Record Warn</button>
-            <button class="secondary" id="evidence-fail-btn" type="button">Record Fail</button>
-            <button class="secondary" id="evidence-note-btn" type="button">Save Note</button>
-          </div>
-          <div class="status-note" id="evidence-feedback"></div>
-        </article>
-      </div>
-    </section>
+          </aside>
 
-    <section class="category-shell">
-      <div class="category-head">
-        <div>
-          <h2>Category Rail</h2>
-          <p class="meta" id="category-summary">Loading category model...</p>
-        </div>
-        <span class="meta">Top rail stays broad; the next rail keeps the engineering detail.</span>
-      </div>
-      <div class="category-rail" id="category-rail"></div>
-    </section>
+          <section class="main-stack">
+            <section class="panel main-panel" id="main-panel"></section>
+          </section>
 
-    <section class="module-shell">
-      <div class="module-head">
-        <div>
-          <h2 id="module-rail-title">Module Rail</h2>
-          <p class="meta" id="module-rail-summary">Loading module rail...</p>
-        </div>
-        <span class="meta">Second level stays owner-aware and never hides blocked slices.</span>
+          <aside class="side-stack">
+            <section class="panel" id="session-panel"></section>
+            <section class="panel" id="readiness-panel"></section>
+            <section class="panel" id="evidence-panel"></section>
+          </aside>
+        </section>
       </div>
-      <div class="module-list" id="module-list"></div>
     </section>
-
-    <section class="work">
-      <div class="work-top">
-        <div>
-          <div class="row" id="workspace-badges"></div>
-          <h2 id="workspace-title" style="margin-top: 10px;">Laboratory Overview</h2>
-          <p class="meta" id="workspace-summary">Loading workspace...</p>
-        </div>
-        <a class="button secondary" id="open-direct-link" href="/service" target="_blank" rel="noreferrer">Open Direct</a>
-      </div>
-      <div id="workspace-surface"></div>
-      <div class="log" id="platform-log">Waiting for platform log...</div>
-    </section>
-  </div>
+  </main>
 
   <script src="/static/smart_bar.js"></script>
   <script>
-    const LAB_SESSION_STORAGE_KEY = "smart-platform.laboratory.session.v1";
-    const POWER_CONTEXTS = {
-      bench_psu: {
-        id: "bench_psu",
-        title: "Bench PSU",
-        summary: "Adjustable bench supply is available. Voltage-dependent hints stay visible."
-      },
-      battery: {
-        id: "battery",
-        title: "LiFePO4 Battery",
-        summary: "Battery-powered session. PSU-dependent calibration stays blocked or advisory-only."
-      }
-    };
+    const STORAGE_DRAFT_KEY = "smart-platform.laboratory.draft.v2";
+    const STORAGE_ACTIVE_TOOL_KEY = "smart-platform.laboratory.active-tool.v2";
 
-    const CATEGORY_ORDER = ["overview", "light", "drives", "water", "audio", "sensors", "camera", "displays", "experimental"];
-
-    const CATEGORY_DEFS = {
-      overview: { title: "Overview", summary: "Readiness, power context, fullscreen behavior, and the current bring-up order." },
-      light: { title: "Light", summary: "Bench strobe, turret strobe, and future LED qualification." },
-      drives: { title: "Drives", summary: "Servo alignment now, stepper experiments later, always with owner awareness." },
-      water: { title: "Water", summary: "Irrigation service, sprayer checks, and water-path qualification without fake ownership." },
-      audio: { title: "Audio", summary: "Audible and ultrasonic emitter families, with laboratory-only honesty where needed." },
-      sensors: { title: "Sensors", summary: "Environment, range, soil, and wake sensors with expected-result guidance." },
-      camera: { title: "Camera", summary: "Camera availability, preview, and bring-up notes without pretending product readiness." },
-      displays: { title: "Displays", summary: "HDMI touch panels, screen patterns, and owner-side display qualification without collapsing into camera UX." },
-      experimental: { title: "Experimental", summary: "Unknown or not-yet-productized modules that still need a clean place in the lab." }
-    };
-
-    const MODULE_DEFS = [
-      {
-        id: "overview",
-        category: "overview",
-        title: "Laboratory Overview",
-        kind: "overview",
-        stage: "live",
-        ownerHint: "shared",
-        summary: "Shared readiness view for board visibility, power context, and bring-up order.",
-        controls: [
-          "Readiness review before touching the next board or module",
-          "Power-context declaration before PSU-sensitive tests",
-          "Fullscreen switch before denser phone work",
-          "Review path from Laboratory to Gallery > Reports"
-        ],
-        expected: [
-          "The operator understands what can be tested now.",
-          "Blocked peer-owned slices stay visible with a reason.",
-          "The next action is explicit instead of implicit operator memory."
-        ],
-        evidence: "Gallery > Reports plus the live platform log",
-        presetPath: "Profiles stay local for now and later graduate through an explicit review/apply flow."
-      },
-      {
-        id: "strobe_bench",
-        category: "light",
-        title: "Bench Strobe",
-        kind: "linked",
-        stage: "live",
-        ownerHint: "ESP32",
-        ownerScope: "esp32",
-        powerGuard: "bench_psu_required",
-        labOnly: true,
-        summary: "ESP32 bench slice for pulses, patterns, cooldown, and presets.",
-        find: (modules) => modules.find((item) => item.id === "strobe_bench") || null,
-        path: () => "/service/strobe",
-        controls: [
-          "Manual PSU voltage note before the run",
-          "Pulse duration and flash cadence",
-          "Burst count plus on/off timing",
-          "Loop and timed continuous patterns",
-          "Safe presets and cooldown awareness"
-        ],
-        expected: [
-          "Short visible flash patterns with honest cooldown and stop reason.",
-          "No owner confusion between bench strobe and turret strobe.",
-          "Preset candidates can later be reviewed for promotion into product settings."
-        ],
-        evidence: "Laboratory event trail and Gallery > Reports",
-        presetPath: "Later candidates may graduate into Settings for Manual / FPV after explicit review.",
-        stageNote: "Dedicated working slice is already available."
-      },
-      {
-        id: "turret_strobe",
-        category: "light",
-        title: "Turret Strobe",
-        kind: "linked",
-        stage: "partial",
-        ownerHint: "Raspberry Pi",
-        ownerScope: "raspberry_pi",
-        summary: "Owner-side strobe state, interlock visibility, and runtime gating.",
-        find: (modules) => modules.find((item) => item.id === "strobe") || modules.find((item) => item.id === "turret_bridge") || null,
-        path: () => "/service/turret?focus=strobe",
-        controls: [
-          "Owner-side readiness and interlock checks",
-          "Blocked-vs-available strobe transitions",
-          "Runtime result visibility inside the turret service lane",
-          "Shared evidence path without pretending local ESP32 ownership"
-        ],
-        expected: [
-          "Strobe remains blocked when interlock or readiness says no.",
-          "The operator sees the turret owner and the block reason.",
-          "This temporary slice can later be extracted into a dedicated light module tab."
-        ],
-        evidence: "Turret event log and Gallery > Reports",
-        presetPath: "Product promotion stays separate until a dedicated turret-light contract exists.",
-        stageNote: "Current implementation reuses the turret runtime slice as a temporary bridge."
-      },
-      {
-        id: "led_outputs",
-        category: "light",
-        title: "LED Outputs",
-        kind: "placeholder",
-        stage: "planned",
-        ownerHint: "shared",
-        summary: "Future qualification surface for indicators, discrete LEDs, and strips.",
-        controls: [
-          "Channel or strip selection",
-          "Polarity and safe wiring note",
-          "Brightness or PWM level",
-          "Blink pattern and repeat timing",
-          "Expected current or battery impact hint"
-        ],
-        expected: [
-          "Selected LED output reacts with predictable brightness or blink behavior.",
-          "The operator can tell whether the problem is wiring, polarity, or control timing.",
-          "This slice stays separate from Strobe so light behaviors do not collapse into one tool."
-        ],
-        evidence: "Placeholder now, later report cards per LED test",
-        presetPath: "Future light profiles may graduate into Settings only by explicit operator action.",
-        stageNote: "Placeholder kept visible so the IA stays stable while implementation catches up."
-      },
-      {
-        id: "servos_lab",
-        category: "drives",
-        title: "Servos",
-        kind: "linked",
-        stage: "partial",
-        ownerHint: "Raspberry Pi",
-        ownerScope: "raspberry_pi",
-        summary: "MG996R + PCA9685 alignment, travel, inversion, and safe range validation.",
-        find: (modules) => modules.find((item) => item.id === "turret_bridge") || null,
-        path: () => "/service/turret?focus=motion",
-        controls: [
-          "Channel selection and center point",
-          "Min / max travel guardrails",
-          "Direction or inversion note",
-          "Sweep test and return-to-center confidence",
-          "Driver binding visibility before motion"
-        ],
-        expected: [
-          "Servo motion stays within safe travel and returns predictably.",
-          "Motion readiness remains owner-aware and interlock-aware.",
-          "The current turret service lane acts as a bridge until a dedicated servo slice exists."
-        ],
-        evidence: "Turret service log and future servo-specific reports",
-        presetPath: "Servo presets can later flow into product motion settings after review.",
-        stageNote: "Current implementation reuses the turret motion runtime as a temporary deep slice."
-      },
-      {
-        id: "stepper_drives",
-        category: "drives",
-        title: "Stepper Drives",
-        kind: "placeholder",
-        stage: "planned",
-        ownerHint: "Laboratory-only",
-        labOnly: true,
-        summary: "Experimental drive lane for stepper bring-up without polluting turret motion UX.",
-        controls: [
-          "Direction, step count, and travel estimate",
-          "Speed and acceleration envelope",
-          "Microstep or driver mode note",
-          "Safe stop and hold behavior",
-          "Bench-only wiring checklist"
-        ],
-        expected: [
-          "Drive response can be checked without pretending stepper is a turret baseline.",
-          "The operator gets a place to qualify unusual hardware and keep notes.",
-          "This slice remains laboratory-only even after deeper support appears."
-        ],
-        evidence: "Laboratory-only report cards and operator notes",
-        presetPath: "No automatic promotion to product settings."
-      },
-      {
-        id: "irrigation_service",
-        category: "water",
-        title: "Irrigation Chain",
-        kind: "linked",
-        stage: "live",
-        ownerHint: "ESP32",
-        ownerScope: "esp32",
-        summary: "Zone pulses, soil simulation, valve checks, and peristaltic path visibility.",
-        find: (modules) => modules.find((item) => item.id === "irrigation_service") || modules.find((item) => item.id === "irrigation") || null,
-        path: () => "/service/irrigation",
-        controls: [
-          "Service pulse per zone",
-          "Dry / wet / fault / restore simulation",
-          "Soil moisture visibility per zone",
-          "Water-path qualification before longer runs",
-          "Owner-aware irrigation evidence trail"
-        ],
-        expected: [
-          "Zones and sensor states stay visible even when degraded.",
-          "Missing or faulty sensing remains honest instead of disappearing.",
-          "This slice later splits into richer water and soil cards without changing the IA."
-        ],
-        evidence: "Irrigation log and Gallery > Reports",
-        presetPath: "Later irrigation profiles can be reviewed for promotion into product settings."
-      },
-      {
-        id: "sprayer_water",
-        category: "water",
-        title: "Sprayer / Turret Water",
-        kind: "linked",
-        stage: "partial",
-        ownerHint: "Raspberry Pi",
-        ownerScope: "raspberry_pi",
-        summary: "Turret water-path readiness, guarded action family, and owner-side visibility.",
-        find: (modules) => modules.find((item) => item.id === "turret_bridge") || null,
-        path: () => "/service/turret?focus=water",
-        controls: [
-          "Water action readiness and block reason",
-          "Turret owner and interlock visibility",
-          "Runtime gating in service mode",
-          "Future pulse / prime / spray duration extraction"
-        ],
-        expected: [
-          "Turret water stays separate from irrigation ownership.",
-          "Unsafe action attempts remain blocked with an explicit reason.",
-          "The operator can later tune spray-specific parameters in a dedicated water slice."
-        ],
-        evidence: "Turret runtime events and Gallery > Reports",
-        presetPath: "Any future spray presets require separate review before product reuse.",
-        stageNote: "Current implementation reuses the turret runtime slice as a temporary bridge."
-      },
-      {
-        id: "ultrasonic_emitters",
-        category: "audio",
-        title: "Ultrasonic Tweeters",
-        kind: "placeholder",
-        stage: "planned",
-        ownerHint: "Raspberry Pi",
-        ownerScope: "raspberry_pi",
-        labOnly: true,
-        summary: "Laboratory slice for emitter families, size variants, and maximum safe frequency tests.",
-        controls: [
-          "Tweeter pair or size selection",
-          "Frequency band and duty-cycle note",
-          "Duration and burst pattern",
-          "Safe operating range hint",
-          "Expected audible or non-audible response guidance"
-        ],
-        expected: [
-          "The operator can compare emitter variants without turning the slice into a product deterrence panel.",
-          "The meaning of Ultrasonic stays emitter-family testing, not range sensing.",
-          "This module remains laboratory-only until a dedicated hardware contract exists."
-        ],
-        evidence: "Future laboratory report cards and operator notes",
-        presetPath: "No automatic product promotion."
-      },
-      {
-        id: "audio_lab",
-        category: "audio",
-        title: "Audible Audio",
-        kind: "linked",
-        stage: "partial",
-        ownerHint: "Raspberry Pi",
-        ownerScope: "raspberry_pi",
-        summary: "Piezo, horn, or voice-path bring-up inside the owner-side turret service lane.",
-        find: (modules) => modules.find((item) => item.id === "turret_bridge") || null,
-        path: () => "/service/turret?focus=audio",
-        controls: [
-          "Audio family readiness and driver binding visibility",
-          "Service-safe enable / disable path",
-          "Future tone, duration, and pattern extraction",
-          "Expected speaker or tweeter response notes"
-        ],
-        expected: [
-          "Audio actions stay owner-aware and never look local on the wrong board.",
-          "The operator can later split audible and ultrasonic profiles without changing categories.",
-          "Current bridge remains honest about still living inside turret runtime."
-        ],
-        evidence: "Turret runtime events and Gallery > Reports",
-        presetPath: "Later audio profiles can graduate to Settings only through explicit review.",
-        stageNote: "Current implementation reuses the turret runtime slice as a temporary bridge."
-      },
-      {
-        id: "air_env",
-        category: "sensors",
-        title: "Air Temperature / Humidity",
-        kind: "placeholder",
-        stage: "planned",
-        ownerHint: "ESP32",
-        ownerScope: "esp32",
-        summary: "Environmental sensing lane for live readings, stale markers, and sanity checks.",
-        controls: [
-          "Live temperature and humidity values",
-          "Stale-reading warning",
-          "Optional trend line or recent reading window",
-          "Sensor fault explanation",
-          "Expected range note for the current room or bench context"
-        ],
-        expected: [
-          "The operator can tell whether the sensor is alive, noisy, or obviously wrong.",
-          "Environmental data remains visible without pretending it already drives product behavior.",
-          "The slice stays ready for later integration into reports and presets."
-        ],
-        evidence: "Future sensor warning and pass reports",
-        presetPath: "Read-only observational slice for now."
-      },
-      {
-        id: "soil_lab",
-        category: "sensors",
-        title: "Soil Moisture",
-        kind: "linked",
-        stage: "partial",
-        ownerHint: "ESP32",
-        ownerScope: "esp32",
-        summary: "Soil sensing visibility stays close to the irrigation chain but remains a first-class lab slice.",
-        find: (modules) => modules.find((item) => item.id === "irrigation_service") || modules.find((item) => item.id === "irrigation") || null,
-        path: () => "/service/irrigation",
-        controls: [
-          "Zone selection and raw moisture visibility",
-          "Dry / wet / fault / restore simulation",
-          "Sensor-fault explanation",
-          "Expected reading interpretation per zone"
-        ],
-        expected: [
-          "The operator can separate sensing problems from water-path problems.",
-          "Soil data stays visible even when one zone is degraded.",
-          "This slice can later split into its own dedicated card without changing the category model."
-        ],
-        evidence: "Irrigation service log and future sensor-specific reports",
-        presetPath: "Future calibration data requires explicit review before product reuse.",
-        stageNote: "Current implementation reuses the irrigation service slice as a temporary bridge."
-      },
-      {
-        id: "lidar_lab",
-        category: "sensors",
-        title: "Lidar / Range",
-        kind: "linked",
-        stage: "partial",
-        ownerHint: "Raspberry Pi",
-        ownerScope: "raspberry_pi",
-        labOnly: true,
-        summary: "Owner-side TFmini Plus baseline with room for HC-SR04-class experimental profiles.",
-        find: (modules) => modules.find((item) => item.id === "turret_bridge") || null,
-        path: () => "/service/turret",
-        controls: [
-          "Profile label visibility for TFmini Plus baseline",
-          "Experimental HC-SR04-class note without pretending owner equivalence",
-          "Range availability and degraded-state explanation",
-          "Expected distance-feedback guidance"
-        ],
-        expected: [
-          "Owner-side range stays distinct from laboratory-only range experiments.",
-          "Missing range hardware changes readiness honestly.",
-          "The slice later grows into live range charts and profile switching."
-        ],
-        evidence: "Turret readiness reports and future range testcards",
-        presetPath: "Experimental profiles remain laboratory-only unless explicitly approved."
-      },
-      {
-        id: "motion_sensor",
-        category: "sensors",
-        title: "Motion Sensor",
-        kind: "placeholder",
-        stage: "planned",
-        ownerHint: "Raspberry Pi",
-        ownerScope: "raspberry_pi",
-        labOnly: true,
-        summary: "Reserved wake-testing slice for turret standby exit and motion-trigger experiments.",
-        controls: [
-          "Trigger visibility and cooldown",
-          "Wake scenario notes for day and night testing",
-          "Detection distance expectation",
-          "Operator notes about false positives or dead zones"
-        ],
-        expected: [
-          "The operator can test wake-path behavior without pretending the sensor is fully productized.",
-          "This slice stays visible even before the final hardware choice is locked.",
-          "Future motion profiles stay separate from product policies until explicitly reviewed."
-        ],
-        evidence: "Future wake-test reports and operator notes",
-        presetPath: "Laboratory-only until a final wake sensor contract exists."
-      },
-      {
-        id: "camera_lab",
-        category: "camera",
-        title: "Camera",
-        kind: "linked",
-        stage: "partial",
-        ownerHint: "Raspberry Pi",
-        ownerScope: "raspberry_pi",
-        summary: "Camera readiness, preview path, and owner-side availability without fake FPV promises.",
-        find: (modules) => modules.find((item) => item.id === "turret_bridge") || null,
-        path: () => "/service/turret",
-        controls: [
-          "Camera readiness and availability",
-          "Preview-path expectation",
-          "Resolution or profile note for IMX219 baseline",
-          "Expected-result hints when the stream is missing or degraded"
-        ],
-        expected: [
-          "Camera absence degrades the slice honestly instead of silently failing later.",
-          "The operator can treat this as bring-up, not as the final FPV screen.",
-          "Later extraction can create a dedicated camera slice without changing the category model."
-        ],
-        evidence: "Turret readiness reports and future camera smoke reports",
-        presetPath: "Future camera settings require explicit promotion into Settings."
-      },
-      {
-        id: "rpi_touch_display",
-        category: "displays",
-        title: "Raspberry Pi Touch Display",
-        kind: "linked",
-        stage: "live",
-        ownerHint: "Raspberry Pi",
-        ownerScope: "raspberry_pi",
-        summary: "8-inch 1280x800 HDMI + USB touch panel qualification for the Raspberry Pi owner side.",
-        path: () => "/service/displays",
-        controls: [
-          "Solid-color and grayscale patterns for pixel and backlight checks",
-          "Grid and checker patterns for geometry and sharpness",
-          "Touch target matrix with resettable hit map",
-          "Fullscreen and standalone opening for real panel qualification",
-          "Operator notes about rotation, brightness, ghost touches, or dead zones"
-        ],
-        expected: [
-          "The panel shows clean 1280x800 output without obvious dead pixels or scaling glitches.",
-          "Touch input reaches the expected zones instead of drifting or dropping edges.",
-          "This slice stays blocked when Raspberry Pi is missing, even if the shell was opened from ESP32."
-        ],
-        evidence: "Display-test notes and Gallery > Reports",
-        presetPath: "Display calibration stays laboratory-local until a dedicated product display contract exists.",
-        stageNote: "Dedicated display-test page is available on the Raspberry Pi owner side."
-      },
-      {
-        id: "custom_module",
-        category: "experimental",
-        title: "Unknown Module Slot",
-        kind: "placeholder",
-        stage: "planned",
-        ownerHint: "shared",
-        labOnly: true,
-        summary: "Stable placeholder for unexpected hardware so the lab can grow without IA breakage.",
-        controls: [
-          "Name, owner guess, and wiring note",
-          "Expected-result note before the first test",
-          "Operator freeform observations",
-          "Future data-contract slot for custom drivers"
-        ],
-        expected: [
-          "Unexpected hardware still has a clean entry point instead of forcing ad-hoc pages.",
-          "The operator can document what was tried and what happened.",
-          "This placeholder lets the system grow without redesigning the main Laboratory IA."
-        ],
-        evidence: "Operator notes first, dedicated reports later",
-        presetPath: "No product promotion path until the hardware contract exists."
-      },
-      {
-        id: "turret_runtime",
-        category: "experimental",
-        title: "Turret Runtime Lane",
-        kind: "linked",
-        stage: "partial",
-        ownerHint: "Raspberry Pi",
-        ownerScope: "raspberry_pi",
-        labOnly: true,
-        summary: "Current deep engineering page for runtime toggles, scenarios, drivers, and raw evidence.",
-        find: (modules) => modules.find((item) => item.id === "turret_bridge") || null,
-        path: () => "/service/turret",
-        controls: [
-          "Service scenarios",
-          "Sensor availability toggles",
-          "Actuator and logic toggles",
-          "Driver bindings and raw event log"
-        ],
-        expected: [
-          "Deep diagnostics remain available without dominating the main Laboratory IA.",
-          "Future user-facing slices can continue to peel out of this lane.",
-          "This stays visible as an advanced bridge, not as the default first stop."
-        ],
-        evidence: "Turret event log and Gallery > Reports",
-        presetPath: "No direct promotion path. This is an engineering bridge surface.",
-        stageNote: "Kept as a visible advanced lane so deep diagnostics do not vanish during IA cleanup."
-      }
+    const CATEGORIES = [
+      { id: "overview", title: "Overview", summary: "Preflight, сессия, порядок работ" },
+      { id: "light", title: "Light", summary: "Strobe, LED and light output checks" },
+      { id: "drives", title: "Drives", summary: "Servos, motion, experimental drives" },
+      { id: "water", title: "Water", summary: "Spray, irrigation, valves, pumps" },
+      { id: "audio", title: "Audio", summary: "Piezo, ultrasonic, voice path" },
+      { id: "sensors", title: "Sensors", summary: "Range, motion, environment" },
+      { id: "camera", title: "Camera", summary: "Camera and vision path" },
+      { id: "displays", title: "Displays", summary: "Raspberry Pi display qualification" },
+      { id: "experimental", title: "Experimental", summary: "Local-only lab profiles" },
+      { id: "evidence", title: "Evidence", summary: "Reports and notes" }
     ];
 
-    let state = {
+    const SLICES = [
+      { id: "overview", category: "overview", title: "Preflight", owner: "shared", moduleId: "overview", kind: "overview", status: "ready" },
+      { id: "bringup", category: "overview", title: "Bring-up order", owner: "shared", moduleId: "laboratory", kind: "bringup", status: "ready" },
+      { id: "turret_service", category: "overview", title: "Turret Service Lane", owner: "rpi", moduleId: "turret_bridge", kind: "turret-service", status: "online" },
+      { id: "strobe", category: "light", title: "Strobe", owner: "rpi", moduleId: "turret_bridge", kind: "turret-subsystem", subsystemId: "strobe", status: "online" },
+      { id: "strobe_bench", category: "light", title: "ESP32 Strobe Bench", owner: "esp32", moduleId: "strobe_bench", kind: "peer", status: "blocked", route: "/federated/handoff?module_id=strobe_bench" },
+      { id: "led", category: "light", title: "LED", owner: "esp32", moduleId: "strobe_bench", kind: "planned", status: "blocked", route: "/federated/handoff?module_id=strobe_bench" },
+      { id: "servos", category: "drives", title: "Servos", owner: "rpi", moduleId: "turret_bridge", kind: "turret-subsystem", subsystemId: "motion", status: "online" },
+      { id: "stepper", category: "drives", title: "Stepper Motor / Drives", owner: "lab", moduleId: "stepper_lab", kind: "experimental", status: "planned" },
+      { id: "sprayer", category: "water", title: "Sprayer / Water", owner: "rpi", moduleId: "turret_bridge", kind: "turret-subsystem", subsystemId: "water", status: "online" },
+      { id: "irrigation", category: "water", title: "Irrigation Service", owner: "esp32", moduleId: "irrigation_service", kind: "peer", status: "blocked", route: "/federated/handoff?module_id=irrigation_service" },
+      { id: "soil", category: "water", title: "Soil Moisture + Valves + Peristaltic", owner: "esp32", moduleId: "irrigation", kind: "peer", status: "blocked", route: "/federated/handoff?module_id=irrigation" },
+      { id: "piezo", category: "audio", title: "Piezo / Ultrasonic", owner: "rpi", moduleId: "turret_bridge", kind: "turret-subsystem", subsystemId: "audio", status: "online" },
+      { id: "voice", category: "audio", title: "Voice / Speaker", owner: "lab", moduleId: "audio_lab", kind: "experimental", status: "planned" },
+      { id: "lidar", category: "sensors", title: "Lidar", owner: "rpi", moduleId: "turret_bridge", kind: "turret-subsystem", subsystemId: "range", status: "online" },
+      { id: "motion_sensor", category: "sensors", title: "Motion Sensor", owner: "lab", moduleId: "motion_sensor_lab", kind: "experimental", status: "planned" },
+      { id: "environment", category: "sensors", title: "Air Temperature / Humidity", owner: "esp32", moduleId: "environment_lab", kind: "peer", status: "blocked" },
+      { id: "camera", category: "camera", title: "Camera", owner: "rpi", moduleId: "turret_bridge", kind: "turret-subsystem", subsystemId: "camera", status: "online" },
+      { id: "vision", category: "camera", title: "Vision Pipeline", owner: "rpi", moduleId: "turret_bridge", kind: "turret-subsystem", subsystemId: "vision", status: "online" },
+      { id: "rpi_touch_display", category: "displays", title: "Raspberry Pi Touch Display", owner: "rpi", moduleId: "display_lab", kind: "display", status: "online" },
+      { id: "hc_sr04", category: "experimental", title: "HC-SR04 Range Profile", owner: "lab", moduleId: "hc_sr04_lab", kind: "experimental", status: "planned" },
+      { id: "custom_module", category: "experimental", title: "Custom Module Intake", owner: "lab", moduleId: "custom_module_lab", kind: "experimental", status: "planned" },
+      { id: "reports", category: "evidence", title: "Reports", owner: "shared", moduleId: "laboratory", kind: "evidence", status: "ready" }
+    ];
+
+    const PATTERNS = [
+      ["white", "White"],
+      ["black", "Black"],
+      ["red", "Red"],
+      ["green", "Green"],
+      ["blue", "Blue"],
+      ["gradient", "Gradient"],
+      ["grayscale", "Grayscale"],
+      ["checker", "Checker"],
+      ["grid", "Grid"]
+    ];
+
+    const state = {
       snapshot: null,
-      modules: [],
-      log: null,
       readiness: null,
-      sessionBackend: null,
-      sessionApiAvailable: false,
+      session: null,
+      turret: null,
+      scenarios: null,
+      reports: null,
       activeCategory: "overview",
-      activeModule: "overview",
-      powerContext: readPowerContext(),
-      fullscreen: false,
-      workspaceSignature: "",
-      localSession: readLocalSession(),
-      sessionFeedback: "",
-      evidenceFeedback: "",
-      contextSyncSignature: "",
-      sessionControlsBound: false
+      activeTool: "overview",
+      pattern: "white",
+      touchCells: new Set(),
+      lastMessage: "Laboratory загружается.",
+      lastPayload: null,
+      busy: false,
+      draft: readDraft(),
+      draftTouched: false
     };
+
+    function readDraft() {
+      try {
+        const payload = JSON.parse(localStorage.getItem(STORAGE_DRAFT_KEY) || "{}");
+        return {
+          operator: String(payload.operator || "local-operator"),
+          objective: String(payload.objective || "Bring-up pass"),
+          hardware: String(payload.hardware || "desktop smoke / local host"),
+          external: String(payload.external || ""),
+          power: ["bench_psu", "battery"].includes(payload.power) ? payload.power : "bench_psu",
+          view: ["browser", "fullscreen"].includes(payload.view) ? payload.view : "browser",
+          note: String(payload.note || ""),
+          caseId: String(payload.caseId || "laboratory-smoke")
+        };
+      } catch (_error) {
+        return {
+          operator: "local-operator",
+          objective: "Bring-up pass",
+          hardware: "desktop smoke / local host",
+          external: "",
+          power: "bench_psu",
+          view: "browser",
+          note: "",
+          caseId: "laboratory-smoke"
+        };
+      }
+    }
+
+    function saveDraft() {
+      try {
+        localStorage.setItem(STORAGE_DRAFT_KEY, JSON.stringify(state.draft));
+      } catch (_error) {
+        return;
+      }
+    }
 
     function esc(value) {
       return String(value ?? "")
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")
-        .replace(/\"/g, "&quot;")
+        .replace(/"/g, "&quot;")
         .replace(/'/g, "&#39;");
     }
 
-    function badgeClass(stateValue) {
-      const normalized = String(stateValue || "offline").toLowerCase();
-      if (normalized === "ready" || normalized === "healthy" || normalized === "online") return "badge state-online";
-      if (normalized === "attention" || normalized === "warning" || normalized === "degraded") return "badge state-degraded";
-      if (normalized === "blocked" || normalized === "locked" || normalized === "offline") return "badge state-locked";
-      if (normalized === "fault" || normalized === "module_fault") return "badge state-fault";
-      if (normalized === "active") return "badge state-active";
-      if (normalized === "partial") return "badge state-partial";
-      if (normalized === "planned") return "badge state-planned";
-      return "badge state-service";
+    function qs(value) {
+      return encodeURIComponent(String(value ?? ""));
     }
 
-    function statusBadgeClass(stateValue) {
-      return badgeClass(stateValue);
-    }
-
-    function stageBadge(stage) {
-      if (stage === "live") return "badge state-active";
-      if (stage === "partial") return "badge state-partial";
-      return "badge state-planned";
-    }
-
-    function nodeLabel(node) {
-      const type = String(node?.node_type || "").toLowerCase();
-      if (type === "esp32") return "ESP32";
-      if (type === "raspberry_pi") return "Raspberry Pi";
-      const title = String(node?.title || node?.node_id || "Unknown Node");
-      if (/esp32/i.test(title)) return "ESP32";
-      if (/raspberry/i.test(title)) return "Raspberry Pi";
-      return title;
-    }
-
-    function nodeHealth(node) {
-      if (node && node.health) return String(node.health).toLowerCase();
-      if (node && node.reachable === false) return "offline";
-      return "online";
-    }
-
-    function connectedBoardCount(current, peer) {
-      let count = current ? 1 : 0;
-      if (peer && peer.reachable) count += 1;
-      return count;
-    }
-
-    function defaultLocalSession() {
-      return {
-        status: "idle",
-        sessionId: "",
-        operator: "",
-        objective: "",
-        hardwareProfile: "",
-        externalModule: "",
-        powerContext: "bench_psu",
-        viewMode: "browser",
-        activeTool: "overview",
-        moduleId: "overview",
-        startedAtMs: 0,
-        backendSynced: false
-      };
-    }
-
-    function readLocalSession() {
-      try {
-        const raw = localStorage.getItem(LAB_SESSION_STORAGE_KEY);
-        if (!raw) return defaultLocalSession();
-        const parsed = JSON.parse(raw);
-        if (!parsed || typeof parsed !== "object") return defaultLocalSession();
-        return { ...defaultLocalSession(), ...parsed };
-      } catch (_error) {
-        return defaultLocalSession();
+    async function fetchJson(url, options) {
+      const response = await fetch(url, options);
+      const payload = await response.json();
+      if (!response.ok) {
+        throw new Error(payload.message || payload.error || response.statusText);
       }
-    }
-
-    function writeLocalSession() {
-      try {
-        localStorage.setItem(LAB_SESSION_STORAGE_KEY, JSON.stringify(state.localSession));
-      } catch (_error) {
-      }
-    }
-
-    function readTool() {
-      const params = new URLSearchParams(window.location.search);
-      return params.get("tool");
-    }
-
-    function writeTool(id) {
-      const url = new URL(window.location.href);
-      url.searchParams.set("tool", id);
-      window.history.replaceState({}, "", url);
-    }
-
-    function readPowerContext() {
-      try {
-        return localStorage.getItem("smart-platform.laboratory.power") || "bench_psu";
-      } catch (_error) {
-        return "bench_psu";
-      }
-    }
-
-    function writePowerContext(value) {
-      try {
-        localStorage.setItem("smart-platform.laboratory.power", value);
-      } catch (_error) {
-      }
-    }
-
-    function currentViewMode() {
-      return state.fullscreen ? "fullscreen" : "browser";
-    }
-
-    function syncLocalSessionContext() {
-      state.localSession = {
-        ...defaultLocalSession(),
-        ...state.localSession,
-        powerContext: state.powerContext,
-        viewMode: currentViewMode(),
-        activeTool: state.activeModule,
-        moduleId: state.activeModule
-      };
-      writeLocalSession();
-    }
-
-    function fillSessionInputs(force = false) {
-      const bindings = [
-        ["session-operator", "operator"],
-        ["session-objective", "objective"],
-        ["session-hardware", "hardwareProfile"],
-        ["session-external-module", "externalModule"]
-      ];
-      for (const [id, key] of bindings) {
-        const input = document.getElementById(id);
-        if (!input) continue;
-        if (force || (!input.value && document.activeElement !== input)) {
-          input.value = state.localSession[key] || "";
-        }
-      }
-    }
-
-    function readSessionForm() {
-      return {
-        operator: document.getElementById("session-operator").value.trim(),
-        objective: document.getElementById("session-objective").value.trim(),
-        hardwareProfile: document.getElementById("session-hardware").value.trim(),
-        externalModule: document.getElementById("session-external-module").value.trim(),
-        finishNote: document.getElementById("session-finish-note").value.trim()
-      };
-    }
-
-    function currentShellNode() {
-      const snapshot = state.snapshot || {};
-      const nodes = snapshot.nodes || {};
-      return nodes.current || {};
-    }
-
-    function buildLaboratoryMetadataParams() {
-      const form = readSessionForm();
-      const currentNode = currentShellNode();
-      const payload = {
-        lab_session_status: state.localSession.status || "idle",
-        lab_operator: form.operator || state.localSession.operator || "",
-        lab_objective: form.objective || state.localSession.objective || "",
-        lab_hardware_profile: form.hardwareProfile || state.localSession.hardwareProfile || "",
-        lab_external_module: form.externalModule || state.localSession.externalModule || "",
-        lab_power_context: state.powerContext,
-        lab_view_mode: currentViewMode(),
-        lab_active_tool: state.activeModule,
-        lab_context_module: state.activeModule,
-        lab_owner_node_id: currentNode.node_id || "",
-        lab_owner_node_type: currentShellType() || String(currentNode.node_type || "")
-      };
-      if (state.localSession.sessionId) payload.lab_session_id = state.localSession.sessionId;
       return payload;
     }
 
-    function defaultCaseIdForModule(moduleId) {
-      if (!moduleId || moduleId === "overview") return "laboratory-overview-smoke";
-      return `${moduleId}-smoke`;
+    function post(url) {
+      return fetchJson(url, { method: "POST" });
     }
 
-    function syncEvidenceCaseId(force = false) {
-      const input = document.getElementById("evidence-case-id");
-      if (!input) return;
-      const nextDefault = defaultCaseIdForModule(state.activeModule);
-      if (force || !input.value || input.dataset.auto === "1") {
-        input.value = nextDefault;
-        input.dataset.auto = "1";
-      }
-      document.getElementById("evidence-module").value = moduleById(state.activeModule).title;
+    function statusClass(status) {
+      const normalized = String(status || "offline").toLowerCase();
+      if (["ready", "online", "active", "service"].includes(normalized)) return `state-${normalized}`;
+      if (["attention", "degraded", "warn", "warning"].includes(normalized)) return normalized === "warning" ? "state-warn" : `state-${normalized}`;
+      if (["blocked", "locked", "fault", "error"].includes(normalized)) return `state-${normalized}`;
+      if (["idle", "planned", "offline"].includes(normalized)) return `state-${normalized}`;
+      return "state-offline";
     }
 
-    function sessionStatusLine() {
-      if (state.localSession.status === "active") {
-        const objective = state.localSession.objective ? ` / ${state.localSession.objective}` : "";
-        return `Active session ${state.localSession.sessionId || "(local draft)"} / ${state.localSession.operator || "local-operator"}${objective}`;
-      }
-      return "No active laboratory session. You can keep fields as a draft or start a tracked pass now.";
-    }
-
-    function backendSyncLine() {
-      if (state.sessionApiAvailable) return "Raspberry Pi backend session sync is available on this shell.";
-      if (currentShellType() === "raspberry_pi") return "Raspberry Pi backend session sync is currently unavailable, so the page falls back to local draft state.";
-      return "This mirrored shell keeps the session draft locally. Explicit report actions still carry the session fields.";
-    }
-
-    function applyBackendSessionSnapshot(payload) {
-      if (!payload || typeof payload !== "object") return;
-      const context = payload.context || {};
-      const active = payload.active_session || null;
-      const completed = payload.last_completed_session || null;
-      if (active) {
-        state.localSession = {
-          ...defaultLocalSession(),
-          ...state.localSession,
-          status: "active",
-          sessionId: active.session_id || state.localSession.sessionId,
-          operator: active.operator || "",
-          objective: active.objective || "",
-          hardwareProfile: active.hardware_profile || "",
-          externalModule: active.external_module || "",
-          powerContext: context.power_context || state.powerContext,
-          viewMode: context.view_mode || currentViewMode(),
-          activeTool: context.active_tool || state.activeModule,
-          moduleId: context.module_id || state.activeModule,
-          startedAtMs: Number(active.started_at_ms || 0),
-          backendSynced: true
-        };
-      } else if (completed) {
-        state.localSession = {
-          ...defaultLocalSession(),
-          ...state.localSession,
-          status: "idle",
-          sessionId: "",
-          operator: completed.operator || state.localSession.operator,
-          objective: completed.objective || state.localSession.objective,
-          hardwareProfile: completed.hardware_profile || state.localSession.hardwareProfile,
-          externalModule: completed.external_module || state.localSession.externalModule,
-          powerContext: context.power_context || state.powerContext,
-          viewMode: context.view_mode || currentViewMode(),
-          activeTool: context.active_tool || state.activeModule,
-          moduleId: context.module_id || state.activeModule,
-          startedAtMs: 0,
-          backendSynced: true
-        };
-      }
-      writeLocalSession();
-      fillSessionInputs(true);
-    }
-
-    async function postCommand(path, payload) {
-      const url = new URL(path, window.location.origin);
-      Object.entries(payload || {}).forEach(([key, value]) => {
-        if (value === undefined || value === null) return;
-        const text = String(value);
-        if (!text && text !== "0") return;
-        url.searchParams.set(key, text);
-      });
-      const response = await fetch(url, { method: "POST" });
-      if (!response.ok) throw new Error(`status ${response.status}`);
-      return await response.json();
-    }
-
-    async function loadLaboratorySessionBackend() {
-      if (currentShellType() !== "raspberry_pi") {
-        state.sessionApiAvailable = false;
-        state.sessionBackend = null;
-        return null;
-      }
-
-      try {
-        const response = await fetch("/api/v1/laboratory/session");
-        if (!response.ok) throw new Error(`status ${response.status}`);
-        const payload = await response.json();
-        state.sessionApiAvailable = true;
-        state.sessionBackend = payload;
-        applyBackendSessionSnapshot(payload);
-        return payload;
-      } catch (_error) {
-        state.sessionApiAvailable = false;
-        state.sessionBackend = null;
-        return null;
-      }
-    }
-
-    async function syncContextToBackend(force = false) {
-      syncLocalSessionContext();
-      const signature = [state.powerContext, currentViewMode(), state.activeModule, currentShellType()].join("|");
-      if (!force && signature === state.contextSyncSignature) return;
-      state.contextSyncSignature = signature;
-      if (currentShellType() !== "raspberry_pi") return;
-
-      try {
-        const payload = await postCommand("/api/v1/laboratory/session/context", {
-          power_context: state.powerContext,
-          view_mode: currentViewMode(),
-          active_tool: state.activeModule,
-          module_id: state.activeModule
-        });
-        if (payload.session) {
-          state.sessionApiAvailable = true;
-          state.sessionBackend = payload.session;
-          applyBackendSessionSnapshot(payload.session);
-        }
-      } catch (_error) {
-        state.sessionApiAvailable = false;
-      }
-    }
-
-    async function handleSessionStart() {
-      const form = readSessionForm();
-      if (currentShellType() === "raspberry_pi") {
-        try {
-          const payload = await postCommand("/api/v1/laboratory/session/start", {
-            operator: form.operator,
-            objective: form.objective,
-            hardware_profile: form.hardwareProfile,
-            external_module: form.externalModule,
-            power_context: state.powerContext,
-            view_mode: currentViewMode(),
-            active_tool: state.activeModule,
-            module_id: state.activeModule
-          });
-          state.sessionFeedback = payload.message || "laboratory session started";
-          if (payload.accepted && payload.session) {
-            state.sessionApiAvailable = true;
-            state.sessionBackend = payload.session;
-            applyBackendSessionSnapshot(payload.session);
-          }
-        } catch (error) {
-          state.sessionFeedback = `session start failed: ${String(error)}`;
-        }
-      } else {
-        state.localSession = {
-          ...state.localSession,
-          status: "active",
-          sessionId: state.localSession.sessionId || `local-${Date.now()}`,
-          operator: form.operator || "local-operator",
-          objective: form.objective,
-          hardwareProfile: form.hardwareProfile,
-          externalModule: form.externalModule,
-          powerContext: state.powerContext,
-          viewMode: currentViewMode(),
-          activeTool: state.activeModule,
-          moduleId: state.activeModule,
-          startedAtMs: Date.now(),
-          backendSynced: false
-        };
-        writeLocalSession();
-        state.sessionFeedback = "local-only session started for this mirrored shell";
-      }
-      renderSessionShell();
-      refresh().catch(() => {});
-    }
-
-    async function handleSessionUpdate() {
-      const form = readSessionForm();
-      if (currentShellType() === "raspberry_pi" && state.localSession.status === "active") {
-        try {
-          const payload = await postCommand("/api/v1/laboratory/session/update", {
-            operator: form.operator,
-            objective: form.objective,
-            hardware_profile: form.hardwareProfile,
-            external_module: form.externalModule
-          });
-          state.sessionFeedback = payload.message || "laboratory session updated";
-          if (payload.accepted && payload.session) {
-            state.sessionBackend = payload.session;
-            state.sessionApiAvailable = true;
-            applyBackendSessionSnapshot(payload.session);
-          }
-        } catch (error) {
-          state.sessionFeedback = `session update failed: ${String(error)}`;
-        }
-      } else {
-        state.localSession = {
-          ...state.localSession,
-          operator: form.operator,
-          objective: form.objective,
-          hardwareProfile: form.hardwareProfile,
-          externalModule: form.externalModule,
-          powerContext: state.powerContext,
-          viewMode: currentViewMode(),
-          activeTool: state.activeModule,
-          moduleId: state.activeModule
-        };
-        writeLocalSession();
-        state.sessionFeedback = state.localSession.status === "active" ? "local session details updated" : "draft session fields saved locally";
-      }
-      renderSessionShell();
-    }
-
-    async function handleSessionFinish() {
-      const finishNote = readSessionForm().finishNote;
-      if (currentShellType() === "raspberry_pi" && state.localSession.status === "active") {
-        try {
-          const payload = await postCommand("/api/v1/laboratory/session/finish", {
-            summary_note: finishNote
-          });
-          state.sessionFeedback = payload.message || "laboratory session finished";
-          if (payload.accepted && payload.session) {
-            state.sessionBackend = payload.session;
-            state.sessionApiAvailable = true;
-            applyBackendSessionSnapshot(payload.session);
-          }
-        } catch (error) {
-          state.sessionFeedback = `session finish failed: ${String(error)}`;
-        }
-      } else {
-        state.localSession = {
-          ...state.localSession,
-          status: "idle",
-          sessionId: "",
-          startedAtMs: 0,
-          backendSynced: false
-        };
-        writeLocalSession();
-        state.sessionFeedback = finishNote ? `local session closed: ${finishNote}` : "local session closed";
-      }
-      document.getElementById("session-finish-note").value = "";
-      renderSessionShell();
-      refresh().catch(() => {});
-    }
-
-    async function handleEvidenceCapture(kind) {
-      const caseId = document.getElementById("evidence-case-id").value.trim();
-      const note = document.getElementById("evidence-note").value.trim();
-      const moduleId = state.activeModule;
-      const board = currentShellType() || String(currentShellNode().node_type || "unknown");
-      const metadata = buildLaboratoryMetadataParams();
-
-      if (kind !== "note" && !caseId) {
-        state.evidenceFeedback = "case_id is required for pass / warn / fail";
-        renderSessionShell();
-        return;
-      }
-      if (kind === "note" && !note) {
-        state.evidenceFeedback = "note is required for note-only evidence";
-        renderSessionShell();
-        return;
-      }
-
-      try {
-        let payload;
-        if (kind === "note") {
-          payload = await postCommand("/api/v1/reports/note", {
-            note,
-            module_id: moduleId,
-            board,
-            case_id: caseId,
-            ...metadata
-          });
-        } else {
-          payload = await postCommand("/api/v1/reports/testcase", {
-            case_id: caseId,
-            module_id: moduleId,
-            result: kind,
-            note,
-            board,
-            ...metadata
-          });
-        }
-        state.evidenceFeedback = payload.message || "evidence recorded";
-        document.getElementById("evidence-note").value = "";
-        refresh().catch(() => {});
-      } catch (error) {
-        state.evidenceFeedback = `evidence recording failed: ${String(error)}`;
-      }
-      renderSessionShell();
-    }
-
-    function bindSessionControls() {
-      if (state.sessionControlsBound) return;
-      state.sessionControlsBound = true;
-      document.getElementById("session-start-btn").addEventListener("click", () => {
-        handleSessionStart().catch(() => {});
-      });
-      document.getElementById("session-update-btn").addEventListener("click", () => {
-        handleSessionUpdate().catch(() => {});
-      });
-      document.getElementById("session-finish-btn").addEventListener("click", () => {
-        handleSessionFinish().catch(() => {});
-      });
-      document.getElementById("evidence-pass-btn").addEventListener("click", () => {
-        handleEvidenceCapture("pass").catch(() => {});
-      });
-      document.getElementById("evidence-warn-btn").addEventListener("click", () => {
-        handleEvidenceCapture("warn").catch(() => {});
-      });
-      document.getElementById("evidence-fail-btn").addEventListener("click", () => {
-        handleEvidenceCapture("fail").catch(() => {});
-      });
-      document.getElementById("evidence-note-btn").addEventListener("click", () => {
-        handleEvidenceCapture("note").catch(() => {});
-      });
-      document.getElementById("evidence-case-id").addEventListener("input", (event) => {
-        event.target.dataset.auto = event.target.value.trim() ? "0" : "1";
-      });
-    }
-
-    function currentShellType() {
-      return String(((state.snapshot || {}).current_shell || {}).node_type || "").toLowerCase();
-    }
-
-    function ownerTitleForScope(scope) {
-      if (scope === "esp32") return "ESP32";
-      if (scope === "raspberry_pi") return "Raspberry Pi";
-      return "shared";
-    }
-
-    function resolveOwnerScope(moduleDef, module) {
-      if (moduleDef.ownerScope) return moduleDef.ownerScope;
-      const snapshot = state.snapshot || {};
-      const currentShell = snapshot.current_shell || {};
-      const peerNode = ((snapshot.nodes || {}).peer) || {};
-      const currentType = String(currentShell.node_type || "").toLowerCase();
-      const currentNodeId = currentShell.node_id || "";
-      if (module && module.owner_node_id) {
-        if (module.owner_node_id === currentNodeId) return currentType || "shared";
-        if (module.owner_node_id === peerNode.node_id) {
-          if (currentType === "esp32") return "raspberry_pi";
-          if (currentType === "raspberry_pi") return "esp32";
-        }
-      }
-      return "shared";
-    }
-
-    function ownerStatus(moduleDef, module) {
-      const snapshot = state.snapshot || {};
-      const currentShell = snapshot.current_shell || {};
-      const currentNode = ((snapshot.nodes || {}).current) || {};
-      const peerNode = ((snapshot.nodes || {}).peer) || {};
-      const scope = resolveOwnerScope(moduleDef, module);
-      const currentType = currentShellType();
-
-      if (!scope || scope === "shared") {
-        return {
-          scope: "shared",
-          title: "shared",
-          nodeId: "shared",
-          available: true,
-          local: true,
-          baseUrl: "",
-          blockReason: module?.block_reason || "none"
-        };
-      }
-
-      if (scope === currentType) {
-        return {
-          scope,
-          title: ownerTitleForScope(scope),
-          nodeId: currentShell.node_id || currentNode.node_id || ownerTitleForScope(scope),
-          available: true,
-          local: true,
-          baseUrl: "",
-          blockReason: module?.block_reason || "none"
-        };
-      }
-
-      const available = Boolean(peerNode.reachable && peerNode.shell_ready && peerNode.sync_ready && peerNode.shell_base_url);
-      return {
-        scope,
-        title: ownerTitleForScope(scope),
-        nodeId: peerNode.node_id || ownerTitleForScope(scope),
-        available,
-        local: false,
-        baseUrl: peerNode.shell_base_url || "",
-        blockReason: available ? (module?.block_reason || "peer_owner_available") : (module?.block_reason || "owner_unavailable")
+    function statusLabel(status) {
+      const labels = {
+        ready: "Ready",
+        online: "Online",
+        active: "Active",
+        service: "Laboratory",
+        attention: "Attention",
+        degraded: "Degraded",
+        blocked: "Blocked",
+        locked: "Locked",
+        fault: "Fault",
+        error: "Error",
+        offline: "Offline",
+        planned: "Planned",
+        idle: "Idle"
       };
+      return labels[String(status || "offline").toLowerCase()] || String(status || "unknown");
     }
 
-    function moduleById(id) {
-      return MODULE_DEFS.find((module) => module.id === id) || MODULE_DEFS[0];
+    function modeLabel(mode) {
+      if (mode === "service_test") return "Laboratory";
+      if (mode === "automatic") return "Automatic";
+      if (mode === "manual") return "Manual";
+      if (mode === "emergency") return "Emergency";
+      if (mode === "fault") return "Fault";
+      return mode || "unknown";
     }
 
-    function modulesInCategory(categoryId) {
-      return MODULE_DEFS.filter((module) => module.category === categoryId);
+    function ownerLabel(owner) {
+      if (owner === "rpi") return "Raspberry Pi";
+      if (owner === "esp32") return "ESP32";
+      if (owner === "lab") return "Laboratory-local";
+      return "Shared";
     }
 
-    function firstModuleInCategory(categoryId) {
-      return modulesInCategory(categoryId)[0] || MODULE_DEFS[0];
+    function activeSlice() {
+      return SLICES.find((item) => item.id === state.activeTool) || SLICES[0];
     }
 
-    function initSelection() {
-      const requested = readTool();
-      const active = moduleById(requested || "overview");
-      state.activeCategory = active.category;
-      state.activeModule = active.id;
-      writeTool(active.id);
-    }
-
-    function runtime(moduleDef) {
-      const module = typeof moduleDef.find === "function" ? moduleDef.find(state.modules) : null;
-      const owner = ownerStatus(moduleDef, module);
-      const servicePath = typeof moduleDef.path === "function" ? moduleDef.path(module) : "";
-      const url = serviceUrl(module, servicePath, owner);
-      const powerBlock = powerGuard(moduleDef);
-      return { def: moduleDef, module, owner, servicePath, url, powerBlock };
-    }
-
-    function serviceUrl(module, path, owner) {
-      if (!path || module?.id === "service_mode") return "";
-      if (owner.local) return path;
-      if (owner.available && owner.baseUrl) return `${owner.baseUrl}${path}`;
-      if (module.owner_available && module.canonical_url && module.canonical_path) {
-        return module.canonical_url.replace(module.canonical_path, path);
-      }
-      return "";
-    }
-
-    function powerGuard(moduleDef) {
-      if (moduleDef.powerGuard === "bench_psu_required" && state.powerContext === "battery") {
-        return {
-          blocked: true,
-          title: "Battery context blocks this bench slice",
-          summary: "This module depends on adjustable bench-supply guidance. Battery mode cannot truthfully provide that yet.",
-          action: "Switch power context back to Bench PSU before opening the voltage-sensitive calibration flow."
-        };
-      }
-      return {
-        blocked: false,
-        title: "",
-        summary: POWER_CONTEXTS[state.powerContext].summary,
-        action: state.powerContext === "battery"
-          ? "Battery mode stays advisory-only for slices that do not explicitly depend on adjustable PSU control."
-          : "Bench PSU mode keeps calibration hints visible but does not claim hardware enforcement by itself."
+    function resolveTool(toolId) {
+      const normalized = String(toolId || "").trim();
+      const aliases = {
+        service_turret: "turret_service",
+        turret: "turret_service",
+        turret_lab: "turret_service",
+        display: "rpi_touch_display",
+        displays: "rpi_touch_display",
+        rpi_display_checks: "rpi_touch_display",
+        peer_link_smoke: "bringup",
+        shell_smoke: "overview",
+        reports_review: "reports",
+        esp32_strobe_bench: "strobe_bench",
+        esp32_irrigation_service: "irrigation"
       };
+      const direct = SLICES.find((item) => item.id === normalized);
+      if (direct) return direct.id;
+      const alias = aliases[normalized];
+      return SLICES.find((item) => item.id === alias)?.id || "overview";
     }
 
-    function moduleDisplayState(runtimeState) {
-      if (runtimeState.powerBlock.blocked) return { label: "blocked", className: "badge state-locked" };
-      if (runtimeState.def.kind !== "overview" && !runtimeState.owner.available) {
-        return { label: "blocked", className: "badge state-locked" };
-      }
-      if (runtimeState.module) {
-        const currentState = runtimeState.module.state || runtimeState.def.stage || "service";
-        return { label: currentState, className: badgeClass(currentState) };
-      }
-      if (runtimeState.def.kind === "overview") return { label: "service", className: "badge state-service" };
-      if (runtimeState.def.stage === "live") return { label: "ready", className: "badge state-online" };
-      if (runtimeState.def.stage === "partial") return { label: "partial", className: "badge state-partial" };
-      return { label: "planned", className: "badge state-planned" };
+    function slicesForCategory(categoryId) {
+      return SLICES.filter((item) => item.category === categoryId);
     }
 
-    function categoryStats(categoryId) {
-      const modules = modulesInCategory(categoryId);
-      let available = 0;
-      let blocked = 0;
-      let planned = 0;
-      for (const moduleDef of modules) {
-        const currentRuntime = runtime(moduleDef);
-        if (moduleDef.kind !== "overview" && !currentRuntime.owner.available) {
-          blocked += 1;
-          continue;
-        }
-        if (currentRuntime.powerBlock.blocked) {
-          blocked += 1;
-          continue;
-        }
-        if (moduleDef.kind === "placeholder") {
-          planned += 1;
-          continue;
-        }
-        available += 1;
+    function setActiveTool(toolId, pushUrl = true) {
+      const slice = SLICES.find((item) => item.id === resolveTool(toolId)) || SLICES[0];
+      state.activeTool = slice.id;
+      state.activeCategory = slice.category;
+      try {
+        localStorage.setItem(STORAGE_ACTIVE_TOOL_KEY, slice.id);
+      } catch (_error) {
+        // Browsers can block localStorage in private contexts; navigation should still work.
       }
-      return { total: modules.length, available, blocked, planned };
+      if (pushUrl) {
+        const url = new URL(window.location.href);
+        url.searchParams.set("tool", slice.id);
+        history.replaceState({}, "", url);
+      }
+      syncContext().catch(() => {});
+      render();
     }
 
     function setActiveCategory(categoryId) {
-      const current = moduleById(state.activeModule);
       state.activeCategory = categoryId;
-      if (current.category !== categoryId) state.activeModule = firstModuleInCategory(categoryId).id;
-      writeTool(state.activeModule);
-      renderCategoryRail();
-      renderModuleRail();
-      renderWorkspace();
-      syncEvidenceCaseId();
-      syncLocalSessionContext();
-      renderSessionShell();
-      syncContextToBackend().catch(() => {});
-    }
-
-    function setActiveModule(moduleId) {
-      const moduleDef = moduleById(moduleId);
-      state.activeModule = moduleDef.id;
-      state.activeCategory = moduleDef.category;
-      writeTool(moduleDef.id);
-      renderCategoryRail();
-      renderModuleRail();
-      renderWorkspace();
-      syncEvidenceCaseId();
-      syncLocalSessionContext();
-      renderSessionShell();
-      syncContextToBackend().catch(() => {});
-    }
-
-    function renderPowerContext() {
-      const target = document.getElementById("power-context");
-      target.innerHTML = Object.values(POWER_CONTEXTS).map((option) => {
-        const active = option.id === state.powerContext ? " active" : "";
-        return `<button type="button" class="segment-button${active}" data-power="${esc(option.id)}">${esc(option.title)}</button>`;
-      }).join("");
-      for (const button of target.querySelectorAll("button[data-power]")) {
-        button.addEventListener("click", () => {
-          state.powerContext = button.dataset.power;
-          writePowerContext(state.powerContext);
-          state.workspaceSignature = "";
-          renderPowerContext();
-          renderSummary();
-          renderCategoryRail();
-          renderModuleRail();
-          renderWorkspace();
-          syncLocalSessionContext();
-          renderSessionShell();
-          syncContextToBackend().catch(() => {});
-        });
-      }
-    }
-
-    function renderSessionShell() {
-      syncLocalSessionContext();
-      fillSessionInputs();
-      syncEvidenceCaseId();
-      const badges = [
-        `<span class="${state.localSession.status === "active" ? "badge state-active" : "badge state-service"}">${esc(state.localSession.status === "active" ? "session active" : "session idle")}</span>`,
-        `<span class="${state.sessionApiAvailable ? "badge state-online" : "badge state-degraded"}">${esc(state.sessionApiAvailable ? "backend sync ready" : "local draft mode")}</span>`,
-        `<span class="badge state-service">${esc(POWER_CONTEXTS[state.powerContext].title)}</span>`,
-        `<span class="badge state-service">${esc(currentViewMode())}</span>`
-      ];
-      document.getElementById("session-shell-badges").innerHTML = badges.join("");
-      document.getElementById("session-shell-summary").textContent = `${sessionStatusLine()} ${backendSyncLine()}`;
-      document.getElementById("session-shell-feedback").textContent = state.sessionFeedback;
-      document.getElementById("evidence-summary").textContent = `Current slice: ${moduleById(state.activeModule).title} / board: ${nodeLabel(currentShellNode())} / power: ${POWER_CONTEXTS[state.powerContext].title} / view: ${currentViewMode()}`;
-      document.getElementById("evidence-feedback").textContent = state.evidenceFeedback;
-    }
-
-    function renderDeviceRibbon() {
-      const snapshot = state.snapshot || {};
-      const shell = snapshot.current_shell || {};
-      const nodes = snapshot.nodes || {};
-      const current = nodes.current || {};
-      const peer = nodes.peer || {};
-      const count = connectedBoardCount(current, peer);
-      const clusterState = count === 2 ? "ready" : "attention";
-      const powerSummary = state.powerContext === "battery"
-        ? "Battery context is selected. PSU-dependent bench flows stay blocked until bench power is declared."
-        : "Bench PSU context is selected. Voltage-dependent hints stay visible for qualifying slices.";
-
-      document.getElementById("device-ribbon").innerHTML = `
-        <article class="device-chip">
-          <div class="tool-top">
-            <strong>This Shell: ${esc(nodeLabel(current))}</strong>
-            <span class="${statusBadgeClass(nodeHealth(current))}">${esc(nodeHealth(current))}</span>
-          </div>
-          <p>mode: ${esc(shell.active_mode || current.reported_mode || "unknown")}</p>
-          <p>wifi: ${esc(current.wifi_ready)} / shell: ${esc(current.shell_ready)} / sync: ${esc(current.sync_ready)}</p>
-          <p>node_id: ${esc(shell.node_id || current.node_id || "unknown")}</p>
-        </article>
-        <article class="device-chip">
-          <div class="tool-top">
-            <strong>Peer Board: ${esc(nodeLabel(peer))}</strong>
-            <span class="${statusBadgeClass(nodeHealth(peer))}">${esc(nodeHealth(peer))}</span>
-          </div>
-          <p>reachable: ${esc(peer.reachable)}</p>
-          <p>wifi: ${esc(peer.wifi_ready)} / shell: ${esc(peer.shell_ready)} / sync: ${esc(peer.sync_ready)}</p>
-          <p>reported_mode: ${esc(peer.reported_mode || "unknown")}</p>
-        </article>
-        <article class="device-chip">
-          <div class="tool-top">
-            <strong>Connection Summary</strong>
-            <span class="${statusBadgeClass(clusterState)}">${esc(clusterState)}</span>
-          </div>
-          <p>${count} / 2 boards connected</p>
-          <p>${esc(powerSummary)}</p>
-        </article>
-      `;
-    }
-
-    function renderSummary() {
-      const snapshot = state.snapshot || {};
-      const shell = snapshot.current_shell || {};
-      const nodes = snapshot.nodes || {};
-      const current = nodes.current || {};
-      const peer = nodes.peer || {};
-      const summaries = snapshot.summaries || {};
-      const faults = summaries.faults || {};
-      const content = summaries.content || {};
-
-      document.getElementById("shell-pill").textContent = `shell: ${current.title || "node"}`;
-      document.getElementById("mode-pill").textContent = `mode: ${shell.active_mode || "unknown"}`;
-      document.getElementById("peer-pill").textContent = `peer: ${peer.health || "offline"}`;
-      document.getElementById("view-pill").textContent = `view: ${state.fullscreen ? "fullscreen" : "browser"}`;
-
-      const cards = [
-        { title: "Current Shell", lines: [`node: ${current.title || "unknown"}`, `mode: ${shell.active_mode || "unknown"}`, `service_mode: ${shell.service_mode}`] },
-        { title: "Peer", lines: [`health: ${peer.health || "offline"}`, `sync_ready: ${peer.sync_ready}`, `summary: ${peer.summary || "-"}`] },
-        { title: "Power And View", lines: [`power_context: ${POWER_CONTEXTS[state.powerContext].title}`, `view_mode: ${state.fullscreen ? "fullscreen" : "browser"}`, state.powerContext === "battery" ? "battery guard: bench-only PSU flows blocked" : "battery guard: bench PSU hints available"] },
-        { title: "Shell State", lines: [`fault: ${faults.has_fault}`, `degraded: ${faults.has_degraded}`, `reports_ready: ${content.ready}`] }
-      ];
-
-      document.getElementById("summary-grid").innerHTML = cards.map((card) => `
-        <article class="card">
-          <h2>${esc(card.title)}</h2>
-          <p class="meta">${card.lines.map(esc).join("<br>")}</p>
-        </article>
-      `).join("");
-    }
-
-    function renderCategoryRail() {
-      const target = document.getElementById("category-rail");
-      document.getElementById("category-summary").textContent = CATEGORY_DEFS[state.activeCategory].summary;
-      target.innerHTML = CATEGORY_ORDER.map((categoryId) => {
-        const category = CATEGORY_DEFS[categoryId];
-        const active = state.activeCategory === categoryId ? " active" : "";
-        const stats = categoryStats(categoryId);
-        const moduleCountLabel = `${stats.total} slices / ${stats.available} ready / ${stats.blocked} blocked / ${stats.planned} planned`;
-        return `
-          <button type="button" class="category-button${active}" data-category="${esc(categoryId)}">
-            <div class="category-stack">
-              <div class="tool-top">
-                <strong>${esc(category.title)}</strong>
-                <span class="badge state-service">${esc(categoryId)}</span>
-              </div>
-              <small>${esc(category.summary)}</small>
-              <small>${esc(moduleCountLabel)}</small>
-            </div>
-          </button>
-        `;
-      }).join("");
-      for (const button of target.querySelectorAll("button[data-category]")) {
-        button.addEventListener("click", () => setActiveCategory(button.dataset.category));
-      }
-    }
-
-    function renderModuleRail() {
-      const target = document.getElementById("module-list");
-      const modules = modulesInCategory(state.activeCategory);
-      const category = CATEGORY_DEFS[state.activeCategory];
-      document.getElementById("module-rail-title").textContent = `${category.title} Modules`;
-      document.getElementById("module-rail-summary").textContent = category.summary;
-      target.innerHTML = modules.map((moduleDef) => {
-        const currentRuntime = runtime(moduleDef);
-        const displayState = moduleDisplayState(currentRuntime);
-        const active = state.activeModule === moduleDef.id ? " active" : "";
-        const owner = currentRuntime.owner.title;
-        const stage = moduleDef.stage === "live" ? "working slice" : moduleDef.stage === "partial" ? "temporary bridge" : "visible placeholder";
-        const labOnly = moduleDef.labOnly ? `<span class="badge state-service">lab-only</span>` : "";
-        const blockNote = !currentRuntime.owner.available ? ` / block: ${currentRuntime.owner.blockReason}` : "";
-        return `
-          <button type="button" class="module-button${active}" data-module="${esc(moduleDef.id)}">
-            <div class="module-stack">
-              <div class="tool-top">
-                <strong>${esc(moduleDef.title)}</strong>
-                <span class="${displayState.className}">${esc(displayState.label)}</span>
-              </div>
-              <small>${esc(moduleDef.summary)}</small>
-              <small>owner: ${esc(owner)} / stage: ${esc(stage)}${esc(blockNote)}</small>
-              <div class="row">
-                ${labOnly}
-                <span class="${stageBadge(moduleDef.stage)}">${esc(moduleDef.stage)}</span>
-              </div>
-            </div>
-          </button>
-        `;
-      }).join("");
-      for (const button of target.querySelectorAll("button[data-module]")) {
-        button.addEventListener("click", () => setActiveModule(button.dataset.module));
-      }
-    }
-
-    function buildReadinessChecks(items) {
-      return (items || []).map((item) => `
-        <article class="check">
-          <div class="tool-top">
-            <strong>${esc(item.title || item.id || "Check")}</strong>
-            <span class="${statusBadgeClass(item.status)}">${esc(item.status || "unknown")}</span>
-          </div>
-          <p>${esc(item.summary || "")}</p>
-          <p>${esc(item.action || "")}</p>
-        </article>
-      `).join("");
-    }
-
-    function buildReadinessSteps(items) {
-      return (items || []).map((item) => `
-        <article class="check">
-          <div class="tool-top">
-            <strong>${esc(item.title || item.id || "Step")}</strong>
-            <span class="${statusBadgeClass(item.status)}">${esc(item.status || "unknown")}</span>
-          </div>
-          <p>${esc(item.summary || "")}</p>
-          <p>${esc(item.action || "")}</p>
-          <p class="code">route: ${esc(item.route || "-")} / owner: ${esc(item.owner_scope || "shared")}</p>
-        </article>
-      `).join("");
-    }
-
-    function listMarkup(items) {
-      return `<ul class="detail-list">${(items || []).map((item) => `<li>${esc(item)}</li>`).join("")}</ul>`;
-    }
-
-    function categoryMapMarkup() {
-      return CATEGORY_ORDER.filter((categoryId) => categoryId !== "overview").map((categoryId) => {
-        const category = CATEGORY_DEFS[categoryId];
-        const names = modulesInCategory(categoryId).map((module) => module.title).join(", ");
-        const stats = categoryStats(categoryId);
-        return `
-          <article class="mini-card">
-            <div class="tool-top">
-              <strong>${esc(category.title)}</strong>
-              <span class="badge state-service">${esc(stats.total)} slices</span>
-            </div>
-            <p class="meta">${esc(category.summary)}</p>
-            <p class="meta">${esc(names)}</p>
-          </article>
-        `;
-      }).join("");
-    }
-
-    function renderOverviewSurface() {
-      const readiness = state.readiness || {};
-      const nextAction = readiness.next_action || {};
-      const powerContext = POWER_CONTEXTS[state.powerContext];
-      return `
-        <div class="box-grid">
-          <article class="box">
-            <strong>Testing Readiness</strong>
-            <p class="meta">${esc(readiness.summary || "Loading readiness summary...")}</p>
-            <p class="meta">next_action: ${esc(nextAction.title || nextAction.id || "waiting")}</p>
-            <p class="meta">${esc(nextAction.action || "Waiting for the next recommended action...")}</p>
-          </article>
-          <article class="box">
-            <strong>Power Context</strong>
-            <p class="meta">${esc(powerContext.title)}</p>
-            <p class="meta">${esc(powerContext.summary)}</p>
-            <p class="meta">${state.powerContext === "battery" ? "Default guard right now: only explicitly PSU-dependent bench slices are blocked." : "Bench-sensitive slices can surface voltage notes and calibration hints."}</p>
-          </article>
-          <article class="box">
-            <strong>Preset Promotion Path</strong>
-            <p class="meta">Laboratory settings stay local by default.</p>
-            <p class="meta">Later flow: select candidate -> review -> apply in Settings -> reuse in Manual / FPV.</p>
-            <p class="meta">This keeps experimentation and product behavior separated.</p>
-          </article>
-        </div>
-        <div class="box" style="margin-top: 16px;">
-          <strong>Category Map</strong>
-          <p class="meta">Top rail stays broad for phone UX; second rail keeps the real hardware slices visible.</p>
-          <div class="mini-grid" style="margin-top: 14px;">${categoryMapMarkup()}</div>
-        </div>
-        <div class="box" style="margin-top: 16px;">
-          <strong>Preflight Checklist</strong>
-          <div class="checklist" style="margin-top: 14px;">${buildReadinessChecks(readiness.preflight)}</div>
-        </div>
-        <div class="box" style="margin-top: 16px;">
-          <strong>Bring-Up Order</strong>
-          <div class="step-list" style="margin-top: 14px;">${buildReadinessSteps(readiness.bringup_sequence)}</div>
-        </div>
-      `;
-    }
-
-    function ownerUnavailableMarkup(moduleDef, currentRuntime) {
-      return `
-        <div class="notice">
-          <strong>Owner side is not ready.</strong><br>
-          ${esc(moduleDef.title)} belongs to ${esc(currentRuntime.owner.title)}, so the slice stays visible but locked until that board is connected and synchronized.<br>
-          block_reason: ${esc(currentRuntime.owner.blockReason)}<br>
-          action: connect ${esc(currentRuntime.owner.title)}, wait for shell + sync readiness, then reopen this slice.
-        </div>
-      `;
-    }
-
-    function powerBlockedMarkup(currentRuntime) {
-      return `
-        <div class="notice">
-          <strong>${esc(currentRuntime.powerBlock.title)}</strong><br>
-          ${esc(currentRuntime.powerBlock.summary)}<br>
-          action: ${esc(currentRuntime.powerBlock.action)}
-        </div>
-      `;
-    }
-
-    function placeholderMarkup(moduleDef) {
-      return `
-        <div class="notice">
-          <strong>Visible placeholder.</strong><br>
-          ${esc(moduleDef.stageNote || "This slice is intentionally visible before the deep implementation exists.")}<br>
-          You can return later and fill in the real controls without breaking the category model.
-        </div>
-      `;
-    }
-
-    function renderModuleSurface(currentRuntime) {
-      const moduleDef = currentRuntime.def;
-      const owner = currentRuntime.owner.title;
-      const stageText = moduleDef.stage === "live" ? "Dedicated working slice" : moduleDef.stage === "partial" ? "Temporary bridge into an existing deep page" : "Planned placeholder kept visible on purpose";
-      const powerTitle = POWER_CONTEXTS[state.powerContext].title;
-      const powerDetail = currentRuntime.powerBlock.blocked ? currentRuntime.powerBlock.summary : currentRuntime.powerBlock.action;
-      let surface = "";
-      if (!currentRuntime.owner.available) {
-        surface = ownerUnavailableMarkup(moduleDef, currentRuntime);
-      } else if (currentRuntime.powerBlock.blocked) {
-        surface = powerBlockedMarkup(currentRuntime);
-      } else if (moduleDef.kind === "placeholder") {
-        surface = placeholderMarkup(moduleDef);
-      } else if (!currentRuntime.url) {
-        surface = ownerUnavailableMarkup(moduleDef, currentRuntime);
+      const firstSlice = slicesForCategory(categoryId)[0];
+      if (firstSlice) {
+        setActiveTool(firstSlice.id);
       } else {
-        surface = `
-          <iframe class="frame" title="${esc(moduleDef.title)}" src="${esc(currentRuntime.url)}" loading="eager" referrerpolicy="no-referrer" allowfullscreen></iframe>
-        `;
+        render();
       }
-
-      return `
-        <div class="detail-grid">
-          <article class="box">
-            <strong>Current Slice Stage</strong>
-            <p class="meta">owner: ${esc(owner)}</p>
-            <p class="meta">stage: ${esc(stageText)}</p>
-            <p class="meta">${esc(moduleDef.stageNote || "")}</p>
-          </article>
-          <article class="box">
-            <strong>What You Can Tune</strong>
-            ${listMarkup(moduleDef.controls)}
-          </article>
-          <article class="box">
-            <strong>Expected Feedback</strong>
-            ${listMarkup(moduleDef.expected)}
-          </article>
-          <article class="box">
-            <strong>Power And Preset Path</strong>
-            <p class="meta">power_context: ${esc(powerTitle)}</p>
-            <p class="meta">${esc(powerDetail)}</p>
-            <p class="meta">preset_path: ${esc(moduleDef.presetPath || "No preset path yet.")}</p>
-            <p class="meta">evidence: ${esc(moduleDef.evidence || "Gallery > Reports")}</p>
-          </article>
-        </div>
-        <div style="margin-top: 16px;">${surface}</div>
-      `;
     }
 
-    function updateOpenDirect(currentRuntime) {
-      const link = document.getElementById("open-direct-link");
-      const enabled = Boolean(currentRuntime.owner.available && !currentRuntime.powerBlock.blocked && currentRuntime.url);
-      link.classList.toggle("disabled-link", !enabled);
-      link.setAttribute("aria-disabled", enabled ? "false" : "true");
-      link.textContent = enabled ? "Open Direct" : "Direct page unavailable";
-      link.href = enabled ? currentRuntime.url : "#";
+    function collectDraft() {
+      const ids = {
+        operator: "lab-operator",
+        objective: "lab-objective",
+        hardware: "lab-hardware",
+        external: "lab-external",
+        note: "evidence-note",
+        caseId: "evidence-case"
+      };
+      Object.entries(ids).forEach(([key, id]) => {
+        const el = document.getElementById(id);
+        if (el) state.draft[key] = el.value;
+      });
+      saveDraft();
     }
 
-    function renderWorkspace() {
-      const moduleDef = moduleById(state.activeModule);
-      const currentRuntime = runtime(moduleDef);
-      const displayState = moduleDisplayState(currentRuntime);
-      const owner = currentRuntime.owner.title;
-      const badges = [
-        `<span class="${displayState.className}">${esc(displayState.label)}</span>`,
-        `<span class="badge state-service">${esc(owner)}</span>`,
-        `<span class="badge state-active">${esc(state.activeCategory)}</span>`,
-        `<span class="badge state-service">${esc(POWER_CONTEXTS[state.powerContext].title)}</span>`
-      ];
-      if (moduleDef.labOnly) badges.push('<span class="badge state-service">lab-only</span>');
-
-      document.getElementById("workspace-badges").innerHTML = badges.join("");
-      document.getElementById("workspace-title").textContent = moduleDef.title;
-      document.getElementById("workspace-summary").textContent = moduleDef.summary;
-      updateOpenDirect(currentRuntime);
-
-      const surface = document.getElementById("workspace-surface");
-      const nextActionId = (state.readiness || {}).next_action ? `${state.readiness.next_action.id || ""}:${state.readiness.next_action.status || ""}` : "no-next-action";
-      const signature = [
-        moduleDef.id,
-        state.activeCategory,
-        state.powerContext,
-        currentRuntime.owner.scope,
-        currentRuntime.owner.available,
-        currentRuntime.owner.blockReason,
-        currentRuntime.module?.state || "no-module",
-        currentRuntime.url,
-        nextActionId,
-        (state.readiness || {}).overall_status || "no-readiness"
-      ].join("|");
-
-      if (surface.dataset.signature === signature) return;
-      surface.dataset.signature = signature;
-      surface.innerHTML = moduleDef.kind === "overview" ? renderOverviewSurface() : renderModuleSurface(currentRuntime);
-    }
-
-    function renderLog() {
-      const entries = (state.log || {}).entries || [];
-      const target = document.getElementById("platform-log");
-      if (!entries.length) {
-        target.textContent = "No platform log entries yet.";
-        return;
-      }
-      target.textContent = entries.map((entry) => {
-        const origin = entry.origin_node || "unknown";
-        const mirrored = entry.mirrored ? " mirrored" : "";
-        const details = entry.details && Object.keys(entry.details).length ? ` ${JSON.stringify(entry.details)}` : "";
-        return `[${entry.timestamp_ms} ms] ${origin}${mirrored} ${entry.source} ${String(entry.level || "").toUpperCase()} ${entry.type}: ${entry.message}${details}`;
-      }).join("\n");
-    }
-
-    function fallbackReadiness() {
-      const snapshot = state.snapshot || {};
-      const current = ((snapshot.nodes || {}).current) || {};
-      const peer = ((snapshot.nodes || {}).peer) || {};
-      const count = connectedBoardCount(current, peer);
-      const overall = count === 2 ? "ready" : "attention";
+    function laboratoryMetadata() {
+      const session = state.session || {};
+      const context = session.context || {};
+      const active = session.active_session || {};
       return {
-        overall_status: overall,
-        summary: count === 2 ? "Both boards are visible, so coordinated laboratory bring-up can start." : "Direct shell is working in single-board mode. Peer-owned slices stay blocked until the second board appears.",
-        next_action: {
-          id: "power_context_first",
-          title: "Confirm power context and choose the next local slice",
-          status: overall,
-          action: state.powerContext === "battery" ? "Battery mode is selected. Bench PSU dependent slices stay blocked until the operator switches back to Bench PSU." : "Bench PSU mode is selected. Continue with the next available local slice and collect notes."
-        },
-        preflight: [
-          { id: "local_shell_ready", title: "Coordinator shell is reachable", status: "ready", summary: "Current laboratory page is available on this shell.", action: "Use the current board for the first isolated test step." },
-          { id: "power_context_visible", title: "Power context is explicit", status: "ready", summary: POWER_CONTEXTS[state.powerContext].summary, action: state.powerContext === "battery" ? "Keep battery context visible and avoid PSU-dependent calibration slices." : "Keep bench PSU context visible before opening voltage-sensitive slices." },
-          { id: "peer_owner_link", title: "Peer owner link is ready for peer-owned tests", status: count === 2 ? "ready" : "attention", summary: count === 2 ? "Peer owner is visible from this shell." : "Peer board is still offline or not connected to this shell.", action: count === 2 ? "Peer-owned laboratory slices can be opened when needed." : "Continue with local-only checks and keep blocked peer slices visible." }
-        ],
-        bringup_sequence: [
-          { id: "home_shell_smoke", title: "Home -> Laboratory Path", owner_scope: "shared", route: "/", status: "ready", summary: "Verify the phone can reach Home, see board statuses, and enter Laboratory.", action: "Start each session by checking the top bar, then confirm power context before module work." },
-          { id: "local_owner_slice", title: `Local Owner Slice / ${nodeLabel(current)}`, owner_scope: String(current.node_type || "local"), route: "/service", status: "ready", summary: "Use the currently connected board for the first isolated hardware pass.", action: "Collect interface pain points, control density notes, and expected-result gaps while staying local first." },
-          { id: "peer_owner_slice", title: `Peer Owner Slice / ${nodeLabel(peer)}`, owner_scope: String(peer.node_type || "peer"), route: "/service", status: count === 2 ? "ready" : "blocked", summary: count === 2 ? "The peer board is available for owner-aware handoff." : "This slice should stay visibly blocked until the peer board appears.", action: count === 2 ? "Open the peer-owned slice after local smoke checks." : "Do not fake peer control; keep the blocked state visible in the UI." }
-        ]
+        lab_session_id: active.session_id || "",
+        lab_session_status: session.status || "idle",
+        lab_operator: active.operator || state.draft.operator,
+        lab_objective: active.objective || state.draft.objective,
+        lab_hardware_profile: active.hardware_profile || state.draft.hardware,
+        lab_external_module: active.external_module || state.draft.external,
+        lab_power_context: context.power_context || state.draft.power,
+        lab_view_mode: context.view_mode || state.draft.view,
+        lab_active_tool: state.activeTool,
+        lab_context_module: activeSlice().moduleId || state.activeTool,
+        lab_owner_node_id: context.owner_node_id || "",
+        lab_owner_node_type: context.owner_node_type || ""
       };
     }
 
-    async function loadReadiness() {
-      try {
-        const response = await fetch("/api/v1/laboratory/readiness");
-        if (!response.ok) throw new Error(`status ${response.status}`);
-        return await response.json();
-      } catch (_error) {
-        return fallbackReadiness();
-      }
+    function queryFromObject(payload) {
+      return Object.entries(payload)
+        .filter(([, value]) => value !== undefined && value !== null && String(value).trim() !== "")
+        .map(([key, value]) => `${qs(key)}=${qs(value)}`)
+        .join("&");
     }
 
-    function syncFullscreenState() {
-      state.fullscreen = Boolean(document.fullscreenElement);
-      document.body.classList.toggle("fullscreen-app", state.fullscreen);
-      renderSummary();
-    }
-
-    async function toggleFullscreen() {
-      const root = document.documentElement;
-      if (!document.fullscreenElement && root.requestFullscreen) {
-        await root.requestFullscreen();
-        return;
-      }
-      if (document.fullscreenElement && document.exitFullscreen) {
-        await document.exitFullscreen();
+    async function syncContext() {
+      const payload = {
+        power_context: state.draft.power,
+        view_mode: state.draft.view,
+        active_tool: state.activeTool,
+        module_id: activeSlice().moduleId || state.activeTool
+      };
+      state.session = await post(`/api/v1/laboratory/session/context?${queryFromObject(payload)}`);
+      if (state.session.session) {
+        state.session = state.session.session;
       }
     }
 
     async function refresh() {
-      const [snapshotResponse, logResponse] = await Promise.all([
-        fetch("/api/v1/shell/snapshot"),
-        fetch("/api/v1/logs?limit=24")
+      collectDraft();
+      const results = await Promise.allSettled([
+        fetchJson("/api/v1/shell/snapshot"),
+        fetchJson("/api/v1/laboratory/readiness"),
+        fetchJson("/api/v1/laboratory/session"),
+        fetchJson("/api/v1/turret/status"),
+        fetchJson("/api/v1/turret/scenarios"),
+        fetchJson("/api/v1/reports?limit=8")
       ]);
-      state.snapshot = await snapshotResponse.json();
-      state.modules = state.snapshot.module_cards || [];
-      state.log = await logResponse.json();
-      state.readiness = await loadReadiness();
-      await loadLaboratorySessionBackend();
-      renderPowerContext();
-      renderDeviceRibbon();
-      renderSummary();
-      renderSessionShell();
-      renderCategoryRail();
-      renderModuleRail();
-      renderWorkspace();
-      renderLog();
-      syncContextToBackend().catch(() => {});
+      const keys = ["snapshot", "readiness", "session", "turret", "scenarios", "reports"];
+      results.forEach((result, index) => {
+        if (result.status === "fulfilled") {
+          state[keys[index]] = result.value;
+        }
+      });
+      render();
     }
 
-    document.getElementById("fullscreen-btn").addEventListener("click", () => {
-      toggleFullscreen().catch(() => {});
-    });
+    function render() {
+      renderTopStatus();
+      renderRails();
+      renderMainPanel();
+      renderSessionPanel();
+      renderReadinessPanel();
+      renderEvidencePanel();
+      bindDynamicControls();
+    }
 
-    document.addEventListener("fullscreenchange", () => {
-      state.workspaceSignature = "";
-      syncFullscreenState();
-      renderWorkspace();
-      syncLocalSessionContext();
-      renderSessionShell();
-      syncContextToBackend().catch(() => {});
-    });
+    function renderTopStatus() {
+      const current = state.snapshot?.nodes?.current || {};
+      const peer = state.snapshot?.nodes?.peer || {};
+      const readiness = state.readiness || {};
+      const session = state.session || {};
+      const mode = state.turret?.runtime?.active_mode || state.snapshot?.current_shell?.active_mode || "unknown";
+      document.getElementById("top-status").innerHTML = `
+        <span class="status-chip ${statusClass(readiness.overall_status || "idle")}"><strong>Ready</strong> ${esc(statusLabel(readiness.overall_status || "idle"))}</span>
+        <span class="status-chip ${statusClass(current.health || "offline")}"><strong>Current</strong> ${esc(current.title || "Current host")}</span>
+        <span class="status-chip ${statusClass(peer.health || "offline")}"><strong>Peer</strong> ${esc(peer.title || "Peer")} · ${esc(statusLabel(peer.health || "offline"))}</span>
+        <span class="status-chip ${statusClass(mode === "service_test" ? "service" : "online")}"><strong>Mode</strong> ${esc(modeLabel(mode))}</span>
+        <span class="status-chip ${statusClass(session.status || "idle")}"><strong>Session</strong> ${esc(statusLabel(session.status || "idle"))}</span>
+      `;
+    }
 
-    initSelection();
-    syncFullscreenState();
-    bindSessionControls();
-    fillSessionInputs(true);
-    syncEvidenceCaseId(true);
-    syncLocalSessionContext();
-    renderSessionShell();
-    refresh().catch((error) => {
-      document.getElementById("workspace-surface").innerHTML = `
-        <div class="notice">
-          <strong>Laboratory load error</strong><br>
-          ${esc(String(error))}
+    function renderRails() {
+      document.getElementById("slice-count").textContent = String(SLICES.length);
+      document.getElementById("active-category-chip").textContent =
+        CATEGORIES.find((item) => item.id === state.activeCategory)?.title || "Category";
+      document.getElementById("category-rail").innerHTML = CATEGORIES.map((category) => `
+        <button type="button" class="nav-button ${category.id === state.activeCategory ? "active" : ""}" data-category="${esc(category.id)}">
+          <strong>${esc(category.title)}</strong>
+          <div class="meta">${esc(category.summary)}</div>
+        </button>
+      `).join("");
+
+      document.getElementById("slice-rail").innerHTML = slicesForCategory(state.activeCategory).map((slice) => {
+        const status = sliceStatus(slice);
+        return `
+          <button type="button" class="slice-button ${slice.id === state.activeTool ? "active" : ""}" data-tool="${esc(slice.id)}">
+            <div class="row" style="justify-content:space-between;">
+              <strong>${esc(slice.title)}</strong>
+              <span class="dot ${esc(status)}"></span>
+            </div>
+            <div class="meta">${esc(ownerLabel(slice.owner))} · ${esc(statusLabel(status))}</div>
+          </button>
+        `;
+      }).join("");
+    }
+
+    function sliceStatus(slice) {
+      if (slice.kind === "turret-subsystem") {
+        const subsystem = findSubsystem(slice.subsystemId);
+        return subsystem?.state || slice.status || "offline";
+      }
+      if (slice.kind === "peer") {
+        const peer = state.snapshot?.nodes?.peer || {};
+        return peer.reachable && peer.sync_ready ? "ready" : "blocked";
+      }
+      if (slice.kind === "display") {
+        return state.snapshot ? "ready" : "attention";
+      }
+      if (slice.kind === "overview" || slice.kind === "bringup" || slice.kind === "evidence" || slice.kind === "turret-service") {
+        return state.readiness?.overall_status || slice.status || "ready";
+      }
+      return slice.status || "planned";
+    }
+
+    function renderMainPanel() {
+      const slice = activeSlice();
+      if (slice.kind === "overview") {
+        renderOverview(slice);
+      } else if (slice.kind === "bringup") {
+        renderBringup(slice);
+      } else if (slice.kind === "turret-service") {
+        renderTurretService(slice);
+      } else if (slice.kind === "turret-subsystem") {
+        renderTurretSlice(slice);
+      } else if (slice.kind === "display") {
+        renderDisplaySlice(slice);
+      } else if (slice.kind === "peer") {
+        renderPeerSlice(slice);
+      } else if (slice.kind === "experimental" || slice.kind === "planned") {
+        renderExperimentalSlice(slice);
+      } else if (slice.kind === "evidence") {
+        renderEvidenceWorkspace(slice);
+      }
+    }
+
+    function workspaceHeader(slice, subtitle = "") {
+      const status = sliceStatus(slice);
+      return `
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">${esc(ownerLabel(slice.owner))}</div>
+            <h2>${esc(slice.title)}</h2>
+            ${subtitle ? `<p class="muted">${esc(subtitle)}</p>` : ""}
+          </div>
+          <div class="chip-row">
+            <span class="status-chip ${statusClass(status)}"><strong>Status</strong> ${esc(statusLabel(status))}</span>
+            <span class="chip"><strong>Module</strong> ${esc(slice.moduleId || slice.id)}</span>
+            <span class="chip"><strong>Power</strong> ${esc(state.draft.power)}</span>
+          </div>
         </div>
       `;
+    }
+
+    function renderOverview(slice) {
+      const readiness = state.readiness || {};
+      const next = readiness.next_action || {};
+      const current = state.snapshot?.nodes?.current || {};
+      const peer = state.snapshot?.nodes?.peer || {};
+      document.getElementById("main-panel").innerHTML = `
+        <div class="workspace">
+          ${workspaceHeader(slice, "Начинаем с честной готовности: что можно тестировать сейчас, а что ждёт owner/peer board.")}
+          <div class="grid-3">
+            <article class="tile tile-hero">
+              <div class="eyebrow">Next action</div>
+              <h3>${esc(next.title || "Loading")}</h3>
+              <p class="muted">${esc(next.action || readiness.summary || "Readiness summary is loading.")}</p>
+              <span class="status-chip ${statusClass(next.status || readiness.overall_status || "idle")}">${esc(statusLabel(next.status || readiness.overall_status || "idle"))}</span>
+            </article>
+            <article class="tile">
+              <div class="eyebrow">Current owner</div>
+              <h3>${esc(current.title || "Current host")}</h3>
+              <p class="muted">${esc(current.summary || "Current shell state is loading.")}</p>
+              <span class="status-chip ${statusClass(current.health || "offline")}">${esc(statusLabel(current.health || "offline"))}</span>
+            </article>
+            <article class="tile">
+              <div class="eyebrow">Peer owner</div>
+              <h3>${esc(peer.title || "Peer")}</h3>
+              <p class="muted">${esc(peer.summary || "Peer state is loading.")}</p>
+              <span class="status-chip ${statusClass(peer.health || "offline")}">${esc(statusLabel(peer.health || "offline"))}</span>
+            </article>
+          </div>
+          <div class="grid-2">
+            <article class="tile">
+              <h3>Preflight</h3>
+              <div class="scenario-steps">${renderStepLines(readiness.preflight || [])}</div>
+            </article>
+            <article class="tile">
+              <h3>Runtime overview</h3>
+              ${renderRuntimeSummary()}
+            </article>
+          </div>
+          <div class="terminal">${esc(JSON.stringify({ readiness, session: state.session, turret: state.turret?.runtime }, null, 2))}</div>
+        </div>
+      `;
+    }
+
+    function renderBringup(slice) {
+      const readiness = state.readiness || {};
+      document.getElementById("main-panel").innerHTML = `
+        <div class="workspace">
+          ${workspaceHeader(slice, "Последовательность проверок фиксирует порядок, чтобы мы не прыгали между железом случайно.")}
+          <div class="grid-auto">
+            ${(readiness.bringup_sequence || []).map((step, index) => `
+              <article class="tile">
+                <div class="row" style="justify-content:space-between;">
+                  <span class="chip"><strong>${index + 1}</strong></span>
+                  <span class="status-chip ${statusClass(step.status)}">${esc(statusLabel(step.status))}</span>
+                </div>
+                <h3>${esc(step.title)}</h3>
+                <p class="muted">${esc(step.summary)}</p>
+                <p class="meta">${esc(step.action)}</p>
+                <button type="button" class="action-button ghost" data-route="${esc(step.route || "/service")}">Open route</button>
+              </article>
+            `).join("")}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderTurretSlice(slice) {
+      const subsystem = findSubsystem(slice.subsystemId) || {};
+      const runtime = state.turret?.runtime || {};
+      const product = runtime.product_view || {};
+      document.getElementById("main-panel").innerHTML = `
+        <div class="workspace">
+          ${workspaceHeader(slice, subsystem.summary || "Owner-side turret runtime controls with honest interlocks.")}
+          <div class="grid-3">
+            <article class="tile">
+              <h3>Runtime mode</h3>
+              <div class="segmented three">
+                ${modeButton("manual", runtime.active_mode)}
+                ${modeButton("service_test", runtime.active_mode)}
+                ${modeButton("automatic", runtime.active_mode)}
+              </div>
+              <div class="action-row">
+                <button type="button" class="action-button danger" data-interlock="emergency">Emergency</button>
+                <button type="button" class="action-button warn" data-interlock="fault">Fault</button>
+                <button type="button" class="action-button ghost" data-interlock="clear">Clear</button>
+              </div>
+            </article>
+            <article class="tile">
+              <h3>${esc(subsystem.title || slice.title)}</h3>
+              ${renderKv({
+                State: statusLabel(subsystem.state || "offline"),
+                Enabled: subsystem.enabled ? "yes" : "no",
+                "Block reason": subsystem.block_reason || "none",
+                Profile: subsystem.profile_label || subsystem.profile || "runtime"
+              })}
+              <div class="action-row">
+                <button type="button" class="action-button primary" data-subsystem="${esc(slice.subsystemId)}" data-enabled="${subsystem.enabled ? "0" : "1"}">
+                  ${subsystem.enabled ? "Disable" : "Enable"}
+                </button>
+              </div>
+            </article>
+            <article class="tile">
+              <h3>Policy gates</h3>
+              <div class="action-row">
+                ${flagButton("automation_ready", runtime.automation_ready)}
+                ${flagButton("target_locked", runtime.target_locked)}
+                ${flagButton("vision_tracking", runtime.vision_tracking)}
+              </div>
+              <p class="meta">API может отклонить действие, если interlock, sensing или automatic gate не готовы. Это нормальная честная блокировка.</p>
+            </article>
+          </div>
+          <div class="grid-2">
+            <article class="tile">
+              <h3>Service scenarios</h3>
+              <div class="grid-auto">
+                ${(state.scenarios?.scenarios || []).map((scenario) => `
+                  <article class="tile compact">
+                    <div class="eyebrow">${esc(scenario.category)}</div>
+                    <strong>${esc(scenario.title)}</strong>
+                    <p class="meta">${esc(scenario.description)}</p>
+                    <button type="button" class="action-button ghost" data-scenario="${esc(scenario.id)}">Run</button>
+                  </article>
+                `).join("")}
+              </div>
+            </article>
+            <article class="tile">
+              <h3>Product view</h3>
+              ${renderKv({
+                Overview: product.overview?.summary || "no product view yet",
+                "Manual console": product.manual_console?.summary || "n/a",
+                Automatic: product.automatic_defense?.summary || "n/a",
+                "Service lane": product.service_lane?.summary || "n/a"
+              })}
+            </article>
+          </div>
+          <div class="terminal">${esc(JSON.stringify(state.lastPayload || state.turret?.runtime || {}, null, 2))}</div>
+        </div>
+      `;
+    }
+
+    function renderTurretService(slice) {
+      const runtime = state.turret?.runtime || {};
+      const interlocks = runtime.interlocks || {};
+      const subsystems = runtime.subsystems || [];
+      document.getElementById("main-panel").innerHTML = `
+        <div class="workspace">
+          ${workspaceHeader(slice, "Единая сервисная полоса турели: режим, interlock, флаги, сценарии и подсистемы без ухода на старую service page.")}
+          <div class="grid-3">
+            <article class="tile tile-hero">
+              <h3>Mode and interlock</h3>
+              <div class="segmented three">
+                ${modeButton("manual", runtime.active_mode)}
+                ${modeButton("service_test", runtime.active_mode)}
+                ${modeButton("automatic", runtime.active_mode)}
+              </div>
+              <div class="action-row">
+                <button type="button" class="action-button danger" data-interlock="emergency">Emergency</button>
+                <button type="button" class="action-button warn" data-interlock="fault">Fault</button>
+                <button type="button" class="action-button ghost" data-interlock="clear">Clear</button>
+              </div>
+              ${renderKv({
+                Mode: modeLabel(runtime.active_mode),
+                Emergency: interlocks.emergency_latched ? "latched" : "clear",
+                Fault: interlocks.fault_latched ? interlocks.fault_reason || "latched" : "clear"
+              })}
+            </article>
+            <article class="tile">
+              <h3>Automation gates</h3>
+              <div class="action-row">
+                ${flagButton("automation_ready", runtime.automation_ready)}
+                ${flagButton("target_locked", runtime.target_locked)}
+                ${flagButton("vision_tracking", runtime.vision_tracking)}
+              </div>
+              <p class="meta">Флаги не являются Settings. Это laboratory/runtime switches для проверки gating-логики.</p>
+            </article>
+            <article class="tile">
+              <h3>Quick evidence</h3>
+              <p class="muted">Сохраняет текущий service lane в Gallery > Reports с лабораторным контекстом.</p>
+              <div class="action-row">
+                <button type="button" class="action-button primary" data-evidence-result="pass" data-case-default="turret-service-lane">Pass</button>
+                <button type="button" class="action-button warn" data-evidence-result="warn" data-case-default="turret-service-lane">Warn</button>
+                <button type="button" class="action-button danger" data-evidence-result="fail" data-case-default="turret-service-lane">Fail</button>
+              </div>
+            </article>
+          </div>
+          <div class="grid-auto">
+            ${subsystems.map((subsystem) => `
+              <article class="tile compact">
+                <div class="row" style="justify-content:space-between;">
+                  <strong>${esc(subsystem.title || subsystem.id)}</strong>
+                  <span class="status-chip ${statusClass(subsystem.state)}">${esc(statusLabel(subsystem.state))}</span>
+                </div>
+                <p class="meta">${esc(subsystem.note || subsystem.block_reason || "runtime subsystem")}</p>
+                <div class="action-row">
+                  <button type="button" class="action-button ${subsystem.enabled ? "primary" : "ghost"}" data-subsystem="${esc(subsystem.id)}" data-enabled="${subsystem.enabled ? "0" : "1"}">
+                    ${subsystem.enabled ? "Disable" : "Enable"}
+                  </button>
+                </div>
+              </article>
+            `).join("")}
+          </div>
+          <div class="grid-2">
+            <article class="tile">
+              <h3>Service scenarios</h3>
+              <div class="grid-auto">
+                ${(state.scenarios?.scenarios || []).map((scenario) => `
+                  <article class="tile compact">
+                    <div class="eyebrow">${esc(scenario.category)}</div>
+                    <strong>${esc(scenario.title)}</strong>
+                    <p class="meta">${esc(scenario.description)}</p>
+                    <button type="button" class="action-button ghost" data-scenario="${esc(scenario.id)}">Run</button>
+                  </article>
+                `).join("")}
+              </div>
+            </article>
+            <article class="tile">
+              <h3>Runtime JSON</h3>
+              <div class="terminal">${esc(JSON.stringify(state.lastPayload || runtime, null, 2))}</div>
+            </article>
+          </div>
+        </div>
+      `;
+    }
+
+    function modeButton(value, currentMode) {
+      return `<button type="button" class="action-button segment ${currentMode === value ? "primary" : "ghost"}" data-mode="${esc(value)}">${esc(modeLabel(value))}</button>`;
+    }
+
+    function flagButton(name, enabled) {
+      const title = {
+        automation_ready: "Automation",
+        target_locked: "Target",
+        vision_tracking: "Tracking"
+      }[name] || name;
+      return `<button type="button" class="action-button ${enabled ? "primary" : "ghost"}" data-flag="${esc(name)}" data-value="${enabled ? "0" : "1"}">${esc(title)} ${enabled ? "On" : "Off"}</button>`;
+    }
+
+    function renderDisplaySlice(slice) {
+      document.getElementById("main-panel").innerHTML = `
+        <div class="workspace">
+          ${workspaceHeader(slice, "Owner-side display qualification: color patterns, fullscreen check, and 12-zone touch pass.")}
+          <div class="grid-2">
+            <article class="tile">
+              <div class="section-head">
+                <h3>Pattern bench</h3>
+                <button type="button" class="action-button ghost" id="display-fullscreen">Fullscreen pattern</button>
+              </div>
+              <div class="pattern-stage" id="pattern-stage" data-pattern="${esc(state.pattern)}">
+                <span class="pattern-label">${esc(PATTERNS.find(([id]) => id === state.pattern)?.[1] || state.pattern)}</span>
+              </div>
+              <div class="action-row">
+                ${PATTERNS.map(([id, label]) => `
+                  <button type="button" class="action-button ${state.pattern === id ? "primary" : "ghost"}" data-pattern="${esc(id)}">${esc(label)}</button>
+                `).join("")}
+              </div>
+            </article>
+            <article class="tile">
+              <h3>Touch grid</h3>
+              <p class="muted">Нажимай зоны по физическому экрану. Для evidence достаточно сохранить pass/warn/fail с заметкой.</p>
+              <div class="touch-grid">
+                ${Array.from({ length: 12 }, (_, index) => `
+                  <button type="button" class="touch-cell ${state.touchCells.has(index) ? "active" : ""}" data-touch="${index}">${index + 1}</button>
+                `).join("")}
+              </div>
+              <div class="action-row">
+                <button type="button" class="action-button ghost" id="touch-reset">Reset touch</button>
+                <button type="button" class="action-button primary" data-evidence-result="pass" data-case-default="display-touch-grid">Record pass</button>
+                <button type="button" class="action-button warn" data-evidence-result="warn" data-case-default="display-touch-grid">Record warn</button>
+              </div>
+              ${renderKv({
+                Pattern: PATTERNS.find(([id]) => id === state.pattern)?.[1] || state.pattern,
+                "Touched zones": `${state.touchCells.size} / 12`,
+                Owner: "Raspberry Pi display path"
+              })}
+            </article>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderPeerSlice(slice) {
+      const peer = state.snapshot?.nodes?.peer || {};
+      const available = peer.reachable && peer.sync_ready;
+      document.getElementById("main-panel").innerHTML = `
+        <div class="workspace">
+          ${workspaceHeader(slice, "Peer-owned slice stays visible, but local shell does not fake ownership.")}
+          <div class="grid-2">
+            <article class="tile tile-hero">
+              <h3>${available ? "Peer owner is available" : "Waiting for peer owner"}</h3>
+              <p class="muted">${esc(peer.summary || "ESP32 owner state is not available yet.")}</p>
+              <span class="status-chip ${statusClass(available ? "ready" : "blocked")}">${esc(available ? "Ready for handoff" : "Blocked")}</span>
+              <div class="action-row">
+                <button type="button" class="action-button ${available ? "primary" : "ghost"}" data-route="${esc(slice.route || `/federated/handoff?module_id=${slice.moduleId}`)}">
+                  Open owner handoff
+                </button>
+              </div>
+            </article>
+            <article class="tile">
+              <h3>Why this is blocked</h3>
+              <p class="muted">Water/irrigation branches live on the peer owner. Laboratory can describe the slice, record notes, and keep the route ready, but commands must go through owner-aware handoff.</p>
+              ${renderKv({
+                Owner: ownerLabel(slice.owner),
+                Reachable: peer.reachable ? "yes" : "no",
+                "Sync ready": peer.sync_ready ? "yes" : "no",
+                Route: slice.route || "not assigned"
+              })}
+            </article>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderExperimentalSlice(slice) {
+      const benchSensitive = ["hc_sr04", "stepper", "custom_module"].includes(slice.id);
+      document.getElementById("main-panel").innerHTML = `
+        <div class="workspace">
+          ${workspaceHeader(slice, "Laboratory-local skeleton: видимая зона будущего теста без притворства, что product feature уже готова.")}
+          <div class="grid-2">
+            <article class="tile tile-hero">
+              <div class="eyebrow">Planned skeleton</div>
+              <h3>${esc(slice.title)}</h3>
+              <p class="muted">${experimentalHint(slice.id)}</p>
+              <span class="status-chip ${statusClass(slice.status || "planned")}">${esc(statusLabel(slice.status || "planned"))}</span>
+            </article>
+            <article class="tile">
+              <h3>Engineering fields</h3>
+              ${renderKv({
+                "Power context": state.draft.power,
+                "Bench-sensitive": benchSensitive ? "yes" : "no",
+                "Owner": ownerLabel(slice.owner),
+                "Promotion path": "explicit review/apply to Settings later"
+              })}
+              <p class="meta">Если это battery-context, PSU-dependent calibration должна оставаться advisory или blocked, а не silently applied.</p>
+            </article>
+          </div>
+          <div class="tile">
+            <h3>Future control skeleton</h3>
+            <div class="field-grid">
+              <label>Profile name<input class="field" value="${esc(slice.title)}" disabled></label>
+              <label>Expected range<input class="field" value="${slice.id === "motion_sensor" ? "up to 20 m wake testing" : "TBD"}" disabled></label>
+              <label>Pinout<input class="field" value="TBD" disabled></label>
+              <label>Power rail<input class="field" value="${benchSensitive ? "Bench PSU preferred" : "TBD"}" disabled></label>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function experimentalHint(sliceId) {
+      const hints = {
+        hc_sr04: "HC-SR04-class range lives under Lidar as a laboratory-only profile, not as replacement for TFmini Plus.",
+        stepper: "Stepper drives are isolated lab experiments and must not redefine turret pan/tilt baseline.",
+        motion_sensor: "Motion wake should support future animal feeder and turret wake scenarios without using illogical light-sensor assumptions.",
+        custom_module: "Intake area for future modules/components before they are promoted into platform registry.",
+        voice: "Speaker/voice path belongs to audio qualification before it becomes a product policy."
+      };
+      return hints[sliceId] || "This slice is visible so future hardware can be added without breaking the tab model.";
+    }
+
+    function renderEvidenceWorkspace(slice) {
+      document.getElementById("main-panel").innerHTML = `
+        <div class="workspace">
+          ${workspaceHeader(slice, "Evidence is the bridge between Laboratory actions and Gallery > Reports.")}
+          <div class="grid-2">
+            <article class="tile">
+              <h3>Record result</h3>
+              ${renderEvidenceForm(true)}
+            </article>
+            <article class="tile">
+              <h3>Recent reports</h3>
+              ${renderReports()}
+              <div class="action-row">
+                <button type="button" class="action-button ghost" data-route="/gallery?tab=reports">Open Gallery Reports</button>
+              </div>
+            </article>
+          </div>
+          <div class="terminal">${esc(JSON.stringify(state.reports || {}, null, 2))}</div>
+        </div>
+      `;
+    }
+
+    function renderRuntimeSummary() {
+      const runtime = state.turret?.runtime || {};
+      const interlocks = runtime.interlocks || {};
+      return renderKv({
+        Mode: modeLabel(runtime.active_mode),
+        Emergency: interlocks.emergency_latched ? "latched" : "clear",
+        Fault: interlocks.fault_latched ? interlocks.fault_reason || "latched" : "clear",
+        "Active subsystems": (runtime.summary?.active_subsystems || []).join(", ") || "none",
+        Camera: runtime.summary?.camera_available ? "available" : "unavailable",
+        Range: runtime.summary?.range_available ? "available" : "unavailable"
+      });
+    }
+
+    function renderKv(rows) {
+      return `<div class="kv">${Object.entries(rows).map(([key, value]) => `
+        <div class="kv-row">
+          <div class="kv-key">${esc(key)}</div>
+          <div class="kv-value">${esc(value)}</div>
+        </div>
+      `).join("")}</div>`;
+    }
+
+    function renderStepLines(items) {
+      if (!items.length) return `<p class="meta">Loading...</p>`;
+      return items.map((item) => `
+        <div class="step-line">
+          <span class="dot ${esc(item.status || "offline")}"></span>
+          <div>
+            <strong>${esc(item.title)}</strong>
+            <div class="meta">${esc(item.summary || item.action || "")}</div>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function findSubsystem(id) {
+      return (state.turret?.runtime?.subsystems || []).find((item) => item.id === id);
+    }
+
+    function renderSessionPanel() {
+      const session = state.session || {};
+      const active = session.active_session || {};
+      const context = session.context || {};
+      if (!state.draftTouched && active.session_id) {
+        state.draft.operator = active.operator || state.draft.operator;
+        state.draft.objective = active.objective || state.draft.objective;
+        state.draft.hardware = active.hardware_profile || state.draft.hardware;
+        state.draft.external = active.external_module || state.draft.external;
+      }
+      state.draft.power = context.power_context || state.draft.power;
+      state.draft.view = context.view_mode || state.draft.view;
+      document.getElementById("session-panel").innerHTML = `
+        <div class="section-head">
+          <h3>Session Backbone</h3>
+          <span class="status-chip ${statusClass(session.status || "idle")}">${esc(statusLabel(session.status || "idle"))}</span>
+        </div>
+        <div class="field-grid">
+          <label>Operator<input id="lab-operator" class="field" value="${esc(state.draft.operator)}"></label>
+          <label>Hardware profile<input id="lab-hardware" class="field" value="${esc(state.draft.hardware)}"></label>
+        </div>
+        <label>Objective<input id="lab-objective" class="field" value="${esc(state.draft.objective)}"></label>
+        <label>External module<input id="lab-external" class="field" value="${esc(state.draft.external)}" placeholder="optional"></label>
+        <div class="segmented">
+          <button type="button" class="action-button segment ${state.draft.power === "bench_psu" ? "primary" : "ghost"}" data-power="bench_psu">Bench PSU</button>
+          <button type="button" class="action-button segment ${state.draft.power === "battery" ? "primary" : "ghost"}" data-power="battery">Battery</button>
+        </div>
+        <div class="segmented">
+          <button type="button" class="action-button segment ${state.draft.view === "browser" ? "primary" : "ghost"}" data-view="browser">Browser</button>
+          <button type="button" class="action-button segment ${state.draft.view === "fullscreen" ? "primary" : "ghost"}" data-view="fullscreen">Fullscreen</button>
+        </div>
+        <div class="action-row">
+          <button type="button" class="action-button primary" id="session-start" ${session.status === "active" ? "disabled" : ""}>Start</button>
+          <button type="button" class="action-button ghost" id="session-update" ${session.status !== "active" ? "disabled" : ""}>Update</button>
+          <button type="button" class="action-button warn" id="session-finish" ${session.status !== "active" ? "disabled" : ""}>Finish</button>
+        </div>
+        <p class="footer-note">${esc(active.session_id ? `Active: ${active.session_id}` : "No active session yet. Draft context is still kept locally.")}</p>
+      `;
+    }
+
+    function renderReadinessPanel() {
+      const readiness = state.readiness || {};
+      const next = readiness.next_action || {};
+      document.getElementById("readiness-panel").innerHTML = `
+        <div class="section-head">
+          <h3>Readiness</h3>
+          <span class="status-chip ${statusClass(readiness.overall_status || "idle")}">${esc(statusLabel(readiness.overall_status || "idle"))}</span>
+        </div>
+        <p class="muted">${esc(readiness.summary || "Readiness is loading.")}</p>
+        <div class="tile compact">
+          <div class="eyebrow">Next</div>
+          <strong>${esc(next.title || "Loading")}</strong>
+          <p class="meta">${esc(next.action || "")}</p>
+        </div>
+        <div class="scenario-steps">${renderStepLines((readiness.preflight || []).slice(0, 5))}</div>
+      `;
+    }
+
+    function renderEvidencePanel() {
+      document.getElementById("evidence-panel").innerHTML = `
+        <div class="section-head">
+          <h3>Evidence</h3>
+          <span class="chip">${esc(activeSlice().title)}</span>
+        </div>
+        ${renderEvidenceForm(false)}
+        <h3>Recent</h3>
+        ${renderReports()}
+      `;
+    }
+
+    function renderEvidenceForm(full) {
+      return `
+        <label>Case id<input id="evidence-case" class="field" value="${esc(state.draft.caseId || defaultCaseId())}"></label>
+        <label>Note<textarea id="evidence-note" class="field" placeholder="Что проверили, что увидели, что поправить дальше">${esc(state.draft.note)}</textarea></label>
+        <div class="action-row">
+          <button type="button" class="action-button primary" data-evidence-result="pass">Pass</button>
+          <button type="button" class="action-button warn" data-evidence-result="warn">Warn</button>
+          <button type="button" class="action-button danger" data-evidence-result="fail">Fail</button>
+          <button type="button" class="action-button ghost" id="${full ? "record-note-main" : "record-note-side"}">Note</button>
+        </div>
+        <p class="footer-note">${esc(state.lastMessage)}</p>
+      `;
+    }
+
+    function renderReports() {
+      const entries = state.reports?.entries || [];
+      if (!entries.length) {
+        return `<p class="meta">No reports loaded yet.</p>`;
+      }
+      return `<div class="recent-list">${entries.slice(0, 6).map((entry) => `
+        <article class="report-line">
+          <div class="row" style="justify-content:space-between;">
+            <strong>${esc(entry.title || entry.type || entry.event_type || "report")}</strong>
+            <span class="status-chip ${statusClass(entry.severity === "error" ? "fault" : entry.severity === "warning" ? "attention" : "ready")}">${esc(entry.severity || "info")}</span>
+          </div>
+          <p class="meta">${esc(entry.message || entry.note || "")}</p>
+        </article>
+      `).join("")}</div>`;
+    }
+
+    function defaultCaseId() {
+      const slice = activeSlice();
+      if (slice.kind === "display") return "display-pattern-touch";
+      if (slice.kind === "turret-subsystem") return `turret-${slice.subsystemId}-lab`;
+      return `${slice.id}-lab`;
+    }
+
+    function bindDynamicControls() {
+      document.querySelectorAll("[data-category]").forEach((button) => {
+        button.addEventListener("click", () => setActiveCategory(button.dataset.category));
+      });
+      document.querySelectorAll("[data-tool]").forEach((button) => {
+        button.addEventListener("click", () => setActiveTool(button.dataset.tool));
+      });
+      document.querySelectorAll("[data-route]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const route = button.dataset.route || "/service";
+          if (route.startsWith("/service?tool=")) {
+            const url = new URL(route, window.location.origin);
+            setActiveTool(resolveTool(url.searchParams.get("tool") || "overview"));
+          } else {
+            window.location.href = route;
+          }
+        });
+      });
+      document.querySelectorAll("[data-mode]").forEach((button) => {
+        button.addEventListener("click", async () => runCommand(`/api/v1/turret/runtime/mode?value=${qs(button.dataset.mode)}`));
+      });
+      document.querySelectorAll("[data-interlock]").forEach((button) => {
+        button.addEventListener("click", async () => runCommand(`/api/v1/turret/runtime/interlock?value=${qs(button.dataset.interlock)}`));
+      });
+      document.querySelectorAll("[data-subsystem]").forEach((button) => {
+        button.addEventListener("click", async () => runCommand(`/api/v1/turret/runtime/subsystem?id=${qs(button.dataset.subsystem)}&enabled=${qs(button.dataset.enabled === "1")}`));
+      });
+      document.querySelectorAll("[data-flag]").forEach((button) => {
+        button.addEventListener("click", async () => runCommand(`/api/v1/turret/runtime/flag?name=${qs(button.dataset.flag)}&value=${qs(button.dataset.value === "1")}`));
+      });
+      document.querySelectorAll("[data-scenario]").forEach((button) => {
+        button.addEventListener("click", async () => runCommand(`/api/v1/turret/scenarios/run?id=${qs(button.dataset.scenario)}`));
+      });
+      document.querySelectorAll("[data-pattern]").forEach((button) => {
+        button.addEventListener("click", async () => {
+          state.pattern = button.dataset.pattern;
+          state.lastMessage = `Pattern selected: ${state.pattern}`;
+          await recordLabEvent("display_pattern_selected", `Display pattern selected: ${state.pattern}`, "display-pattern");
+          render();
+        });
+      });
+      document.querySelectorAll("[data-touch]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const index = Number(button.dataset.touch);
+          if (state.touchCells.has(index)) state.touchCells.delete(index);
+          else state.touchCells.add(index);
+          state.lastMessage = `Touch zones: ${state.touchCells.size}/12`;
+          render();
+        });
+      });
+      document.querySelectorAll("[data-evidence-result]").forEach((button) => {
+        button.addEventListener("click", async () => {
+          if (button.dataset.caseDefault) {
+            state.draft.caseId = button.dataset.caseDefault;
+          }
+          await recordEvidence(button.dataset.evidenceResult);
+        });
+      });
+      document.querySelectorAll("[data-power]").forEach((button) => {
+        button.addEventListener("click", async () => {
+          collectDraft();
+          state.draft.power = button.dataset.power;
+          saveDraft();
+          await syncContext();
+          render();
+        });
+      });
+      document.querySelectorAll("[data-view]").forEach((button) => {
+        button.addEventListener("click", async () => {
+          collectDraft();
+          state.draft.view = button.dataset.view;
+          saveDraft();
+          await syncContext();
+          render();
+        });
+      });
+      document.querySelectorAll("input, textarea").forEach((field) => {
+        field.addEventListener("input", () => {
+          state.draftTouched = true;
+          collectDraft();
+        });
+      });
+      document.getElementById("session-start")?.addEventListener("click", startSession);
+      document.getElementById("session-update")?.addEventListener("click", updateSession);
+      document.getElementById("session-finish")?.addEventListener("click", finishSession);
+      document.getElementById("touch-reset")?.addEventListener("click", () => {
+        state.touchCells.clear();
+        state.lastMessage = "Touch grid reset.";
+        render();
+      });
+      document.getElementById("display-fullscreen")?.addEventListener("click", () => {
+        document.getElementById("pattern-stage")?.requestFullscreen?.();
+      });
+      document.getElementById("record-note-main")?.addEventListener("click", recordNote);
+      document.getElementById("record-note-side")?.addEventListener("click", recordNote);
+    }
+
+    async function runCommand(url) {
+      state.busy = true;
+      try {
+        const payload = await post(url);
+        state.lastPayload = payload;
+        state.lastMessage = payload.message || payload.command || "Command accepted.";
+      } catch (error) {
+        state.lastMessage = `Command rejected: ${error.message}`;
+      } finally {
+        state.busy = false;
+        await refresh();
+      }
+    }
+
+    async function startSession() {
+      collectDraft();
+      const payload = {
+        operator: state.draft.operator,
+        objective: state.draft.objective,
+        hardware_profile: state.draft.hardware,
+        external_module: state.draft.external,
+        power_context: state.draft.power,
+        view_mode: state.draft.view,
+        active_tool: state.activeTool,
+        module_id: activeSlice().moduleId || state.activeTool
+      };
+      await runCommand(`/api/v1/laboratory/session/start?${queryFromObject(payload)}`);
+    }
+
+    async function updateSession() {
+      collectDraft();
+      const payload = {
+        operator: state.draft.operator,
+        objective: state.draft.objective,
+        hardware_profile: state.draft.hardware,
+        external_module: state.draft.external
+      };
+      await runCommand(`/api/v1/laboratory/session/update?${queryFromObject(payload)}`);
+    }
+
+    async function finishSession() {
+      collectDraft();
+      const summary = state.draft.note || `Finished ${activeSlice().title} pass`;
+      await runCommand(`/api/v1/laboratory/session/finish?summary_note=${qs(summary)}`);
+    }
+
+    async function recordEvidence(result) {
+      collectDraft();
+      const slice = activeSlice();
+      const payload = {
+        case_id: state.draft.caseId || defaultCaseId(),
+        module_id: slice.moduleId || slice.id,
+        result,
+        note: state.draft.note || `${slice.title}: ${result}`,
+        board: ownerLabel(slice.owner),
+        ...laboratoryMetadata()
+      };
+      await runCommand(`/api/v1/reports/testcase?${queryFromObject(payload)}`);
+    }
+
+    async function recordNote() {
+      collectDraft();
+      const slice = activeSlice();
+      const payload = {
+        note: state.draft.note || `${slice.title}: operator note`,
+        module_id: slice.moduleId || slice.id,
+        board: ownerLabel(slice.owner),
+        case_id: state.draft.caseId || defaultCaseId(),
+        ...laboratoryMetadata()
+      };
+      await runCommand(`/api/v1/reports/note?${queryFromObject(payload)}`);
+    }
+
+    async function recordLabEvent(eventType, message, caseId) {
+      const slice = activeSlice();
+      const payload = {
+        module_id: slice.moduleId || slice.id,
+        event_type: eventType,
+        message,
+        case_id: caseId || defaultCaseId(),
+        note: state.draft.note || "",
+        severity: "info",
+        ...laboratoryMetadata()
+      };
+      try {
+        const result = await post(`/api/v1/laboratory/event?${queryFromObject(payload)}`);
+        state.lastPayload = result;
+      } catch (error) {
+        state.lastMessage = `Event was not recorded: ${error.message}`;
+      }
+    }
+
+    function bootstrapToolFromUrl() {
+      const url = new URL(window.location.href);
+      const requested = url.searchParams.get("tool") || url.searchParams.get("focus");
+      const stored = (() => {
+        try { return localStorage.getItem(STORAGE_ACTIVE_TOOL_KEY) || ""; } catch (_error) { return ""; }
+      })();
+      const tool = resolveTool(requested || stored || "overview");
+      setActiveTool(tool, false);
+    }
+
+    bootstrapToolFromUrl();
+    refresh().catch((error) => {
+      state.lastMessage = `Laboratory failed to load: ${error.message}`;
+      render();
     });
-    setInterval(() => refresh().catch(() => {}), 2500);
+    window.setInterval(() => refresh().catch(() => {}), 7000);
   </script>
 </body>
 </html>

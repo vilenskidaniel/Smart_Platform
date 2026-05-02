@@ -5,12 +5,14 @@
   const STORAGE_KEY = "smart-platform.desktop-controls.enabled";
   const SETTINGS_CACHE_KEY = "smart-platform.settings.cache";
   const SETTINGS_LANGUAGE_KEY = "smart-platform.settings.language";
+  const SETTINGS_THEME_KEY = "smart-platform.settings.theme";
+  const SETTINGS_DENSITY_KEY = "smart-platform.settings.density";
   const VIEWER_STORAGE_KEY = "smart-platform.viewer.id";
   const FULLSCREEN_STORAGE_KEY = "smart-platform.fullscreen.enabled";
   const FULLSCREEN_PENDING_KEY = "smart-platform.fullscreen.pending";
   const SETTINGS_ENDPOINT = "/api/v1/settings";
   const DEFAULT_TOOLTIP = "Status details are loading.";
-  const TOOLTIP_HIDE_MS = 2000;
+  const TOOLTIP_HIDE_MS = 6000;
   const TOOLTIP_SHOW_DELAY_MS = 500;
   const TOOLTIP_MOVE_TOLERANCE_PX = 3;
   const REFRESH_MS = 5000;
@@ -34,16 +36,27 @@
   let tooltipHoverTarget = null;
   let tooltipPointerX = 0;
   let tooltipPointerY = 0;
+  let tooltipFocusSuppressedUntil = 0;
   let tooltipHideTimer = 0;
   let globalListenersInstalled = false;
   let barLayoutFrame = 0;
   let viewerSessionId = "";
   let viewerHeartbeatTimer = 0;
   let viewerHeartbeatInFlight = false;
+  let refreshTimer = 0;
+  let clockTimer = 0;
   let fullscreenToggleIntent = null;
   let fullscreenResumeListenersInstalled = false;
   let fullscreenPendingHintPage = "";
-  let barSettings = { language: "", fullscreenEnabled: false, desktopControlsEnabled: desktopControlsEnabled };
+  let barSettings = {
+    language: "",
+    theme: "meadow",
+    density: "comfortable",
+    fullscreenEnabled: false,
+    desktopControlsEnabled: desktopControlsEnabled,
+    preferPeerContinuity: true,
+    pollIntervalSeconds: 30
+  };
 
   function esc(value) {
     return String(value ?? "")
@@ -75,6 +88,26 @@
     return ["en", "ru", "he", "de", "fr", "es", "zh", "ar"].includes(normalized) ? normalized : "";
   }
 
+  function normalizeBarTheme(value) {
+    const normalized = String(value || "").trim().toLowerCase();
+    return ["meadow", "dawn", "studio", "midnight", "sunlit", "night", "minimal", "contrast"].includes(normalized)
+      ? normalized
+      : "";
+  }
+
+  function normalizeBarDensity(value) {
+    const normalized = String(value || "").trim().toLowerCase();
+    return ["comfortable", "compact"].includes(normalized) ? normalized : "";
+  }
+
+  function clampInt(value, fallback, min, max) {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) {
+      return fallback;
+    }
+    return Math.min(max, Math.max(min, Math.round(parsed)));
+  }
+
   function readCachedSettings() {
     const raw = readStorage(SETTINGS_CACHE_KEY);
     if (!raw) {
@@ -101,22 +134,80 @@
   function normalizeBarSettings(raw) {
     const payload = raw && typeof raw === "object" ? raw : {};
     const interfaceSettings = payload.interface && typeof payload.interface === "object" ? payload.interface : payload;
+    const styleSettings = payload.style && typeof payload.style === "object" ? payload.style : payload;
+    const syncSettings = payload.synchronization && typeof payload.synchronization === "object" ? payload.synchronization : payload;
     const storedLanguage = normalizeBarLanguage(readStorage(SETTINGS_LANGUAGE_KEY));
+    const storedTheme = normalizeBarTheme(readStorage(SETTINGS_THEME_KEY));
+    const storedDensity = normalizeBarDensity(readStorage(SETTINGS_DENSITY_KEY));
     const storedFullscreen = readStorage(FULLSCREEN_STORAGE_KEY);
     const storedDesktopControls = readStorage(STORAGE_KEY);
     return {
       language: normalizeBarLanguage(interfaceSettings.language) || storedLanguage,
+      theme: normalizeBarTheme(styleSettings.theme) || storedTheme || "meadow",
+      density: normalizeBarDensity(styleSettings.density) || storedDensity || "comfortable",
       fullscreenEnabled: storedFullscreen === null
         ? boolPreference(interfaceSettings.fullscreen_enabled, fullscreenPreferenceEnabled())
         : storedFullscreen === "1",
       desktopControlsEnabled: storedDesktopControls === null
         ? boolPreference(interfaceSettings.desktop_controls_enabled, desktopControlsEnabled)
-        : storedDesktopControls !== "0"
+        : storedDesktopControls !== "0",
+      preferPeerContinuity: boolPreference(syncSettings.prefer_peer_continuity, true),
+      pollIntervalSeconds: clampInt(syncSettings.poll_interval_seconds, 30, 5, 300)
     };
   }
 
   function preferredLocale() {
     return barSettings.language || normalizeBarLanguage(readStorage(SETTINGS_LANGUAGE_KEY)) || navigator.language || "en";
+  }
+
+  function settingsPageActive() {
+    const pathname = String(window.location.pathname || "/").replace(/\/+$/, "") || "/";
+    return pathname === "/settings";
+  }
+
+  function applyShellAppearance() {
+    if (!(document.body instanceof HTMLBodyElement) || settingsPageActive()) {
+      return;
+    }
+    document.body.dataset.shellTheme = normalizeBarTheme(barSettings.theme) || "meadow";
+    document.body.dataset.shellDensity = normalizeBarDensity(barSettings.density) || "comfortable";
+  }
+
+  function effectiveRefreshMs() {
+    if (barSettings.preferPeerContinuity !== false) {
+      return REFRESH_MS;
+    }
+    return clampInt(barSettings.pollIntervalSeconds, 30, 5, 300) * 1000;
+  }
+
+  function restartRefreshLoop() {
+    if (refreshTimer) {
+      window.clearInterval(refreshTimer);
+      refreshTimer = 0;
+    }
+    refreshTimer = window.setInterval(() => {
+      refresh().catch(() => {});
+    }, effectiveRefreshMs());
+  }
+
+  function restartViewerHeartbeatLoop() {
+    if (viewerHeartbeatTimer) {
+      window.clearInterval(viewerHeartbeatTimer);
+      viewerHeartbeatTimer = 0;
+    }
+    sendViewerHeartbeat().catch(() => {});
+    viewerHeartbeatTimer = window.setInterval(() => {
+      sendViewerHeartbeat().catch(() => {});
+    }, effectiveRefreshMs());
+  }
+
+  function ensureClockLoop() {
+    if (clockTimer) {
+      return;
+    }
+    clockTimer = window.setInterval(() => {
+      renderBar(currentSnapshot);
+    }, CLOCK_MS);
   }
 
   function applyBarSettings(raw) {
@@ -126,8 +217,13 @@
     if (barSettings.language) {
       writeStorage(SETTINGS_LANGUAGE_KEY, barSettings.language);
     }
+    writeStorage(SETTINGS_THEME_KEY, barSettings.theme);
+    writeStorage(SETTINGS_DENSITY_KEY, barSettings.density);
     setFullscreenPreference(barSettings.fullscreenEnabled);
     ensureFullscreenPreference();
+    applyShellAppearance();
+    restartRefreshLoop();
+    restartViewerHeartbeatLoop();
     renderBar(currentSnapshot);
   }
 
@@ -198,7 +294,7 @@
   }
 
   function fullscreenRestorePending() {
-    return fullscreenNavigationPending() && !document.fullscreenElement;
+    return fullscreenPreferenceEnabled() && !document.fullscreenElement;
   }
 
   function clearTooltipHideTimer() {
@@ -238,6 +334,9 @@
 
   async function requestStoredFullscreen() {
     if (!fullscreenPreferenceEnabled() || document.fullscreenElement || !document.fullscreenEnabled || !document.documentElement.requestFullscreen) {
+      if (fullscreenPreferenceEnabled() && !document.fullscreenElement) {
+        setFullscreenNavigationPending(true);
+      }
       return false;
     }
 
@@ -247,6 +346,7 @@
       clearFullscreenResumeListeners();
       return true;
     } catch (_error) {
+      setFullscreenNavigationPending(true);
       return false;
     }
   }
@@ -280,27 +380,24 @@
   }
 
   function installFullscreenResumeListeners() {
-    if (fullscreenResumeListenersInstalled || !fullscreenPreferenceEnabled()) {
-      return;
-    }
-
-    document.addEventListener("click", handleFullscreenResumeInteraction, true);
-    document.addEventListener("keydown", handleFullscreenResumeInteraction, true);
-    fullscreenResumeListenersInstalled = true;
+    fullscreenResumeListenersInstalled = false;
   }
 
   function ensureFullscreenPreference() {
     if (!fullscreenPreferenceEnabled() || document.fullscreenElement) {
       return;
     }
+    setFullscreenNavigationPending(true);
 
     requestStoredFullscreen().then((resumed) => {
       if (!resumed && fullscreenPreferenceEnabled()) {
         installFullscreenResumeListeners();
+        renderBar(currentSnapshot);
       }
     }).catch(() => {
       if (fullscreenPreferenceEnabled()) {
         installFullscreenResumeListeners();
+        renderBar(currentSnapshot);
       }
     });
   }
@@ -373,6 +470,366 @@
         --sp-bar-active-bg: rgba(37, 95, 151, 0.16);
         --sp-bar-active-line: rgba(37, 95, 151, 0.22);
         --sp-bar-active-ink: #255f97;
+      }
+
+      body[data-shell-theme="meadow"] {
+        --bg: #dce5dd;
+        --panel: rgba(251, 252, 248, 0.92);
+        --panel-strong: #f9fcf6;
+        --ink: #1a2620;
+        --muted: #657469;
+        --line: rgba(52, 79, 61, 0.14);
+        --accent: #2f5d43;
+        --accent-soft: rgba(47, 93, 67, 0.12);
+        --button-bg: rgba(47, 93, 67, 0.08);
+        --button-line: rgba(47, 93, 67, 0.18);
+        --shadow: 0 24px 54px rgba(21, 33, 25, 0.12);
+        --ok-bg: rgba(47, 125, 77, 0.14);
+        --ok-ink: #2f7d4d;
+        --warn-bg: rgba(155, 102, 25, 0.14);
+        --warn-ink: #9b6619;
+        --fault-bg: rgba(164, 58, 58, 0.14);
+        --fault-ink: #a43a3a;
+        --idle-bg: rgba(101, 116, 105, 0.12);
+        --idle-ink: #657469;
+        --shell-hero-a: rgba(30, 61, 43, 0.98);
+        --shell-hero-b: rgba(71, 108, 79, 0.96);
+        --shell-hero-ink: #f3fbf2;
+        --shell-glow-a: rgba(77, 119, 85, 0.18);
+        --shell-glow-b: rgba(44, 106, 111, 0.08);
+        --shell-wash: #f2f7f1;
+      }
+
+      body[data-shell-theme="dawn"] {
+        --bg: #e7ddd1;
+        --panel: rgba(255, 249, 239, 0.92);
+        --panel-strong: #fffbf3;
+        --ink: #302217;
+        --muted: #7c6956;
+        --line: rgba(120, 86, 54, 0.15);
+        --accent: #8b5d2b;
+        --accent-soft: rgba(139, 93, 43, 0.12);
+        --button-bg: rgba(139, 93, 43, 0.08);
+        --button-line: rgba(139, 93, 43, 0.18);
+        --shadow: 0 24px 54px rgba(60, 37, 17, 0.12);
+        --ok-bg: rgba(104, 132, 59, 0.14);
+        --ok-ink: #68843b;
+        --warn-bg: rgba(157, 100, 24, 0.14);
+        --warn-ink: #9d6418;
+        --fault-bg: rgba(162, 66, 57, 0.14);
+        --fault-ink: #a24239;
+        --idle-bg: rgba(124, 105, 86, 0.12);
+        --idle-ink: #7c6956;
+        --shell-hero-a: rgba(98, 60, 24, 0.98);
+        --shell-hero-b: rgba(153, 105, 52, 0.96);
+        --shell-hero-ink: #fff8ef;
+        --shell-glow-a: rgba(179, 123, 67, 0.18);
+        --shell-glow-b: rgba(213, 168, 118, 0.12);
+        --shell-wash: #fff6ec;
+      }
+
+      body[data-shell-theme="studio"] {
+        --bg: #dce2e7;
+        --panel: rgba(248, 251, 253, 0.92);
+        --panel-strong: #fcfdfe;
+        --ink: #18232a;
+        --muted: #62717a;
+        --line: rgba(57, 84, 103, 0.15);
+        --accent: #31546b;
+        --accent-soft: rgba(49, 84, 107, 0.12);
+        --button-bg: rgba(49, 84, 107, 0.08);
+        --button-line: rgba(49, 84, 107, 0.18);
+        --shadow: 0 24px 54px rgba(18, 34, 43, 0.12);
+        --ok-bg: rgba(50, 111, 96, 0.14);
+        --ok-ink: #326f60;
+        --warn-bg: rgba(147, 102, 43, 0.14);
+        --warn-ink: #93662b;
+        --fault-bg: rgba(156, 65, 65, 0.14);
+        --fault-ink: #9c4141;
+        --idle-bg: rgba(98, 113, 122, 0.12);
+        --idle-ink: #62717a;
+        --shell-hero-a: rgba(25, 48, 61, 0.98);
+        --shell-hero-b: rgba(68, 97, 118, 0.96);
+        --shell-hero-ink: #f5fbfe;
+        --shell-glow-a: rgba(91, 130, 158, 0.18);
+        --shell-glow-b: rgba(158, 184, 198, 0.12);
+        --shell-wash: #f1f6fa;
+      }
+
+      body[data-shell-theme="midnight"] {
+        --bg: #101820;
+        --panel: rgba(24, 35, 43, 0.92);
+        --panel-strong: #16212a;
+        --ink: #edf6f8;
+        --muted: #9fb2b9;
+        --line: rgba(160, 190, 198, 0.16);
+        --accent: #6eb6c5;
+        --accent-soft: rgba(110, 182, 197, 0.14);
+        --button-bg: rgba(110, 182, 197, 0.12);
+        --button-line: rgba(110, 182, 197, 0.2);
+        --shadow: 0 24px 54px rgba(3, 9, 13, 0.34);
+        --ok-bg: rgba(122, 215, 163, 0.14);
+        --ok-ink: #7ad7a3;
+        --warn-bg: rgba(241, 193, 111, 0.16);
+        --warn-ink: #f1c16f;
+        --fault-bg: rgba(242, 139, 130, 0.16);
+        --fault-ink: #f28b82;
+        --idle-bg: rgba(159, 178, 185, 0.14);
+        --idle-ink: #9fb2b9;
+        --shell-hero-a: rgba(14, 25, 34, 0.98);
+        --shell-hero-b: rgba(34, 66, 78, 0.96);
+        --shell-hero-ink: #f4fbfd;
+        --shell-glow-a: rgba(67, 130, 151, 0.22);
+        --shell-glow-b: rgba(110, 182, 197, 0.14);
+        --shell-wash: #16242d;
+      }
+
+      body[data-shell-theme="sunlit"] {
+        --bg: #f1e7bf;
+        --panel: rgba(255, 253, 238, 0.92);
+        --panel-strong: #fff9df;
+        --ink: #2b2a18;
+        --muted: #7d744e;
+        --line: rgba(143, 122, 46, 0.18);
+        --accent: #9b7a16;
+        --accent-soft: rgba(155, 122, 22, 0.13);
+        --button-bg: rgba(155, 122, 22, 0.08);
+        --button-line: rgba(155, 122, 22, 0.18);
+        --shadow: 0 24px 54px rgba(75, 58, 12, 0.13);
+        --ok-bg: rgba(89, 125, 47, 0.14);
+        --ok-ink: #597d2f;
+        --warn-bg: rgba(169, 103, 18, 0.15);
+        --warn-ink: #a96712;
+        --fault-bg: rgba(161, 62, 50, 0.15);
+        --fault-ink: #a13e32;
+        --idle-bg: rgba(125, 116, 78, 0.12);
+        --idle-ink: #7d744e;
+        --shell-hero-a: rgba(116, 89, 13, 0.98);
+        --shell-hero-b: rgba(191, 148, 37, 0.95);
+        --shell-hero-ink: #fffbe8;
+        --shell-glow-a: rgba(248, 213, 94, 0.24);
+        --shell-glow-b: rgba(212, 168, 47, 0.14);
+        --shell-wash: #fff7dc;
+      }
+
+      body[data-shell-theme="night"] {
+        --bg: #17171d;
+        --panel: rgba(31, 31, 40, 0.92);
+        --panel-strong: #20212b;
+        --ink: #f2f0ea;
+        --muted: #aaa7bd;
+        --line: rgba(186, 181, 208, 0.15);
+        --accent: #b8a7ff;
+        --accent-soft: rgba(184, 167, 255, 0.13);
+        --button-bg: rgba(184, 167, 255, 0.12);
+        --button-line: rgba(184, 167, 255, 0.2);
+        --shadow: 0 24px 54px rgba(5, 5, 10, 0.35);
+        --ok-bg: rgba(143, 212, 156, 0.14);
+        --ok-ink: #8fd49c;
+        --warn-bg: rgba(231, 189, 116, 0.15);
+        --warn-ink: #e7bd74;
+        --fault-bg: rgba(236, 141, 154, 0.16);
+        --fault-ink: #ec8d9a;
+        --idle-bg: rgba(170, 167, 189, 0.14);
+        --idle-ink: #aaa7bd;
+        --shell-hero-a: rgba(28, 25, 43, 0.98);
+        --shell-hero-b: rgba(67, 57, 103, 0.96);
+        --shell-hero-ink: #fbf9ff;
+        --shell-glow-a: rgba(122, 105, 199, 0.2);
+        --shell-glow-b: rgba(184, 167, 255, 0.14);
+        --shell-wash: #211f2e;
+      }
+
+      body[data-shell-theme="minimal"] {
+        --bg: #eeeeea;
+        --panel: rgba(252, 252, 248, 0.94);
+        --panel-strong: #ffffff;
+        --ink: #20231f;
+        --muted: #6c7068;
+        --line: rgba(65, 69, 62, 0.14);
+        --accent: #4b5a4b;
+        --accent-soft: rgba(75, 90, 75, 0.1);
+        --button-bg: rgba(75, 90, 75, 0.08);
+        --button-line: rgba(75, 90, 75, 0.18);
+        --shadow: 0 18px 42px rgba(28, 30, 28, 0.08);
+        --ok-bg: rgba(63, 115, 82, 0.12);
+        --ok-ink: #3f7352;
+        --warn-bg: rgba(140, 107, 40, 0.12);
+        --warn-ink: #8c6b28;
+        --fault-bg: rgba(148, 67, 64, 0.13);
+        --fault-ink: #944340;
+        --idle-bg: rgba(108, 112, 104, 0.12);
+        --idle-ink: #6c7068;
+        --shell-hero-a: rgba(54, 61, 55, 0.98);
+        --shell-hero-b: rgba(91, 101, 90, 0.94);
+        --shell-hero-ink: #fbfbf8;
+        --shell-glow-a: rgba(170, 176, 166, 0.18);
+        --shell-glow-b: rgba(108, 112, 104, 0.08);
+        --shell-wash: #f8f8f3;
+      }
+
+      body[data-shell-theme="contrast"] {
+        --bg: #ffffff;
+        --panel: #ffffff;
+        --panel-strong: #ffffff;
+        --ink: #000000;
+        --muted: #343434;
+        --line: rgba(0, 0, 0, 0.24);
+        --accent: #003f8f;
+        --accent-soft: rgba(0, 63, 143, 0.12);
+        --button-bg: rgba(0, 63, 143, 0.08);
+        --button-line: rgba(0, 63, 143, 0.24);
+        --shadow: 0 14px 28px rgba(0, 0, 0, 0.12);
+        --ok-bg: rgba(0, 107, 45, 0.12);
+        --ok-ink: #006b2d;
+        --warn-bg: rgba(138, 82, 0, 0.13);
+        --warn-ink: #8a5200;
+        --fault-bg: rgba(176, 0, 32, 0.12);
+        --fault-ink: #b00020;
+        --idle-bg: rgba(52, 52, 52, 0.08);
+        --idle-ink: #343434;
+        --shell-hero-a: #000000;
+        --shell-hero-b: #1d1d1d;
+        --shell-hero-ink: #ffffff;
+        --shell-glow-a: rgba(0, 63, 143, 0.12);
+        --shell-glow-b: rgba(0, 0, 0, 0.04);
+        --shell-wash: #ffffff;
+      }
+
+      body[data-shell-theme] {
+        color: var(--ink);
+        background:
+          radial-gradient(circle at top left, var(--shell-glow-a, rgba(77, 119, 85, 0.18)), transparent 32%),
+          radial-gradient(circle at bottom right, var(--shell-glow-b, rgba(44, 106, 111, 0.08)), transparent 28%),
+          linear-gradient(180deg, var(--shell-wash, #f3f7ef) 0%, var(--bg) 100%) !important;
+      }
+
+      body[data-shell-theme] .hero {
+        background: linear-gradient(135deg, var(--shell-hero-a), var(--shell-hero-b)) !important;
+        color: var(--shell-hero-ink) !important;
+      }
+
+      body[data-shell-theme] .hero p {
+        color: color-mix(in srgb, var(--shell-hero-ink) 84%, transparent) !important;
+      }
+
+      body[data-shell-theme] .hero,
+      body[data-shell-theme] .card,
+      body[data-shell-theme] .module,
+      body[data-shell-theme] .tile,
+      body[data-shell-theme] .topbar,
+      body[data-shell-theme] .launcher-card,
+      body[data-shell-theme] .check,
+      body[data-shell-theme] .report,
+      body[data-shell-theme] .field input,
+      body[data-shell-theme] .field select,
+      body[data-shell-theme] .field textarea {
+        border-color: var(--line) !important;
+        box-shadow: var(--shadow);
+      }
+
+      body[data-shell-theme] .card,
+      body[data-shell-theme] .module,
+      body[data-shell-theme] .tile,
+      body[data-shell-theme] .report,
+      body[data-shell-theme] .check,
+      body[data-shell-theme] .topbar,
+      body[data-shell-theme] .launcher-card {
+        background: var(--panel) !important;
+      }
+
+      body[data-shell-theme] .token,
+      body[data-shell-theme] .moisture-lane,
+      body[data-shell-theme] .home-button,
+      body[data-shell-theme] .control-button,
+      body[data-shell-theme] .primary,
+      body[data-shell-theme] .secondary,
+      body[data-shell-theme] .button.primary,
+      body[data-shell-theme] .button.secondary,
+      body[data-shell-theme] .card-action {
+        color: var(--ink);
+      }
+
+      body[data-shell-theme] .home-button,
+      body[data-shell-theme] .control-button,
+      body[data-shell-theme] .secondary,
+      body[data-shell-theme] .button.secondary,
+      body[data-shell-theme] .card-action {
+        background: var(--button-bg) !important;
+        border-color: var(--button-line) !important;
+      }
+
+      body[data-shell-theme] .primary,
+      body[data-shell-theme] .button.primary {
+        background: var(--accent) !important;
+        border-color: color-mix(in srgb, var(--accent) 72%, black) !important;
+        color: var(--shell-hero-ink) !important;
+      }
+
+      body[data-shell-density="comfortable"] .app-shell,
+      body[data-shell-density="comfortable"] .page,
+      body[data-shell-density="comfortable"] .shell {
+        padding: 18px 14px 44px !important;
+      }
+
+      body[data-shell-density="comfortable"] .hero,
+      body[data-shell-density="comfortable"] .card,
+      body[data-shell-density="comfortable"] .module,
+      body[data-shell-density="comfortable"] .tile,
+      body[data-shell-density="comfortable"] .topbar,
+      body[data-shell-density="comfortable"] .launcher-card,
+      body[data-shell-density="comfortable"] .report,
+      body[data-shell-density="comfortable"] .check {
+        padding: 22px !important;
+        border-radius: 24px !important;
+      }
+
+      body[data-shell-density="compact"] .app-shell,
+      body[data-shell-density="compact"] .page,
+      body[data-shell-density="compact"] .shell {
+        padding: 10px 10px 24px !important;
+      }
+
+      body[data-shell-density="compact"] .hero,
+      body[data-shell-density="compact"] .card,
+      body[data-shell-density="compact"] .module,
+      body[data-shell-density="compact"] .tile,
+      body[data-shell-density="compact"] .topbar,
+      body[data-shell-density="compact"] .launcher-card,
+      body[data-shell-density="compact"] .report,
+      body[data-shell-density="compact"] .check {
+        padding: 14px !important;
+        border-radius: 16px !important;
+      }
+
+      body[data-shell-density="compact"] .hero h1 {
+        font-size: clamp(24px, 4vw, 36px) !important;
+      }
+
+      body[data-shell-density="compact"] .hero p,
+      body[data-shell-density="compact"] .meta,
+      body[data-shell-density="compact"] .module p,
+      body[data-shell-density="compact"] .tile p,
+      body[data-shell-density="compact"] .check p,
+      body[data-shell-density="compact"] .report-note,
+      body[data-shell-density="compact"] .report-message {
+        font-size: 13px !important;
+      }
+
+      body[data-shell-density="compact"] .home-button,
+      body[data-shell-density="compact"] .control-button,
+      body[data-shell-density="compact"] .primary,
+      body[data-shell-density="compact"] .secondary,
+      body[data-shell-density="compact"] .button.primary,
+      body[data-shell-density="compact"] .button.secondary,
+      body[data-shell-density="compact"] .token,
+      body[data-shell-density="compact"] .moisture-lane,
+      body[data-shell-density="compact"] .card-action,
+      body[data-shell-density="compact"] input,
+      body[data-shell-density="compact"] select,
+      body[data-shell-density="compact"] textarea {
+        min-height: 38px !important;
+        padding: 8px 10px !important;
       }
 
       body[data-sp-bar-mounted="true"] {
@@ -1261,8 +1718,8 @@
           icon: item.icon,
           value: item.value,
           title: item.title,
-          state: "attention",
-          blink: true,
+          state: "neutral",
+          blink: false,
           detail: `${item.title} is expected by the platform but is not connected yet.`
         };
       }
@@ -1425,7 +1882,7 @@
         iconOptions: { variant: wifiReady ? "online" : "offline" },
         value: "",
         title: "Wi-Fi",
-        state: smokeRuntime ? "neutral" : wifiReady ? "online" : "attention",
+        state: smokeRuntime ? "neutral" : wifiReady ? "online" : "neutral",
         detail: smokeRuntime
           ? "Smoke runtime does not prove board-level Wi-Fi readiness."
           : wifiReady
@@ -1446,7 +1903,7 @@
         },
         value: "",
         title: "Sync",
-        state: smokeRuntime ? "neutral" : syncReady ? "online" : syncError ? "fault" : "attention",
+        state: smokeRuntime ? "neutral" : syncReady ? "online" : syncError ? "fault" : (syncPending ? "attention" : "neutral"),
         detail: smokeRuntime
           ? "Smoke runtime keeps sync in preview mode. Real peer readiness must come from hardware-linked owners."
           : syncReady
@@ -1687,7 +2144,7 @@
     const localViewer = detectClient(snapshot);
     const fullscreenPending = fullscreenRestorePending();
     const controls = [
-      { id: "home", href: "/", icon: "home", title: "Smart Platform Home", detail: "Return to the Smart Platform launcher." },
+      { id: "home", href: `${window.location.origin}/`, icon: "home", title: "Smart Platform Home", detail: "Return to the Smart Platform launcher." },
       { id: "input", icon: "keyboard", title: "Input Helpers", detail: desktopControlsEnabled ? "Turret Manual action keys and hover helpers are enabled. Text fields keep normal typing behavior." : "Turret Manual action keys and hover helpers are disabled.", active: desktopControlsEnabled },
       {
         id: "fullscreen",
@@ -1696,7 +2153,7 @@
         detail: document.fullscreenElement
           ? "Leave fullscreen mode."
           : fullscreenPending
-          ? "Browser fullscreen ended during page navigation. Click once on this page or use this control to restore fullscreen."
+          ? "Browser fullscreen ended during page navigation. Use this control to restore fullscreen."
           : "Enter fullscreen mode.",
         active: document.fullscreenElement || fullscreenPending,
         blink: fullscreenPending
@@ -1839,7 +2296,7 @@
     }
 
     fullscreenPendingHintPage = pageKey;
-    showTooltip(toggle, true);
+    showTooltip(toggle, false);
   }
 
   function readTooltipPayload(target) {
@@ -1897,6 +2354,27 @@
     }, TOOLTIP_HIDE_MS);
   }
 
+  function positionTooltipNearPointer(tooltip, target) {
+    requestAnimationFrame(() => {
+      const tipRect = tooltip.getBoundingClientRect();
+      const rect = target.getBoundingClientRect();
+      const hasPointer = tooltipPointerX > 0 || tooltipPointerY > 0;
+      const anchorX = hasPointer ? tooltipPointerX : rect.left + (rect.width / 2);
+      const anchorY = hasPointer ? tooltipPointerY : rect.bottom;
+      const gap = 14;
+      const preferredLeft = anchorX + gap;
+      const left = preferredLeft + tipRect.width + 12 > window.innerWidth
+        ? anchorX - tipRect.width - gap
+        : preferredLeft;
+      const preferredTop = anchorY + gap;
+      const top = preferredTop + tipRect.height + 12 > window.innerHeight
+        ? anchorY - tipRect.height - gap
+        : preferredTop;
+      tooltip.style.left = `${Math.min(Math.max(12, left), window.innerWidth - tipRect.width - 12)}px`;
+      tooltip.style.top = `${Math.min(Math.max(12, top), window.innerHeight - tipRect.height - 12)}px`;
+    });
+  }
+
   function scheduleTooltipShow(target, pinned, event) {
     if (!(target instanceof HTMLElement)) {
       return;
@@ -1921,22 +2399,13 @@
   function showTooltip(target, pinned) {
     const tooltip = ensureTooltip();
     const payload = readTooltipPayload(target);
-    const rect = target.getBoundingClientRect();
 
     tooltip.innerHTML = renderTooltipMarkup(payload);
     tooltip.setAttribute("data-visible", "true");
     tooltipOwnerId = target.getAttribute("data-token-id") || target.getAttribute("data-control-id") || "";
     tooltipPinned = Boolean(pinned);
     scheduleTooltipAutoHide();
-
-    requestAnimationFrame(() => {
-      const tipRect = tooltip.getBoundingClientRect();
-      const left = Math.min(Math.max(12, rect.left + (rect.width / 2) - (tipRect.width / 2)), window.innerWidth - tipRect.width - 12);
-      const showAbove = rect.bottom + tipRect.height + 16 > window.innerHeight;
-      const top = showAbove ? rect.top - tipRect.height - 8 : rect.bottom + 8;
-      tooltip.style.left = `${left}px`;
-      tooltip.style.top = `${Math.max(12, top)}px`;
-    });
+    positionTooltipNearPointer(tooltip, target);
   }
 
   function hideTooltip(force) {
@@ -1954,21 +2423,43 @@
     }
   }
 
+  function normalizeShellNavigationHref(rawHref) {
+    try {
+      const url = new URL(rawHref, window.location.href);
+      if (url.protocol === window.location.protocol && url.hostname === window.location.hostname && !url.port && window.location.port) {
+        url.port = window.location.port;
+        return url.href;
+      }
+      return rawHref;
+    } catch (_error) {
+      return rawHref;
+    }
+  }
+
   function bindInteractions() {
     const tokens = document.querySelectorAll(".sp-token, .sp-control");
     for (const token of tokens) {
+      token.onpointerdown = () => {
+        tooltipFocusSuppressedUntil = Date.now() + 700;
+        hideTooltip(true);
+      };
       token.onmouseenter = (event) => scheduleTooltipShow(token, tooltipPinned && tooltipOwnerId === (token.getAttribute("data-token-id") || token.getAttribute("data-control-id") || ""), event);
       token.onmousemove = (event) => {
-        if (!tooltipHoverTarget || tooltipPinned) {
+        if (!tooltipHoverTarget && !tooltipOwnerId) {
           return;
         }
         if (tooltipMovedPastTolerance(event)) {
           hideTooltip(true);
         }
       };
-      token.onfocus = () => showTooltip(token, tooltipPinned && tooltipOwnerId === (token.getAttribute("data-token-id") || token.getAttribute("data-control-id") || ""));
-      token.onmouseleave = () => hideTooltip(false);
-      token.onblur = () => hideTooltip(false);
+      token.onfocus = () => {
+        if (Date.now() < tooltipFocusSuppressedUntil) {
+          return;
+        }
+        showTooltip(token, tooltipPinned && tooltipOwnerId === (token.getAttribute("data-token-id") || token.getAttribute("data-control-id") || ""));
+      };
+      token.onmouseleave = () => hideTooltip(true);
+      token.onblur = () => hideTooltip(true);
     }
 
     const statusTokens = document.querySelectorAll(".sp-token");
@@ -1981,7 +2472,7 @@
           return;
         }
         setTooltipPointerOrigin(event);
-        showTooltip(token, true);
+        showTooltip(token, false);
       };
     }
 
@@ -1991,12 +2482,16 @@
     if (inputToggle) {
       inputToggle.onclick = (event) => {
         event.preventDefault();
+        setTooltipPointerOrigin(event);
         desktopControlsEnabled = !desktopControlsEnabled;
         writeStorage(STORAGE_KEY, desktopControlsEnabled ? "1" : "0");
+        window.dispatchEvent(new CustomEvent("smart-platform:desktop-controls-updated", {
+          detail: { desktop_controls_enabled: desktopControlsEnabled }
+        }));
         renderBar(currentSnapshot);
         const nextToggle = document.querySelector('.sp-control[data-control-id="input"]');
         if (nextToggle) {
-          showTooltip(nextToggle, true);
+          showTooltip(nextToggle, false);
         }
       };
     }
@@ -2004,10 +2499,11 @@
     if (fullscreenToggle) {
       fullscreenToggle.onclick = async (event) => {
         event.preventDefault();
+        setTooltipPointerOrigin(event);
         const wantsFullscreen = !document.fullscreenElement;
         fullscreenToggleIntent = wantsFullscreen ? "enter" : "exit";
         setFullscreenPreference(wantsFullscreen);
-        setFullscreenNavigationPending(false);
+        setFullscreenNavigationPending(wantsFullscreen);
         clearFullscreenResumeListeners();
         try {
           if (document.fullscreenElement && document.exitFullscreen) {
@@ -2017,16 +2513,18 @@
           }
         } catch (_error) {
           // Ignore browser fullscreen rejections; the tooltip already explains the action.
-          setFullscreenPreference(Boolean(document.fullscreenElement));
-          setFullscreenNavigationPending(false);
+          setFullscreenPreference(wantsFullscreen);
+          setFullscreenNavigationPending(wantsFullscreen && !document.fullscreenElement);
           fullscreenToggleIntent = null;
         }
-        setFullscreenPreference(Boolean(document.fullscreenElement));
-        persistFullscreenPreference(Boolean(document.fullscreenElement)).catch(() => {});
+        const nextPreference = fullscreenToggleIntent === "exit" ? false : (wantsFullscreen || Boolean(document.fullscreenElement));
+        setFullscreenPreference(nextPreference);
+        setFullscreenNavigationPending(nextPreference && !document.fullscreenElement);
+        persistFullscreenPreference(nextPreference).catch(() => {});
         renderBar(currentSnapshot);
         const nextToggle = document.querySelector('.sp-control[data-control-id="fullscreen"]');
         if (nextToggle) {
-          showTooltip(nextToggle, true);
+          showTooltip(nextToggle, false);
         }
       };
     }
@@ -2039,13 +2537,28 @@
         if (!event.defaultPrevented && event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey && target instanceof HTMLElement) {
           const anchor = target.closest("a[href]");
           if (anchor instanceof HTMLAnchorElement) {
-            markFullscreenResumeOnInternalNavigation(anchor.href);
+            const normalizedHref = normalizeShellNavigationHref(anchor.href);
+            markFullscreenResumeOnInternalNavigation(normalizedHref);
+            if (normalizedHref !== anchor.href) {
+              event.preventDefault();
+              window.location.href = normalizedHref;
+              return;
+            }
           }
         }
         if (target instanceof HTMLElement && target.closest(".sp-token, .sp-control, .sp-tooltip")) {
           return;
         }
         hideTooltip(true);
+      });
+
+      document.addEventListener("mousemove", (event) => {
+        if (!tooltipHoverTarget && !tooltipOwnerId) {
+          return;
+        }
+        if (tooltipMovedPastTolerance(event)) {
+          hideTooltip(true);
+        }
       });
 
       document.addEventListener("keydown", (event) => {
@@ -2082,14 +2595,15 @@
           clearFullscreenResumeListeners();
         } else if (fullscreenNavigationPending()) {
           setFullscreenPreference(true);
-          installFullscreenResumeListeners();
+          setFullscreenNavigationPending(true);
+          clearFullscreenResumeListeners();
         } else if (fullscreenToggleIntent === "exit") {
           setFullscreenPreference(false);
           setFullscreenNavigationPending(false);
           clearFullscreenResumeListeners();
         } else if (fullscreenPreferenceEnabled()) {
-          setFullscreenPreference(false);
-          setFullscreenNavigationPending(false);
+          setFullscreenPreference(true);
+          setFullscreenNavigationPending(true);
           clearFullscreenResumeListeners();
         }
         fullscreenToggleIntent = null;
@@ -2110,7 +2624,14 @@
       });
 
       window.addEventListener("storage", (event) => {
-        if (!event.key || ![STORAGE_KEY, FULLSCREEN_STORAGE_KEY, SETTINGS_LANGUAGE_KEY, SETTINGS_CACHE_KEY].includes(event.key)) {
+        if (!event.key || ![
+          STORAGE_KEY,
+          FULLSCREEN_STORAGE_KEY,
+          SETTINGS_LANGUAGE_KEY,
+          SETTINGS_THEME_KEY,
+          SETTINGS_DENSITY_KEY,
+          SETTINGS_CACHE_KEY
+        ].includes(event.key)) {
           return;
         }
 
@@ -2179,14 +2700,7 @@
   }
 
   function ensureViewerHeartbeat() {
-    if (viewerHeartbeatTimer) {
-      return;
-    }
-
-    sendViewerHeartbeat().catch(() => {});
-    viewerHeartbeatTimer = window.setInterval(() => {
-      sendViewerHeartbeat().catch(() => {});
-    }, VIEWER_HEARTBEAT_MS);
+    restartViewerHeartbeatLoop();
   }
 
   async function ensureBatteryWatcher() {
@@ -2222,34 +2736,26 @@
     injectStyles();
     ensureHost();
     ensureTooltip();
+    applyBarSettings(readCachedSettings() || {});
     await loadBarSettings();
     ensureFullscreenPreference();
     renderBar(currentSnapshot);
     ensureBatteryWatcher().catch(() => {});
     ensureViewerHeartbeat();
     refresh().catch(() => {});
-    setInterval(() => {
-      refresh().catch(() => {});
-    }, REFRESH_MS);
-    setInterval(() => {
-      renderBar(currentSnapshot);
-    }, CLOCK_MS);
+    ensureClockLoop();
   }
 
   boot().catch(() => {
     injectStyles();
     ensureHost();
     ensureTooltip();
+    applyBarSettings(readCachedSettings() || {});
     ensureFullscreenPreference();
     renderBar(currentSnapshot);
     ensureBatteryWatcher().catch(() => {});
     ensureViewerHeartbeat();
     refresh().catch(() => {});
-    setInterval(() => {
-      refresh().catch(() => {});
-    }, REFRESH_MS);
-    setInterval(() => {
-      renderBar(currentSnapshot);
-    }, CLOCK_MS);
+    ensureClockLoop();
   });
 })();

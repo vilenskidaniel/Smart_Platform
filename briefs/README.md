@@ -6,8 +6,8 @@
 
 Эти файлы являются главными входами для отдельных продуктовых блоков:
 
-1. [web_shell_ui.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/briefs/web_shell_ui.md)
-   `System Shell v1`
+1. [platform_shell_ui.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/briefs/platform_shell_ui.md)
+   `Platform Shell`
 
 2. [irrigation_module.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/briefs/irrigation_module.md)
    `Irrigation v1`
@@ -15,7 +15,7 @@
 3. [turret_bridge_module.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/briefs/turret_bridge_module.md)
    `Turret v1`
 
-4. [service_test_v1.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/briefs/service_test_v1.md)
+4. [laboratory.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/briefs/laboratory.md)
    `Laboratory v1`
 
 ## Support Briefs

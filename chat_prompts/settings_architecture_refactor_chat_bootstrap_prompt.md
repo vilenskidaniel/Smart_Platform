@@ -24,17 +24,26 @@
 Актуальные решения после UI cleanup:
 
 - видимый header Settings короткий: только `Settings` / `Настройки`;
-- Overview как отдельный верхний dashboard удалён из Settings, потому что краткий статус уже живёт в bar-панели;
-- hover tooltip появляется примерно через `500 ms` и закрывается/отменяется при движении курсора больше `3 px`;
+- верхний dashboard как отдельный слой удалён из Settings, потому что краткий статус уже живёт в bar-панели;
+- hover tooltip появляется примерно через `500 ms`, располагается рядом с курсором/местом наведения, закрывается/отменяется сразу при движении курсора больше `3 px` и не держится дольше `6 s`;
+- интерактивные настройки применяются optimistic-first: UI меняется сразу, сохранение уходит в debounce/background и не должно блокировать клики, ввод или переключение секций;
 - helper text не дублируется под control, если он уже есть в tooltip/status-sheet;
 - `EN` и `RU` являются рабочими локалями, а `HE`, `DE`, `FR`, `ES`, `ZH`, `AR` могут быть selectable TODO-заглушками до отдельного translation-модуля;
 - `Modules` — функциональные hardware-level системы (`Турель`, `Ирригация`, `Питание`);
 - `Components` — конкретные железные элементы с инженерными полями: питание, распиновка, допуски, режимы, статус проверки;
 - `System Services` содержит software-сущности вроде `Shell`, `Sync Core`, `Storage Service`; их нельзя смешивать с hardware modules/components;
 - `Constructor` — отдельный modal wizard для черновика модуля или компонента; сначала UI-модель, затем сохранение в JSON/config через приложение;
+- текущий рабочий этап конструктора уже пишет в `raspberry_pi/content/.system/platform_registry.v1.json` через `/api/v1/platform/registry/constructor`; не возвращать его в декоративную local-only заглушку;
+- пример `Cat Feeder` строится вокруг `Motion Sensor`, камеры идентификации и `Servo dispenser`; не использовать `Light Sensor` как компонент кормушки, потому что кот не является источником изменения освещённости;
+- отдельная секция `Platform Nodes` удалена из Settings; краткий статус `RPi/ESP` остаётся в bar-панели, а смысловая связь с платами показывается через `Modules`;
+- `Runtime` сокращает `host kind / viewer kind / runtime profile` до одного launch context, если отдельные строки не добавляют смысла;
+- `Sync` хранит утверждённый список `selected_domains`: service link, module state, shared preferences, reports/logs, plant library, media content (`photo/video/audio/gallery reports`), component registry, software versions (`RPi/ESP/Web UI`); `Auto` выбирает все пункты, ручное изменение любого пункта переводит режим в `Manual review`;
 - storage cards сортируются от глобального к прикладному: project root, plant library, video, audio, reports, gallery, assets, animations, content root;
+- `Plant Library` связана с irrigation и JSON-библиотеками `content/libraries/plant_profiles.v1.json`, `plant_state_rules.v1.json`, `care_scenarios.v1.json`;
+- однотипные инженерные поля компонентов должны показывать ранее введённые значения как suggestions;
 - storage actions включают `Copy path`, `Open folder`, `Open in app`, cleanup preview и подтвержденное удаление, а backend обязан проверять, что путь не выходит за разрешенный root;
 - keyboard action keys работают только на `Turret Manual`; вне control-page клавиши остаются обычным вводом текста;
+- при выключенном `Keyboard controls` поля карты клавиш/мощности остаются видимыми, но disabled/серыми и объясняют в tooltip, что сначала нужно включить режим;
 - базовая мощность action key по умолчанию `50%`, при удержании `Shift` — `100%`, оба значения переназначаются в Settings.
 
 Сохранить из старых prompt-файлов следующие правила:
@@ -43,6 +52,7 @@
 - не считать laptop/desktop запуск отдельным hardware owner;
 - сначала отделять `host launch`, `browser entry`, `module owner` и `current browser client`;
 - при отсутствии truthful data показывать нейтральное/честное состояние, а не выдумывать positive/online status;
+- `offline`/`not connected` отображается серым/neutral во всех shell-поверхностях; красный остаётся для настоящих `fault/error/blocked`;
 - нельзя создавать ложную pseudo-master / master-node модель;
 - нельзя терять origin/source-owner metadata;
 - нельзя молча терять logs/reports/history;
@@ -54,6 +64,8 @@
 - длинные JS-файлы править маленькими hunks в порядке следования кода;
 - не переносить большие куски между Raspberry Pi и ESP32 implementations как будто это один и тот же implementation generation;
 - не строить fullscreen/tooltips так, чтобы первый клик пользователя тратился на побочный эффект и ломал основное действие;
+- если браузер сбросил fullscreen после навигации, bar-control может показывать pending state, но восстановление делается явным нажатием на fullscreen control, а не кликом по пустой области страницы;
+- `Settings` хранит желаемый fullscreen preference, а bar-панель показывает фактический fullscreen/pending restore; browser-exit во время навигации не должен сам менять durable preference на `false`;
 - не оставлять browser-native tooltip параллельно custom tooltip;
 - после regression сначала восстановить рабочее поведение на live page, а уже потом расширять scope.
 
@@ -80,7 +92,7 @@ Settings должен быть одновременно:
 - страницей состояния платформы;
 - страницей пользовательских настроек;
 - страницей конфигурации модулей/компонентов;
-- точкой диагностики причин, но без превращения Overview в техническую свалку.
+- точкой диагностики причин, но без превращения страницы в техническую свалку.
 
 ---
 
@@ -128,7 +140,7 @@ Settings должен быть одновременно:
 
 `Host — устройство, на котором запущен сервер Smart Platform.`
 
-### Viewer / Current device
+### Viewer device
 
 Устройство, с которого пользователь сейчас смотрит web UI.
 
@@ -140,9 +152,8 @@ Settings должен быть одновременно:
 - экран Raspberry Pi;
 - другой browser client в LAN.
 
-Пользовательское объяснение:
-
-`Текущее устройство — устройство, с которого вы сейчас открыли интерфейс.`
+Viewer device — технический сигнал для launch context и bar-панели. Не делать для него
+отдельную карточку настроек, если она только дублирует текущую страницу или heartbeat.
 
 ### Platform Node
 
@@ -334,918 +345,159 @@ Fullscreen, language, theme, density, Smart Bar behavior и другие shared 
 
 ---
 
-## Историческая структура Settings Ниже
-
-Следующий раздел оставлен как context/history старого refactor-плана. При
-конфликте использовать актуальные решения выше: короткий header, без отдельного
-Overview dashboard, секции `Appearance`, `Runtime`, `Platform Nodes`, `Sync`,
-`Storage`, `Modules`, `Components`, `System Services`, `Policies`, `Constructor`,
-`Diagnostics`.
-
-## Предлагаемая структура Settings
-
-## 1. Overview
-
-Верхний Overview должен состоять примерно из 4–5 компактных карточек.
-
-Первая карточка — `System Status`.
-
-Для запуска с ноутбука без подключённых плат:
-
-`Локальный запуск, платы offline`
-
-Overview должен быть dashboard: компактный, практичный, без технической энциклопедии.
-
-### Карточка 1: System Status
-
-Показывает общую правду о системе.
-
-Примеры:
-
-- `Локальный запуск, платы offline`;
-- `Система работает на Raspberry Pi, ESP32 offline`;
-- `Система работает на Raspberry Pi, ESP32 online`;
-- `Система degraded: backend отвечает, часть узлов недоступна`.
-
-Критерии:
-
-- `System online` = backend отвечает + snapshot API отвечает.
-- `Platform ready` = готовы обязательные узлы/модули для выбранного сценария.
-
-### Карточка 2: Current Runtime
-
-Показывает, где сейчас работает backend/server.
-
-Поля:
-
-- Host;
-- Host type;
-- OS/device label, если известно;
-- server status;
-- URL / port;
-- runtime/launcher folder;
-- Copy path;
-- Open folder, если поддерживается trusted desktop host.
-
-Если host и viewer совпадают:
-
-`Вы управляете системой с того же устройства, где она запущена.`
-
-### Карточка 3: Current Viewer
-
-Показывает устройство, с которого открыт интерфейс.
-
-Поля:
-
-- Viewer / текущее устройство;
-- тип: desktop / phone / tablet / Raspberry display / unknown;
-- текущая страница;
-- viewer heartbeat status.
-
-Если host и viewer разные:
-
-`Host: ноутбук. Viewer: телефон.`
-
-### Карточка 4: Platform Nodes
-
-Показывает краткие статусы узлов:
-
-- Raspberry Pi — status, role, last seen;
-- ESP32 — status, role, last seen;
-- future nodes — если есть.
-
-Статусы должны совпадать с bar-панелью.
-
-Если узел offline, не повторяй это в трёх строках. Используй corner badge + tooltip.
-
-### Карточка 5: Sync
-
-Синхронизация — отдельный platform process, не часть карточки ESP32 или Raspberry Pi.
-
-Показывать:
-
-- режим;
-- последнее время синхронизации;
-- human-readable время;
-- remote availability;
-- sync domains;
-- что работает только локально;
-- что отключено.
-
-Формулировки:
-
-- `Синхронизация ещё не выполнялась` — история.
-- `Local only` / `только локально` — режим.
-- `Remote unavailable` — причина.
-- `Базовая связь узлов недоступна: remote node offline`.
-
-### Quick actions в Overview
-
-В Overview можно показывать быстрые действия:
-
-- Refresh status;
-- Open phone entry / QR;
-- Copy LAN URL.
-
-Если функция или настройка повторяется в нескольких местах, изменение должно отражаться везде.
-
----
-
-## 2. Appearance & Interface
-
-Пользовательские настройки:
-
-- язык;
-- тема;
-- density;
-- fullscreen;
-- desktop controls;
-- Smart Bar / Compact Bar behavior;
-- tooltip behavior, если будет настройка;
-- accessibility options, если появятся.
-
-При русском языке не оставлять случайные английские labels вроде `Assets`, `Audio`, `Libraries`, если это не internal technical id в Advanced.
-
-Не дублировать язык и тему в трёх местах как статичный шум. Они должны быть:
-
-- видны в bar;
-- редактируемы в Settings;
-- возможно доступны через quick link из Overview.
-
----
-
-## 3. Runtime & Entry
-
-Секция объясняет:
-
-- где запущен backend/server;
-- с какого устройства открыт UI;
-- LAN URL;
-- loopback или LAN;
-- можно ли открыть интерфейс с телефона;
-- QR / phone entry;
-- current host;
-- current viewer.
-
-Home уже имеет логику входа/подключения. Settings не должен дублировать хаотично, а должен использовать общую модель Entry Context.
-
-Пример:
-
-```text
-Host: ноутбук
-Viewer: этот же ноутбук
-Entry: LAN URL доступен
-Raspberry Pi: offline
-ESP32: offline
-```
-
-Если открыт телефон:
-
-```text
-Host: ноутбук
-Viewer: телефон
-Entry: подключён через LAN URL
-Raspberry Pi: offline
-ESP32: offline
-```
-
----
-
-## 4. Platform Nodes & Components
-
-Нужны интерактивные карточки узлов, не простая таблица.
-
-### Карточка узла
-
-Каждый физический узел:
-
-- Raspberry Pi;
-- ESP32;
-- future controller board.
-
-В карточке:
-
-- corner badge статуса;
-- роль/назначение;
-- online/offline/degraded;
-- last seen;
-- IP/API/version, если известно;
-- первые 3 модуля;
-- show more / переход в подробности;
-- список компонентов в подробной секции;
-- кнопка `+ Add module`.
-
-`+ Add module` может быть видна всегда, но если edit mode выключен, tooltip объясняет, что нужно включить режим редактирования.
-
-### Модель вложенности
-
-Использовать:
-
-`Node → Modules → Components`
-
-Примеры:
-
-```text
-Node: Raspberry Pi
-  Module: Turret
-    Components: camera, servo, strobe, pump, lidar
-```
-
-```text
-Node: ESP32
-  Module: Irrigation
-    Components: valves, moisture sensors, pump relay
-```
-
-```text
-Node: Power Controller
-  Module: Power / Solar / Wind
-    Components: solar panel, wind turbine, converter, charge controller, battery sensor
-```
-
-```text
-Node: selected controller
-  Module: Cat Feeder
-    Components: valve/servo, food sensor, schedule logic
-```
-
-### Добавление модулей
-
-Wizard добавления:
-
-1. выбрать тип модуля;
-2. выбрать узел-владелец;
-3. выбрать/уточнить компоненты.
-
-Первый этап:
-
-- открыть выбор типа модуля;
-- затем добавить модуль в локальный registry/config;
-- offline-узлу можно заранее назначить planned/expected module;
-- проверка железа выполняется только когда узел/компонент реально доступен.
-
-Категории модулей:
-
-- Irrigation;
-- Turret;
-- Power / Solar / Wind;
-- Feeding;
-- Sensing;
-- Media;
-- Service;
-- Custom.
-
----
-
-## 5. Sync & Storage
-
-Sync и Storage связаны, но это не одно и то же.
-
-### 5.1 Базовая связь узлов
-
-Показывать отдельным блоком.
-
-Предпочтительное название:
-
-`Базовая связь узлов`
-
-Это обязательная служебная связность, которая не должна отключаться обычным пользовательским тумблером.
-
-Сюда входят:
-
-- язык/тема baseline;
-- критичные safety/fault статусы;
-- capability/heartbeat узлов;
-- минимальный settings baseline;
-- данные, необходимые для восстановления управления.
-
-### 5.2 Опциональные sync-домены
-
-Показывать карточками с тумблерами.
-
-Опционально управляемые домены:
-
-- media/content sync;
-- report/log mirroring;
-- scenario sync;
-- большие файлы;
-- backup/mirror behavior.
-
-Не делать один тупой тумблер `Sync on/off`.
-
-Если media sync отключена, но служебная связь активна:
-
-`Базовая связь узлов активна, media sync отключена.`
-
-### 5.3 Manual review для конфликтов
-
-Обычная синхронизация идёт автоматически.
-
-Если есть конфликт, система показывает review.
-
-Пример:
-
-```text
-Конфликт синхронизации:
-- локальная версия: RU, theme A
-- remote version: EN, theme B
-
-Действие:
-[Оставить локальную] [Принять remote] [Слить вручную]
-```
-
-До решения конфликта статус:
-
-`needs review`
-
-Нельзя делать silent overwrite пользовательских настроек.
-
-### 5.4 Storage
-
-Показывать:
-
-- Launcher/runtime folder;
-- Logs folder;
-- Content root;
-- Assets;
-- Audio;
-- Libraries;
-- Reports/data folders, если применимо.
-
-Для каждого пути:
-
-- readable display;
-- полный путь в tooltip;
-- Copy path;
-- Open folder, если поддерживается;
-- status: ready / missing / not configured / unavailable;
-- file count, если папка существует.
-
-Длинные пути не должны вылезать за карточки.
-
----
-
-## 6. Open Folder Security
-
-`Open folder` нельзя реализовывать как произвольное открытие любого пути из браузера.
-
-Разрешить только whitelist-пути проекта:
-
-- launcher/runtime folder;
-- logs folder;
-- content root;
-- assets;
-- audio;
-- libraries;
-- reports/data folders, если они являются частью проекта.
-
-Условия доступности:
-
-- backend запущен на trusted desktop host;
-- путь принадлежит текущему проекту `Smart_Platform`;
-- backend endpoint явно поддерживает действие;
-- viewer понимает, что папка открывается на host-устройстве.
-
-Если viewer — телефон или другой не-host клиент:
-
-- показывать `Copy path`;
-- `Open folder` скрывать или делать disabled;
-- tooltip объясняет:
-
-`Папка находится на host-устройстве. С этого экрана можно скопировать путь, но не открыть Explorer напрямую.`
-
----
-
-## 7. Module Ownership
-
-Создать отдельную секцию:
-
-`Распределение модулей по узлам`
-
-Не держать ownership внутри карточки ESP32.
-
-Показывать expected/planned ownership отдельно от live availability.
-
-Пример:
-
-- Irrigation → ESP32;
-- Turret → Raspberry Pi;
-- Gallery → platform service;
-- Laboratory → platform service;
-- Power / Solar / Wind → selected power/controller node;
-- Cat Feeder → selected node.
-
-Если узел offline, ownership всё равно можно показывать как expected/planned ownership, но не как live status.
-
----
-
-## 8. Advanced / Developer Details
-
-Технические детали доступны, но не в главном Overview.
-
-Возможное содержимое:
-
-- raw shell snapshot;
-- registry count;
-- API status;
-- technical runtime profile id;
-- debug payloads;
-- owner routing;
-- sync details;
-- stale/cache state;
-- deprecated old fields if needed for debug.
-
-Не выносить сырую внутреннюю архитектуру в основной пользовательский обзор.
-
----
-
-## Tooltip Requirements
-
-Settings должен использовать tooltip-систему уровня Smart Bar.
-
-Подсказки должны:
-
-- открываться по hover;
-- открываться по keyboard focus;
-- открываться по tap на mobile;
-- иметь задержку и поведение как в Smart Bar;
-- быть структурными, не сплошным полотном текста;
-- не повторять видимый текст;
-- объяснять причину состояния;
-- объяснять, что делать дальше;
-- показывать troubleshooting hints;
-- работать для status badges, disabled controls, paths, sync states, node/component statuses.
-
-Структура tooltip:
-
-- title;
-- short explanation;
-- status/reason;
-- next action;
-- technical details if needed;
-- related path/API/last seen if relevant.
-
-Пример для offline Raspberry Pi:
-
-```text
-Title:
-Raspberry Pi offline
-
-Reason:
-Узел сейчас не отвечает на heartbeat/API.
-
-What to check:
-- питание;
-- сеть;
-- IP/URL;
-- запущен ли backend на Raspberry Pi;
-- последний ответ, если известен.
-```
-
----
-
-## Control Semantics
-
-Использовать единые типы контролов.
-
-### Status badge
-
-Только отображает состояние.
-
-Примеры:
-
-- online;
-- offline;
-- degraded;
-- local only;
-- not detected;
-- fault.
-
-### Checkmark
-
-Подтверждает готовность/валидность.
-
-### Toggle switch
-
-Включает/выключает опциональную функцию.
-
-Примеры:
-
-- media sync enabled;
-- desktop controls enabled;
-- fullscreen enabled.
-
-### Segmented control
-
-Выбор одного режима из нескольких взаимоисключающих вариантов.
-
-Примеры:
-
-- Manual / Automatic;
-- Comfortable / Compact;
-- Auto / Manual Review.
-
-### Button
-
-Выполняет действие.
-
-Примеры:
-
-- Open folder;
-- Copy path;
-- Refresh node status;
-- Add module.
-
-### Disabled control
-
-Обязан иметь tooltip:
-
-- почему недоступен;
-- что нужно подключить/включить;
-- какой profile/host поддерживает действие.
-
----
-
-## Edit Mode
-
-Для структурных и потенциально опасных изменений нужен режим редактирования.
-
-По умолчанию Settings показывает состояние и безопасные quick actions.
-
-Edit mode нужен для:
-
-- Add module;
-- bind module to node;
-- change module ownership;
-- change storage path;
-- change optional sync domains;
-- create missing folder;
-- change hardware/component config.
-
-Логика:
-
-```text
-[Edit configuration]
-
-после включения:
-[+ Add module]
-[Change owner]
-[Create missing folder]
-[Save] [Cancel]
-```
-
-Опасные действия требуют отдельного confirmation.
-
----
-
-## Уровни действий
-
-### Safe action
-
-Безопасны без edit mode:
-
-- Refresh status;
-- Copy path;
-- Copy LAN URL;
-- Open phone entry / QR;
-- открыть подробности;
-- перейти к секции.
-
-### Local host action
-
-Выполняются на host-устройстве:
-
-- Open folder;
-- open runtime logs;
-- open launcher folder.
-
-Требуют trusted desktop host.
-
-### Config action
-
-Меняют конфигурацию:
-
-- Add module;
-- bind module to node;
-- change ownership;
-- change storage path;
-- change optional sync domains.
-
-Требуют edit mode + Save/Cancel.
-
-### Dangerous action
-
-Могут повлиять на данные/безопасность:
-
-- reset sync state;
-- clear local storage;
-- force accept remote settings;
-- override conflict;
-- clear logs/reports;
-- disable critical safety-related behavior.
-
-Требуют confirmation.
-
----
-
-## Empty States
-
-Settings должен хорошо выглядеть в нормальных промежуточных состояниях.
-
-### Нет подключённых плат
-
-Показывать:
-
-`Локальный запуск, платы offline.`
-
-Дать действия:
-
-- Refresh status;
-- Copy LAN URL;
-- Open phone entry / QR;
-- подсказка, как подключить Raspberry Pi/ESP32.
-
-### Sync ещё не выполнялась
-
-Показывать:
-
-`Синхронизация ещё не выполнялась.`
-
-Не путать с `Local only`.
-
-### Remote node unavailable
-
-Показывать:
-
-`Базовая связь узлов недоступна: remote node offline.`
-
-Tooltip:
-
-- какой узел недоступен;
-- что проверить;
-- last seen;
-- какие sync domains работают только локально.
-
-### Папка missing / not configured
-
-Показывать:
-
-- `missing`, если путь ожидается, но папки нет;
-- `not configured`, если путь не задан;
-- `unavailable`, если путь есть, но host/viewer не может его открыть.
-
-Действия:
-
-- Copy path;
-- Create folder, если безопасно и путь в whitelist;
-- Open folder, если доступно.
-
-### У узла нет модулей
-
-Показывать:
-
-`Для этого узла пока нет назначенных модулей.`
-
-`+ Add module` видна всегда, но если edit mode выключен, tooltip объясняет, что нужно включить режим редактирования.
-
-### Модуль добавлен, но железо не найдено
-
-Разделять:
-
-- module planned/configured;
-- component not detected;
-- node offline;
-- verification pending.
-
----
-
-## Mobile / Responsive Behavior
-
-Settings должен быть usable на desktop, phone, tablet и Raspberry display.
-
-На mobile:
-
-- карточки складываются вертикально;
-- длинные пути показываются компактно;
-- `Open folder` скрывается или disabled, если viewer не является host;
-- `Copy path` остаётся доступным;
-- tooltip работает по tap;
-- hover-only логика недопустима;
-- status chips не должны переполнять карточки;
-- add module/edit controls не должны быть слишком мелкими;
-- QR/phone entry не должен показываться бессмысленно, если пользователь уже на телефоне.
-
----
-
-## Layout Exploration
-
-Codex должен предложить 2–3 layout-варианта, но реализовывать один выбранный default, а не кодить сразу три разных дизайна.
-
-Варианты:
-
-### Вариант A — Compact Dashboard
-
-- 4–5 верхних карточек;
-- минимальный текст;
-- status badges;
-- quick actions.
-
-### Вариант B — Runtime-first
-
-- первая крупная карточка объясняет текущий запуск;
-- рядом узлы и sync;
-- полезно для debugging laptop/phone/Raspberry entry.
-
-### Вариант C — Modular Constructor
-
-- Overview сверху компактный;
-- ниже сильный акцент на Node → Module → Component;
-- удобно для будущего добавления solar/wind/cat feeder/extra valves.
-
-Рекомендуемый default:
-
-- Overview как Compact Dashboard;
-- подробные секции как Modular Constructor.
-
----
-
-## Known Issues To Fix
-
-1. `Desktop Smoke` не должен отображаться как пользовательский профиль Raspberry Pi.
-2. При запуске с ноутбука не показывать Raspberry Pi online.
-3. Убрать `neighbor node` / `соседний узел` из user-facing UI.
-4. Sync status не должен жить внутри ESP32 card.
-5. Слово `локально` в sync должно быть заменено на ясные состояния.
-6. `Visible modules: 11` должно быть переименовано как `Модули в registry`, либо перенесено в System/Registry/Advanced.
-7. Module ownership вынести в отдельную секцию.
-8. Длинные пути не должны ломать карточки.
-9. Для путей нужны `Copy path` и, где возможно, `Open folder`.
-10. `Assets`, `Audio`, `Libraries` должны быть переведены и показывать status/path/count.
-11. Не дублировать язык/тему как статичный шум.
-12. Tooltip в Settings привести к качеству Smart Bar.
-13. Settings и Smart Bar должны использовать общие статусы, цвета и форматирование.
-14. Overview должен быть компактным и практичным.
-15. Fullscreen, bar behavior и другие интерактивные настройки не должны работать независимо в разных местах.
-16. Кликабельные элементы, которые затрагивают другие классы/modules/backend, должны исправляться не только в `settings.html`, но и в связанных JS/backend местах.
-
----
-
-## Required Files To Inspect First
-
-Сначала открыть и изучить:
-
-1. `README.md`
-2. `chat_prompts/README.md`
-3. `chat_prompts/gallery_settings_sync_chat_bootstrap_prompt.md`
-4. `docs/48_browser_entry_and_host_launch.md`
-5. `docs/49_shell_runtime_and_chat_guardrails.md`
-6. `docs/33_shell_snapshot_schema.md`
-7. `docs/40_system_shell_navigation_alignment.md`
-8. `briefs/sync_and_storage.md`
-9. `raspberry_pi/web/static/smart_bar.js`
-10. `raspberry_pi/web/settings.html`
-11. `raspberry_pi/server.py`
-12. `raspberry_pi/settings_store.py`
-13. `raspberry_pi/shell_snapshot_facade.py`
-
----
-
-## Implementation Stage 1
-
-Не переписывать всё хаотично.
-
-Stage 1:
-
-1. Пересобрать верхний Overview вокруг:
-   - System Status;
-   - Current Runtime;
-   - Current Viewer;
-   - Platform Nodes;
-   - Sync;
-   - quick links к пользовательским настройкам.
-2. Убрать ложную Raspberry/ESP hierarchy.
-3. Убрать/перенести misleading strings из старого UI.
-4. Подготовить или переиспользовать shared tooltip/status helpers из Smart Bar.
-5. Оставить часть старых секций ниже только если они не вводят в заблуждение.
-6. Удалить явно ошибочный или дублирующий контент.
-7. Если интерактив связан с backend/shared state, править не только HTML, но и связанные JS/backend modules.
-8. Начать выравнивать fullscreen/bar/settings behavior вокруг общего settings state.
-9. После изменений проверить live page, а не только source file.
-
----
-
-## Documentation Requirement
-
-После изменения Settings обновить документацию.
-
-Обязательные действия:
-
-1. Обновить docs, которые описывают runtime, entry, shell, settings, sync, ownership, storage и status semantics.
-2. Если новая терминология меняет старую модель, заменить устаревшие термины.
-3. Убрать или пометить deprecated формулировки вроде `neighbor node`, ложного Raspberry-as-current-host, pseudo-master semantics.
-4. Зафиксировать новую модель:
-   - Host;
-   - Viewer/current browser client;
-   - Platform Node;
-   - Module;
-   - Component;
-   - Module Ownership;
-   - Sync domains;
-   - Service connectivity;
-   - Optional sync;
-   - Storage paths.
-5. Размножить лучшие решения на всю документацию и UI:
-   - общий status model;
-   - единая tooltip-система;
-   - единые chips/badges;
-   - одинаковая логика fullscreen/settings/bar state;
-   - одинаковые названия online/offline/not detected/missing/fault/simulated;
-   - одинаковая логика Open folder / Copy path / unsupported viewer.
-6. Если меняется API/snapshot/settings semantics — обновить contracts/shared docs.
-7. Документацию обновлять в том же PR/коммите, не отдельной задачей.
-
-Особенно проверить:
-
-- `README.md`;
-- `chat_prompts/README.md`;
-- этот Settings bootstrap prompt;
-- `docs/48_browser_entry_and_host_launch.md`;
-- `docs/49_shell_runtime_and_chat_guardrails.md`;
-- `docs/33_shell_snapshot_schema.md`;
-- `docs/40_system_shell_navigation_alignment.md`;
-- `briefs/sync_and_storage.md`;
-- shared contracts, если меняется API/snapshot/settings semantics.
-
----
-
-## Chat Prompts Update
-
-Создать новый файл:
-
-`chat_prompts/settings_architecture_refactor_chat_bootstrap_prompt.md`
-
-Старый файл:
-
-`chat_prompts/gallery_settings_sync_chat_bootstrap_prompt.md`
-
-оставить для задач Gallery/Settings sync-continuity.
-
-Обновить:
-
-`chat_prompts/README.md`
-
-Добавить туда новый пункт:
-
-```markdown
-- `settings_architecture_refactor_chat_bootstrap_prompt.md` — Settings page architecture refactor: runtime/viewer/node model, shared Smart Bar status/tooltip behavior, sync/storage/preferences separation, module/component configuration.
-```
-
----
-
-## Acceptance Criteria
-
-После первого прохода пользователь, открывший Settings с ноутбука без подключённых Raspberry Pi и ESP32, должен ясно видеть:
-
-- система запущена локально с ноутбука/desktop host;
-- backend и snapshot API отвечают;
-- текущее устройство просмотра определено корректно;
-- Raspberry Pi offline;
-- ESP32 offline;
-- offline относится к узлам, а not detected — к компонентам;
-- sync находится в local-only/remote unavailable/never synced состоянии с ясным текстом;
-- базовая связь узлов отделена от отключаемой расширенной sync;
-- module count относится к registry, а не к физически найденному железу;
-- module ownership показан как ожидаемая архитектура, а не live status;
-- язык/тема редактируются в правильной секции и не повторяются как статичный шум;
-- длинные пути не ломают layout;
-- tooltip выглядят и работают как в Smart Bar;
-- статусы в Settings совпадают с bar-панелью;
-- интерактивные элементы используют единую семантику и не конфликтуют между страницами;
-- документация обновлена вместе с изменениями.
-
----
-
-## Рабочий режим Codex
-
-При старте сессии:
-
-1. Прочитай этот prompt полностью.
-2. Открой связанные файлы и docs.
-3. Смоделируй практический user flow:
-   - пользователь запускает систему с ноутбука;
-   - Raspberry Pi и ESP32 offline;
-   - пользователь смотрит Settings;
-   - bar показывает статусы честно;
-   - Settings должен показать ту же truth model.
-4. Сопоставь Settings с Smart Bar и найди расхождения.
-5. Сначала исправь model/skeleton/status semantics.
-6. Затем добавляй интерактив, layout и визуальные улучшения.
-7. Если что-то кликабельное затрагивает другие классы/modules/backend, правь связанные места, а не только HTML.
-8. После изменений проверь live page.
-9. Обнови документацию и prompt/contract files.
-
----
-
+## Каноническая структура Settings
+
+Ниже идёт уже не historical appendix, а актуальный канон для будущих сессий.
+Если старые prompt-файлы, заметки или doc-snippets противоречат этому блоку,
+они считаются устаревшими.
+
+### Разделы страницы
+
+1. `Interface`
+   - язык;
+   - theme;
+   - density;
+   - fullscreen;
+   - keyboard controls;
+   - advanced diagnostics toggle.
+2. `Launch and Runtime`
+   - один launch context вместо россыпи дублирующих host/viewer/profile полей;
+   - краткое truthful explanation, где запущен backend и кто сейчас смотрит UI.
+3. `Synchronization`
+   - `Auto` / `Manual review`;
+   - список `selected_domains`;
+   - last sync time;
+   - per-domain status рядом с выбранными пунктами;
+   - continuity preference и poll interval.
+4. `Storage`
+   - project root;
+   - plant library;
+   - video;
+   - audio;
+   - reports;
+   - gallery/content roots;
+   - действия `Copy path`, `Open folder`, `Open in app`, cleanup preview,
+     подтвержденное удаление в разрешенных пределах.
+5. `Modules`
+   - продуктовые hardware-level системы: `Turret`, `Irrigation`, `Power`;
+   - ownership показывается через логические роли узлов, а не через brand платы;
+   - truthful hardware profile при необходимости показывается отдельно.
+6. `Components`
+   - каждый компонент живёт в собственной карточке;
+   - инженерные поля, suggestions, pinout/power/tolerance/modes;
+   - статусы честные, нейтральные при offline.
+7. `System Services`
+   - `Platform Shell`, `Sync Core`, `Storage Service` и другие software-сущности;
+   - не смешивать с modules/components.
+8. `Policies`
+   - turret policies;
+   - irrigation policies;
+   - keyboard action semantics;
+   - безопасные правила, которые пользователь действительно может менять.
+9. `Constructor`
+   - отдельный modal wizard;
+   - создаёт scaffold будущего module/component registry entry;
+   - сначала проверяем UI-flow, затем сохраняем в JSON/config через приложение.
+10. `Diagnostics`
+   - secondary section;
+   - по умолчанию под спойлером;
+   - не раскрывается сам по себе.
+
+### Канон терминов
+
+- `Platform Shell` — каноническое имя shell-блока;
+- `Laboratory` — каноническое имя инженерного сервисного блока;
+- `compute_node`, `io_node`, `shared` — канонические логические роли узлов;
+- `Raspberry Pi`, `ESP32` и будущие платы — truthful board profiles, а не
+  универсальные owner-термины для всей архитектуры;
+- legacy alias `system_shell`, `service_test`, `rpi`, `esp32` допускаются только
+  как compatibility-layer в старых payload, логах и bridge-stage документах.
+
+### Что удалено из канона
+
+- отдельный `Overview` dashboard в Settings;
+- отдельная секция `Platform Nodes`;
+- дублирующие quick actions в нескольких местах;
+- helper text, который повторяет tooltip;
+- user-facing текст, показывающий историю рефакторинга вместо смысла функции.
+
+### Правила truthful-state
+
+- runtime truth приходит из `/api/v1/shell/snapshot`;
+- редактируемые предпочтения и policies приходят из `/api/v1/settings`;
+- offline / not connected отображается нейтрально серым;
+- красный используется только для реальных `fault / error / blocked`;
+- desktop/laptop host не должен маскироваться под `Raspberry Pi online`;
+- host launch, viewer device, module ownership и hardware presence всегда
+  разделяются как разные сущности.
+
+### Правила UX
+
+- page header короткий: только `Settings` / `Настройки`;
+- tooltip появляется примерно через `500 ms`;
+- tooltip закрывается/отменяется сразу при смещении курсора больше `3 px`;
+- без движения tooltip живёт не дольше `6 s`;
+- tooltip располагается рядом с курсором или местом наведения;
+- custom tooltip не должен конфликтовать с browser-native tooltip;
+- optimistic-first update: UI реагирует сразу, сохранение уходит в debounce/background;
+- выбранный язык применяется ко всему user-facing тексту страницы;
+- theme и density распространяются на все shell-страницы, кроме нейтральной bar-панели.
+
+### Приоритет реализации
+
+1. Сначала поддерживать skeleton, который можно честно тестировать с ноутбука.
+2. Не связывать progress с наличием реального железа, если задача касается:
+   - docs;
+   - settings persistence;
+   - constructor registry scaffold;
+   - sync/storage semantics;
+   - UI vocabulary и navigation alignment.
+3. Hardware-required behaviour расширять только после того, как laptop-testable
+   слой стал truthful и непротиворечивым.
+
+### Требования к Constructor
+
+- это не должен быть бессмысленный placeholder;
+- нужен полноценный scaffold flow хотя бы с тремя реальными примерами:
+  - `Cat Feeder` как новый модуль;
+  - `Servo Dispenser` как компонент для нового модуля;
+  - `Light Sensor` как компонент для существующего модуля;
+- flow должен удерживать разделение между:
+  - controller node role;
+  - assigned module;
+  - component kind;
+  - engineering fields;
+- пользователь не должен терять введённые значения и suggestions для типовых полей.
+
+### Что проверять после каждой итерации
+
+- `Settings` страница жива на реальном порту и не падает до первого render;
+- theme/density/language/fullscreen работают согласованно между Settings и shell;
+- tooltip contract одинаков в Settings и bar-панели;
+- sync/storage actions не выходят за разрешённые roots;
+- docs, prompt-файлы и UI vocabulary не спорят между собой.
+
+### Основные файлы для старта новой сессии
+
+1. `chat_prompts/README.md`
+2. `docs/05_ui_shell_and_navigation.md`
+3. `docs/27_platform_shell_v1_spec.md`
+4. `docs/33_shell_snapshot_schema.md`
+5. `docs/39_design_decisions_and_screen_map.md`
+6. `docs/40_platform_shell_navigation_alignment.md`
+7. `shared_contracts/shell_snapshot_contract.md`
+8. `shared_contracts/api_contracts.md`
+9. `briefs/laboratory.md`
+
+### Инструкция для следующей Codex-сессии
+
+1. Сначала сравнить текущий `Settings` UI с этим каноном.
+2. Затем найти все residual contradictions в docs/prompts/contracts.
+3. Исправлять сначала truthful-state и shared semantics, а уже потом косметику.
+4. Если встречаются старые указания про `Overview`, `Platform Nodes`,
+   старые shell/laboratory aliases, light/dark-only theme model или
+   brand-based ownership semantics, считать их устаревшими и мигрировать на
+   канон выше.
 ## Тон интерфейса
 
 Интерфейс должен быть:

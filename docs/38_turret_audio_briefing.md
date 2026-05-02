@@ -16,7 +16,7 @@
 2. `horn_pair`
 3. `voice_fx`
 
-Service/Test должен отображать их:
+Laboratory должен отображать их:
 
 - как одну общую audio-вкладку;
 - но внутри нее как три независимые группы тестирования.
@@ -102,7 +102,7 @@ Service/Test должен отображать их:
 
 - в UI это может оставаться одним модулем `turret_audio`;
 - внутри hardware/contracts это три разные channel groups;
-- `Service/Test` по `audio` должен уметь:
+- `Laboratory` по `audio` должен уметь:
   - подбирать частоты
   - подбирать уровни/мощность
   - проверять сценарии
@@ -130,4 +130,4 @@ Service/Test должен отображать их:
 2. уточнить роли усилителей и групп каналов
 3. уточнить Bluetooth reconnect contract
 4. уточнить storage/source contract для звуков
-5. только потом проектировать `Service/Test` audio tab и product-level audio controls
+5. только потом проектировать `Laboratory` audio tab и product-level audio controls

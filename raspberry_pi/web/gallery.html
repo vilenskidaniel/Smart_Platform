@@ -204,6 +204,9 @@
           <p>Raw directory inspection stays in <a href="/content">Storage Diagnostics</a>.</p>
           <p>Future richer viewer can grow here without putting storage concerns back into the top shell.</p>
         </div>
+        <div class="module" id="capture-summary" style="margin-top: 14px;">
+          <p>Loading turret captures...</p>
+        </div>
       </article>
     </section>
 
@@ -239,6 +242,7 @@
                 <option value="operator_note">Operator Note</option>
                 <option value="scenario">Scenario</option>
                 <option value="action">Action</option>
+                <option value="media_capture">Media Capture</option>
                 <option value="sync">Sync</option>
                 <option value="mode_change">Mode Change</option>
                 <option value="interlock">Interlock</option>
@@ -638,7 +642,31 @@
       `).join('');
     }
 
-    function renderPanels(snapshot, contentStatus, reportsSnapshot) {
+    function buildCaptureSummary(capturesSnapshot) {
+      const artifacts = (capturesSnapshot.artifacts || []).slice(0, 8);
+      if (!artifacts.length) {
+        return `
+          <h3>Recent Captures</h3>
+          <p>No turret photo/video artifacts yet.</p>
+          <p class="meta">Manual FPV saves metadata artifacts here until physical camera transport is wired.</p>
+        `;
+      }
+
+      return `
+        <h3>Recent Captures</h3>
+        ${artifacts.map((artifact) => `
+          <p>
+            <a href="${esc(artifact.artifact_url || '#')}">${esc(artifact.capture_id || 'capture')}</a>
+            · ${esc(artifact.kind || 'media')}
+            · ${esc(artifact.status || artifact.phase || 'recorded')}
+            ${artifact.duration_ms ? `· ${esc(artifact.duration_ms)} ms` : ''}
+          </p>
+        `).join('')}
+        <p class="meta">Photo artifacts live under Gallery; video artifacts live under Video and are also linked from reports.</p>
+      `;
+    }
+
+    function renderPanels(snapshot, contentStatus, reportsSnapshot, capturesSnapshot) {
       const content = ((snapshot.summaries || {}).content || {});
       const reportSummary = reportsSnapshot.summary || {};
       const visibleEntries = (reportsSnapshot.entries || []).length;
@@ -653,8 +681,10 @@
         <p>assets_ready: ${esc(content.assets_ready)}</p>
         <p>audio_ready: ${esc(content.audio_ready)}</p>
         <p>animations_ready: ${esc(content.animations_ready)}</p>
+        <p>recent_captures: ${esc((capturesSnapshot.artifacts || []).length)}</p>
         <p>Media is already separated from raw storage inspection even before the richer viewer is implemented.</p>
       `;
+      document.getElementById('capture-summary').innerHTML = buildCaptureSummary(capturesSnapshot);
 
       document.getElementById('reports-summary').innerHTML = `
         <p>visible_entries: ${esc(visibleEntries)}</p>
@@ -738,15 +768,17 @@
     }
 
     async function refresh() {
-      const [snapshotResponse, contentResponse, reportsResponse] = await Promise.all([
+      const [snapshotResponse, contentResponse, reportsResponse, capturesResponse] = await Promise.all([
         fetch('/api/v1/shell/snapshot'),
         fetch('/api/v1/content/status'),
-        fetch(`/api/v1/reports?${buildReportQuery()}`)
+        fetch(`/api/v1/reports?${buildReportQuery()}`),
+        fetch('/api/v1/turret/captures')
       ]);
 
       const snapshot = await snapshotResponse.json();
       const contentStatus = await contentResponse.json();
       const reportsSnapshot = await reportsResponse.json();
+      const capturesSnapshot = await capturesResponse.json();
       state.snapshot = snapshot;
       const current = ((snapshot.nodes || {}).current || {});
       const peer = ((snapshot.nodes || {}).peer || {});
@@ -756,7 +788,7 @@
       document.getElementById('peer-pill').textContent = `peer: ${peer.health || 'unknown'}`;
 
       renderSummary(snapshot, contentStatus);
-      renderPanels(snapshot, contentStatus, reportsSnapshot);
+      renderPanels(snapshot, contentStatus, reportsSnapshot, capturesSnapshot);
       populateModuleSelect('case-module', snapshot);
       populateModuleSelect('note-module', snapshot);
       populateOriginNodeOptions(snapshot);

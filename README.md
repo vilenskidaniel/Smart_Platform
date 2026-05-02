@@ -24,7 +24,7 @@
 
 На верхнем уровне продукт делится на:
 
-1. `System Shell`
+1. `Platform Shell`
 2. `Irrigation`
 3. `Turret`
 4. `Gallery`
@@ -36,7 +36,7 @@
 - `Settings` не выделяется в отдельный product block, но остается обязательной persistent platform-page:
   здесь пользователь видит truthful platform state, shared preferences, storage/sync semantics и policy baselines;
 - `camera_stack`, `driver layer`, `water path`, `sensor pack` — внутренние технические слои;
-- внутреннее stage-name `Service/Test v1` можно сохранять в roadmap, но user-facing имя страницы фиксируется как `Laboratory`.
+- legacy alias `service_test` можно сохранять в roadmap, но user-facing имя страницы фиксируется как `Laboratory`.
 
 ## Кто чем владеет
 
@@ -81,13 +81,13 @@
 - реальной камеры и production-ready FPV transport;
 - полного hardware-backed turret stack;
 - полного live irrigation hardware-loop;
-- полностью завершенного product-level `System Shell v1`;
+- полностью завершенного product-level `Platform Shell`;
 - полной обкатки связки `ESP32 + Raspberry Pi` на реальном железе.
 
 Важно:
 
 - это не означает, что работа должна снова застрять в shell-refactor;
-- текущий `System Shell` уже достаточно зрел как platform foundation;
+- текущий `Platform Shell` уже достаточно зрел как platform foundation;
 - поэтому дальнейшую работу можно вести по модульным блокам и по product-context, а не только по внутренним слоям.
 
 ## Где именно работать
@@ -128,12 +128,12 @@
 4. [docs/02_system_architecture.md](docs/02_system_architecture.md)
 5. [docs/05_ui_shell_and_navigation.md](docs/05_ui_shell_and_navigation.md)
 6. [docs/39_design_decisions_and_screen_map.md](docs/39_design_decisions_and_screen_map.md)
-7. [docs/40_system_shell_navigation_alignment.md](docs/40_system_shell_navigation_alignment.md)
+7. [docs/40_platform_shell_navigation_alignment.md](docs/40_platform_shell_navigation_alignment.md)
 8. [docs/09_master_design_plan.md](docs/09_master_design_plan.md)
 9. [docs/28_legacy_migration_map.md](docs/28_legacy_migration_map.md)
 10. [docs/30_top_down_architecture_map.md](docs/30_top_down_architecture_map.md)
-11. [docs/27_system_shell_v1_spec.md](docs/27_system_shell_v1_spec.md)
-12. [docs/31_system_shell_class_map.md](docs/31_system_shell_class_map.md)
+11. [docs/27_platform_shell_v1_spec.md](docs/27_platform_shell_v1_spec.md)
+12. [docs/31_platform_shell_class_map.md](docs/31_platform_shell_class_map.md)
 13. [docs/32_current_shell_role_mapping.md](docs/32_current_shell_role_mapping.md)
 14. [docs/33_shell_snapshot_schema.md](docs/33_shell_snapshot_schema.md)
 15. [shared_contracts/shell_snapshot_contract.md](shared_contracts/shell_snapshot_contract.md)
@@ -144,7 +144,7 @@ Stage-документы `12+` читать уже после этого, ког
 
 Платформу лучше развивать по продуктовым блокам:
 
-1. `System Shell v1`
+1. `Platform Shell`
 2. `Irrigation v1`
 3. `Turret v1`
 4. `Gallery v1`
@@ -176,7 +176,7 @@ Stage-документы `12+` читать уже после этого, ког
 2. глубокую разработку лучше вести по одному product-level блоку за чат;
 3. после завершения отдельных блоков нужно возвращаться сюда для синтеза и интеграции.
 
-Если новый чат одновременно начинает подробно тянуть `System Shell`, `Irrigation` и `Turret`, это сигнал снова разделить работу.
+Если новый чат одновременно начинает подробно тянуть `Platform Shell`, `Irrigation` и `Turret`, это сигнал снова разделить работу.
 
 Важно:
 

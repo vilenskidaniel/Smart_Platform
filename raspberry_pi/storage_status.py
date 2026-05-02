@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 import platform
 import shutil
@@ -47,15 +48,43 @@ def _path_state(path: Path) -> str:
     return "ready"
 
 
+def _plant_profile_count(library_root: Path) -> int:
+    profile_path = library_root / "plant_profiles.v1.json"
+    try:
+        payload = json.loads(profile_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return 0
+    entries = payload.get("entries", [])
+    return len(entries) if isinstance(entries, list) else 0
+
+
 def _open_supported() -> bool:
     system_name = platform.system().strip().lower()
     if system_name == "windows":
-        return hasattr(os, "startfile")
+        return True
     if system_name == "darwin":
         return True
     if system_name == "linux":
         return shutil.which("xdg-open") is not None
     return False
+
+
+def _open_windows_folder_in_front(path: Path) -> None:
+    subprocess.Popen(["explorer.exe", str(path)])
+    focus_script = (
+        "Start-Sleep -Milliseconds 350; "
+        "$shell = New-Object -ComObject WScript.Shell; "
+        "$null = $shell.AppActivate('File Explorer'); "
+        "$null = $shell.AppActivate('Проводник')"
+    )
+    try:
+        subprocess.Popen(
+            ["powershell.exe", "-NoProfile", "-WindowStyle", "Hidden", "-Command", focus_script],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    except OSError:
+        return
 
 
 def _path_entry(
@@ -68,6 +97,7 @@ def _path_entry(
     description: str = "",
     cleanup_supported: bool = False,
     cleanup_reason: str = "",
+    metadata: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     resolved = path.resolve()
     state = _path_state(resolved)
@@ -90,6 +120,7 @@ def _path_entry(
         "cleanup_supported": cleanup_supported and state in {"ready", "missing"},
         "cleanup_reason": cleanup_reason,
         "description": description,
+        "metadata": metadata or {},
     }
 
 
@@ -130,9 +161,10 @@ def build_content_status(content_root: Path, *, project_root: Path | None = None
             "Plant Library",
             root / "libraries",
             open_target="libraries",
-            app_url="/gallery?tab=plants",
-            description="Structured plant profiles, state rules, and care scenarios.",
+            app_url="/irrigation?library=plants",
+            description="Structured plant profiles, state rules, and care scenarios used by the irrigation page.",
             cleanup_reason="Reference libraries are protected from cleanup in Settings.",
+            metadata={"plant_profile_count": _plant_profile_count(root / "libraries")},
         ),
         _path_entry(
             "video",
@@ -276,7 +308,7 @@ def open_host_path_target(
     system_name = platform.system().strip().lower()
     try:
         if system_name == "windows":
-            os.startfile(str(path))  # type: ignore[attr-defined]
+            _open_windows_folder_in_front(path)
         elif system_name == "darwin":
             subprocess.Popen(["open", str(path)])
         elif system_name == "linux":

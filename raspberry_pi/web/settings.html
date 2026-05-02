@@ -221,11 +221,18 @@
       --shadow: 0 14px 28px rgba(0, 0, 0, 0.12);
     }
 
+    body[data-density="comfortable"] {
+      --page-gap: 20px;
+      --section-pad: 22px;
+      --radius: 14px;
+      --radius-sm: 12px;
+    }
+
     body[data-density="compact"] {
       --page-gap: 10px;
       --section-pad: 12px;
-      --radius: 10px;
-      --radius-sm: 8px;
+      --radius: 11px;
+      --radius-sm: 9px;
     }
 
     * { box-sizing: border-box; }
@@ -313,7 +320,6 @@
     }
 
     .hero-kicker,
-    .section-kicker,
     .panel-kicker,
     .metric-kicker,
     .rail-kicker {
@@ -325,7 +331,6 @@
     }
 
     .hero-kicker,
-    .section-kicker,
     .panel-kicker,
     .metric-kicker,
     .rail-kicker {
@@ -421,6 +426,22 @@
       justify-content: center;
     }
 
+    .option-row[data-layout="density"] {
+      align-items: center;
+    }
+
+    .option-row[data-layout="density"] .option-chip span {
+      min-width: 124px;
+      min-height: 42px;
+      justify-content: center;
+    }
+
+    .option-row[data-layout="sync-mode"] .option-chip span {
+      width: 148px;
+      min-height: 42px;
+      justify-content: center;
+    }
+
     .settings-shell {
       display: grid;
       grid-template-columns: 300px minmax(0, 1fr);
@@ -435,8 +456,6 @@
     .section-panel,
     .detail-card,
     .path-card,
-    .node-card,
-    .ownership-card,
     .module-card,
     .component-card,
     .service-card,
@@ -612,8 +631,6 @@
 
     .detail-grid,
     .path-grid,
-    .node-grid,
-    .ownership-grid,
     .module-grid,
     .theme-grid,
     .component-grid,
@@ -625,7 +642,6 @@
 
     .detail-grid,
     .path-grid,
-    .ownership-grid,
     .module-grid,
     .component-grid,
     .service-grid,
@@ -637,31 +653,28 @@
       grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
     }
 
-    .node-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+    .sync-secondary-grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: 1fr;
+      margin-top: 12px;
     }
 
-    .node-card[data-tone="ok"],
     .path-card[data-tone="ok"],
-    .ownership-card[data-tone="ok"],
     .module-card[data-tone="ok"],
     .component-card[data-tone="ok"],
     .service-card[data-tone="ok"] {
       border-color: color-mix(in srgb, var(--ok) 22%, transparent);
     }
 
-    .node-card[data-tone="warn"],
     .path-card[data-tone="warn"],
-    .ownership-card[data-tone="warn"],
     .module-card[data-tone="warn"],
     .component-card[data-tone="warn"],
     .service-card[data-tone="warn"] {
       border-color: color-mix(in srgb, var(--warn) 22%, transparent);
     }
 
-    .node-card[data-tone="fault"],
     .path-card[data-tone="fault"],
-    .ownership-card[data-tone="fault"],
     .module-card[data-tone="fault"],
     .component-card[data-tone="fault"],
     .service-card[data-tone="fault"] {
@@ -669,18 +682,14 @@
     }
 
     .info-stack,
-    .status-list,
     .module-list,
-    .ownership-list,
     .note-stack,
     .diagnostics-stack {
       display: grid;
       gap: 10px;
     }
 
-    .info-row,
-    .status-row-item,
-    .ownership-row {
+    .info-row {
       display: flex;
       justify-content: space-between;
       gap: 12px;
@@ -690,22 +699,16 @@
       font-size: 14px;
     }
 
-    .info-row:first-child,
-    .status-row-item:first-child,
-    .ownership-row:first-child {
+    .info-row:first-child {
       padding-top: 0;
       border-top: 0;
     }
 
-    .info-row strong,
-    .status-row-item strong,
-    .ownership-row strong {
+    .info-row strong {
       color: var(--ink);
     }
 
-    .info-row span:last-child,
-    .status-row-item span:last-child,
-    .ownership-row span:last-child {
+    .info-row span:last-child {
       text-align: right;
       color: var(--ink);
       min-width: 0;
@@ -716,9 +719,10 @@
 
     .detail-card,
     .path-card,
-    .node-card,
-    .ownership-card,
     .module-card,
+    .component-card,
+    .service-card,
+    .constructor-card,
     .note-card,
     .empty-state {
       padding: 16px;
@@ -845,13 +849,13 @@
     }
 
     .theme-card {
-      min-height: 116px;
+      min-height: 132px;
       border-radius: var(--radius-sm);
       border: 1px solid var(--line);
-      padding: 13px;
+      padding: 16px;
       cursor: pointer;
       display: grid;
-      gap: 10px;
+      gap: 12px;
       transition: transform 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
     }
 
@@ -903,7 +907,7 @@
 
     .theme-name {
       font-family: var(--display);
-      font-size: 24px;
+      font-size: 26px;
       line-height: 1;
       margin: 0;
       letter-spacing: 0;
@@ -951,19 +955,17 @@
     .theme-card[data-theme-preview="contrast"] .theme-swatch:nth-child(3) { background: #ffffff; }
 
     body[data-density="compact"] .section-title {
-      font-size: clamp(23px, 3vw, 32px);
+      font-size: clamp(20px, 2.5vw, 28px);
     }
 
     body[data-density="compact"] .panel-title,
     body[data-density="compact"] .theme-name {
-      font-size: 20px;
+      font-size: 18px;
     }
 
     body[data-density="compact"] .detail-card,
     body[data-density="compact"] .section-panel,
     body[data-density="compact"] .path-card,
-    body[data-density="compact"] .node-card,
-    body[data-density="compact"] .ownership-card,
     body[data-density="compact"] .module-card,
     body[data-density="compact"] .component-card,
     body[data-density="compact"] .service-card {
@@ -973,13 +975,55 @@
     body[data-density="compact"] .toggle,
     body[data-density="compact"] .readonly-row,
     body[data-density="compact"] .note-box {
-      padding: 10px 12px;
+      padding: 7px 8px;
       border-radius: var(--radius-sm);
     }
 
     body[data-density="compact"] .theme-card {
-      min-height: 92px;
-      padding: 10px;
+      min-height: 86px;
+      padding: 8px;
+      gap: 4px;
+    }
+
+    body[data-density="compact"] .theme-grid {
+      grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+    }
+
+    body[data-density="compact"] .field input,
+    body[data-density="compact"] .search-input {
+      min-height: 36px;
+      padding: 7px 9px;
+    }
+
+    body[data-density="compact"] .option-chip span {
+      min-height: 34px;
+      padding: 7px 11px;
+    }
+
+    body[data-density="compact"] .option-row[data-layout="density"] .option-chip span {
+      min-width: 112px;
+      min-height: 36px;
+    }
+
+    body[data-density="compact"] .option-row[data-layout="sync-mode"] .option-chip span {
+      width: 132px;
+      min-height: 36px;
+    }
+
+    body[data-density="compact"] .sync-domain-row,
+    body[data-density="compact"] .status-row-item {
+      min-height: 72px;
+      font-size: 13px;
+    }
+
+    body[data-density="compact"] .sync-domain-row,
+    body[data-density="compact"] .status-row-item {
+      padding: 8px 9px;
+    }
+
+    body[data-density="compact"] .sync-domain-meta,
+    body[data-density="compact"] .sync-domain-row strong {
+      font-size: 13px;
     }
 
     .path-value,
@@ -999,6 +1043,111 @@
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
+    }
+
+    .component-visual {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 42px;
+    }
+
+    .component-symbol {
+      width: 42px;
+      height: 42px;
+      border-radius: 16px;
+      display: inline-grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      background: color-mix(in srgb, var(--accent) 10%, var(--panel-soft));
+      color: var(--accent);
+      font-weight: 900;
+      letter-spacing: 0.04em;
+    }
+
+    .sync-domain-list {
+      display: grid;
+      gap: 8px;
+      grid-auto-rows: minmax(74px, auto);
+    }
+
+    .sync-domain-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--panel-soft);
+      min-height: 74px;
+    }
+
+    .sync-domain-row[data-selected="false"],
+    .status-row-item[data-selected="false"] {
+      opacity: 0.6;
+    }
+
+    .sync-domain-row strong {
+      display: block;
+      margin-bottom: 3px;
+      font-size: 14px;
+    }
+
+    .sync-domain-meta {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    .sync-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .status-list {
+      display: grid;
+      gap: 8px;
+      grid-auto-rows: minmax(74px, auto);
+    }
+
+    .status-row-item {
+      display: grid;
+      grid-template-columns: minmax(130px, 0.58fr) minmax(170px, 1fr);
+      gap: 14px;
+      align-items: center;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--panel-soft);
+      min-height: 74px;
+      font-size: 14px;
+    }
+
+    .status-row-item strong {
+      display: block;
+      color: var(--ink);
+      font-size: 14px;
+    }
+
+    .status-row-item span:last-child {
+      text-align: left;
+      color: var(--ink);
+      min-width: 0;
+      max-width: none;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    .sync-policy-grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .module-pill {
@@ -1053,6 +1202,11 @@
       gap: 6px;
     }
 
+    .field.is-disabled {
+      opacity: 0.58;
+      cursor: help;
+    }
+
     .field label {
       color: var(--muted);
       font-size: 12px;
@@ -1069,7 +1223,15 @@
       background: color-mix(in srgb, var(--panel-strong) 84%, white);
       color: var(--ink);
       font: inherit;
+      line-height: 1.25;
       padding: 9px 11px;
+    }
+
+    .field input:disabled,
+    .field select:disabled,
+    .field textarea:disabled {
+      cursor: help;
+      background: color-mix(in srgb, var(--muted) 8%, var(--panel-soft));
     }
 
     .field textarea {
@@ -1302,8 +1464,6 @@
     @media (max-width: 860px) {
       .detail-grid,
       .path-grid,
-      .node-grid,
-      .ownership-grid,
       .module-grid,
       .component-grid,
       .service-grid,
@@ -1313,6 +1473,10 @@
 
       .theme-grid {
         grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+      }
+
+      .sync-policy-grid {
+        grid-template-columns: 1fr;
       }
     }
 
@@ -1329,14 +1493,16 @@
 
       .info-row,
       .status-row-item,
-      .ownership-row,
       .readonly-row {
         flex-direction: column;
       }
 
+      .status-row-item {
+        grid-template-columns: 1fr;
+      }
+
       .info-row span:last-child,
-      .status-row-item span:last-child,
-      .ownership-row span:last-child {
+      .status-row-item span:last-child {
         max-width: none;
         text-align: left;
       }
@@ -1361,10 +1527,13 @@
     const DESKTOP_CONTROLS_KEY = "smart-platform.desktop-controls.enabled";
     const FULLSCREEN_STORAGE_KEY = "smart-platform.fullscreen.enabled";
     const SETTINGS_LANGUAGE_KEY = "smart-platform.settings.language";
+    const SETTINGS_THEME_KEY = "smart-platform.settings.theme";
+    const SETTINGS_DENSITY_KEY = "smart-platform.settings.density";
     const VIEWER_STORAGE_KEY = "smart-platform.viewer.id";
-    const TOOLTIP_HIDE_MS = 2000;
+    const TOOLTIP_HIDE_MS = 6000;
     const TOOLTIP_SHOW_DELAY_MS = 500;
     const TOOLTIP_MOVE_TOLERANCE_PX = 3;
+    const SETTINGS_SAVE_DEBOUNCE_MS = 500;
 
     const DEFAULT_SETTINGS = {
       schema_version: "settings.v1",
@@ -1381,7 +1550,27 @@
       },
       synchronization: {
         preferred_mode: "auto",
-        prefer_peer_continuity: true
+        prefer_peer_continuity: true,
+        poll_interval_seconds: 30,
+        selected_domains: {
+          service_link: true,
+          module_state: true,
+          shared_preferences: true,
+          reports_history: true,
+          plant_library: true,
+          media_content: true,
+          component_registry: true,
+          software_versions: true
+        }
+      },
+      component_field_options: {
+        component_kind: ["sensor", "actuator", "power", "controller"],
+        assigned_module: ["turret", "irrigation", "power", "cat_feeder"],
+        node_role: ["compute_node", "io_node", "shared"],
+        power_profile: ["3.3V", "5V", "5-6V", "12V", "PWM", "I2C/ADC"],
+        pinout: ["TBD", "CSI ribbon", "ESP32 GPIO TBD", "PWM TBD", "relay/MOSFET TBD", "I2C/ADC TBD"],
+        tolerance: ["50-100%", "sensor health", "calibration required", "angle limits TBD", "voltage/current limits"],
+        operating_modes: ["sample", "manual aim", "preview, capture, evidence", "pulse, deterrence", "zone open/close"]
       },
       keyboard: {
         turret_manual_enabled: true,
@@ -1408,7 +1597,9 @@
         silent_observation: true,
         allow_animal_deterrence: true,
         allow_auto_water_action: false,
+        allow_auto_capture: true,
         return_to_warm_standby: true,
+        max_recording_seconds: 30,
         do_not_target_people: true
       },
       irrigation: {
@@ -1421,7 +1612,6 @@
     const SECTION_ORDER = [
       "appearance",
       "runtime",
-      "nodes",
       "sync",
       "storage",
       "modules",
@@ -1442,7 +1632,6 @@
         overview: "Overview",
         appearance: "Appearance",
         runtime: "Runtime & Entry",
-        nodes: "Platform Nodes",
         sync: "Sync",
         storage: "Storage",
         ownership: "Ownership",
@@ -1457,13 +1646,13 @@
         searchPlaceholder: "Filter sections, labels, and notes",
         searchEmptyTitle: "No matching settings",
         searchEmptyBody: "Clear the filter or use a broader term to bring sections back.",
-        clearFilter: "Clear filter",
         runtimeSummary: "Runtime Summary",
+        runtimeEnvironment: "Runtime environment",
+        runtimeEnvironmentTip: "Host, viewer type, and runtime profile collapsed into one launch context.",
+        launchContext: "Launch context",
         visibleSections: "Visible sections",
         currentRuntime: "Current Runtime",
-        currentViewer: "Current Viewer",
         systemStatus: "System Status",
-        platformNodes: "Platform Nodes",
         syncState: "Sync state",
         syncDomains: "Sync domains",
         sharedPreferences: "Shared preferences",
@@ -1530,15 +1719,15 @@
         storageLead: "Content roots, report archives, and host folder actions.",
         ownershipLead: "Module owners, routes, and availability.",
         policiesLead: "Persistent product preferences for turret and irrigation.",
-        modulesLead: "Module registry and staged constructor controls.",
+        modulesLead: "Module registry and constructor scaffolds.",
         componentsLead: "Hardware components, engineering fields, bindings, and local test controls.",
         servicesLead: "Software services are tracked separately from hardware modules.",
-        constructorLead: "Create a module or draft a component through a guided UI model.",
+        constructorLead: "Create a module or component scaffold through a guided flow.",
         diagnosticsLead: "Raw payloads for engineering checks.",
         hostStateTip: "Host means the device where the Smart Platform backend/server is currently running.",
         viewerStateTip: "Viewer means the browser/device currently showing this page.",
         systemStatusTip: "This card summarizes the honest runtime situation without collapsing host, viewer, and physical nodes into one label.",
-        syncTip: "Sync is a platform process. It should not be hidden inside the ESP32 or Raspberry Pi card.",
+        syncTip: "Sync is a platform process. It should not be hidden inside a controller card.",
         storageTip: "Storage paths belong to the host filesystem. Open folder actions run on that host, not necessarily on the current viewer device.",
         copyPath: "Copy path",
         openFolder: "Open folder",
@@ -1558,7 +1747,6 @@
         openStorageDiagnostics: "Storage diagnostics",
         sameDevice: "Same device",
         differentDevice: "Different devices",
-        pathState: "Path state",
         files: "Files",
         folders: "Folders",
         serviceLink: "Service link",
@@ -1571,7 +1759,7 @@
         openFolderUnsupported: "This host/runtime does not expose a safe folder-open action for this path.",
         addModule: "+ Add module",
         editConfiguration: "Edit configuration",
-        constructorStaged: "Constructor flows are staged. Real registry writes are not wired yet.",
+        constructorStaged: "Constructor saves module/component scaffolds to the platform registry JSON.",
         ownershipColumnOwner: "Owner",
         ownershipColumnState: "Live state",
         ownershipColumnRoute: "Route",
@@ -1582,7 +1770,10 @@
         blocked: "Blocked",
         service: "Service",
         statePreview: "Preview",
-        platformService: "Platform service",
+        platformService: "Shared service",
+        computeNodeLabel: "Compute node",
+        ioNodeLabel: "I/O node",
+        sharedNodeLabel: "Shared node",
         desktopHostLabel: "Desktop host",
         rpiOwnerHostLabel: "Raspberry Pi owner",
         esp32FallbackLabel: "ESP32 fallback shell",
@@ -1610,7 +1801,9 @@
         silentObservation: "Silent observation",
         animalDeterrence: "Allow animal deterrence",
         autoWaterAction: "Allow automatic water action",
+        autoCapture: "Allow capture in Automatic",
         warmStandby: "Return to warm standby",
+        maxRecordingSeconds: "Recording limit",
         doNotTargetPeople: "Do not target people",
         safetyBaseline: "Safety baseline",
         preferDriestZone: "Prefer driest zone",
@@ -1648,8 +1841,8 @@
         nightTip: "Low-light night palette.",
         minimalTip: "Quiet neutral palette with less decoration.",
         contrastTip: "High-contrast accessibility palette.",
-        comfortableTip: "Roomier spacing for relaxed reading.",
-        compactTip: "Tighter density for more information on screen.",
+        comfortableTip: "Larger cards, wider gaps, and easier reading across desktop-sized pages.",
+        compactTip: "Smaller cards, tighter rows, and denser page layouts for smaller screens.",
         languageTodoTip: "TODO: this locale is selectable now; full translation module will be filled later.",
         keyboardMap: "Keyboard map",
         keyboardPower: "Power",
@@ -1671,6 +1864,7 @@
         captureAction: "Video capture",
         powerModifier: "Power modifier",
         keyboardScopeTip: "Keyboard controls are global as a preference, but action keys only control Turret Manual. In text fields they remain normal typing keys.",
+        enableDesktopControlsTip: "Enable Desktop controls before changing key bindings.",
         manualTurretKeys: "Turret manual keys",
         moduleComponents: "Module components",
         addComponent: "+ Add component",
@@ -1681,10 +1875,12 @@
         tolerance: "Tolerance",
         operatingModes: "Operating modes",
         testControl: "Test control",
-        simulatedOnly: "UI model only",
+        simulatedOnly: "Local scaffold",
         createModule: "Create module",
         moduleName: "Module name",
-        moduleOwner: "Controller",
+        moduleSummary: "Module summary",
+        controllerNode: "Controller node",
+        assignedModule: "Assigned module",
         componentName: "Component name",
         wizardStepModule: "Module",
         wizardStepComponent: "Component",
@@ -1693,11 +1889,59 @@
         previousStep: "Back",
         close: "Close",
         saveDraft: "Save draft",
-        draftSaved: "Draft saved in UI model",
+        draftSaved: "Local scaffold saved",
+        registrySaved: "Registry saved",
+        registrySaveFailed: "Registry save failed",
         syncNow: "Sync now",
+        syncSelected: "Sync selected",
+        scanSelected: "Scan selected",
+        selectedSyncItems: "Selected sync items",
+        syncSelectionTip: "Auto selects every sync item. Changing a single item switches the mode to manual review.",
+        syncStatus: "Sync status",
+        syncContinuityCard: "Continuity and polling",
+        syncPollingInterval: "Polling interval, sec",
+        syncPollingEnabledTip: "With continuity disabled, a slower poll interval can reduce background wake-ups and save power.",
+        syncPollingDisabledTip: "Disable continuity before changing the polling interval.",
+        syncNotSelected: "Not selected",
+        syncStatusSelected: "Selected",
+        lastSync: "Last sync",
+        versionCheck: "Version check",
+        localVersion: "Local version",
+        peerVersion: "Peer version",
+        versionAligned: "Versions aligned",
+        versionMismatch: "Version mismatch",
+        versionUnknown: "Peer version unknown",
         syncTimeline: "Recent sync",
         syncConflicts: "Conflicts",
         noConflicts: "No conflicts reported",
+        syncDomainServiceLink: "Service link",
+        syncDomainServiceLinkTip: "Heartbeat and base owner-node connectivity.",
+        syncDomainModuleState: "Module states",
+        syncDomainModuleStateTip: "Owner availability, module state, and route summaries.",
+        syncDomainPreferences: "Shared preferences",
+        syncDomainPreferencesTip: "Settings and durable user choices shared between owners.",
+        syncDomainReports: "Reports and logs",
+        syncDomainReportsTip: "Gallery reports, platform logs, and evidence continuity.",
+        syncDomainPlantLibrary: "Plant library",
+        syncDomainPlantLibraryTip: "Plant profiles, state rules, and care scenarios used by Irrigation.",
+        syncDomainMedia: "Media content",
+        syncDomainMediaTip: "Photos, video, audio, and gallery reports.",
+        syncDomainComponents: "Component registry",
+        syncDomainComponentsTip: "Module/component assignments, pinout, and engineering fields.",
+        syncDomainVersions: "Software versions",
+        syncDomainVersionsTip: "RPi, ESP, and Web UI version scan before accepting synchronized data.",
+        plantProfiles: "Plant profiles",
+        moduleDisconnected: "Not connected",
+        moduleConnected: "Connected",
+        moduleBlocked: "Blocked",
+        componentDisconnected: "Not connected",
+        componentPending: "Check pending",
+        componentReady: "Ready",
+        componentIcon: "Component",
+        componentBadgeSensor: "Sensor component: reads the environment, stream, or user/device presence.",
+        componentBadgeActuator: "Actuator component: performs a physical action after policy and runtime checks.",
+        componentBadgePower: "Power component: energy input, conversion, battery, or rail monitoring.",
+        componentBadgeHardware: "Hardware component: engineering fields define how it is wired and tested.",
         protectedServiceTip: "Software service: keep it out of hardware module/component lists.",
         runtimeTooltipSection: "Runtime",
         viewerTooltipSection: "Viewer",
@@ -1711,12 +1955,14 @@
         persistentTurretPolicyTip: "Persistent product-level turret preference.",
         animalDeterrenceTip: "Allow deterrence actions for non-human targets when the runtime supports them.",
         autoWaterActionTip: "Allow automatic water action when policy and runtime conditions allow it.",
+        autoCaptureTip: "Keep photo/video capture available in Automatic FPV while weapon and valve controls stay hidden.",
         warmStandbyTip: "Return the turret to warm standby after action sequences.",
+        maxRecordingSecondsTip: "Maximum Manual FPV video length in seconds. Range: 5 seconds to 10 hours.",
         safetyBaselineTip: "This safety baseline remains always on in the current settings contract.",
         driestZoneTip: "Bias automatic irrigation toward the driest known zone.",
         serviceBlockTip: "Keep irrigation automatic mode blocked while service workflows are active.",
         sensorHealthTip: "Require healthy sensor state before automatic irrigation can proceed.",
-        constructorEnableTip: "Enable staged constructor controls without silently writing to the registry."
+        constructorEnableTip: "Use the wizard to create module/component entries in the platform registry JSON."
       },
       ru: {
         pageTitle: "Настройки",
@@ -1727,7 +1973,6 @@
         overview: "Обзор",
         appearance: "Интерфейс",
         runtime: "Запуск и вход",
-        nodes: "Узлы платформы",
         sync: "Синхронизация",
         storage: "Хранилище",
         ownership: "Владение",
@@ -1742,13 +1987,13 @@
         searchPlaceholder: "Фильтр по секциям, подписям и заметкам",
         searchEmptyTitle: "Совпадений не найдено",
         searchEmptyBody: "Сбросьте фильтр или используйте более общий запрос.",
-        clearFilter: "Сбросить фильтр",
         runtimeSummary: "Краткая сводка",
+        runtimeEnvironment: "Среда запуска",
+        runtimeEnvironmentTip: "Устройство запуска, тип просмотра и профиль объединены в один контекст.",
+        launchContext: "Контекст запуска",
         visibleSections: "Видимые секции",
         currentRuntime: "Текущая среда запуска",
-        currentViewer: "Текущее устройство",
         systemStatus: "Состояние системы",
-        platformNodes: "Узлы платформы",
         syncState: "Состояние синхронизации",
         syncDomains: "Домены синхронизации",
         sharedPreferences: "Общие настройки",
@@ -1815,15 +2060,15 @@
         storageLead: "Корни контента, архив отчётов и действия с папками устройства запуска.",
         ownershipLead: "Владельцы модулей, маршруты и доступность.",
         policiesLead: "Постоянные продуктовые настройки турели и полива.",
-        modulesLead: "Реестр модулей и подготовленный конструктор.",
+        modulesLead: "Реестр модулей и каркасы конструктора.",
         componentsLead: "Железные компоненты, инженерные поля, подключения и локальные тестовые элементы.",
         servicesLead: "Программные сервисы отделены от железных модулей.",
-        constructorLead: "Создание модуля или черновика компонента через пошаговую UI-модель.",
+        constructorLead: "Создание каркаса модуля или компонента через пошаговый сценарий.",
         diagnosticsLead: "Сырые данные для инженерной проверки.",
         hostStateTip: "Устройство запуска — место, где сейчас работает сервер Smart Platform.",
         viewerStateTip: "Просмотр — устройство или браузер, с которого открыта эта страница.",
         systemStatusTip: "Карточка показывает фактическое состояние без смешения устройства запуска, просмотра и физических узлов в один ложный статус.",
-        syncTip: "Синхронизация — отдельный процесс платформы. Она не должна прятаться внутри карточки ESP32 или Raspberry Pi.",
+        syncTip: "Синхронизация — отдельный процесс платформы. Она не должна прятаться внутри карточки контроллера.",
         storageTip: "Пути хранилища относятся к файловой системе устройства запуска. Папка открывается там, а не обязательно на текущем устройстве просмотра.",
         copyPath: "Скопировать путь",
         openFolder: "Открыть папку",
@@ -1843,7 +2088,6 @@
         openStorageDiagnostics: "Диагностика хранилища",
         sameDevice: "То же устройство",
         differentDevice: "Разные устройства",
-        pathState: "Состояние пути",
         files: "Файлы",
         folders: "Папки",
         serviceLink: "Базовая связь",
@@ -1856,7 +2100,7 @@
         openFolderUnsupported: "Для этого пути среда запуска не публикует безопасное действие открытия папки.",
         addModule: "+ Добавить модуль",
         editConfiguration: "Редактировать конфигурацию",
-        constructorStaged: "Конструктор показан, но реальные записи в реестр и конфигурацию пока не подключены.",
+        constructorStaged: "Конструктор сохраняет каркас модуля/компонента в JSON-реестр платформы.",
         ownershipColumnOwner: "Владелец",
         ownershipColumnState: "Состояние",
         ownershipColumnRoute: "Маршрут",
@@ -1867,7 +2111,10 @@
         blocked: "Заблокировано",
         service: "Сервис",
         statePreview: "Предпросмотр",
-        platformService: "Сервис платформы",
+        platformService: "Общий сервис",
+        computeNodeLabel: "Вычислительный узел",
+        ioNodeLabel: "Узел ввода-вывода",
+        sharedNodeLabel: "Общий узел",
         desktopHostLabel: "Настольное устройство",
         rpiOwnerHostLabel: "Владелец Raspberry Pi",
         esp32FallbackLabel: "Резервная оболочка ESP32",
@@ -1895,7 +2142,9 @@
         silentObservation: "Тихое наблюдение",
         animalDeterrence: "Разрешить отпугивание животных",
         autoWaterAction: "Разрешить автоматическое водяное действие",
+        autoCapture: "Разрешить захват в Automatic",
         warmStandby: "Возврат в тёплое ожидание",
+        maxRecordingSeconds: "Лимит записи",
         doNotTargetPeople: "Не воздействовать на людей",
         safetyBaseline: "Базовое правило безопасности",
         preferDriestZone: "Предпочитать самую сухую зону",
@@ -1933,8 +2182,8 @@
         nightTip: "Палитра для слабого освещения.",
         minimalTip: "Спокойная нейтральная тема с минимумом декора.",
         contrastTip: "Высококонтрастная тема для лучшей читаемости.",
-        comfortableTip: "Более свободные отступы для спокойного чтения.",
-        compactTip: "Более плотная компоновка, чтобы видеть больше информации.",
+        comfortableTip: "Более крупные карточки, свободные отступы и спокойное чтение на больших экранах.",
+        compactTip: "Меньшие карточки, плотные строки и более собранная раскладка для небольших экранов.",
         languageTodoTip: "TODO: локаль уже можно выбрать; полноценный модуль переводов будет добавлен отдельно.",
         keyboardMap: "Карта клавиш",
         keyboardPower: "Мощность",
@@ -1956,6 +2205,7 @@
         captureAction: "Видеозахват",
         powerModifier: "Модификатор мощности",
         keyboardScopeTip: "Клавиатурное управление включается глобально как настройка, но управляющие клавиши действуют только на странице ручной турели. В полях ввода они остаются обычным текстом.",
+        enableDesktopControlsTip: "Включите управление с клавиатуры, чтобы менять назначение клавиш.",
         manualTurretKeys: "Клавиши ручной турели",
         moduleComponents: "Компоненты модуля",
         addComponent: "+ Добавить компонент",
@@ -1966,10 +2216,12 @@
         tolerance: "Допуски",
         operatingModes: "Режимы работы",
         testControl: "Тест",
-        simulatedOnly: "Только UI-модель",
+        simulatedOnly: "Локальный каркас",
         createModule: "Создать модуль",
         moduleName: "Название модуля",
-        moduleOwner: "Управляющий узел",
+        moduleSummary: "Описание модуля",
+        controllerNode: "Узел-контроллер",
+        assignedModule: "Назначенный модуль",
         componentName: "Название компонента",
         wizardStepModule: "Модуль",
         wizardStepComponent: "Компонент",
@@ -1978,11 +2230,59 @@
         previousStep: "Назад",
         close: "Закрыть",
         saveDraft: "Сохранить черновик",
-        draftSaved: "Черновик сохранён в UI-модели",
+        draftSaved: "Каркас сохранён",
+        registrySaved: "Реестр сохранён",
+        registrySaveFailed: "Не удалось сохранить реестр",
         syncNow: "Синхронизировать",
+        syncSelected: "Синхронизировать выбранное",
+        scanSelected: "Сканировать выбранное",
+        selectedSyncItems: "Что синхронизируется",
+        syncSelectionTip: "Авто выбирает все пункты. Изменение любого пункта переводит режим в ручную проверку.",
+        syncStatus: "Статус синхронизации",
+        syncContinuityCard: "Непрерывность и опрос",
+        syncPollingInterval: "Интервал опроса, сек",
+        syncPollingEnabledTip: "При выключенной непрерывности более редкий опрос уменьшает фоновые пробуждения и экономит энергию.",
+        syncPollingDisabledTip: "Сначала выключите непрерывность, чтобы менять интервал опроса.",
+        syncNotSelected: "Не выбрано",
+        syncStatusSelected: "Выбрано",
+        lastSync: "Последняя синхронизация",
+        versionCheck: "Проверка версий",
+        localVersion: "Локальная версия",
+        peerVersion: "Версия второго узла",
+        versionAligned: "Версии совпадают",
+        versionMismatch: "Версии отличаются",
+        versionUnknown: "Версия второго узла неизвестна",
         syncTimeline: "Последняя синхронизация",
         syncConflicts: "Конфликты",
         noConflicts: "Конфликтов нет",
+        syncDomainServiceLink: "Базовая связь",
+        syncDomainServiceLinkTip: "Heartbeat и базовая связность узлов-владельцев.",
+        syncDomainModuleState: "Состояния модулей",
+        syncDomainModuleStateTip: "Доступность владельцев, состояние модулей и маршруты.",
+        syncDomainPreferences: "Общие настройки",
+        syncDomainPreferencesTip: "Настройки и долговременные пользовательские выборы между узлами.",
+        syncDomainReports: "Отчёты и логи",
+        syncDomainReportsTip: "Отчёты галереи, журналы платформы и evidence continuity.",
+        syncDomainPlantLibrary: "Библиотека растений",
+        syncDomainPlantLibraryTip: "Профили растений, правила состояний и сценарии ухода для полива.",
+        syncDomainMedia: "Медиа-контент",
+        syncDomainMediaTip: "Фото, видео, аудио и отчёты галереи.",
+        syncDomainComponents: "Реестр компонентов",
+        syncDomainComponentsTip: "Назначения модулей/компонентов, распиновка и инженерные поля.",
+        syncDomainVersions: "Версии ПО",
+        syncDomainVersionsTip: "Проверка версий RPi, ESP и Web UI перед принятием синхронизированных данных.",
+        plantProfiles: "Профили растений",
+        moduleDisconnected: "Не подключён",
+        moduleConnected: "Подключён",
+        moduleBlocked: "Заблокирован",
+        componentDisconnected: "Не подключён",
+        componentPending: "Ожидает проверки",
+        componentReady: "Готов",
+        componentIcon: "Компонент",
+        componentBadgeSensor: "Сенсор: считывает среду, поток или присутствие пользователя/устройства.",
+        componentBadgeActuator: "Актуатор: выполняет физическое действие после проверок политики и runtime.",
+        componentBadgePower: "Питание: источник энергии, преобразование, батарея или контроль линии.",
+        componentBadgeHardware: "Железный компонент: инженерные поля описывают подключение и проверку.",
         protectedServiceTip: "Программный сервис: не смешивать с железными модулями и компонентами.",
         runtimeTooltipSection: "Запуск",
         viewerTooltipSection: "Просмотр",
@@ -1996,12 +2296,14 @@
         persistentTurretPolicyTip: "Постоянная продуктовая настройка турели.",
         animalDeterrenceTip: "Разрешить отпугивание животных, когда среда запуска это поддерживает.",
         autoWaterActionTip: "Разрешить автоматическое водяное действие, когда политика и условия запуска это допускают.",
+        autoCaptureTip: "Оставлять фото/видеозахват доступным в Automatic FPV, пока вооружение и клапаны скрыты.",
         warmStandbyTip: "Возвращать турель в тёплое ожидание после последовательностей действий.",
+        maxRecordingSecondsTip: "Максимальная длительность видеозаписи Manual FPV в секундах. Диапазон: от 5 секунд до 10 часов.",
         safetyBaselineTip: "Это базовое правило безопасности всегда включено в текущем контракте настроек.",
         driestZoneTip: "Смещать автоматический полив к самой сухой известной зоне.",
         serviceBlockTip: "Блокировать автоматический полив, пока активны сценарии обслуживания.",
         sensorHealthTip: "Требовать здоровое состояние датчиков перед автоматическим поливом.",
-        constructorEnableTip: "Включить подготовленные элементы конструктора без скрытой записи в реестр."
+        constructorEnableTip: "Используйте мастер, чтобы создать записи модуля/компонента в JSON-реестре платформы."
       }
     };
 
@@ -2009,6 +2311,7 @@
       snapshot: null,
       sync: null,
       storage: null,
+      registry: null,
       settings: normalizeSettings(DEFAULT_SETTINGS),
       settingsStorage: "loading",
       saveState: "idle",
@@ -2021,10 +2324,17 @@
       constructorOpen: false,
       constructorStep: 1,
       constructorDraft: {
-        moduleName: "Animal Feeder",
-        moduleOwner: "rpi",
-        componentName: "Servo dispenser",
-        componentKind: "actuator"
+        moduleId: "cat_feeder",
+        moduleName: "Cat Feeder",
+        controllerNode: "compute_node",
+        moduleSummary: "Motion wakes the camera; video identification and owner notification can start feeding.",
+        componentId: "cat_feeder_motion_sensor",
+        componentName: "Motion sensor",
+        componentKind: "sensor",
+        powerProfile: "3.3V / GPIO",
+        pinout: "PIR GPIO TBD",
+        tolerance: "wake debounce",
+        operatingModes: "wake camera, notify owner"
       },
       toastTimer: 0,
       tooltipPinned: false,
@@ -2033,7 +2343,16 @@
       tooltipHoverTarget: null,
       tooltipPointerX: 0,
       tooltipPointerY: 0,
+      tooltipFocusSuppressedUntil: 0,
       tooltipHideTimer: 0,
+      settingsSaveTimer: 0,
+      settingsSaveRevision: 0,
+      settingsSaveInFlight: false,
+      pendingSettingsPayload: null,
+      renderFrame: 0,
+      renderPreserveSearchFocus: false,
+      runtimeRefreshTimer: 0,
+      openDetails: {},
       saveResetTimer: 0
     };
 
@@ -2057,6 +2376,17 @@
       { value: "night", titleKey: "night", tipKey: "nightTip" },
       { value: "minimal", titleKey: "minimal", tipKey: "minimalTip" },
       { value: "contrast", titleKey: "contrast", tipKey: "contrastTip" }
+    ];
+
+    const SYNC_DOMAIN_OPTIONS = [
+      { id: "service_link", titleKey: "syncDomainServiceLink", summaryKey: "syncDomainServiceLinkTip" },
+      { id: "module_state", titleKey: "syncDomainModuleState", summaryKey: "syncDomainModuleStateTip" },
+      { id: "shared_preferences", titleKey: "syncDomainPreferences", summaryKey: "syncDomainPreferencesTip" },
+      { id: "reports_history", titleKey: "syncDomainReports", summaryKey: "syncDomainReportsTip" },
+      { id: "plant_library", titleKey: "syncDomainPlantLibrary", summaryKey: "syncDomainPlantLibraryTip" },
+      { id: "media_content", titleKey: "syncDomainMedia", summaryKey: "syncDomainMediaTip" },
+      { id: "component_registry", titleKey: "syncDomainComponents", summaryKey: "syncDomainComponentsTip" },
+      { id: "software_versions", titleKey: "syncDomainVersions", summaryKey: "syncDomainVersionsTip" }
     ];
 
     function esc(value) {
@@ -2108,17 +2438,49 @@
       return Number.isFinite(parsed) ? parsed : fallback;
     }
 
+    function optionList(value, defaults) {
+      const seen = new Set();
+      const result = [];
+      [...(Array.isArray(value) ? value : []), ...defaults].forEach((item) => {
+        const text = String(item || "").trim();
+        const key = text.toLowerCase();
+        if (!text || seen.has(key)) {
+          return;
+        }
+        seen.add(key);
+        result.push(text.slice(0, 80));
+      });
+      return result.slice(0, 18);
+    }
+
+    function allSyncDomainsSelected(selection) {
+      return SYNC_DOMAIN_OPTIONS.every((item) => selection[item.id] === true);
+    }
+
     function normalizeSettings(raw) {
       const payload = raw && typeof raw === "object" ? raw : {};
       const interfaceSettings = payload.interface && typeof payload.interface === "object" ? payload.interface : {};
       const styleSettings = payload.style && typeof payload.style === "object" ? payload.style : {};
       const syncSettings = payload.synchronization && typeof payload.synchronization === "object" ? payload.synchronization : {};
+      const syncSelection = syncSettings.selected_domains && typeof syncSettings.selected_domains === "object" ? syncSettings.selected_domains : {};
       const keyboardSettings = payload.keyboard && typeof payload.keyboard === "object" ? payload.keyboard : {};
       const keyboardBindings = keyboardSettings.bindings && typeof keyboardSettings.bindings === "object" ? keyboardSettings.bindings : {};
+      const componentOptions = payload.component_field_options && typeof payload.component_field_options === "object" ? payload.component_field_options : {};
+      const assignedModuleOptions = Array.isArray(componentOptions.assigned_module)
+        ? componentOptions.assigned_module
+        : componentOptions.module_owner;
+      const nodeRoleOptions = Array.isArray(componentOptions.node_role)
+        ? componentOptions.node_role
+        : [];
       const turretPolicies = payload.turret_policies && typeof payload.turret_policies === "object" ? payload.turret_policies : {};
       const irrigationSettings = payload.irrigation && typeof payload.irrigation === "object" ? payload.irrigation : {};
       const languages = ["en", "ru", "he", "de", "fr", "es", "zh", "ar"];
       const themes = ["meadow", "dawn", "studio", "midnight", "sunlit", "night", "minimal", "contrast"];
+      const preferredSyncMode = choiceValue(syncSettings.preferred_mode, ["auto", "manual_review"], "auto");
+      const selectedDomains = Object.fromEntries(Object.keys(DEFAULT_SETTINGS.synchronization.selected_domains).map((id) => [
+        id,
+        preferredSyncMode === "auto" ? true : boolValue(syncSelection[id], true)
+      ]));
 
       return {
         schema_version: "settings.v1",
@@ -2134,8 +2496,19 @@
           density: choiceValue(styleSettings.density, ["comfortable", "compact"], "comfortable")
         },
         synchronization: {
-          preferred_mode: choiceValue(syncSettings.preferred_mode, ["auto", "manual_review"], "auto"),
-          prefer_peer_continuity: boolValue(syncSettings.prefer_peer_continuity, true)
+          preferred_mode: preferredSyncMode,
+          prefer_peer_continuity: boolValue(syncSettings.prefer_peer_continuity, true),
+          poll_interval_seconds: Math.max(5, Math.min(300, numberValue(syncSettings.poll_interval_seconds, 30))),
+          selected_domains: selectedDomains
+        },
+        component_field_options: {
+          component_kind: optionList(componentOptions.component_kind, DEFAULT_SETTINGS.component_field_options.component_kind),
+          assigned_module: optionList(assignedModuleOptions, DEFAULT_SETTINGS.component_field_options.assigned_module),
+          node_role: optionList(nodeRoleOptions, DEFAULT_SETTINGS.component_field_options.node_role),
+          power_profile: optionList(componentOptions.power_profile, DEFAULT_SETTINGS.component_field_options.power_profile),
+          pinout: optionList(componentOptions.pinout, DEFAULT_SETTINGS.component_field_options.pinout),
+          tolerance: optionList(componentOptions.tolerance, DEFAULT_SETTINGS.component_field_options.tolerance),
+          operating_modes: optionList(componentOptions.operating_modes, DEFAULT_SETTINGS.component_field_options.operating_modes)
         },
         keyboard: {
           turret_manual_enabled: boolValue(keyboardSettings.turret_manual_enabled, true),
@@ -2162,7 +2535,9 @@
           silent_observation: boolValue(turretPolicies.silent_observation, true),
           allow_animal_deterrence: boolValue(turretPolicies.allow_animal_deterrence, true),
           allow_auto_water_action: boolValue(turretPolicies.allow_auto_water_action, false),
+          allow_auto_capture: boolValue(turretPolicies.allow_auto_capture, true),
           return_to_warm_standby: boolValue(turretPolicies.return_to_warm_standby, true),
+          max_recording_seconds: Math.max(5, Math.min(36000, numberValue(turretPolicies.max_recording_seconds, 30))),
           do_not_target_people: true
         },
         irrigation: {
@@ -2315,6 +2690,27 @@
       }, TOOLTIP_HIDE_MS);
     }
 
+    function positionTooltipNearPointer(tooltip, target) {
+      window.requestAnimationFrame(() => {
+        const tipRect = tooltip.getBoundingClientRect();
+        const rect = target.getBoundingClientRect();
+        const hasPointer = state.tooltipPointerX > 0 || state.tooltipPointerY > 0;
+        const anchorX = hasPointer ? state.tooltipPointerX : rect.left + (rect.width / 2);
+        const anchorY = hasPointer ? state.tooltipPointerY : rect.bottom;
+        const gap = 14;
+        const preferredLeft = anchorX + gap;
+        const left = preferredLeft + tipRect.width + 12 > window.innerWidth
+          ? anchorX - tipRect.width - gap
+          : preferredLeft;
+        const preferredTop = anchorY + gap;
+        const top = preferredTop + tipRect.height + 12 > window.innerHeight
+          ? anchorY - tipRect.height - gap
+          : preferredTop;
+        tooltip.style.left = `${Math.min(Math.max(12, left), window.innerWidth - tipRect.width - 12)}px`;
+        tooltip.style.top = `${Math.min(Math.max(12, top), window.innerHeight - tipRect.height - 12)}px`;
+      });
+    }
+
     function showTooltip(target, pinned) {
       const payload = readTooltipPayload(target);
       const tooltip = ensureTooltip();
@@ -2322,24 +2718,12 @@
         return;
       }
 
-      const rect = target.getBoundingClientRect();
       tooltip.innerHTML = renderTooltipMarkup(payload);
       tooltip.setAttribute("data-visible", "true");
       state.tooltipOwnerId = tooltipOwnerId(target);
       state.tooltipPinned = Boolean(pinned);
       scheduleTooltipAutoHide();
-
-      window.requestAnimationFrame(() => {
-        const tipRect = tooltip.getBoundingClientRect();
-        const left = Math.min(
-          Math.max(12, rect.left + (rect.width / 2) - (tipRect.width / 2)),
-          window.innerWidth - tipRect.width - 12
-        );
-        const showAbove = rect.bottom + tipRect.height + 16 > window.innerHeight;
-        const top = showAbove ? rect.top - tipRect.height - 8 : rect.bottom + 8;
-        tooltip.style.left = `${left}px`;
-        tooltip.style.top = `${Math.max(12, top)}px`;
-      });
+      positionTooltipNearPointer(tooltip, target);
     }
 
     function scheduleTooltipShow(target, pinned, event) {
@@ -2368,6 +2752,15 @@
     }
 
     function bindTooltipEvents() {
+      document.addEventListener("pointerdown", (event) => {
+        const target = closestTooltipTarget(event.target);
+        if (!target) {
+          return;
+        }
+        state.tooltipFocusSuppressedUntil = Date.now() + 700;
+        hideTooltip(true);
+      });
+
       document.addEventListener("mouseover", (event) => {
         const target = closestTooltipTarget(event.target);
         if (!target) {
@@ -2377,7 +2770,7 @@
       });
 
       document.addEventListener("mousemove", (event) => {
-        if (!state.tooltipHoverTarget || state.tooltipPinned) {
+        if (!state.tooltipHoverTarget && !state.tooltipOwnerId) {
           return;
         }
         if (tooltipMovedPastTolerance(event)) {
@@ -2394,12 +2787,12 @@
         if (related instanceof HTMLElement && (target.contains(related) || related.closest(".sp-tooltip"))) {
           return;
         }
-        hideTooltip(false);
+        hideTooltip(true);
       });
 
       document.addEventListener("focusin", (event) => {
         const target = closestTooltipTarget(event.target);
-        if (target) {
+        if (target && Date.now() >= state.tooltipFocusSuppressedUntil) {
           showTooltip(target, false);
         }
       });
@@ -2415,13 +2808,7 @@
       document.addEventListener("click", (event) => {
         const target = closestTooltipTarget(event.target);
         if (target) {
-          const targetOwner = tooltipOwnerId(target);
-          if (state.tooltipPinned && state.tooltipOwnerId === targetOwner) {
-            hideTooltip(true);
-            return;
-          }
-          setTooltipPointerOrigin(event);
-          showTooltip(target, true);
+          hideTooltip(true);
           return;
         }
 
@@ -2444,6 +2831,64 @@
       cursor[segments[0]] = value;
     }
 
+    function setAllSyncDomains(target, value) {
+      if (!target.synchronization || typeof target.synchronization !== "object") {
+        target.synchronization = {};
+      }
+      target.synchronization.selected_domains = Object.fromEntries(SYNC_DOMAIN_OPTIONS.map((item) => [item.id, Boolean(value)]));
+    }
+
+    function rememberComponentFieldOption(fieldKey, value) {
+      const key = String(fieldKey || "").trim();
+      const text = String(value || "").trim();
+      if (!key || !text || !Object.prototype.hasOwnProperty.call(DEFAULT_SETTINGS.component_field_options, key)) {
+        return null;
+      }
+      const nextSettings = clone(state.settings);
+      if (!nextSettings.component_field_options || typeof nextSettings.component_field_options !== "object") {
+        nextSettings.component_field_options = {};
+      }
+      const current = Array.isArray(nextSettings.component_field_options[key])
+        ? nextSettings.component_field_options[key]
+        : [];
+      const exists = current.some((item) => String(item || "").trim().toLowerCase() === text.toLowerCase());
+      if (!exists) {
+        nextSettings.component_field_options[key] = [text, ...current].slice(0, 18);
+      }
+      return nextSettings;
+    }
+
+    function effectiveSyncPollIntervalMs(settingsOverride) {
+      const source = settingsOverride || state.settings || DEFAULT_SETTINGS;
+      const syncSettings = (source && source.synchronization) || {};
+      if (syncSettings.prefer_peer_continuity !== false) {
+        return 5000;
+      }
+      const seconds = Math.max(5, Math.min(300, numberValue(syncSettings.poll_interval_seconds, 30)));
+      return seconds * 1000;
+    }
+
+    function restartRuntimeRefreshLoop() {
+      if (state.runtimeRefreshTimer) {
+        window.clearInterval(state.runtimeRefreshTimer);
+        state.runtimeRefreshTimer = 0;
+      }
+      state.runtimeRefreshTimer = window.setInterval(() => {
+        refreshRuntime().catch(() => {});
+      }, effectiveSyncPollIntervalMs());
+    }
+
+    function restoreOpenDetails(scope) {
+      const root = scope instanceof HTMLElement ? scope : document;
+      root.querySelectorAll("details[data-details-id]").forEach((details) => {
+        const detailsId = details.getAttribute("data-details-id") || "";
+        if (!detailsId || state.openDetails[detailsId] !== true) {
+          return;
+        }
+        details.open = true;
+      });
+    }
+
     function applyVisualSettings() {
       document.body.dataset.theme = state.settings.style.theme;
       document.body.dataset.density = state.settings.style.density;
@@ -2453,12 +2898,16 @@
       writeStorage(DESKTOP_CONTROLS_KEY, state.settings.interface.desktop_controls_enabled ? "1" : "0");
       writeStorage(FULLSCREEN_STORAGE_KEY, state.settings.interface.fullscreen_enabled ? "1" : "0");
       writeStorage(SETTINGS_LANGUAGE_KEY, state.settings.interface.language);
+      writeStorage(SETTINGS_THEME_KEY, state.settings.style.theme);
+      writeStorage(SETTINGS_DENSITY_KEY, state.settings.style.density);
     }
 
     function broadcastSettingsUpdate() {
       try {
+        const detail = clone(state.settings);
+        detail.__source = "settings-page";
         window.dispatchEvent(new CustomEvent("smart-platform:settings-updated", {
-          detail: clone(state.settings)
+          detail
         }));
       } catch (_error) {
         return;
@@ -2475,9 +2924,9 @@
           await document.exitFullscreen();
         }
       } catch (_error) {
-        return Boolean(document.fullscreenElement);
+        return enabled ? true : Boolean(document.fullscreenElement);
       }
-      return Boolean(document.fullscreenElement);
+      return enabled ? true : Boolean(document.fullscreenElement);
     }
 
     async function fetchJson(url, options) {
@@ -2507,6 +2956,7 @@
       }
       applyVisualSettings();
       broadcastSettingsUpdate();
+      restartRuntimeRefreshLoop();
     }
 
     function showToast(title, body, tone) {
@@ -2526,38 +2976,82 @@
       }, 2600);
     }
 
-    async function saveSettings(nextSettings) {
+    function scheduleRender(preserveSearchFocus) {
+      state.renderPreserveSearchFocus = state.renderPreserveSearchFocus || Boolean(preserveSearchFocus);
+      if (state.renderFrame) {
+        return;
+      }
+      state.renderFrame = window.requestAnimationFrame(() => {
+        const shouldPreserveSearchFocus = state.renderPreserveSearchFocus;
+        state.renderFrame = 0;
+        state.renderPreserveSearchFocus = false;
+        render(shouldPreserveSearchFocus);
+      });
+    }
+
+    function commitSettings(nextSettings, options) {
+      const opts = options || {};
       state.saveState = "saving";
       state.saveMessage = "";
       state.settings = normalizeSettings(nextSettings);
       applyVisualSettings();
+      restartRuntimeRefreshLoop();
       broadcastSettingsUpdate();
-      render();
+      if (opts.render !== false) {
+        scheduleRender(Boolean(opts.preserveSearchFocus));
+      }
+      scheduleSettingsSave();
+    }
 
+    function scheduleSettingsSave() {
+      state.settingsSaveRevision += 1;
+      state.pendingSettingsPayload = clone(state.settings);
+      window.clearTimeout(state.settingsSaveTimer);
+      state.settingsSaveTimer = window.setTimeout(() => {
+        flushSettingsSave().catch((error) => {
+          state.runtimeError = `Settings save error: ${error}`;
+          scheduleRender();
+        });
+      }, SETTINGS_SAVE_DEBOUNCE_MS);
+    }
+
+    async function flushSettingsSave() {
+      if (state.settingsSaveInFlight) {
+        return;
+      }
+      state.settingsSaveInFlight = true;
+      const revision = state.settingsSaveRevision;
+      const payloadToSave = clone(state.pendingSettingsPayload || state.settings);
       try {
         const payload = await fetchJson("/api/v1/settings", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(state.settings)
+          body: JSON.stringify(payloadToSave)
         });
-        state.settings = normalizeSettings(payload);
+        if (state.settingsSaveRevision === revision) {
+          state.settings = normalizeSettings(payload);
+        }
         state.settingsStorage = "server";
         state.saveMessage = "";
-        showToast(t("savedOnHost"), t("sharedPreferences"), "ok");
       } catch (_error) {
-        writeStorage(SETTINGS_FALLBACK_KEY, JSON.stringify(state.settings));
+        writeStorage(SETTINGS_FALLBACK_KEY, JSON.stringify(payloadToSave));
         state.settingsStorage = "browser";
         state.saveMessage = t("browserFallback");
         showToast(t("browserFallback"), t("sharedPreferences"), "warn");
+      } finally {
+        state.settingsSaveInFlight = false;
+      }
+
+      if (state.settingsSaveRevision !== revision) {
+        scheduleSettingsSave();
+        return;
       }
 
       state.saveState = "saved";
       window.clearTimeout(state.saveResetTimer);
       state.saveResetTimer = window.setTimeout(() => {
         state.saveState = "idle";
-        render();
-      }, 1400);
-      render();
+      }, 1200);
     }
 
     function normalizeViewerKind(kind) {
@@ -2632,6 +3126,39 @@
       };
     }
 
+    function localizedValue(value, fallback = "") {
+      if (value && typeof value === "object") {
+        const language = (state.settings && state.settings.interface && state.settings.interface.language) || "en";
+        return String(value[language] || value.en || value.ru || fallback || "").trim();
+      }
+      return String(value || fallback || "").trim();
+    }
+
+    function normalizeRegistry(raw) {
+      const payload = raw && typeof raw === "object" ? raw : {};
+      const modules = Array.isArray(payload.modules) ? payload.modules : [];
+      const components = Array.isArray(payload.components) ? payload.components : [];
+      const assignments = Array.isArray(payload.assignments) ? payload.assignments : [];
+      return {
+        schema_version: String(payload.schema_version || "platform_registry.v1"),
+        updated_at_ms: numberValue(payload.updated_at_ms, 0),
+        modules: modules.filter((item) => item && typeof item === "object"),
+        components: components.filter((item) => item && typeof item === "object"),
+        assignments: assignments.filter((item) => item && typeof item === "object"),
+        templates: payload.templates && typeof payload.templates === "object" ? payload.templates : {}
+      };
+    }
+
+    async function loadRegistry() {
+      try {
+        state.registry = normalizeRegistry(await fetchJson("/api/v1/platform/registry"));
+      } catch (error) {
+        state.runtimeError = `Registry load error: ${error}`;
+        state.registry = normalizeRegistry({});
+      }
+      scheduleRender();
+    }
+
     async function refreshRuntime() {
       try {
         const snapshot = await fetchJson("/api/v1/shell/snapshot");
@@ -2643,15 +3170,7 @@
       } catch (error) {
         state.runtimeError = `Settings runtime load error: ${error}`;
       }
-      render();
-    }
-
-    function currentNode() {
-      return (((state.snapshot || {}).nodes || {}).current || {});
-    }
-
-    function peerNode() {
-      return (((state.snapshot || {}).nodes || {}).peer || {});
+      scheduleRender();
     }
 
     function runtimeHost() {
@@ -2670,12 +3189,52 @@
       return Array.isArray((state.snapshot || {}).module_cards) ? state.snapshot.module_cards : [];
     }
 
-    function moduleByOwner(ownerScope) {
-      return moduleCards().filter((module) => String(module.owner_scope || "") === ownerScope);
-    }
-
     function moduleById(id) {
       return moduleCards().find((module) => module.id === id) || null;
+    }
+
+    function moduleConnectionState(source) {
+      if (!source || source.owner_available === false) {
+        return "disconnected";
+      }
+      const raw = String(source.state || "offline").toLowerCase();
+      if (["online", "ready"].includes(raw)) {
+        return "ready";
+      }
+      if (["locked", "blocked", "offline"].includes(raw)) {
+        return "disconnected";
+      }
+      return raw || "disconnected";
+    }
+
+    function componentConnectionState(moduleId) {
+      const moduleState = moduleConnectionState(moduleById(moduleId === "turret" ? "turret_bridge" : moduleId));
+      return moduleState === "ready" ? "pending" : moduleState;
+    }
+
+    function moduleStatusLabel(value) {
+      const normalized = String(value || "").toLowerCase();
+      if (normalized === "ready" || normalized === "online") {
+        return t("moduleConnected");
+      }
+      if (normalized === "blocked" || normalized === "locked") {
+        return t("moduleBlocked");
+      }
+      if (normalized === "pending") {
+        return t("pending");
+      }
+      return t("moduleDisconnected");
+    }
+
+    function componentStatusLabel(value) {
+      const normalized = String(value || "").toLowerCase();
+      if (normalized === "ready" || normalized === "online") {
+        return t("componentReady");
+      }
+      if (normalized === "pending") {
+        return t("componentPending");
+      }
+      return t("componentDisconnected");
     }
 
     function compactPathLabel(value) {
@@ -2714,22 +3273,72 @@
       return `${size.toFixed(digits)} ${units[unit]}`;
     }
 
-    function fieldInput(path, label, value, type = "text", payload = null) {
+    function appHref(path) {
+      try {
+        return new URL(path, window.location.origin).href;
+      } catch (_error) {
+        return path;
+      }
+    }
+
+    function fieldInput(path, label, value, type = "text", payload = null, disabled = false) {
       return `
-        <label class="field"${tooltipAttrs(payload || tooltipPayload(label, t("simulatedOnly")))}>
+        <label class="field${disabled ? " is-disabled" : ""}"${tooltipAttrs(payload || tooltipPayload(label, t("simulatedOnly")))}>
           <span>${esc(label)}</span>
-          <input type="${esc(type)}" data-setting-path="${esc(path)}" value="${esc(value)}">
+          <input type="${esc(type)}" data-setting-path="${esc(path)}" value="${esc(value)}" ${disabled ? "disabled" : ""}>
         </label>
       `;
     }
 
-    function localField(label, value, type = "text", payload = null) {
+    function componentFieldOptions(fieldKey) {
+      return ((state.settings || {}).component_field_options || {})[fieldKey] || [];
+    }
+
+    function datalistId(fieldKey) {
+      return `component-options-${String(fieldKey || "").replace(/[^a-z0-9_-]/gi, "-")}`;
+    }
+
+    function componentDatalist(fieldKey) {
+      const options = componentFieldOptions(fieldKey);
+      return `<datalist id="${esc(datalistId(fieldKey))}">${options.map((item) => `<option value="${esc(item)}"></option>`).join("")}</datalist>`;
+    }
+
+    function localField(fieldKey, label, value, type = "text", payload = null, draftPath = "") {
       return `
         <label class="field"${tooltipAttrs(payload || tooltipPayload(label, t("simulatedOnly")))}>
           <span>${esc(label)}</span>
-          <input type="${esc(type)}" value="${esc(value)}" data-local-field="true">
+          <input type="${esc(type)}" value="${esc(value)}" list="${esc(datalistId(fieldKey))}" data-local-field-key="${esc(fieldKey)}" ${draftPath ? `data-draft-path="${esc(draftPath)}"` : ""}>
+          ${componentDatalist(fieldKey)}
         </label>
       `;
+    }
+
+    function componentFieldSymbol(component) {
+      const kind = String(component.kind || "").trim().toLowerCase();
+      if (kind === "sensor") {
+        return "SN";
+      }
+      if (kind === "actuator") {
+        return "AC";
+      }
+      if (kind === "power") {
+        return "PW";
+      }
+      return "HW";
+    }
+
+    function componentFieldSymbolTip(component) {
+      const kind = String(component.kind || "").trim().toLowerCase();
+      if (kind === "sensor") {
+        return t("componentBadgeSensor");
+      }
+      if (kind === "actuator") {
+        return t("componentBadgeActuator");
+      }
+      if (kind === "power") {
+        return t("componentBadgePower");
+      }
+      return t("componentBadgeHardware");
     }
 
     function toneForState(value) {
@@ -2737,7 +3346,10 @@
       if (["online", "ready"].includes(normalized)) {
         return "ok";
       }
-      if (["fault", "offline", "missing", "blocked", "error"].includes(normalized)) {
+      if (["offline", "missing", "disconnected", "unknown", "not_configured", "not_detected", "simulated"].includes(normalized)) {
+        return "neutral";
+      }
+      if (["fault", "blocked", "error"].includes(normalized)) {
         return "fault";
       }
       return "warn";
@@ -2748,6 +3360,9 @@
       if (normalized === "online") {
         return t("online");
       }
+      if (normalized === "ready") {
+        return t("ready");
+      }
       if (normalized === "offline") {
         return t("offline");
       }
@@ -2756,6 +3371,12 @@
       }
       if (normalized === "fault") {
         return t("fault");
+      }
+      if (normalized === "pending") {
+        return t("pending");
+      }
+      if (normalized === "disconnected") {
+        return t("moduleDisconnected");
       }
       if (normalized === "locked") {
         return t("blocked");
@@ -2853,11 +3474,14 @@
 
     function ownerScopeLabel(scope) {
       const normalized = String(scope || "").trim().toLowerCase();
-      if (normalized === "esp32") {
-        return "ESP32";
+      if (normalized === "esp32" || normalized === "io_node") {
+        return t("ioNodeLabel");
       }
-      if (normalized === "rpi") {
-        return "Raspberry Pi";
+      if (normalized === "rpi" || normalized === "compute_node") {
+        return t("computeNodeLabel");
+      }
+      if (normalized === "shared") {
+        return t("sharedNodeLabel");
       }
       return t("platformService");
     }
@@ -2908,11 +3532,12 @@
     }
 
     function detailCard(kicker, title, payload, contentHtml) {
+      const showKicker = String(kicker || "").trim() && String(kicker || "").trim() !== String(title || "").trim();
       return `
         <article class="detail-card"${tooltipAttrs(payload)}>
           <div class="panel-head">
             <div>
-              <div class="panel-kicker">${esc(kicker)}</div>
+              ${showKicker ? `<div class="panel-kicker">${esc(kicker)}</div>` : ""}
               <h3 class="panel-title">${esc(title)}</h3>
             </div>
           </div>
@@ -3032,24 +3657,21 @@
           {
             title: t("pathTooltipSection"),
             rows: [
-              { label: t("pathState"), value: storageStateLabel(entry.state) },
               { label: t("files"), value: String(entry.file_count || 0) }
             ]
           }
         ]
       );
       return `
-        <article class="path-card" data-tone="${esc(toneForState(entry.state))}"${tooltipAttrs(tooltipPayload(entry.title, entry.description || entry.path || "", [{ title: t("pathTooltipSection"), rows: [{ label: t("pathState"), value: storageStateLabel(entry.state) }, { label: t("runtime"), value: entry.path || "-" }] }], t("storageTip")))}>
+        <article class="path-card" data-tone="${esc(toneForState(entry.state))}"${tooltipAttrs(tooltipPayload(entry.title, entry.description || entry.path || "", [{ title: t("pathTooltipSection"), rows: [{ label: t("runtime"), value: entry.path || "-" }] }], t("storageTip")))}>
           <div class="panel-head">
             <div>
               <div class="panel-kicker">${esc(t("runtime"))}</div>
               <h3 class="panel-title">${esc(entry.title)}</h3>
             </div>
-            <span class="inline-chip" data-tone="${esc(toneForState(entry.state))}">${esc(storageStateLabel(entry.state))}</span>
           </div>
           <div class="path-value">${esc(compactPathLabel(entry.path))}</div>
           <div class="info-stack">
-            ${infoRow(t("pathState"), storageStateLabel(entry.state))}
             ${infoRow(t("files"), String(entry.file_count || 0))}
             ${infoRow(t("folders"), String(entry.dir_count || 0))}
           </div>
@@ -3076,7 +3698,6 @@
           {
             title: t("pathTooltipSection"),
             rows: [
-              { label: t("pathState"), value: storageStateLabel(entry.state) },
               { label: t("files"), value: String(entry.file_count || 0) },
               { label: t("folders"), value: String(entry.dir_count || 0) }
             ]
@@ -3094,16 +3715,15 @@
         <article class="path-card" data-tone="${esc(toneForState(entry.state))}"${tooltipAttrs(payload)}>
           <div class="panel-head">
             <div>
-              <div class="panel-kicker">${esc(t("storage"))}</div>
               <h3 class="panel-title">${esc(entry.title)}</h3>
             </div>
-            <span class="inline-chip" data-tone="${esc(toneForState(entry.state))}">${esc(storageStateLabel(entry.state))}</span>
           </div>
           <div class="path-value">${esc(compactPathLabel(entry.path))}</div>
           <div class="info-stack">
             ${infoRow(t("files"), String(entry.file_count || 0))}
             ${infoRow(t("folders"), String(entry.dir_count || 0))}
             ${infoRow(t("totalSize"), formatBytes(entry.total_bytes))}
+            ${entry.id === "libraries" ? infoRow(t("plantProfiles"), String(((entry.metadata || {}).plant_profile_count) || 0)) : ""}
           </div>
           <div class="path-actions">
             ${entry.app_supported ? `<a class="action-button" href="${esc(entry.app_url)}"${tooltipAttrs(tooltipPayload(t("openInApp"), entry.description || entry.app_url))}>${esc(t("openInApp"))}</a>` : ""}
@@ -3116,95 +3736,117 @@
       `;
     }
 
-    function renderNodeCard(node, ownerScope, titleOverride) {
-      const modules = moduleByOwner(ownerScope);
-      return `
-        <article class="node-card" data-tone="${esc(toneForState(node.health || "unknown"))}"${tooltipAttrs(tooltipPayload(titleOverride || node.title || "-", String(node.summary || ""), [{ title: t("physicalNode"), rows: [{ label: t("role"), value: ownerScopeLabel(ownerScope) }, { label: t("lastSeen"), value: node.last_seen_ms ? formatDateTime(node.last_seen_ms) : t("notYet") }] }], t("nodesLead")))}>
-          <div class="panel-head">
-            <div>
-              <div class="panel-kicker">${esc(t("physicalNode"))}</div>
-              <h3 class="panel-title">${esc(titleOverride || node.title || "-")}</h3>
-            </div>
-            <span class="inline-chip" data-tone="${esc(toneForState(node.health || "unknown"))}">${esc(nodeStateLabel(node.health || "unknown"))}</span>
-          </div>
-          <div class="info-stack">
-            ${infoRow(t("role"), ownerScopeLabel(ownerScope))}
-            ${infoRow(t("lastSeen"), node.last_seen_ms ? `${formatRelativeTime(node.last_seen_ms)} · ${formatDateTime(node.last_seen_ms)}` : t("notYet"))}
-            ${infoRow(t("shellReady"), node.shell_ready ? t("ready") : t("offline"))}
-            ${infoRow(t("wifiReady"), node.wifi_ready ? t("ready") : t("offline"))}
-            ${infoRow(t("syncReady"), node.sync_ready ? t("ready") : t("offline"))}
-          </div>
-          <div class="module-pill-list">
-            ${modules.length
-              ? modules.map((module) => `<span class="module-pill"${tooltipAttrs(tooltipPayload(module.title, module.summary || "", [{ title: t("moduleState"), rows: [{ label: t("ownershipColumnOwner"), value: ownerScopeLabel(module.owner_scope) }, { label: t("ownershipColumnState"), value: nodeStateLabel(module.state || "unknown") }, { label: t("ownershipColumnRoute"), value: routeModeLabel(module.route_mode || "blocked") }] }]))}>${esc(module.title)}</span>`).join("")
-              : `<span class="module-pill">${esc(t("plannedModules"))}: 0</span>`}
-          </div>
-        </article>
-      `;
+    function registryModules() {
+      return Array.isArray((state.registry || {}).modules) ? state.registry.modules : [];
     }
 
-    function renderOwnershipCard(module) {
-      return `
-        <article class="ownership-card" data-tone="${esc(toneForState(module.state || "unknown"))}"${tooltipAttrs(tooltipPayload(module.title, module.summary || "", [{ title: t("moduleOwnership"), rows: [{ label: t("ownershipColumnOwner"), value: ownerScopeLabel(module.owner_scope) }, { label: t("ownershipColumnState"), value: nodeStateLabel(module.state || "unknown") }, { label: t("ownershipColumnRoute"), value: routeModeLabel(module.route_mode || "blocked") }] }], t("ownershipLead")))}>
-          <div class="panel-head">
-            <div>
-              <div class="panel-kicker">${esc(t("moduleOwnership"))}</div>
-              <h3 class="panel-title">${esc(module.title)}</h3>
-            </div>
-            <span class="inline-chip" data-tone="${esc(toneForState(module.state || "unknown"))}">${esc(nodeStateLabel(module.state || "unknown"))}</span>
-          </div>
-          <div class="ownership-list">
-            ${infoRow(t("ownershipColumnOwner"), ownerScopeLabel(module.owner_scope))}
-            ${infoRow(t("ownershipColumnRoute"), routeModeLabel(module.route_mode || "blocked"))}
-            ${infoRow(t("ownerAvailable"), module.owner_available ? t("ready") : t("offline"))}
-          </div>
-        </article>
-      `;
+    function registryComponents() {
+      return Array.isArray((state.registry || {}).components) ? state.registry.components : [];
+    }
+
+    function registryModuleRuntimeSource(module) {
+      const runtimeId = String(module.runtime_module_id || "").trim();
+      if (runtimeId) {
+        return moduleById(runtimeId);
+      }
+      const moduleId = String(module.id || "").trim();
+      return moduleId ? moduleById(moduleId) : null;
+    }
+
+    function registryComponentState(component) {
+      const explicit = String(component.state || "").trim();
+      if (explicit && !["not_detected", "simulated", "disconnected"].includes(explicit.toLowerCase())) {
+        return explicit;
+      }
+      const moduleId = String(component.assigned_module || "").trim();
+      const stateValue = componentConnectionState(moduleId);
+      if (stateValue === "ready") {
+        return "pending";
+      }
+      if (explicit === "simulated") {
+        return "simulated";
+      }
+      return stateValue || explicit || "not_detected";
     }
 
     function hardwareModules() {
+      const registryItems = registryModules();
+      if (registryItems.length) {
+        return registryItems.map((module) => {
+          const source = registryModuleRuntimeSource(module);
+          const explicitState = String(module.state || "").trim();
+          const stateValue = source ? moduleConnectionState(source) : explicitState || "disconnected";
+          return {
+            id: String(module.id || ""),
+            title: localizedValue(module.title, module.id),
+            owner: String(module.owner_role || module.owner || "shared"),
+            state: stateValue,
+            source,
+            components: Array.isArray(module.component_ids) ? module.component_ids.map((id) => String(id || "")) : []
+          };
+        });
+      }
+      const turretSource = moduleById("turret_bridge");
+      const irrigationSource = moduleById("irrigation");
       return [
         {
           id: "turret",
           title: state.settings.interface.language === "ru" ? "Турель" : "Turret",
-          owner: "rpi",
-          state: "ready",
+          owner: "compute_node",
+          state: moduleConnectionState(turretSource),
+          source: turretSource,
           components: ["camera", "strobe", "piezo", "water_pump", "servo_pan_tilt", "lidar"]
         },
         {
           id: "irrigation",
           title: state.settings.interface.language === "ru" ? "Ирригация" : "Irrigation",
-          owner: "esp32",
-          state: "pending",
+          owner: "io_node",
+          state: moduleConnectionState(irrigationSource),
+          source: irrigationSource,
           components: ["soil_moisture", "air_temp_humidity", "drip_valves", "peristaltic_pump", "light_sensor"]
         },
         {
           id: "power",
           title: state.settings.interface.language === "ru" ? "Питание" : "Power",
           owner: "shared",
-          state: "pending",
+          state: "disconnected",
+          source: null,
           components: ["solar_panel", "converter", "battery_monitor"]
         }
       ];
     }
 
     function hardwareComponents() {
+      const registryItems = registryComponents();
+      if (registryItems.length) {
+        return registryItems.map((component) => ({
+          id: String(component.id || ""),
+          title: localizedValue(component.title, component.id),
+          kind: String(component.kind || "sensor"),
+          module: String(component.assigned_module || component.module || ""),
+          power: String(component.power_profile || component.power || "TBD"),
+          pinout: String(component.pinout || "TBD"),
+          tolerance: String(component.tolerance || "verification pending"),
+          modes: String(component.operating_modes || component.modes || "sample"),
+          state: registryComponentState(component)
+        }));
+      }
       const ru = state.settings.interface.language === "ru";
       return [
-        { id: "camera", title: ru ? "Камера Raspberry Pi" : "Raspberry Pi Camera", kind: "sensor", module: "turret", power: "5V / CSI", pinout: "CSI ribbon", tolerance: ru ? "Проверка потока" : "stream check", modes: "preview, capture, evidence", state: "ready" },
-        { id: "strobe", title: ru ? "Стробоскоп" : "Strobe", kind: "actuator", module: "turret", power: "12V driver", pinout: "ESP32 GPIO TBD", tolerance: "50-100%", modes: "pulse, deterrence", state: "pending" },
-        { id: "piezo", title: ru ? "Пьезотвиттер" : "Piezo tweeter", kind: "actuator", module: "turret", power: "PWM", pinout: "ESP32 GPIO TBD", tolerance: "50-100%", modes: "tone, sweep", state: "pending" },
-        { id: "water_pump", title: ru ? "Насос водной пушки" : "Water cannon pump", kind: "actuator", module: "turret", power: "12V pump", pinout: "relay/MOSFET TBD", tolerance: "50-100%", modes: "short burst", state: "pending" },
-        { id: "servo_pan_tilt", title: ru ? "Сервоприводы наведения" : "Pan/tilt servos", kind: "actuator", module: "turret", power: "5-6V", pinout: "PWM TBD", tolerance: "angle limits TBD", modes: "manual aim", state: "pending" },
-        { id: "lidar", title: ru ? "Лидар / дальномер" : "Lidar / range sensor", kind: "sensor", module: "turret", power: "5V UART/I2C", pinout: "TBD", tolerance: "range sanity", modes: "distance gate", state: "pending" },
-        { id: "soil_moisture", title: ru ? "Датчик влажности почвы" : "Soil moisture sensor", kind: "sensor", module: "irrigation", power: "3.3V ADC", pinout: "ESP32 ADC TBD", tolerance: "calibration required", modes: "sample, average", state: "pending" },
-        { id: "air_temp_humidity", title: ru ? "Температура и влажность воздуха" : "Air temp/humidity", kind: "sensor", module: "irrigation", power: "3.3V I2C/1-wire", pinout: "TBD", tolerance: "sensor health", modes: "sample", state: "pending" },
-        { id: "drip_valves", title: ru ? "Клапаны капельного полива" : "Drip valves", kind: "actuator", module: "irrigation", power: "12V valves", pinout: "relay board TBD", tolerance: "zone timeout", modes: "zone open/close", state: "pending" },
-        { id: "peristaltic_pump", title: ru ? "Перистальтический насос" : "Peristaltic pump", kind: "actuator", module: "irrigation", power: "12V pump", pinout: "MOSFET TBD", tolerance: "dose duration", modes: "dose", state: "pending" },
-        { id: "light_sensor", title: ru ? "Датчик освещённости" : "Light sensor", kind: "sensor", module: "irrigation", power: "3.3V I2C/ADC", pinout: "TBD", tolerance: "day/night threshold", modes: "sample", state: "pending" },
-        { id: "solar_panel", title: ru ? "Солнечная панель" : "Solar panel", kind: "power", module: "power", power: "input", pinout: "charge controller", tolerance: "voltage/current limits", modes: "charge", state: "pending" },
-        { id: "converter", title: ru ? "DC/DC конвертер" : "DC/DC converter", kind: "power", module: "power", power: "5V/12V rails", pinout: "power rail", tolerance: "rail stability", modes: "supply", state: "pending" },
-        { id: "battery_monitor", title: ru ? "Монитор батареи" : "Battery monitor", kind: "sensor", module: "power", power: "I2C/ADC", pinout: "TBD", tolerance: "voltage sanity", modes: "sample", state: "pending" }
+        { id: "camera", title: ru ? "Камера Raspberry Pi" : "Raspberry Pi Camera", kind: "sensor", module: "turret", power: "5V / CSI", pinout: "CSI ribbon", tolerance: ru ? "Проверка потока" : "stream check", modes: "preview, capture, evidence", state: componentConnectionState("turret") },
+        { id: "strobe", title: ru ? "Стробоскоп" : "Strobe", kind: "actuator", module: "turret", power: "12V driver", pinout: "ESP32 GPIO TBD", tolerance: "50-100%", modes: "pulse, deterrence", state: componentConnectionState("turret") },
+        { id: "piezo", title: ru ? "Пьезотвиттер" : "Piezo tweeter", kind: "actuator", module: "turret", power: "PWM", pinout: "ESP32 GPIO TBD", tolerance: "50-100%", modes: "tone, sweep", state: componentConnectionState("turret") },
+        { id: "water_pump", title: ru ? "Насос водной пушки" : "Water cannon pump", kind: "actuator", module: "turret", power: "12V pump", pinout: "relay/MOSFET TBD", tolerance: "50-100%", modes: "short burst", state: componentConnectionState("turret") },
+        { id: "servo_pan_tilt", title: ru ? "Сервоприводы наведения" : "Pan/tilt servos", kind: "actuator", module: "turret", power: "5-6V", pinout: "PWM TBD", tolerance: "angle limits TBD", modes: "manual aim", state: componentConnectionState("turret") },
+        { id: "lidar", title: ru ? "Лидар / дальномер" : "Lidar / range sensor", kind: "sensor", module: "turret", power: "5V UART/I2C", pinout: "TBD", tolerance: "range sanity", modes: "distance gate", state: componentConnectionState("turret") },
+        { id: "soil_moisture", title: ru ? "Датчик влажности почвы" : "Soil moisture sensor", kind: "sensor", module: "irrigation", power: "3.3V ADC", pinout: "ESP32 ADC TBD", tolerance: "calibration required", modes: "sample, average", state: componentConnectionState("irrigation") },
+        { id: "air_temp_humidity", title: ru ? "Температура и влажность воздуха" : "Air temp/humidity", kind: "sensor", module: "irrigation", power: "3.3V I2C/1-wire", pinout: "TBD", tolerance: "sensor health", modes: "sample", state: componentConnectionState("irrigation") },
+        { id: "drip_valves", title: ru ? "Клапаны капельного полива" : "Drip valves", kind: "actuator", module: "irrigation", power: "12V valves", pinout: "relay board TBD", tolerance: "zone timeout", modes: "zone open/close", state: componentConnectionState("irrigation") },
+        { id: "peristaltic_pump", title: ru ? "Перистальтический насос" : "Peristaltic pump", kind: "actuator", module: "irrigation", power: "12V pump", pinout: "MOSFET TBD", tolerance: "dose duration", modes: "dose", state: componentConnectionState("irrigation") },
+        { id: "light_sensor", title: ru ? "Датчик освещённости" : "Light sensor", kind: "sensor", module: "irrigation", power: "3.3V I2C/ADC", pinout: "TBD", tolerance: "day/night threshold", modes: "sample", state: componentConnectionState("irrigation") },
+        { id: "solar_panel", title: ru ? "Солнечная панель" : "Solar panel", kind: "power", module: "power", power: "input", pinout: "charge controller", tolerance: "voltage/current limits", modes: "charge", state: "disconnected" },
+        { id: "converter", title: ru ? "DC/DC конвертер" : "DC/DC converter", kind: "power", module: "power", power: "5V/12V rails", pinout: "power rail", tolerance: "rail stability", modes: "supply", state: "disconnected" },
+        { id: "battery_monitor", title: ru ? "Монитор батареи" : "Battery monitor", kind: "sensor", module: "power", power: "I2C/ADC", pinout: "TBD", tolerance: "voltage sanity", modes: "sample", state: "disconnected" }
       ];
     }
 
@@ -3216,25 +3858,6 @@
       ];
     }
 
-    function renderModuleCard(module) {
-      return `
-        <article class="module-card" data-tone="${esc(toneForState(module.state || "unknown"))}"${tooltipAttrs(tooltipPayload(module.title, module.summary || "", [{ title: t("moduleState"), rows: [{ label: t("ownershipColumnOwner"), value: ownerScopeLabel(module.owner_scope) }, { label: t("ownershipColumnState"), value: nodeStateLabel(module.state || "unknown") }, { label: t("ownershipColumnRoute"), value: routeModeLabel(module.route_mode || "blocked") }] }]))}>
-          <div class="panel-head">
-            <div>
-              <div class="panel-kicker">${esc(t("moduleRegistry"))}</div>
-              <h3 class="panel-title">${esc(module.title)}</h3>
-            </div>
-            <span class="inline-chip" data-tone="${esc(toneForState(module.state || "unknown"))}">${esc(nodeStateLabel(module.state || "unknown"))}</span>
-          </div>
-          <div class="info-stack">
-            ${infoRow(t("ownershipColumnOwner"), ownerScopeLabel(module.owner_scope))}
-            ${infoRow(t("ownershipColumnRoute"), routeModeLabel(module.route_mode || "blocked"))}
-            ${infoRow(t("ownerAvailable"), module.owner_available ? t("ready") : t("offline"))}
-          </div>
-        </article>
-      `;
-    }
-
     function renderHardwareModuleCard(module, componentsById) {
       const componentItems = module.components.map((id) => componentsById[id]).filter(Boolean);
       return `
@@ -3243,10 +3866,10 @@
             <div>
               <h3 class="panel-title">${esc(module.title)}</h3>
             </div>
-            <span class="inline-chip" data-tone="${esc(toneForState(module.state || "unknown"))}">${esc(nodeStateLabel(module.state || "unknown"))}</span>
+            <span class="inline-chip" data-tone="${esc(toneForState(module.state || "unknown"))}">${esc(moduleStatusLabel(module.state || "disconnected"))}</span>
           </div>
           <div class="info-stack">
-            ${infoRow(t("moduleOwner"), ownerScopeLabel(module.owner))}
+            ${infoRow(t("controllerNode"), ownerScopeLabel(module.owner))}
             ${infoRow(t("moduleComponents"), String(componentItems.length))}
           </div>
           <div class="module-pill-list">
@@ -3260,21 +3883,23 @@
     }
 
     function renderComponentCard(component) {
+      const symbol = componentFieldSymbol(component);
       return `
         <article class="component-card" data-tone="${esc(toneForState(component.state || "unknown"))}"${tooltipAttrs(tooltipPayload(component.title, t("componentsLead"), [{ title: t("componentKind"), rows: [{ label: t("componentKind"), value: component.kind }, { label: t("pinout"), value: component.pinout }, { label: t("powerProfile"), value: component.power }] }]))}>
           <div class="panel-head">
-            <div>
+            <div class="component-visual">
+              <span class="component-symbol" tabindex="0" data-tooltip-owner="component-symbol-${esc(component.id)}"${tooltipAttrs(tooltipPayload(`${symbol} · ${t("componentIcon")}`, componentFieldSymbolTip(component)))}>${esc(symbol)}</span>
               <h3 class="panel-title">${esc(component.title)}</h3>
             </div>
-            <span class="inline-chip" data-tone="${esc(toneForState(component.state || "unknown"))}">${esc(nodeStateLabel(component.state || "unknown"))}</span>
+            <span class="inline-chip" data-tone="${esc(toneForState(component.state || "unknown"))}">${esc(componentStatusLabel(component.state || "disconnected"))}</span>
           </div>
           <div class="field-grid">
-            ${localField(t("componentKind"), component.kind)}
-            ${localField(t("moduleOwner"), component.module)}
-            ${localField(t("powerProfile"), component.power)}
-            ${localField(t("pinout"), component.pinout)}
-            ${localField(t("tolerance"), component.tolerance)}
-            ${localField(t("operatingModes"), component.modes)}
+            ${localField("component_kind", t("componentKind"), component.kind)}
+            ${localField("assigned_module", t("assignedModule"), component.module)}
+            ${localField("power_profile", t("powerProfile"), component.power)}
+            ${localField("pinout", t("pinout"), component.pinout)}
+            ${localField("tolerance", t("tolerance"), component.tolerance)}
+            ${localField("operating_modes", t("operatingModes"), component.modes)}
           </div>
           <div class="button-row">
             <button class="ghost-button" type="button" data-action="local-component-test"${tooltipAttrs(tooltipPayload(t("testControl"), t("simulatedOnly")))}>${esc(t("testControl"))}</button>
@@ -3301,7 +3926,7 @@
       `;
     }
 
-    function keyboardRows() {
+    function keyboardRows(disabled = false) {
       const bindings = state.settings.keyboard.bindings;
       return [
         ["aim_up", t("aimUp")],
@@ -3318,12 +3943,65 @@
         ["water", t("waterAction")],
         ["capture", t("captureAction")],
         ["power_modifier", t("powerModifier")]
-      ].map(([key, label]) => `
-        <label class="field"${tooltipAttrs(tooltipPayload(label, t("keyboardScopeTip")))}>
+      ].map(([key, label]) => {
+        const payload = disabled
+          ? tooltipPayload(label, t("enableDesktopControlsTip"))
+          : tooltipPayload(label, t("keyboardScopeTip"));
+        return `
+        <label class="field${disabled ? " is-disabled" : ""}"${tooltipAttrs(payload)}>
           <span>${esc(label)}</span>
-          <input type="text" data-setting-path="keyboard.bindings.${esc(key)}" value="${esc(bindings[key])}">
+          <input type="text" data-setting-path="keyboard.bindings.${esc(key)}" value="${esc(bindings[key])}" ${disabled ? "disabled" : ""}>
         </label>
-      `).join("");
+      `;
+      }).join("");
+    }
+
+    function syncDomainStatusById() {
+      const domains = Array.isArray((state.sync || {}).domains) ? (state.sync || {}).domains : [];
+      return Object.fromEntries(domains.map((domain) => [String(domain.id || ""), domain]));
+    }
+
+    function syncSelectionRows() {
+      const selected = state.settings.synchronization.selected_domains || {};
+      return SYNC_DOMAIN_OPTIONS.map((item) => {
+        const checked = selected[item.id] !== false;
+        const label = t(item.titleKey);
+        const summary = t(item.summaryKey);
+        return `
+          <label class="sync-domain-row" data-selected="${checked ? "true" : "false"}"${tooltipAttrs(tooltipPayload(label, summary))}>
+            <span>
+              <strong>${esc(label)}</strong>
+              <span class="sync-domain-meta">${esc(summary)}</span>
+            </span>
+            <input class="switch" type="checkbox" data-setting-path="synchronization.selected_domains.${esc(item.id)}" ${checked ? "checked" : ""}>
+          </label>
+        `;
+      }).join("");
+    }
+
+    function syncAuditRows() {
+      const selected = state.settings.synchronization.selected_domains || {};
+      const statusById = syncDomainStatusById();
+      const localVersion = String((((state.snapshot || {}).current_shell || {}).ui_shell_version || "0.1.0"));
+      const peerVersion = String((((state.snapshot || {}).nodes || {}).peer || {}).ui_shell_version || "");
+      return SYNC_DOMAIN_OPTIONS.map((item) => {
+          const selectedRow = selected[item.id] !== false;
+          const status = statusById[item.id] || {};
+          const versionLabel = !selectedRow
+            ? t("syncNotSelected")
+            : peerVersion
+            ? (peerVersion === localVersion ? t("versionAligned") : t("versionMismatch"))
+            : t("versionUnknown");
+          const statusLabel = selectedRow
+            ? syncStateLabel(status.state || (state.sync || {}).state || "local_only")
+            : t("syncNotSelected");
+          return `
+            <div class="status-row-item" data-selected="${selectedRow ? "true" : "false"}"${tooltipAttrs(tooltipPayload(t(item.titleKey), t(item.summaryKey)))}>
+              <strong>${esc(t(item.titleKey))}</strong>
+              <span>${esc(statusLabel)} · ${esc(versionLabel)}</span>
+            </div>
+          `;
+        }).join("");
     }
 
     function renderConstructorModal() {
@@ -3335,23 +4013,30 @@
       const body = step === 1
         ? `
           <div class="field-grid">
-            ${localField(t("moduleName"), draft.moduleName)}
-            ${localField(t("moduleOwner"), draft.moduleOwner)}
+            ${localField("module_name", t("moduleName"), draft.moduleName, "text", null, "constructorDraft.moduleName")}
+            ${localField("node_role", t("controllerNode"), draft.controllerNode, "text", null, "constructorDraft.controllerNode")}
+            ${localField("operating_modes", t("moduleSummary"), draft.moduleSummary || "", "text", tooltipPayload(t("moduleName"), t("constructorEnableTip")), "constructorDraft.moduleSummary")}
           </div>
         `
         : step === 2
         ? `
           <div class="field-grid">
-            ${localField(t("componentName"), draft.componentName)}
-            ${localField(t("componentKind"), draft.componentKind)}
-            ${localField(t("powerProfile"), "5V / TBD")}
-            ${localField(t("pinout"), "TBD")}
+            ${localField("component_name", t("componentName"), draft.componentName, "text", null, "constructorDraft.componentName")}
+            ${localField("component_kind", t("componentKind"), draft.componentKind, "text", null, "constructorDraft.componentKind")}
+            ${localField("power_profile", t("powerProfile"), draft.powerProfile || "TBD", "text", null, "constructorDraft.powerProfile")}
+            ${localField("pinout", t("pinout"), draft.pinout || "TBD", "text", null, "constructorDraft.pinout")}
+            ${localField("tolerance", t("tolerance"), draft.tolerance || "verification pending", "text", null, "constructorDraft.tolerance")}
+            ${localField("operating_modes", t("operatingModes"), draft.operatingModes || "sample", "text", null, "constructorDraft.operatingModes")}
           </div>
         `
         : `
           <div class="note-box">
             ${esc(t("moduleName"))}: ${esc(draft.moduleName)}<br>
+            ${esc(t("controllerNode"))}: ${esc(ownerScopeLabel(draft.controllerNode))}<br>
             ${esc(t("componentName"))}: ${esc(draft.componentName)}<br>
+            ${esc(t("componentKind"))}: ${esc(draft.componentKind)}<br>
+            ${esc(t("powerProfile"))}: ${esc(draft.powerProfile || "TBD")}<br>
+            ${esc(t("pinout"))}: ${esc(draft.pinout || "TBD")}<br>
             ${esc(t("constructorStaged"))}
           </div>
         `;
@@ -3383,29 +4068,38 @@
       const snapshot = state.snapshot || {};
       const host = runtimeHost();
       const viewer = state.currentViewer || resolveCurrentViewer(snapshot);
-      const current = currentNode();
-      const peer = peerNode();
       const sync = state.sync || normalizeSync({});
       const storage = state.storage || normalizeStorage({});
       const runtimePaths = runtimeHostPaths();
       const storageCards = storagePaths();
-      const syncDomains = sync.domains || [];
       const hardwareModuleCards = hardwareModules();
       const componentCards = hardwareComponents();
       const componentsById = Object.fromEntries(componentCards.map((component) => [component.id, component]));
       const serviceCards = systemServices();
+      const keyboardControlsEnabled = state.settings.interface.desktop_controls_enabled;
+      const storageSearch = storageCards.map((entry) => [entry.title, entry.description, entry.path, entry.app_url].join(" ")).join(" ");
+      const moduleSearch = hardwareModuleCards.map((item) => [item.title, item.owner, ...(item.components || [])].join(" ")).join(" ");
+      const componentSearch = componentCards.map((item) => [
+        item.title,
+        item.kind,
+        item.module,
+        item.power,
+        item.pinout,
+        item.tolerance,
+        item.modes
+      ].join(" ")).join(" ");
+      const serviceSearch = serviceCards.map((item) => [item.title, item.owner, item.summary, item.state].join(" ")).join(" ");
 
       return [
         {
           id: "appearance",
           title: t("appearance"),
           summary: t("appearanceLead"),
-          searchText: `${t("appearance")} ${t("language")} ${t("theme")} ${t("density")} ${t("fullscreen")} ${t("desktopControls")} ${t("advancedDiagnostics")}`.toLowerCase(),
+          searchText: `${t("appearance")} ${t("language")} ${t("theme")} ${t("density")} ${t("fullscreen")} ${t("desktopControls")} ${t("advancedDiagnostics")} ${t("keyboardMap")} ${t("basePower")} ${t("shiftPower")} arrows digits q w e space shift стрелки цифры й ц у пробел шифт`.toLowerCase(),
           html: `
             <section class="card section-panel" id="appearance" data-section-id="appearance">
               <div class="section-head"${tooltipAttrs(tooltipPayload(t("appearance"), t("appearanceLead"), [], t("interfaceDefaults")))}>
                 <div>
-                  <div class="section-kicker">${esc(t("appearance"))}</div>
                   <h2 class="section-title">${esc(t("interfaceDefaults"))}</h2>
                 </div>
               </div>
@@ -3420,19 +4114,19 @@
                     ${toggleControl("interface.show_advanced_diagnostics", state.settings.interface.show_advanced_diagnostics, t("advancedDiagnostics"), t("advancedDiagnosticsTip"), false)}
                   </div>
                   <div class="field-grid">
-                    ${fieldInput("keyboard.base_power_percent", t("basePower"), state.settings.keyboard.base_power_percent, "number", tooltipPayload(t("keyboardPower"), t("keyboardScopeTip")))}
-                    ${fieldInput("keyboard.shift_power_percent", t("shiftPower"), state.settings.keyboard.shift_power_percent, "number", tooltipPayload(t("keyboardPower"), t("keyboardScopeTip")))}
+                    ${fieldInput("keyboard.base_power_percent", t("basePower"), state.settings.keyboard.base_power_percent, "number", tooltipPayload(t("keyboardPower"), keyboardControlsEnabled ? t("keyboardScopeTip") : t("enableDesktopControlsTip")), !keyboardControlsEnabled)}
+                    ${fieldInput("keyboard.shift_power_percent", t("shiftPower"), state.settings.keyboard.shift_power_percent, "number", tooltipPayload(t("keyboardPower"), keyboardControlsEnabled ? t("keyboardScopeTip") : t("enableDesktopControlsTip")), !keyboardControlsEnabled)}
                   </div>
-                  <details class="diagnostics-details">
+                  <details class="diagnostics-details" data-details-id="appearance-keyboard-map">
                     <summary>${esc(t("manualTurretKeys"))}</summary>
-                    <div class="field-grid">${keyboardRows()}</div>
+                    <div class="field-grid">${keyboardRows(!keyboardControlsEnabled)}</div>
                   </details>
                 `)}
                 ${detailCard(t("theme"), t("theme"), tooltipPayload(t("theme"), t("themeDensityTip")), `
                   <div class="theme-grid">
                     ${THEME_OPTIONS.map((item) => themeOption(item.value, t(item.titleKey), t(item.tipKey), state.settings.style.theme)).join("")}
                   </div>
-                  <div class="option-row" style="margin-top: 6px;">
+                  <div class="option-row" data-layout="density" style="margin-top: 6px;">
                     ${radioChip("style.density", "comfortable", t("comfortable"), state.settings.style.density, tooltipPayload(t("comfortable"), t("comfortableTip")))}
                     ${radioChip("style.density", "compact", t("compact"), state.settings.style.density, tooltipPayload(t("compact"), t("compactTip")))}
                   </div>
@@ -3450,24 +4144,14 @@
             <section class="card section-panel" id="runtime" data-section-id="runtime">
               <div class="section-head"${tooltipAttrs(tooltipPayload(t("runtime"), t("runtimeLead"), [], t("truthfulState")))}>
                 <div>
-                  <div class="section-kicker">${esc(t("runtime"))}</div>
                   <h2 class="section-title">${esc(t("runtime"))}</h2>
                 </div>
               </div>
               <div class="detail-grid">
-                ${detailCard(t("currentRuntime"), t("currentRuntime"), tooltipPayload(t("currentRuntime"), String(host.summary || ""), [{ title: t("runtimeTooltipSection"), rows: [{ label: t("host"), value: host.title || "-" }, { label: t("hostKind"), value: formatHostKind(host.kind) }, { label: t("viewerType"), value: formatViewerKind(viewer.viewer_kind) }, { label: t("serverUrl"), value: String(host.server_url || "-") }] }], t("hostStateTip")), `
+                ${detailCard(t("runtimeEnvironment"), t("currentRuntime"), tooltipPayload(t("currentRuntime"), String(host.summary || ""), [{ title: t("runtimeTooltipSection"), rows: [{ label: t("launchContext"), value: `${formatHostKind(host.kind)} · ${formatViewerKind(viewer.viewer_kind)} · ${String((((snapshot || {}).current_shell || {}).runtime_profile || "-"))}` }, { label: t("serverUrl"), value: String(host.server_url || "-") }] }], t("runtimeEnvironmentTip")), `
                   <div class="info-stack">
-                    ${infoRow(t("host"), host.title || "-")}
-                    ${infoRow(t("hostKind"), formatHostKind(host.kind))}
-                    ${infoRow(t("viewerType"), formatViewerKind(viewer.viewer_kind))}
-                    ${infoRow(t("serverStatus"), nodeStateLabel(host.server_status || "online"))}
+                    ${infoRow(t("launchContext"), `${formatHostKind(host.kind)} · ${formatViewerKind(viewer.viewer_kind)} · ${String((((snapshot || {}).current_shell || {}).runtime_profile || "-"))}`)}
                     ${infoRow(t("serverUrl"), String(host.server_url || "-"))}
-                    ${infoRow(t("runtimeProfile"), String((((snapshot || {}).current_shell || {}).runtime_profile || "-")))}
-                  </div>
-                `)}
-                ${detailCard(t("currentViewer"), t("currentViewer"), tooltipPayload(t("currentViewer"), t("viewerStateTip"), [{ title: t("viewerTooltipSection"), rows: [{ label: t("viewer"), value: viewer.title || "-" }, { label: t("viewerType"), value: formatViewerKind(viewer.viewer_kind) }, { label: t("currentPage"), value: String(viewer.page || "-") }] }], t("viewerStateTip")), `
-                  <div class="info-stack">
-                    ${infoRow(t("viewer"), viewer.title || "-")}
                     ${infoRow(t("connectivity"), viewerLikelyOnHost() ? t("sameDevice") : t("differentDevice"))}
                   </div>
                 `)}
@@ -3479,74 +4163,47 @@
           `
         },
         {
-          id: "nodes",
-          title: t("nodes"),
-          summary: t("nodesLead"),
-          searchText: `${t("nodes")} raspberry pi esp32 ${t("plannedModules")} ${t("lastSeen")}`.toLowerCase(),
-          html: `
-            <section class="card section-panel" id="nodes" data-section-id="nodes">
-              <div class="section-head"${tooltipAttrs(tooltipPayload(t("nodes"), t("nodesLead"), [], t("platformNodes")))}>
-                <div>
-                  <div class="section-kicker">${esc(t("platformNodes"))}</div>
-                  <h2 class="section-title">${esc(t("nodes"))}</h2>
-                </div>
-              </div>
-              <div class="node-grid">
-                ${renderNodeCard(current, "rpi", current.title || "Raspberry Pi")}
-                ${renderNodeCard(peer, "esp32", peer.title || "ESP32")}
-              </div>
-            </section>
-          `
-        },
-        {
           id: "sync",
           title: t("sync"),
           summary: t("syncLead"),
-          searchText: `${t("sync")} ${t("syncState")} ${t("serviceLink")} ${t("optionalDomains")} ${t("preferredMode")} ${t("preferPeerContinuity")}`.toLowerCase(),
+          searchText: `${t("sync")} ${t("syncState")} ${t("serviceLink")} ${t("optionalDomains")} ${t("preferredMode")} ${t("preferPeerContinuity")} ${SYNC_DOMAIN_OPTIONS.map((item) => t(item.titleKey)).join(" ")}`.toLowerCase(),
           html: `
             <section class="card section-panel" id="sync" data-section-id="sync">
               <div class="section-head"${tooltipAttrs(tooltipPayload(t("sync"), t("syncLead"), [], t("syncTip")))}>
                 <div>
-                  <div class="section-kicker">${esc(t("sync"))}</div>
                   <h2 class="section-title">${esc(t("sync"))}</h2>
                 </div>
               </div>
               <div class="detail-grid">
                 ${detailCard(t("sharedPreferences"), t("sharedPreferences"), tooltipPayload(t("sharedPreferences"), t("sharedPreferenceIntentTip")), `
-                  <div class="option-row">
+                  <div class="option-row" data-layout="sync-mode">
                     ${radioChip("synchronization.preferred_mode", "auto", t("auto"), state.settings.synchronization.preferred_mode, tooltipPayload(t("auto"), t("syncAutoTip")))}
                     ${radioChip("synchronization.preferred_mode", "manual_review", t("manualReview"), state.settings.synchronization.preferred_mode, tooltipPayload(t("manualReview"), t("syncManualTip")))}
                   </div>
-                  <div class="note-stack">
-                    ${toggleControl("synchronization.prefer_peer_continuity", state.settings.synchronization.prefer_peer_continuity, t("preferPeerContinuity"), t("syncContinuityTip"), false)}
+                  <div class="sync-domain-list">
+                    ${syncSelectionRows()}
                   </div>
                 `)}
-                ${detailCard(t("baseConnectivity"), t("baseConnectivity"), tooltipPayload(t("syncState"), String(sync.summary || "")), `
+                ${detailCard(t("syncStatus"), t("syncStatus"), tooltipPayload(t("syncStatus"), String(sync.summary || ""), [], t("syncTip")), `
+                  <div class="sync-actions">
+                    <button class="action-button" type="button" data-action="sync-now"${tooltipAttrs(tooltipPayload(t("syncSelected"), t("syncTip")))}>${esc(t("syncSelected"))}</button>
+                    <button class="ghost-button" type="button" data-action="refresh-runtime"${tooltipAttrs(tooltipPayload(t("scanSelected"), t("refreshPageTip")))}>${esc(t("scanSelected"))}</button>
+                  </div>
+                  <div class="status-list">${syncAuditRows()}</div>
                   <div class="info-stack">
                     ${infoRow(t("syncState"), syncStateLabel(sync.state))}
-                    ${infoRow(t("serviceLink"), sync.peer_reachable ? t("online") : t("remoteUnavailable"))}
-                    ${infoRow(t("syncReady"), sync.peer_sync_ready ? t("ready") : t("offline"))}
-                    ${infoRow(t("lastSeen"), sync.last_sync_ms ? `${formatRelativeTime(sync.last_sync_ms)} · ${formatDateTime(sync.last_sync_ms)}` : t("notYet"))}
-                  </div>
-                  <div class="button-row">
-                    <button class="action-button" type="button" data-action="sync-now"${tooltipAttrs(tooltipPayload(t("syncNow"), t("syncTip")))}>${esc(t("syncNow"))}</button>
-                    <button class="ghost-button" type="button" data-action="refresh-runtime"${tooltipAttrs(tooltipPayload(t("refreshStatus"), t("refreshPageTip")))}>${esc(t("refreshStatus"))}</button>
-                  </div>
-                `)}
-                ${detailCard(t("optionalDomains"), t("syncDomains"), tooltipPayload(t("syncDomains"), t("syncLead")), `
-                  <div class="status-list">
-                    ${syncDomains.map((domain) => `
-                      <div class="status-row-item"${tooltipAttrs(tooltipPayload(domain.title, domain.summary || "", [{ title: t("syncDomains"), rows: [{ label: t("syncState"), value: syncStateLabel(domain.state) }, { label: t("connectivity"), value: domain.enabled ? t("online") : t("localOnly") }] }]))}>
-                        <strong>${esc(domain.title)}</strong>
-                        <span>${esc(syncStateLabel(domain.state))}</span>
-                      </div>
-                    `).join("") || `<div class="note-box">${esc(t("localOnly"))}</div>`}
-                  </div>
-                `)}
-                ${detailCard(t("syncTimeline"), t("syncConflicts"), tooltipPayload(t("syncConflicts"), t("syncLead")), `
-                  <div class="info-stack">
-                    ${infoRow(t("syncConflicts"), t("noConflicts"))}
+                    ${infoRow(t("lastSync"), sync.last_sync_ms ? `${formatRelativeTime(sync.last_sync_ms)} · ${formatDateTime(sync.last_sync_ms)}` : t("notYet"))}
+                    ${infoRow(t("localVersion"), String((((snapshot || {}).current_shell || {}).ui_shell_version || "0.1.0")))}
+                    ${infoRow(t("peerVersion"), String((((snapshot || {}).nodes || {}).peer || {}).ui_shell_version || t("versionUnknown")))}
                     ${infoRow(t("statusReason"), sync.last_error || sync.summary || "-")}
+                  </div>
+                `)}
+              </div>
+              <div class="sync-secondary-grid">
+                ${detailCard(t("syncContinuityCard"), t("syncContinuityCard"), tooltipPayload(t("syncContinuityCard"), t("syncContinuityTip")), `
+                  <div class="sync-policy-grid">
+                    ${toggleControl("synchronization.prefer_peer_continuity", state.settings.synchronization.prefer_peer_continuity, t("preferPeerContinuity"), t("syncContinuityTip"), false)}
+                    ${fieldInput("synchronization.poll_interval_seconds", t("syncPollingInterval"), state.settings.synchronization.poll_interval_seconds, "number", tooltipPayload(t("syncPollingInterval"), state.settings.synchronization.prefer_peer_continuity ? t("syncPollingDisabledTip") : t("syncPollingEnabledTip")), state.settings.synchronization.prefer_peer_continuity)}
                   </div>
                 `)}
               </div>
@@ -3557,12 +4214,11 @@
           id: "storage",
           title: t("storage"),
           summary: t("storageLead"),
-          searchText: `${t("storage")} ${t("reportsArchive")} assets audio animations libraries ${t("copyPath")} ${t("openFolder")}`.toLowerCase(),
+          searchText: `${t("storage")} ${t("reportsArchive")} assets audio animations libraries video gallery plant library ${t("copyPath")} ${t("openFolder")} ${t("openInApp")} ${t("cleanupDelete")} ${storageSearch}`.toLowerCase(),
           html: `
             <section class="card section-panel" id="storage" data-section-id="storage">
               <div class="section-head"${tooltipAttrs(tooltipPayload(t("storage"), t("storageLead"), [], t("storageTip")))}>
                 <div>
-                  <div class="section-kicker">${esc(t("storage"))}</div>
                   <h2 class="section-title">${esc(t("storage"))}</h2>
                 </div>
               </div>
@@ -3576,12 +4232,11 @@
           id: "modules",
           title: t("modules"),
           summary: t("modulesLead"),
-          searchText: `${t("modules")} turret irrigation power ${t("moduleComponents")} ${t("addComponent")}`.toLowerCase(),
+          searchText: `${t("modules")} turret irrigation power турель ирригация питание ${t("moduleComponents")} ${t("addComponent")} ${moduleSearch}`.toLowerCase(),
           html: `
             <section class="card section-panel" id="modules" data-section-id="modules">
               <div class="section-head"${tooltipAttrs(tooltipPayload(t("modules"), t("modulesLead"), [], t("moduleComponents")))}>
                 <div>
-                  <div class="section-kicker">${esc(t("moduleRegistry"))}</div>
                   <h2 class="section-title">${esc(t("modules"))}</h2>
                 </div>
               </div>
@@ -3595,12 +4250,11 @@
           id: "components",
           title: t("components"),
           summary: t("componentsLead"),
-          searchText: `${t("components")} camera strobe piezo audio pump valve lidar sensor servo solar converter pinout gpio`.toLowerCase(),
+          searchText: `${t("components")} camera strobe piezo audio pump valve lidar sensor servo solar converter pinout gpio камера стробоскоп пьезо насос клапан датчик сервопривод солнечная ${componentSearch}`.toLowerCase(),
           html: `
             <section class="card section-panel" id="components" data-section-id="components">
               <div class="section-head"${tooltipAttrs(tooltipPayload(t("components"), t("componentsLead"), [], t("componentKind")))}>
                 <div>
-                  <div class="section-kicker">${esc(t("components"))}</div>
                   <h2 class="section-title">${esc(t("components"))}</h2>
                 </div>
               </div>
@@ -3614,12 +4268,11 @@
           id: "services",
           title: t("services"),
           summary: t("servicesLead"),
-          searchText: `${t("services")} shell sync storage software service`.toLowerCase(),
+          searchText: `${t("services")} shell sync storage software service сервис оболочка синхронизация хранилище ${serviceSearch}`.toLowerCase(),
           html: `
             <section class="card section-panel" id="services" data-section-id="services">
               <div class="section-head"${tooltipAttrs(tooltipPayload(t("services"), t("servicesLead"), [], t("protectedServiceTip")))}>
                 <div>
-                  <div class="section-kicker">${esc(t("services"))}</div>
                   <h2 class="section-title">${esc(t("services"))}</h2>
                 </div>
               </div>
@@ -3633,12 +4286,11 @@
           id: "policies",
           title: t("policies"),
           summary: t("policiesLead"),
-          searchText: `${t("policies")} ${t("turretPolicies")} ${t("irrigationDefaults")} ${t("silentObservation")} ${t("animalDeterrence")} ${t("preferDriestZone")}`.toLowerCase(),
+          searchText: `${t("policies")} ${t("turretPolicies")} ${t("irrigationDefaults")} ${t("silentObservation")} ${t("animalDeterrence")} ${t("autoCapture")} ${t("preferDriestZone")}`.toLowerCase(),
           html: `
             <section class="card section-panel" id="policies" data-section-id="policies">
               <div class="section-head"${tooltipAttrs(tooltipPayload(t("policies"), t("policiesLead"), [], t("sharedPreferences")))}>
                 <div>
-                  <div class="section-kicker">${esc(t("policies"))}</div>
                   <h2 class="section-title">${esc(t("policies"))}</h2>
                 </div>
               </div>
@@ -3648,7 +4300,9 @@
                     ${toggleControl("turret_policies.silent_observation", state.settings.turret_policies.silent_observation, t("silentObservation"), t("persistentTurretPolicyTip"), false)}
                     ${toggleControl("turret_policies.allow_animal_deterrence", state.settings.turret_policies.allow_animal_deterrence, t("animalDeterrence"), t("animalDeterrenceTip"), false)}
                     ${toggleControl("turret_policies.allow_auto_water_action", state.settings.turret_policies.allow_auto_water_action, t("autoWaterAction"), t("autoWaterActionTip"), false)}
+                    ${toggleControl("turret_policies.allow_auto_capture", state.settings.turret_policies.allow_auto_capture, t("autoCapture"), t("autoCaptureTip"), false)}
                     ${toggleControl("turret_policies.return_to_warm_standby", state.settings.turret_policies.return_to_warm_standby, t("warmStandby"), t("warmStandbyTip"), false)}
+                    ${fieldInput("turret_policies.max_recording_seconds", t("maxRecordingSeconds"), state.settings.turret_policies.max_recording_seconds, "number", tooltipPayload(t("maxRecordingSeconds"), t("maxRecordingSecondsTip")), false)}
                     <div class="readonly-row"${tooltipAttrs(tooltipPayload(t("doNotTargetPeople"), t("safetyBaselineTip")))}>
                       <div>
                         <strong>${esc(t("doNotTargetPeople"))}</strong>
@@ -3678,7 +4332,6 @@
             <section class="card section-panel" id="constructor" data-section-id="constructor">
               <div class="section-head"${tooltipAttrs(tooltipPayload(t("constructor"), t("constructorLead"), [], t("moduleConstructor")))}>
                 <div>
-                  <div class="section-kicker">${esc(t("moduleConstructor"))}</div>
                   <h2 class="section-title">${esc(t("constructor"))}</h2>
                 </div>
               </div>
@@ -3701,24 +4354,28 @@
           searchText: `${t("diagnostics")} ${t("shellSnapshot")} ${t("settingsPayload")} ${t("sync")}`.toLowerCase(),
           html: `
             <section class="card section-panel" id="diagnostics" data-section-id="diagnostics">
-              <details class="diagnostics-details">
+              <details class="diagnostics-details" data-details-id="diagnostics-root">
                 <summary>${esc(t("diagnostics"))}</summary>
                 ${state.runtimeError ? `<div class="note-box">${esc(state.runtimeError)}</div>` : ""}
                 ${state.settings.interface.show_advanced_diagnostics ? `
                   <div class="diagnostics-stack">
-                    <details>
+                    <details data-details-id="diagnostics-shell-snapshot">
                       <summary>${esc(t("shellSnapshot"))}</summary>
                       <pre class="code-block">${esc(JSON.stringify(state.snapshot || {}, null, 2))}</pre>
                     </details>
-                    <details>
+                    <details data-details-id="diagnostics-sync">
                       <summary>${esc(t("sync"))}</summary>
                       <pre class="code-block">${esc(JSON.stringify(state.sync || {}, null, 2))}</pre>
                     </details>
-                    <details>
+                    <details data-details-id="diagnostics-storage">
                       <summary>${esc(t("storage"))}</summary>
                       <pre class="code-block">${esc(JSON.stringify(state.storage || {}, null, 2))}</pre>
                     </details>
-                    <details>
+                    <details data-details-id="diagnostics-registry">
+                      <summary>${esc(t("moduleRegistry"))}</summary>
+                      <pre class="code-block">${esc(JSON.stringify(state.registry || {}, null, 2))}</pre>
+                    </details>
+                    <details data-details-id="diagnostics-settings-payload">
                       <summary>${esc(t("settingsPayload"))}</summary>
                       <pre class="code-block">${esc(JSON.stringify(state.settings || {}, null, 2))}</pre>
                     </details>
@@ -3773,7 +4430,7 @@
         </div>
         <div class="rail-block">
           <div class="rail-actions">
-            <a class="action-button" href="/"${tooltipAttrs(tooltipPayload(t("backToShell"), t("toolbarHint")))}>${esc(t("backToShell"))}</a>
+            <a class="action-button" href="${esc(appHref("/"))}"${tooltipAttrs(tooltipPayload(t("backToShell"), t("toolbarHint")))}>${esc(t("backToShell"))}</a>
             <a class="action-button" href="/gallery"${tooltipAttrs(tooltipPayload(t("gallery"), t("quickGalleryTip")))}>${esc(t("gallery"))}</a>
             <a class="action-button" href="/service"${tooltipAttrs(tooltipPayload(t("laboratory"), t("quickLaboratoryTip")))}>${esc(t("laboratory"))}</a>
             <a class="ghost-button" href="/content"${tooltipAttrs(tooltipPayload(t("openStorageDiagnostics"), t("storageDiagnosticsTip")))}>${esc(t("openStorageDiagnostics"))}</a>
@@ -3801,6 +4458,7 @@
         ? sections.filter((section) => section.id === state.activeSection)
         : sections;
       detail.innerHTML = renderedSections.map((section) => section.html).join("");
+      restoreOpenDetails(detail);
       if (state.pendingScrollId) {
         const targetId = state.pendingScrollId;
         state.pendingScrollId = "";
@@ -3828,6 +4486,7 @@
         modalRoot.id = "constructor-modal-root";
         modalRoot.innerHTML = renderConstructorModal();
         document.body.appendChild(modalRoot);
+        restoreOpenDetails(modalRoot);
       }
       if (hadSearchFocus) {
         const input = document.querySelector("[data-action='search-settings']");
@@ -3901,6 +4560,74 @@
       }
     }
 
+    function localizedFieldMatches(value, text) {
+      const expected = String(text || "").trim();
+      if (!expected) {
+        return false;
+      }
+      if (value && typeof value === "object") {
+        return Object.values(value).some((item) => String(item || "").trim() === expected);
+      }
+      return String(value || "").trim() === expected;
+    }
+
+    function constructorDraftPayload() {
+      const payload = { ...state.constructorDraft };
+      const moduleItem = registryModules().find((item) => String(item.id || "") === String(payload.moduleId || ""));
+      if (payload.moduleId && moduleItem && !localizedFieldMatches(moduleItem.title, payload.moduleName)) {
+        delete payload.moduleId;
+      }
+      const componentItem = registryComponents().find((item) => String(item.id || "") === String(payload.componentId || ""));
+      if (payload.componentId && componentItem && !localizedFieldMatches(componentItem.title, payload.componentName)) {
+        delete payload.componentId;
+      }
+      return payload;
+    }
+
+    async function saveConstructorDraft() {
+      try {
+        const payload = await fetchJson("/api/v1/platform/registry/constructor", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(constructorDraftPayload())
+        });
+        if (payload.registry) {
+          state.registry = normalizeRegistry(payload.registry);
+        }
+        showToast(t("registrySaved"), `${payload.module_id || ""} · ${payload.component_id || ""}`.trim(), "ok");
+        state.constructorOpen = false;
+        scheduleRender();
+      } catch (error) {
+        showToast(t("registrySaveFailed"), String(error), "fault");
+      }
+    }
+
+    function openConstructorFor(target) {
+      const moduleId = target.getAttribute("data-module-id") || "";
+      const componentId = target.getAttribute("data-component-id") || "";
+      const modulesById = Object.fromEntries(hardwareModules().map((item) => [item.id, item]));
+      const componentsById = Object.fromEntries(hardwareComponents().map((item) => [item.id, item]));
+      const moduleItem = modulesById[moduleId] || null;
+      const componentItem = componentsById[componentId] || null;
+      const assignedModule = componentItem ? modulesById[componentItem.module] : moduleItem;
+      state.constructorDraft = {
+        ...state.constructorDraft,
+        moduleId: assignedModule ? assignedModule.id : state.constructorDraft.moduleId,
+        moduleName: assignedModule ? assignedModule.title : state.constructorDraft.moduleName,
+        controllerNode: assignedModule ? assignedModule.owner : state.constructorDraft.controllerNode,
+        componentId: componentItem ? componentItem.id : state.constructorDraft.componentId,
+        componentName: componentItem ? componentItem.title : state.constructorDraft.componentName,
+        componentKind: componentItem ? componentItem.kind : state.constructorDraft.componentKind,
+        powerProfile: componentItem ? componentItem.power : state.constructorDraft.powerProfile,
+        pinout: componentItem ? componentItem.pinout : state.constructorDraft.pinout,
+        tolerance: componentItem ? componentItem.tolerance : state.constructorDraft.tolerance,
+        operatingModes: componentItem ? componentItem.modes : state.constructorDraft.operatingModes
+      };
+      state.constructorOpen = true;
+      state.constructorStep = 1;
+      render();
+    }
+
     document.addEventListener("input", (event) => {
       const target = event.target;
       if (!(target instanceof HTMLInputElement)) {
@@ -3908,7 +4635,7 @@
       }
       if (target.dataset.action === "search-settings") {
         state.searchQuery = String(target.value || "").trim().toLowerCase();
-        render(true);
+        scheduleRender(true);
       }
     });
 
@@ -3918,6 +4645,21 @@
         return;
       }
       if (target.dataset.action === "search-settings") {
+        return;
+      }
+      const localFieldKey = target.dataset.localFieldKey;
+      if (localFieldKey) {
+        const draftPath = target.dataset.draftPath;
+        if (draftPath) {
+          setDeepValue(state, draftPath, target.value);
+        }
+        const nextSettings = rememberComponentFieldOption(localFieldKey, target.value);
+        if (nextSettings) {
+          commitSettings(nextSettings, { render: false });
+        }
+        if (draftPath && !nextSettings) {
+          scheduleRender();
+        }
         return;
       }
       const path = target.dataset.settingPath;
@@ -3934,21 +4676,46 @@
       };
       persistValue().then((value) => {
         setDeepValue(nextSettings, path, value);
-        return saveSettings(nextSettings);
+        if (path === "synchronization.preferred_mode" && value === "auto") {
+          setAllSyncDomains(nextSettings, true);
+        }
+        if (path.startsWith("synchronization.selected_domains.")) {
+          const nextSelection = (((nextSettings || {}).synchronization || {}).selected_domains || {});
+          if (!allSyncDomainsSelected(nextSelection)) {
+            setDeepValue(nextSettings, "synchronization.preferred_mode", "manual_review");
+          }
+        }
+        commitSettings(nextSettings, { render: true });
       }).catch((error) => {
         state.runtimeError = `Settings save error: ${error}`;
-        render();
+        scheduleRender();
       });
     });
+
+    document.addEventListener("toggle", (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLDetailsElement)) {
+        return;
+      }
+      const detailsId = target.getAttribute("data-details-id") || "";
+      if (!detailsId) {
+        return;
+      }
+      state.openDetails[detailsId] = target.open;
+    }, true);
 
     window.addEventListener("smart-platform:settings-updated", (event) => {
       const detail = event instanceof CustomEvent ? event.detail : null;
       if (!detail || typeof detail !== "object") {
         return;
       }
+      if (detail.__source === "settings-page") {
+        return;
+      }
       state.settings = normalizeSettings(detail);
       applyVisualSettings();
-      render();
+      restartRuntimeRefreshLoop();
+      scheduleRender();
     });
 
     window.addEventListener("smart-platform:fullscreen-updated", (event) => {
@@ -3960,7 +4727,7 @@
       setDeepValue(nextSettings, "interface.fullscreen_enabled", Boolean(detail.fullscreen_enabled));
       state.settings = normalizeSettings(nextSettings);
       applyVisualSettings();
-      render();
+      scheduleRender();
     });
 
     document.addEventListener("click", (event) => {
@@ -3980,7 +4747,7 @@
       if (sectionTarget) {
         state.activeSection = sectionTarget;
         state.pendingScrollId = sectionTarget;
-        render();
+        scheduleRender();
         return;
       }
 
@@ -3991,12 +4758,6 @@
 
       if (action === "refresh-runtime") {
         refreshRuntime().catch(() => {});
-        return;
-      }
-
-      if (action === "clear-search") {
-        state.searchQuery = "";
-        render();
         return;
       }
 
@@ -4040,9 +4801,7 @@
       }
 
       if (action === "open-constructor") {
-        state.constructorOpen = true;
-        state.constructorStep = 1;
-        render();
+        openConstructorFor(target);
         return;
       }
 
@@ -4065,9 +4824,7 @@
       }
 
       if (action === "constructor-save") {
-        showToast(t("draftSaved"), t("constructorStaged"), "ok");
-        state.constructorOpen = false;
-        render();
+        saveConstructorDraft();
         return;
       }
 
@@ -4085,11 +4842,11 @@
       }
       state.activeSection = sectionId;
       state.pendingScrollId = sectionId;
-      render();
+      scheduleRender();
     });
 
     window.addEventListener("resize", () => {
-      render();
+      scheduleRender();
     });
 
     async function initialize() {
@@ -4101,11 +4858,9 @@
       }
       render();
       await loadSettings();
+      await loadRegistry();
       render();
       await refreshRuntime();
-      window.setInterval(() => {
-        refreshRuntime().catch(() => {});
-      }, 5000);
     }
 
     initialize().catch((error) => {

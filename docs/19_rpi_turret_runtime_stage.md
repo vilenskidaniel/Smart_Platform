@@ -52,7 +52,7 @@
 
 ## Что тогда можно было проверять
 
-1. Переходы между `manual`, `automatic`, `service_test`.
+1. Переходы между `manual`, `automatic`, `laboratory`.
 2. Латч `fault` и `emergency`.
 3. Сброс interlock и возврат в безопасный `manual`.
 4. Блокировку чувствительных действий при небезопасных runtime-условиях.

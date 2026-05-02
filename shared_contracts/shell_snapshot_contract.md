@@ -6,7 +6,7 @@
 
 - это shell-level contract;
 - он не заменяет `system snapshot` и другие runtime endpoint;
-- он нужен специально для `System Shell v1` и truthful `Settings`.
+- он нужен специально для `Platform Shell v1` и truthful `Settings`.
 
 Базовый endpoint для него:
 
@@ -192,8 +192,8 @@ Snapshot не обязан публиковать один заранее выб
     "id": "irrigation",
     "title": "Irrigation",
     "product_block": "irrigation",
-    "owner_scope": "esp32",
-    "owner_title": "ESP32",
+    "owner_scope": "io_node",
+    "owner_title": "I/O node",
     "owner_node_id": "esp32-main",
     "owner_available": false,
     "state": "locked",
@@ -201,23 +201,33 @@ Snapshot не обязан публиковать один заранее выб
     "canonical_path": "/irrigation",
     "canonical_url": "",
     "route_mode": "blocked",
-    "summary": "Peer owner is not available"
+    "summary": "Assigned controller is not available"
   }
 ]
 ```
 
 ### Допустимые `product_block`
 
-- `system_shell`
+- `platform_shell`
 - `irrigation`
 - `turret`
-- `service_test`
+- `laboratory`
+
+Legacy alias для совместимости:
+
+- `system_shell` -> `platform_shell`
+- `service_test` -> `laboratory`
 
 ### Допустимые `owner_scope`
 
-- `esp32`
-- `rpi`
+- `io_node`
+- `compute_node`
 - `shared`
+
+Legacy alias для совместимости:
+
+- `esp32` -> `io_node`
+- `rpi` -> `compute_node`
 
 ### Допустимые `route_mode`
 
@@ -227,8 +237,11 @@ Snapshot не обязан публиковать один заранее выб
 
 Важно:
 
-- `service_test` можно сохранять как internal engineering alias;
-- user-facing label для него в shell должен быть `Laboratory`;
+- `laboratory` — каноническое product-level имя блока; legacy alias
+  `service_test` допускается только как engineering compatibility layer;
+- `owner_scope` описывает логическую роль узла, а не бренд платы;
+- truthful hardware profile можно показывать отдельно через `owner_node_id`,
+  `node_type` или `owner_title` вроде `Compute node · Raspberry Pi`;
 - `owner_scope = shared` не должен маскироваться как ownership конкретной платой;
 - в `desktop_smoke` preview-path может оставаться `local`, но `owner_available`
   и `summary` обязаны честно отражать отсутствие реального owner-device.
@@ -248,7 +261,7 @@ Snapshot не обязан публиковать один заранее выб
   "laboratory": {
     "path": "/service",
     "user_facing_title": "Laboratory",
-    "internal_stage_name": "Service/Test v1"
+    "internal_stage_name": "Laboratory"
   },
   "settings": "/settings"
 }
@@ -319,5 +332,5 @@ Snapshot не обязан публиковать один заранее выб
 ## Связанные документы
 
 - [../docs/26_v1_product_spec.md](../docs/26_v1_product_spec.md)
-- [../docs/27_system_shell_v1_spec.md](../docs/27_system_shell_v1_spec.md)
+- [../docs/27_platform_shell_v1_spec.md](../docs/27_platform_shell_v1_spec.md)
 - [../docs/33_shell_snapshot_schema.md](../docs/33_shell_snapshot_schema.md)

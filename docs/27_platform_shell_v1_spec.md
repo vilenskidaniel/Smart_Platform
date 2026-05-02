@@ -1,12 +1,12 @@
-# System Shell V1 Spec
+# Platform Shell V1 Spec
 
 Этот документ открывает помодульную проработку `v1`.
 
-Он описывает только продуктовый блок `System Shell`.
+Он описывает только продуктовый блок `Platform Shell`.
 
 ## 1. Назначение
 
-`System Shell v1` — это общая оболочка, через которую пользователь входит в платформу и понимает:
+`Platform Shell v1` — это общая оболочка, через которую пользователь входит в платформу и понимает:
 
 - какие узлы доступны;
 - какие модули доступны;
@@ -14,7 +14,7 @@
 - куда пойдет команда;
 - почему что-то заблокировано.
 
-## 2. Что должен дать `System Shell v1`
+## 2. Что должен дать `Platform Shell v1`
 
 После его завершения пользователь должен уметь:
 
@@ -109,7 +109,7 @@ Default language:
 
 ## 7. Поведение `Laboratory`
 
-`System Shell v1` не должен исполнять тестовые команды сам.
+`Platform Shell v1` не должен исполнять тестовые команды сам.
 
 Он должен:
 
@@ -119,14 +119,14 @@ Default language:
 
 Важно:
 
-- `Diagnostics`, `Test Bench` и `Service/Test` считаем alias-именами той же сущности;
+- `Laboratory` является каноническим именем инженерного контура, который включает diagnostics и test-bench slices;
 - user-facing имя этого контура: `Laboratory`;
-- внутренний route/stage-term может оставаться `/service` и `Service/Test v1`;
+- внутренний route/stage-term может оставаться `/service` и legacy alias `service_test`;
 - `Laboratory` должна ощущаться tab-based app-like страницей, а не набором backend-route экранов.
 
 ## 8. Что считается ошибкой дизайна
 
-Признаки плохого `System Shell v1`:
+Признаки плохого `Platform Shell v1`:
 
 - пользователь не понимает, на каком узле он сейчас находится;
 - пользователь не понимает, почему раздел серый;
@@ -160,12 +160,12 @@ Default language:
 
 | User-facing surface | Backing module or layer | Owner scope | Canonical path | Route mode | Primary evidence path |
 | --- | --- | --- | --- | --- | --- |
-| `Home / System Shell` | `system_shell` | `shared` | `/` | local shell | activity summary + `Gallery > Reports` |
-| `Irrigation` | `irrigation` | `ESP32` | `/irrigation` | local or handoff | irrigation reports / gallery reports |
-| `Turret` | `turret_bridge` | `Raspberry Pi` | `/turret` | local or handoff | turret reports / gallery reports |
+| `Home / Platform Shell` | `platform_shell` | `shared` | `/` | local shell | activity summary + `Gallery > Reports` |
+| `Irrigation` | `irrigation` | `io_node` | `/irrigation` | local or handoff | irrigation reports / gallery reports |
+| `Turret` | `turret_bridge` | `compute_node` | `/turret` | local or handoff | turret reports / gallery reports |
 | `Gallery` | shared virtual section | `shared` | `/gallery` | virtual shared explorer | `Plants`, `Media`, `Reports` |
 | `Reports` quick entry | `logs` summary path | `shared` | `/gallery?tab=reports` | shared viewer shortcut | canonical history viewer |
-| `Laboratory` | `service_mode` + owner-specific service slices | `shared entry + owner execution` | `/service` | local workspace + owner-aware tools | readiness + `Gallery > Reports` |
+| `Laboratory` | `laboratory` + owner-specific service slices | `shared entry + owner execution` | `/service` | local workspace + owner-aware tools | readiness + `Gallery > Reports` |
 | `Settings` | `settings` | `shared` | `/settings` | local persistent page | settings audit trail later |
 
 Важно:
@@ -175,7 +175,7 @@ Default language:
 
 ## 10. Что пока не обязательно
 
-Для `System Shell v1` пока не обязательно:
+Для `Platform Shell v1` пока не обязательно:
 
 - полный reverse-proxy peer-owned страниц;
 - идеальный real-time push;
@@ -185,7 +185,7 @@ Default language:
 
 ## 11. Критерий завершения
 
-`System Shell v1` можно считать достаточно зрелым, когда:
+`Platform Shell v1` можно считать достаточно зрелым, когда:
 
 - обе стороны показывают одинаковый shell;
 - handoff понятен и предсказуем;

@@ -1,6 +1,6 @@
 """
 Этот файл не является production runtime.
-Он нужен как skeleton-карта крупных ролей System Shell v1 на стороне
+Он нужен как skeleton-карта крупных ролей Platform Shell на стороне
 Raspberry Pi. Методы здесь специально не детализированы.
 """
 

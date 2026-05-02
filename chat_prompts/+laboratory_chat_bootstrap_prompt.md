@@ -41,7 +41,7 @@
 
 Что Laboratory означает в этом проекте:
 - user-facing имя: `Laboratory`;
-- внутренний route/stage-term может оставаться `/service` и `Service/Test v1`;
+- внутренний route/stage-term может оставаться `/service` и `Laboratory`;
 - это одна app-like tab/workspace surface, а не россыпь backend-screen страниц;
 - page должна работать и на `ESP32`, и на `Raspberry Pi`;
 - page должна сохранять owner-awareness, board visibility и ясную границу между локальными и peer-owned slices;
@@ -91,11 +91,11 @@
 4. `docs/01_product_decisions.md`
 5. `docs/02_system_architecture.md`
 6. `docs/05_ui_shell_and_navigation.md`
-7. `docs/27_system_shell_v1_spec.md`
+7. `docs/27_platform_shell_v1_spec.md`
 8. `docs/39_design_decisions_and_screen_map.md`
 9. `docs/41_laboratory_testing_readiness.md`
 10. `docs/47_acceptance_and_validation_matrix.md`
-11. `briefs/service_test_v1.md`
+11. `briefs/laboratory.md`
 12. затем уже code anchors и узкие stage-docs
 
 Основные code anchors для Laboratory:

@@ -54,9 +54,12 @@
 
 - `manual`
 - `automatic`
-- `service_test`
+- `laboratory`
 - `fault`
 - `emergency`
+
+Legacy alias service_test допускается только как compatibility value для
+старых runtime/log payload.
 
 ### 4. Module Registry
 

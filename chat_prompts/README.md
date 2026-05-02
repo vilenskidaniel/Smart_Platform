@@ -26,11 +26,19 @@
 - не переносить большие куски между `Raspberry Pi` и `ESP32` как будто это один и тот же implementation generation;
 - не строить fullscreen/tooltips так, чтобы первый клик пользователя тратился на побочный effect и ломал основное действие;
 - не оставлять browser-native tooltip параллельно custom tooltip;
-- hover tooltip во всех shell-поверхностях появляется с задержкой около `500 ms` и закрывается/отменяется при сдвиге курсора больше `3 px`;
+- hover tooltip во всех shell-поверхностях появляется с задержкой около `500 ms`, располагается рядом с курсором/местом наведения, закрывается/отменяется сразу при сдвиге курсора больше `3 px` и не держится дольше `6 s`;
+- интерактивные настройки применяются optimistic-first: UI меняется сразу, сохранение уходит в debounce/background и не должно блокировать клики, ввод или переключение секций;
 - выбранный язык должен применяться ко всему видимому тексту; дополнительные локали могут быть TODO-заглушками, если переводной модуль еще не заполнен;
 - hardware modules, hardware components, software services и storage slices не смешиваются в одном списке;
+- `Settings` не держит отдельную секцию `Platform Nodes`: физический quick status остаётся в bar-панели, а продуктовая связь с платами живёт в `Modules`;
+- `Sync` в `Settings` управляется списком `selected_domains`: `Auto` включает всё, ручное изменение переводит режим в `Manual review`;
+- утверждённый sync-набор: service link, module state, shared preferences, reports/logs, plant library, media content (`photo/video/audio/gallery reports`), component registry, software versions (`RPi/ESP/Web UI`);
+- `Plant Library` считается irrigation-linked storage slice и опирается на JSON-библиотеки в `content/libraries`;
+- однотипные инженерные поля компонентов должны подсказывать ранее введённые значения;
 - destructive storage actions идут только через preview/confirm flow и backend root-boundary checks;
+- `offline`/`not connected` отображается серым/neutral во всех shell-поверхностях; красный остаётся для настоящих `fault/error/blocked` состояний;
 - keyboard action shortcuts работают только на странице ручного управления турелью, а не как глобальная навигация по буквам;
+- если keyboard controls выключены, связанные настройки остаются видимыми disabled/серыми и объясняют причину в tooltip;
 - если пользователь ограничил поверхность, например “только PC версия”, сначала решить именно этот slice;
 - после regression сначала восстанавливать рабочее поведение на live page, а уже потом расширять scope.
 

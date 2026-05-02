@@ -25,7 +25,7 @@
 5. [docs/02_system_architecture.md](docs/02_system_architecture.md)
 6. [docs/05_ui_shell_and_navigation.md](docs/05_ui_shell_and_navigation.md)
 7. [docs/39_design_decisions_and_screen_map.md](docs/39_design_decisions_and_screen_map.md)
-8. [docs/40_system_shell_navigation_alignment.md](docs/40_system_shell_navigation_alignment.md)
+8. [docs/40_platform_shell_navigation_alignment.md](docs/40_platform_shell_navigation_alignment.md)
 9. [docs/09_master_design_plan.md](docs/09_master_design_plan.md)
 10. [docs/34_modular_chat_transition_plan.md](docs/34_modular_chat_transition_plan.md)
 11. [briefs/README.md](briefs/README.md)
@@ -45,7 +45,7 @@
 - Не ломать правило одинакового дизайна на `ESP32` и `Raspberry Pi`.
 - Не прятать недоступные разделы полностью: лучше показывать их как серые, но кликабельные с объяснением.
 - User-facing имя инженерного контура — `Laboratory`.
-- Внутреннее stage-name `Service/Test v1` можно сохранять в roadmap и техдоках.
+- Legacy alias `service_test` можно сохранять в roadmap и техдоках.
 - Отдельная user-facing страница `Logs` больше не считается product target:
   основной просмотр истории действий и отчетов идет через `Gallery > Reports`.
 - Обязательно различать `product target` и `software baseline`.
@@ -54,7 +54,7 @@
 
 На верхнем уровне продукта основными считаются:
 
-1. `System Shell`
+1. `Platform Shell`
 2. `Irrigation`
 3. `Turret`
 4. `Gallery`
@@ -83,9 +83,9 @@
 ## Как не потеряться в глубине
 
 - Если речь идет о “втором пункте” модульной очереди, это `Irrigation v1`.
-- Если речь идет про `Этап 2` master-plan, это `System Shell v1`.
+- Если речь идет про `Этап 2` master-plan, это `Platform Shell`.
 - Если чат начинает уходить в слишком много внутренних сущностей, вернуться к [docs/26_v1_product_spec.md](docs/26_v1_product_spec.md).
-- Если работа идет по shell/navigation drift, открыть [docs/40_system_shell_navigation_alignment.md](docs/40_system_shell_navigation_alignment.md).
+- Если работа идет по shell/navigation drift, открыть [docs/40_platform_shell_navigation_alignment.md](docs/40_platform_shell_navigation_alignment.md).
 - Если нужна карта перехода между чатами, открыть [docs/34_modular_chat_transition_plan.md](docs/34_modular_chat_transition_plan.md).
 - Stage-документы и узкие контракты читать только после базовых product-level файлов.
 

@@ -11,11 +11,13 @@ from urllib.parse import parse_qs, urlparse
 
 from bridge_config import BridgeConfig
 from bridge_state import BridgeState
+from platform_registry_store import PlatformRegistryStore
 from settings_store import SettingsStore
 from shell_snapshot_facade import ShellSnapshotFacade
 from shell_viewer_presence import ShellViewerPresence
 from storage_status import build_content_status, cleanup_host_path_target, open_host_path_target
 from sync_client import SyncClient
+from turret_capture_store import create_capture_artifact, list_capture_artifacts
 
 try:
     import segno
@@ -141,6 +143,7 @@ def build_server(config: BridgeConfig, state: BridgeState, sync_client: SyncClie
     runtime_profile = _detect_runtime_profile(config)
     viewer_presence = ShellViewerPresence()
     settings_store = SettingsStore(content_root / ".system" / "settings_state.json")
+    platform_registry_store = PlatformRegistryStore(content_root / ".system" / "platform_registry.v1.json")
     shell_snapshot_facade = ShellSnapshotFacade(
         state,
         content_root,
@@ -161,13 +164,21 @@ def build_server(config: BridgeConfig, state: BridgeState, sync_client: SyncClie
             params = parse_qs(parsed.query, keep_blank_values=True)
             requested_path = Path(parsed.path.lstrip("/"))
 
-            if requested_path.parts and requested_path.parts[0] in {"assets", "audio", "animations", "libraries"}:
+            if len(requested_path.parts) > 1 and requested_path.parts[0] in {
+                "assets",
+                "audio",
+                "animations",
+                "gallery",
+                "libraries",
+                "video",
+            }:
+                slice_root = (content_root / requested_path.parts[0]).resolve()
                 resolved_path = (content_root / requested_path).resolve()
                 try:
-                    resolved_path.relative_to(content_root_resolved)
+                    resolved_path.relative_to(slice_root)
                 except ValueError:
                     self._json_response(
-                        {"error": "invalid_path", "message": "Requested content path escapes content root"},
+                        {"error": "invalid_path", "message": "Requested content path escapes content slice"},
                         HTTPStatus.BAD_REQUEST,
                     )
                     return
@@ -293,6 +304,9 @@ def build_server(config: BridgeConfig, state: BridgeState, sync_client: SyncClie
             if parsed.path == "/api/v1/settings":
                 self._json_response(settings_store.load())
                 return
+            if parsed.path == "/api/v1/platform/registry":
+                self._json_response(platform_registry_store.load())
+                return
             if parsed.path == "/api/v1/turret/status":
                 self._json_response(state.build_turret_status())
                 return
@@ -308,6 +322,9 @@ def build_server(config: BridgeConfig, state: BridgeState, sync_client: SyncClie
                 return
             if parsed.path == "/api/v1/turret/scenarios":
                 self._json_response(state.build_turret_scenarios())
+                return
+            if parsed.path == "/api/v1/turret/captures":
+                self._json_response(list_capture_artifacts(content_root))
                 return
             if parsed.path == "/api/v1/sync/status":
                 self._json_response(state.build_sync_status())
@@ -381,6 +398,49 @@ def build_server(config: BridgeConfig, state: BridgeState, sync_client: SyncClie
                 self._json_response(state.run_turret_scenario(scenario_id))
                 return
 
+            if parsed.path == "/api/v1/turret/capture":
+                try:
+                    artifact = create_capture_artifact(
+                        content_root,
+                        kind=self._param(params, "kind"),
+                        phase=self._param(params, "phase"),
+                        capture_id=self._param(params, "capture_id"),
+                        duration_ms=self._int_param(params, "duration_ms", 0, minimum=0),
+                        power_percent=self._int_param(params, "power_percent", 0, minimum=0),
+                    )
+                    report_entry = state.record_turret_capture(
+                        kind=str(artifact.get("kind", "")),
+                        phase=str(artifact.get("phase", "")),
+                        capture_id=str(artifact.get("capture_id", "")),
+                        artifact_path=str(artifact.get("artifact_path", "")),
+                        artifact_url=str(artifact.get("artifact_url", "")),
+                        gallery_url=str(artifact.get("gallery_url", "")),
+                        duration_ms=int(artifact.get("duration_ms", 0) or 0),
+                        power_percent=int(artifact.get("power_percent", 0) or 0),
+                        status=str(artifact.get("status", "")),
+                    )
+                except ValueError as error:
+                    self._json_response(
+                        {
+                            "command": "turret_capture",
+                            "accepted": False,
+                            "message": str(error),
+                        },
+                        HTTPStatus.BAD_REQUEST,
+                    )
+                    return
+
+                self._json_response(
+                    {
+                        "command": "turret_capture",
+                        "accepted": True,
+                        "message": "turret capture artifact recorded",
+                        "artifact": artifact,
+                        "report_entry": report_entry,
+                    }
+                )
+                return
+
             if parsed.path == "/api/v1/sync/refresh":
                 sync_client.sync_once()
                 self._json_response(
@@ -410,6 +470,22 @@ def build_server(config: BridgeConfig, state: BridgeState, sync_client: SyncClie
                 self._json_response(
                     settings_store.update(settings_payload)
                 )
+                return
+
+            if parsed.path == "/api/v1/platform/registry/constructor":
+                try:
+                    draft_payload = self._read_json_object()
+                    self._json_response(platform_registry_store.upsert_constructor_draft(draft_payload))
+                except ValueError as error:
+                    self._json_response(
+                        {
+                            "command": "platform_registry_constructor_save",
+                            "accepted": False,
+                            "message": str(error),
+                            "registry": platform_registry_store.load(),
+                        },
+                        HTTPStatus.BAD_REQUEST,
+                    )
                 return
 
             if parsed.path == "/api/v1/host/open":
@@ -796,10 +872,17 @@ def build_server(config: BridgeConfig, state: BridgeState, sync_client: SyncClie
             raw = self._param(params, name, "1" if default else "0").strip().lower()
             return raw in {"1", "true", "yes", "on"}
 
-        def _int_param(self, params: dict[str, list[str]], name: str, default: int) -> int:
+        def _int_param(
+            self,
+            params: dict[str, list[str]],
+            name: str,
+            default: int,
+            *,
+            minimum: int = 1,
+        ) -> int:
             raw = self._param(params, name, str(default)).strip()
             try:
-                return max(1, int(raw))
+                return max(minimum, int(raw))
             except ValueError:
                 return default
 

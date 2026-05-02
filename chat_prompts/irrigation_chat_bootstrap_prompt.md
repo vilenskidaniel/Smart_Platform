@@ -91,12 +91,12 @@
   - переключение базового auto-mode
   - локальный irrigation log
 - отдельная страница `/service/irrigation` дает:
-  - вход и выход из `Service/Test`
+  - вход и выход из `Laboratory`
   - service pulse по зоне
   - sensor profiles `dry`, `wet`, `fault`, `restore`
 - первый automatic baseline уже существует:
   - выбирается самая сухая eligible zone
-  - `Service/Test` блокирует automatic сценарий
+  - `Laboratory` блокирует automatic сценарий
   - manual и service actions должны оставаться видимыми и предсказуемыми.
 
 Как моделировать пользователя и оператора:

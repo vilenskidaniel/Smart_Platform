@@ -6,7 +6,7 @@
 
 Сначала проектируем и доводим продуктовые блоки:
 
-1. `System Shell`
+1. `Platform Shell`
 2. `Irrigation`
 3. `Turret`
 4. `Gallery`
@@ -77,7 +77,7 @@
 
 После этого шага legacy `ТЗ` больше не нужен как reference-файл: полезные знания мигрированы в активные docs, а сам legacy `.docx` удален из рабочего набора.
 
-## 3. Этап 2. `System Shell v1`
+## 3. Этап 2. `Platform Shell v1`
 
 Цель:
 
@@ -100,18 +100,18 @@
 
 Следующий правильный шаг внутри этого этапа:
 
-- сделать управляемую карту архитектуры и имен классов для `System Shell v1`;
+- сделать управляемую карту архитектуры и имен классов для `Platform Shell v1`;
 - не уходить сразу в глубокую реализацию всех методов.
 
 Артефакты этого шага:
 
-- [27_system_shell_v1_spec.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/docs/27_system_shell_v1_spec.md)
-- [31_system_shell_class_map.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/docs/31_system_shell_class_map.md)
+- [27_platform_shell_v1_spec.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/docs/27_platform_shell_v1_spec.md)
+- [31_platform_shell_class_map.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/docs/31_platform_shell_class_map.md)
 - [32_current_shell_role_mapping.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/docs/32_current_shell_role_mapping.md)
 - [33_shell_snapshot_schema.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/docs/33_shell_snapshot_schema.md)
 - [shell_snapshot_contract.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/shared_contracts/shell_snapshot_contract.md)
-- [system_shell_esp32_blueprint.h](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/skeletons/system_shell_esp32_blueprint.h)
-- [system_shell_raspberry_pi_blueprint.py](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/skeletons/system_shell_raspberry_pi_blueprint.py)
+- [platform_shell_esp32_blueprint.h](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/skeletons/platform_shell_esp32_blueprint.h)
+- [platform_shell_raspberry_pi_blueprint.py](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/skeletons/platform_shell_raspberry_pi_blueprint.py)
 - [shell_snapshot_facade_esp32_blueprint.h](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/skeletons/shell_snapshot_facade_esp32_blueprint.h)
 - [shell_snapshot_facade_raspberry_pi_blueprint.py](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/skeletons/shell_snapshot_facade_raspberry_pi_blueprint.py)
 
@@ -261,7 +261,7 @@
 
 Рекомендуемый порядок:
 
-1. `System Shell v1`
+1. `Platform Shell v1`
 2. `Irrigation v1`
 3. `Turret v1`
 4. `Gallery v1`

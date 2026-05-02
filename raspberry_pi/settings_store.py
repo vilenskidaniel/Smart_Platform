@@ -35,6 +35,24 @@ def _clamp_int(value: Any, default: int, minimum: int, maximum: int) -> int:
     return max(minimum, min(maximum, _as_int(value, default)))
 
 
+def _string_options(value: Any, defaults: list[str]) -> list[str]:
+    seen: set[str] = set()
+    result: list[str] = []
+    raw_values = value if isinstance(value, list) else []
+    for item in [*raw_values, *defaults]:
+        text = str(item or "").strip()
+        if not text:
+            continue
+        key = text.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        result.append(text[:80])
+        if len(result) >= 18:
+            break
+    return result
+
+
 def _deep_merge(base: dict[str, Any], patch: dict[str, Any]) -> dict[str, Any]:
     merged: dict[str, Any] = {}
     for key, value in base.items():
@@ -56,12 +74,39 @@ def normalize_settings(raw: Any, *, updated_at_ms: int | None = None) -> dict[st
     interface = payload.get("interface") if isinstance(payload.get("interface"), dict) else {}
     style = payload.get("style") if isinstance(payload.get("style"), dict) else {}
     synchronization = payload.get("synchronization") if isinstance(payload.get("synchronization"), dict) else {}
+    selected_domains = (
+        synchronization.get("selected_domains")
+        if isinstance(synchronization.get("selected_domains"), dict)
+        else {}
+    )
     keyboard = payload.get("keyboard") if isinstance(payload.get("keyboard"), dict) else {}
     keyboard_bindings = keyboard.get("bindings") if isinstance(keyboard.get("bindings"), dict) else {}
+    component_options = payload.get("component_field_options") if isinstance(payload.get("component_field_options"), dict) else {}
+    assigned_module_options = component_options.get("assigned_module")
+    if not isinstance(assigned_module_options, list):
+        assigned_module_options = component_options.get("module_owner")
+    node_role_options = component_options.get("node_role")
     turret = payload.get("turret_policies") if isinstance(payload.get("turret_policies"), dict) else {}
     irrigation = payload.get("irrigation") if isinstance(payload.get("irrigation"), dict) else {}
     languages = {"en", "ru", "he", "de", "fr", "es", "zh", "ar"}
     themes = {"meadow", "dawn", "studio", "midnight", "sunlit", "night", "minimal", "contrast"}
+    sync_domain_ids = [
+        "service_link",
+        "module_state",
+        "shared_preferences",
+        "reports_history",
+        "plant_library",
+        "media_content",
+        "component_registry",
+        "software_versions",
+    ]
+    preferred_mode = _as_choice(synchronization.get("preferred_mode"), {"auto", "manual_review"}, "auto")
+    normalized_selected = {
+        domain_id: (_as_bool(selected_domains.get(domain_id), True))
+        for domain_id in sync_domain_ids
+    }
+    if preferred_mode == "auto":
+        normalized_selected = {domain_id: True for domain_id in sync_domain_ids}
 
     return {
         "schema_version": "settings.v1",
@@ -77,8 +122,19 @@ def normalize_settings(raw: Any, *, updated_at_ms: int | None = None) -> dict[st
             "density": _as_choice(style.get("density"), {"comfortable", "compact"}, "comfortable"),
         },
         "synchronization": {
-            "preferred_mode": _as_choice(synchronization.get("preferred_mode"), {"auto", "manual_review"}, "auto"),
+            "preferred_mode": preferred_mode,
             "prefer_peer_continuity": _as_bool(synchronization.get("prefer_peer_continuity"), True),
+            "poll_interval_seconds": _clamp_int(synchronization.get("poll_interval_seconds"), 30, 5, 300),
+            "selected_domains": normalized_selected,
+        },
+        "component_field_options": {
+            "component_kind": _string_options(component_options.get("component_kind"), ["sensor", "actuator", "power", "controller"]),
+            "assigned_module": _string_options(assigned_module_options, ["turret", "irrigation", "power"]),
+            "node_role": _string_options(node_role_options, ["compute_node", "io_node", "shared"]),
+            "power_profile": _string_options(component_options.get("power_profile"), ["3.3V", "5V", "5-6V", "12V", "PWM", "I2C/ADC"]),
+            "pinout": _string_options(component_options.get("pinout"), ["TBD", "CSI ribbon", "ESP32 GPIO TBD", "PWM TBD", "relay/MOSFET TBD", "I2C/ADC TBD"]),
+            "tolerance": _string_options(component_options.get("tolerance"), ["50-100%", "sensor health", "calibration required", "angle limits TBD", "voltage/current limits"]),
+            "operating_modes": _string_options(component_options.get("operating_modes"), ["sample", "manual aim", "preview, capture, evidence", "pulse, deterrence", "zone open/close"]),
         },
         "keyboard": {
             "turret_manual_enabled": _as_bool(keyboard.get("turret_manual_enabled"), True),
@@ -105,7 +161,9 @@ def normalize_settings(raw: Any, *, updated_at_ms: int | None = None) -> dict[st
             "silent_observation": _as_bool(turret.get("silent_observation"), True),
             "allow_animal_deterrence": _as_bool(turret.get("allow_animal_deterrence"), True),
             "allow_auto_water_action": _as_bool(turret.get("allow_auto_water_action"), False),
+            "allow_auto_capture": _as_bool(turret.get("allow_auto_capture"), True),
             "return_to_warm_standby": _as_bool(turret.get("return_to_warm_standby"), True),
+            "max_recording_seconds": _clamp_int(turret.get("max_recording_seconds"), 30, 5, 36000),
             "do_not_target_people": True,
         },
         "irrigation": {

@@ -142,8 +142,8 @@
       "id": "irrigation",
       "title": "Irrigation",
       "product_block": "irrigation",
-      "owner_scope": "esp32",
-      "owner_title": "ESP32",
+      "owner_scope": "io_node",
+      "owner_title": "I/O node",
       "owner_node_id": "esp32-main",
       "owner_available": false,
       "state": "locked",
@@ -157,8 +157,8 @@
       "id": "turret_bridge",
       "title": "Turret",
       "product_block": "turret",
-      "owner_scope": "rpi",
-      "owner_title": "Raspberry Pi",
+      "owner_scope": "compute_node",
+      "owner_title": "Compute node",
       "owner_node_id": "rpi-turret",
       "owner_available": false,
       "state": "online",
@@ -181,7 +181,7 @@
     "laboratory": {
       "path": "/service",
       "user_facing_title": "Laboratory",
-      "internal_stage_name": "Service/Test v1"
+      "internal_stage_name": "Laboratory"
     },
     "settings": "/settings"
   },
@@ -282,21 +282,34 @@ compatibility keys вроде `/content` и `/#diagnostics`, но новые she
 
 ### Допустимые `product_block`
 
-- `system_shell`
+- `platform_shell`
 - `irrigation`
 - `turret`
-- `service_test`
+- `laboratory`
+
+Compatibility alias:
+
+- `system_shell` -> `platform_shell`
+- `service_test` -> `laboratory`
 
 ### Допустимые `owner_scope`
 
-- `esp32`
-- `rpi`
+- `io_node`
+- `compute_node`
 - `shared`
+
+Compatibility alias:
+
+- `esp32` -> `io_node`
+- `rpi` -> `compute_node`
 
 Важно:
 
-- `service_test` в contract можно сохранять как internal engineering alias;
-- user-facing label для него в shell должен быть `Laboratory`;
+- `laboratory` — каноническое product-level имя, а `service_test` остаётся только
+  internal engineering alias;
+- `owner_scope` отражает логическую роль узла, а не бренд контроллера;
+- truthful board profile при этом можно отдельно сохранять в `node_type`,
+  `owner_node_id` или расширенном `owner_title`;
 - `owner_scope = shared` не должен маскироваться под ownership конкретной платой;
 - в `desktop_smoke` preview-path может оставаться `local`, но `owner_available`
   и `summary` обязаны честно отражать отсутствие реального owner-device.
@@ -365,7 +378,7 @@ compatibility keys вроде `/content` и `/#diagnostics`, но новые she
 
 ## 10. Связанные артефакты
 
-- [31_system_shell_class_map.md](31_system_shell_class_map.md)
+- [31_platform_shell_class_map.md](31_platform_shell_class_map.md)
 - [32_current_shell_role_mapping.md](32_current_shell_role_mapping.md)
 - [../shared_contracts/shell_snapshot_contract.md](../shared_contracts/shell_snapshot_contract.md)
 - [../skeletons/shell_snapshot_facade_esp32_blueprint.h](../skeletons/shell_snapshot_facade_esp32_blueprint.h)

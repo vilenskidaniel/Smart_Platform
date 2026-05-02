@@ -15,7 +15,7 @@
 
 Для пользователя и для верхнего roadmap платформа состоит из пяти блоков:
 
-1. `System Shell`
+1. `Platform Shell`
 2. `Irrigation`
 3. `Turret`
 4. `Gallery`
@@ -24,7 +24,7 @@
 Важно:
 
 - `Laboratory` — user-facing имя;
-- внутреннее stage-name `Service/Test v1` можно сохранять в roadmap и технических brief-файлах.
+- внутреннее stage-name `Laboratory` можно сохранять в roadmap и технических brief-файлах.
 - `Diagnostics` и `Test Bench` считаем alias-именами того же инженерного контура;
 - `Gallery` — shared virtual section shell, а не модуль одного owner.
 
@@ -189,7 +189,7 @@
 
 Следующий уровень детализации должен идти не в глубину слоев, а в продуктовые блоки:
 
-1. `System Shell v1`
+1. `Platform Shell v1`
 2. `Irrigation v1`
 3. `Turret v1`
 4. `Gallery v1`

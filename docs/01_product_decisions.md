@@ -67,7 +67,7 @@
 
 На верхнем уровне считаем продуктом:
 
-1. `System Shell`
+1. `Platform Shell`
 2. `Irrigation`
 3. `Turret`
 4. `Gallery`
@@ -75,9 +75,9 @@
 
 Важно:
 
-- `Diagnostics`, `Test Bench` и `Service/Test` на текущем этапе считаем разными именами одной инженерной сущности;
+- `Laboratory` является каноническим именем инженерного контура, который включает diagnostics и test-bench slices;
 - user-facing имя этого контура фиксируется как `Laboratory`;
-- внутреннее stage-name `Service/Test v1` можно сохранять в roadmap и внутренних technical refs;
+- legacy alias `service_test` можно сохранять в roadmap и внутренних technical refs;
 - `Gallery` считаем глобальным виртуальным разделом без одного owner: shell открывает единую explorer-страницу, а каждый файл или отчет при этом сохраняет своего фактического storage-owner.
 
 ## 6. Что не считать отдельными продуктами
@@ -184,7 +184,7 @@
 
 В первый продуктовый релиз входят:
 
-- единый `System Shell`;
+- единый `Platform Shell`;
 - `Irrigation v1`;
 - `Turret v1`;
 - `Gallery`;

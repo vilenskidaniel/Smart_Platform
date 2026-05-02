@@ -102,7 +102,7 @@ Hardware source of truth для нового шага держим не здес
 Решение:
 
 - перенести сценарий и структуру экранов;
-- переписать под `System Shell v1` и новую federated-модель.
+- переписать под `Platform Shell v1` и новую federated-модель.
 
 ### 3.2 Главный shell и навигация
 
@@ -220,7 +220,7 @@ Hardware source of truth для нового шага держим не здес
 Решение:
 
 - использовать как UX-референс для `Settings`;
-- переосмыслить под `System Shell v1`.
+- переосмыслить под `Platform Shell v1`.
 
 ### 4.4 Турельные страницы
 
@@ -320,7 +320,7 @@ Hardware source of truth для нового шага держим не здес
 
 ## 7. Практическая карта “куда переносить”
 
-### В `System Shell v1`
+### В `Platform Shell v1`
 
 Переносить идеи из:
 
@@ -369,16 +369,16 @@ Hardware source of truth для нового шага держим не здес
 Новая платформа не должна копировать его целиком.
 Она должна аккуратно вытянуть из него лучшее и встроить это в:
 
-1. `System Shell v1`
+1. `Platform Shell v1`
 2. `Irrigation v1`
 3. `Turret v1`
-4. `Service/Test v1`
+4. `Laboratory`
 
 ## 9. Следующий практический шаг
 
 После этой карты логично идти так:
 
-1. взять `System Shell v1`;
+1. взять `Platform Shell v1`;
 2. сравнить текущий shell `Smart_Platform` со старым `index/login/wifi_setup/settings/style/script`;
 3. решить, что именно переносим в новый shell по UX и onboarding;
 4. только потом переходить к такому же разбору для `Irrigation v1`.

@@ -40,7 +40,7 @@
 - переключение базового auto-mode;
 - локальный irrigation log.
 
-### 2. Service/Test Contour
+### 2. Laboratory Contour
 
 Появилась отдельная страница:
 
@@ -48,7 +48,7 @@
 
 Она дает:
 
-- вход и выход из `Service/Test`;
+- вход и выход из `Laboratory`;
 - service pulse по зоне;
 - sensor profiles:
   - `dry`
@@ -78,7 +78,7 @@
 
 - `ESP32` может перевести irrigation в `automatic`;
 - auto-mode выбирает самую сухую eligible zone;
-- `Service/Test` блокирует запуск automatic сценария;
+- `Laboratory` блокирует запуск automatic сценария;
 - manual и service actions остаются видимыми и предсказуемыми.
 
 Это не финальный scheduler, но уже честный `Automatic Mode` для `Irrigation v1`.
@@ -88,7 +88,7 @@
 Сторона `ESP32` теперь держит:
 
 - `irrigation` как product module;
-- `irrigation_service` как отдельный `Service/Test` module.
+- `irrigation_service` как отдельный `Laboratory` module.
 
 Это отражается:
 
@@ -132,5 +132,5 @@
 а в следующий product block:
 
 1. `Turret v1`
-2. затем `Service/Test v1` как отдельный блок общего уровня
+2. затем `Laboratory` как отдельный блок общего уровня
 3. после этого возвращаться к cross-module integration и hardware qualification

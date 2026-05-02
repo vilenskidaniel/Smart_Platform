@@ -14,7 +14,7 @@
   - `Media`
   - `Reports`
 - `Laboratory` строится как tab-based страница по модулям;
-- `Diagnostics`, `Test Bench` и `Service/Test` считаются alias-именами того же инженерного контура;
+- `Laboratory` является каноническим именем инженерного контура, который включает diagnostics и test-bench slices;
 - недоступные модули остаются видимыми, но серыми и кликабельными;
 - turret использует `warm standby`;
 - для turret-sensitive групп принят physical emergency power interlock вне зависимости от корректности ПО;

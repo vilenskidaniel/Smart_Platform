@@ -1,0 +1,26 @@
+.operator-hud {
+  --ink: #edf8ee;
+  --muted: rgba(237, 248, 238, 0.68);
+  --line: rgba(194, 224, 203, 0.18);
+  --panel: rgba(7, 16, 11, 0.58);
+  --panel-strong: rgba(7, 16, 11, 0.76);
+  --accent: #9ac58f;
+  --accent-strong: #c5e7b7;
+  --active: #b7d9a3;
+  --warn: #d4b46a;
+  --fault: #ff4b56;
+  --locked: #7b8585;
+  --control-radius: 24px;
+  --control-circle: 999px;
+  --stage-radius: 30px;
+  --shadow: 0 22px 60px rgba(0, 0, 0, 0.34);
+  --sans: "Segoe UI", "Trebuchet MS", sans-serif;
+  --hud-edge: clamp(18px, 2vw, 34px);
+  --bottom-safe: clamp(52px, 7.5vh, 96px);
+  --control-glow: 0 0 0 1px rgba(197, 231, 183, 0.42), 0 0 28px rgba(145, 198, 125, 0.26);
+}
+
+.operator-hud,
+.operator-hud button {
+  font-family: var(--sans);
+}

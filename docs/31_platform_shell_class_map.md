@@ -1,6 +1,6 @@
-# System Shell V1 Class Map
+# Platform Shell V1 Class Map
 
-Этот документ нужен, чтобы `System Shell v1` не продолжал жить как один
+Этот документ нужен, чтобы `Platform Shell v1` не продолжал жить как один
 разросшийся `WebShellServer` на `ESP32` и один большой `server.py` на
 `Raspberry Pi`.
 
@@ -12,7 +12,7 @@
 
 ## 1. Главный принцип
 
-`System Shell v1` для обеих сторон должен мыслиться одинаково:
+`Platform Shell v1` для обеих сторон должен мыслиться одинаково:
 
 - один и тот же продуктовый shell;
 - одинаковые страницы;
@@ -156,7 +156,7 @@
 - дробить `Settings` на десять внутренних сервисов;
 - строить сложный client-side framework ради shell v1.
 
-Для `System Shell v1` достаточно этих восьми крупных ролей.
+Для `Platform Shell v1` достаточно этих восьми крупных ролей.
 
 ## 5. Порядок внедрения
 
@@ -167,10 +167,10 @@
 
 ## 6. Связанные артефакты
 
-- [27_system_shell_v1_spec.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/docs/27_system_shell_v1_spec.md)
+- [27_platform_shell_v1_spec.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/docs/27_platform_shell_v1_spec.md)
 - [30_top_down_architecture_map.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/docs/30_top_down_architecture_map.md)
 - [32_current_shell_role_mapping.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/docs/32_current_shell_role_mapping.md)
 - [33_shell_snapshot_schema.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/docs/33_shell_snapshot_schema.md)
 - [shell_snapshot_contract.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/shared_contracts/shell_snapshot_contract.md)
-- [system_shell_esp32_blueprint.h](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/skeletons/system_shell_esp32_blueprint.h)
-- [system_shell_raspberry_pi_blueprint.py](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/skeletons/system_shell_raspberry_pi_blueprint.py)
+- [platform_shell_esp32_blueprint.h](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/skeletons/platform_shell_esp32_blueprint.h)
+- [platform_shell_raspberry_pi_blueprint.py](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/skeletons/platform_shell_raspberry_pi_blueprint.py)

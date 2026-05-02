@@ -38,7 +38,7 @@
 - список модулей;
 - `Irrigation`;
 - `Turret`;
-- `Service/Test`;
+- `Laboratory`;
 - `Diagnostics`.
 
 ### 4. Locked turret behavior

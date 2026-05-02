@@ -142,11 +142,11 @@
 2. `docs/smart_platform_workshop_inventory.xlsx`
 3. `docs/26_v1_product_spec.md`
 4. `docs/05_ui_shell_and_navigation.md`
-5. `docs/27_system_shell_v1_spec.md`
+5. `docs/27_platform_shell_v1_spec.md`
 6. `docs/29_shared_content_and_sd_strategy.md`
 7. `docs/33_shell_snapshot_schema.md`
 8. `docs/39_design_decisions_and_screen_map.md`
-9. `docs/40_system_shell_navigation_alignment.md`
+9. `docs/40_platform_shell_navigation_alignment.md`
 10. `docs/47_acceptance_and_validation_matrix.md`
 11. затем code files
 

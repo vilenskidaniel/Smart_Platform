@@ -49,7 +49,7 @@
 
 ## 3. Основные продуктовые блоки `v1`
 
-### `System Shell`
+### `Platform Shell`
 
 Что это:
 
@@ -117,7 +117,7 @@
 
 Что входит в `v1`:
 
-- `Laboratory`, `Diagnostics`, `Test Bench` и `Service/Test` считаем одной сущностью
+- `Laboratory` считаем одной инженерной сущностью с diagnostics и test-bench slices
 - гибридная navigation model для телефона:
   - первый уровень: category tabs
   - второй уровень: module slices
@@ -156,7 +156,7 @@
 
 Важно:
 
-- внутреннее stage-name может оставаться `Service/Test v1`;
+- внутреннее stage-name может оставаться `Laboratory`;
 - user-facing имя страницы фиксируется как `Laboratory`.
 - это первая страница для поочередного тестирования отдельных модулей, но первый UX-уровень должен группировать их в понятные категории для телефона;
 - slice `Ultrasonic` означает laboratory-only tweeter / emitter family, а не range-sensing;
@@ -319,7 +319,7 @@
 
 Дальше проект нужно вести по продуктовым блокам:
 
-1. `System Shell v1`
+1. `Platform Shell v1`
 2. `Irrigation v1`
 3. `Turret v1`
 4. `Gallery v1`

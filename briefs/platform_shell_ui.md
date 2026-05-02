@@ -1,10 +1,8 @@
-# Бриф продуктового блока: System Shell
-
-`web_shell_ui.md` сохранен как историческое имя файла, но по смыслу теперь описывает продуктовый блок `System Shell`.
+# Бриф продуктового блока: Platform Shell
 
 ## Назначение
 
-`System Shell` — это общая browser-first оболочка платформы.
+`Platform Shell` — это общая browser-first оболочка платформы.
 
 Он должен:
 
@@ -45,7 +43,7 @@
 - почему модуль заблокирован;
 - куда пользователь будет переведен при handoff.
 
-## Минимальный scope `System Shell v1`
+## Минимальный scope `Platform Shell`
 
 1. `Главная`
 2. `Полив`
@@ -58,15 +56,15 @@
 
 - `Логи`
 - `Диагностика`
-- `Service/Test`
+- `Laboratory`
 
 Важно:
 
 - `Laboratory` остается user-facing именем инженерного контура;
-- `Service/Test v1` сохраняем только как внутренний stage-term.
+- legacy alias `service_test` сохраняем только как внутренний compatibility-term.
 
 ## Первый practical follow-up
 
 Если работа идет в отдельном чате, следующий документ для этого блока:
 
-- [27_system_shell_v1_spec.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/docs/27_system_shell_v1_spec.md)
+- [27_platform_shell_v1_spec.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/docs/27_platform_shell_v1_spec.md)

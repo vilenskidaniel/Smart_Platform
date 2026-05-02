@@ -302,6 +302,35 @@ The most useful recent improvements are already in place:
 
 The next useful improvements should focus on operator clarity beyond that, not on adding more abstract status prose.
 
+### Current `/service` Implementation Note
+
+The old `/service` hub template has been replaced by a single `Laboratory`
+workspace. The page now treats `Laboratory` as the primary engineering surface,
+not as a launcher for several unrelated service pages.
+
+Current behavior to preserve:
+
+- top-level category rail and second-level slice rail switch in-page without a
+  full reload;
+- `Session Backbone`, readiness, and evidence controls remain visible around
+  the active slice;
+- `Turret Service Lane` is available as `/service?tool=turret_service` and
+  carries the useful runtime mode, interlock, subsystem, flag, scenario, and
+  JSON/log inspection controls that previously lived in the old turret service
+  template;
+- `Raspberry Pi Touch Display` is available as
+  `/service?tool=rpi_touch_display` and carries the useful pattern bench,
+  fullscreen pattern, touch-grid, and evidence controls from the display
+  service template;
+- peer-owned slices stay visible and blocked until the owner/peer state allows
+  handoff; the local shell must not fake ownership;
+- experimental slices such as `HC-SR04`, `Stepper Motor / Drives`, motion wake,
+  custom module intake, and audio/voice profiles are visible as skeletons but
+  remain explicitly laboratory-local until a review/apply path promotes them.
+
+Legacy routes `/service/turret` and `/service/displays` can stay temporarily for
+compatibility, but new work should target the unified `/service` workspace first.
+
 ### Step 1. Reflect phone/browser context in readiness output
 
 - add a lightweight notion of `browser` versus `fullscreen` pass state;

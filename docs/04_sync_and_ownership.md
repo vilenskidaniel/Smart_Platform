@@ -44,22 +44,30 @@
 
 ## Канонические владельцы первой версии
 
-- `ESP32`
+В ownership-логике фиксируем не brand платы, а логическую роль узла.
+
+- `io_node`
+  - текущий тип платы может быть `ESP32`
   - `irrigation`
   - `strobe_bench`
   - часть `diagnostics`
-  - fallback `system_shell`
+  - fallback `platform_shell`
 
-- `Raspberry Pi`
+- `compute_node`
+  - текущий тип платы может быть `Raspberry Pi`
   - `turret_bridge`
   - `strobe` в составе турели
   - тяжелая автоматика турели
 
-- `Оба узла`
+- `shared`
   - `settings`
   - `logs`
   - `sync_core`
   - общие пользовательские параметры UI
+
+Если в старом runtime или логах встречаются alias `esp32` и `rpi`, их можно
+сохранять как compatibility-layer, но новые документы и UI vocabulary должны
+мыслить ownership через `io_node`, `compute_node`, `shared`.
 
 ## Что именно синхронизируется
 

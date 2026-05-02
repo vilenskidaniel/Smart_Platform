@@ -25,7 +25,7 @@
 
 Но не стоит в одном чате подряд глубоко тянуть все большие направления сразу:
 
-1. `System Shell v1`
+1. `Platform Shell v1`
 2. `Irrigation v1`
 3. `Turret v1`
 4. `Gallery v1`
@@ -38,7 +38,7 @@
 
 ## Рекомендуемый Порядок Следующих Чатов
 
-1. `System Shell v1`
+1. `Platform Shell v1`
 2. `Irrigation v1`
 3. `Turret v1`
 4. `Gallery v1`
@@ -50,10 +50,10 @@
 
 Здесь легко перепутать два разных смысла:
 
-- `Этап 2` master-plan — это `System Shell v1`;
+- `Этап 2` master-plan — это `Platform Shell v1`;
 - `второй пункт` модульной очереди после shell — это `Irrigation v1`.
 
-На текущем срезе проекта `System Shell` еще не закрыт как полностью завершенный продуктовый этап,
+На текущем срезе проекта `Platform Shell` еще не закрыт как полностью завершенный продуктовый этап,
 но уже достаточно зрел как foundation для следующего отдельного чата.
 
 Практический вывод:
@@ -66,7 +66,7 @@
 
 Каждый новый чат должен брать только один продуктовый блок:
 
-- `System Shell`
+- `Platform Shell`
 - `Irrigation`
 - `Turret`
 - `Gallery`
@@ -88,7 +88,7 @@
 4. [docs/01_product_decisions.md](01_product_decisions.md)
 5. [docs/02_system_architecture.md](02_system_architecture.md)
 6. [docs/05_ui_shell_and_navigation.md](05_ui_shell_and_navigation.md)
-7. [docs/40_system_shell_navigation_alignment.md](40_system_shell_navigation_alignment.md)
+7. [docs/40_platform_shell_navigation_alignment.md](40_platform_shell_navigation_alignment.md)
 8. [docs/09_master_design_plan.md](09_master_design_plan.md)
 9. [briefs/README.md](../briefs/README.md)
 10. нужный brief по конкретному продуктовому блоку
@@ -112,10 +112,10 @@
 
 Основные product-level briefs:
 
-- [web_shell_ui.md](../briefs/web_shell_ui.md) для `System Shell`
+- [platform_shell_ui.md](../briefs/platform_shell_ui.md) для `Platform Shell`
 - [irrigation_module.md](../briefs/irrigation_module.md) для `Irrigation`
 - [turret_bridge_module.md](../briefs/turret_bridge_module.md) для `Turret`
-- [service_test_v1.md](../briefs/service_test_v1.md) для `Laboratory` как внутреннего `Service/Test v1`
+- [laboratory.md](../briefs/laboratory.md) для `Laboratory` как внутреннего `Laboratory`
 
 Для следующего контекстного старта по turret/service дополнительно читать:
 

@@ -103,10 +103,10 @@
 Что читать в первую очередь:
 1. `README.md`
 2. `docs/smart_platform_workshop_inventory.xlsx`
-3. `docs/27_system_shell_v1_spec.md`
+3. `docs/27_platform_shell_v1_spec.md`
 4. `docs/29_shared_content_and_sd_strategy.md`
 5. `docs/33_shell_snapshot_schema.md`
-6. `docs/40_system_shell_navigation_alignment.md`
+6. `docs/40_platform_shell_navigation_alignment.md`
 7. `briefs/sync_and_storage.md`
 8. затем code files
 

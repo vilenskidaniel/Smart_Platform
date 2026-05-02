@@ -1,0 +1,509 @@
+{
+  "schema_version": "platform_registry.v1",
+  "updated_at_ms": 1777672960380,
+  "modules": [
+    {
+      "id": "turret",
+      "title": {
+        "en": "Turret",
+        "ru": "Турель"
+      },
+      "summary": {
+        "en": "Camera-guided manual and automatic deterrence module.",
+        "ru": "Модуль наведения, наблюдения и безопасного отпугивания."
+      },
+      "owner_role": "compute_node",
+      "runtime_module_id": "turret_bridge",
+      "state": "disconnected",
+      "component_ids": [
+        "camera",
+        "strobe",
+        "piezo",
+        "water_pump",
+        "servo_pan_tilt",
+        "lidar"
+      ]
+    },
+    {
+      "id": "irrigation",
+      "title": {
+        "en": "Irrigation",
+        "ru": "Ирригация"
+      },
+      "summary": {
+        "en": "Watering logic, plant rules, valves, pumps, and moisture sensors.",
+        "ru": "Полив, библиотека растений, клапаны, насосы и датчики влажности."
+      },
+      "owner_role": "io_node",
+      "runtime_module_id": "irrigation",
+      "state": "disconnected",
+      "component_ids": [
+        "soil_moisture",
+        "air_temp_humidity",
+        "drip_valves",
+        "peristaltic_pump",
+        "light_sensor"
+      ]
+    },
+    {
+      "id": "power",
+      "title": {
+        "en": "Power",
+        "ru": "Питание"
+      },
+      "summary": {
+        "en": "Energy input, conversion, and battery monitoring.",
+        "ru": "Питание, преобразование энергии и мониторинг батареи."
+      },
+      "owner_role": "shared",
+      "runtime_module_id": "",
+      "state": "disconnected",
+      "component_ids": [
+        "solar_panel",
+        "converter",
+        "battery_monitor"
+      ]
+    },
+    {
+      "id": "cat_feeder",
+      "title": {
+        "en": "Cat Feeder",
+        "ru": "Кормушка для кота"
+      },
+      "summary": {
+        "en": "Motion wakes the camera; video identification and optional meow/request signal can notify the owner or start feeding.",
+        "ru": "Датчик движения будит камеру; видеоидентификация и сигнал запроса помогают уведомить владельца или начать кормление."
+      },
+      "owner_role": "compute_node",
+      "runtime_module_id": "",
+      "state": "simulated",
+      "component_ids": [
+        "cat_feeder_servo",
+        "cat_feeder_motion_sensor",
+        "cat_feeder_camera"
+      ]
+    }
+  ],
+  "components": [
+    {
+      "id": "camera",
+      "title": {
+        "en": "Raspberry Pi Camera",
+        "ru": "Камера Raspberry Pi"
+      },
+      "kind": "sensor",
+      "assigned_module": "turret",
+      "power_profile": "5V / CSI",
+      "pinout": "CSI ribbon",
+      "tolerance": "stream check",
+      "operating_modes": "preview, capture, evidence",
+      "state": "not_detected"
+    },
+    {
+      "id": "strobe",
+      "title": {
+        "en": "Strobe",
+        "ru": "Стробоскоп"
+      },
+      "kind": "actuator",
+      "assigned_module": "turret",
+      "power_profile": "12V driver",
+      "pinout": "ESP32 GPIO TBD",
+      "tolerance": "50-100%",
+      "operating_modes": "pulse, deterrence",
+      "state": "not_detected"
+    },
+    {
+      "id": "piezo",
+      "title": {
+        "en": "Piezo tweeter",
+        "ru": "Пьезотвиттер"
+      },
+      "kind": "actuator",
+      "assigned_module": "turret",
+      "power_profile": "PWM",
+      "pinout": "ESP32 GPIO TBD",
+      "tolerance": "50-100%",
+      "operating_modes": "tone, sweep",
+      "state": "not_detected"
+    },
+    {
+      "id": "water_pump",
+      "title": {
+        "en": "Water cannon pump",
+        "ru": "Насос водной пушки"
+      },
+      "kind": "actuator",
+      "assigned_module": "turret",
+      "power_profile": "12V pump",
+      "pinout": "relay/MOSFET TBD",
+      "tolerance": "50-100%",
+      "operating_modes": "short burst",
+      "state": "not_detected"
+    },
+    {
+      "id": "servo_pan_tilt",
+      "title": {
+        "en": "Pan/tilt servos",
+        "ru": "Сервоприводы наведения"
+      },
+      "kind": "actuator",
+      "assigned_module": "turret",
+      "power_profile": "5-6V",
+      "pinout": "PWM TBD",
+      "tolerance": "angle limits TBD",
+      "operating_modes": "manual aim",
+      "state": "not_detected"
+    },
+    {
+      "id": "lidar",
+      "title": {
+        "en": "Lidar / range sensor",
+        "ru": "Лидар / дальномер"
+      },
+      "kind": "sensor",
+      "assigned_module": "turret",
+      "power_profile": "5V UART/I2C",
+      "pinout": "TBD",
+      "tolerance": "range sanity",
+      "operating_modes": "distance gate",
+      "state": "not_detected"
+    },
+    {
+      "id": "soil_moisture",
+      "title": {
+        "en": "Soil moisture sensor",
+        "ru": "Датчик влажности почвы"
+      },
+      "kind": "sensor",
+      "assigned_module": "irrigation",
+      "power_profile": "3.3V ADC",
+      "pinout": "ESP32 ADC TBD",
+      "tolerance": "calibration required",
+      "operating_modes": "sample, average",
+      "state": "not_detected"
+    },
+    {
+      "id": "air_temp_humidity",
+      "title": {
+        "en": "Air temp/humidity",
+        "ru": "Температура и влажность воздуха"
+      },
+      "kind": "sensor",
+      "assigned_module": "irrigation",
+      "power_profile": "3.3V I2C/1-wire",
+      "pinout": "TBD",
+      "tolerance": "sensor health",
+      "operating_modes": "sample",
+      "state": "not_detected"
+    },
+    {
+      "id": "drip_valves",
+      "title": {
+        "en": "Drip valves",
+        "ru": "Клапаны капельного полива"
+      },
+      "kind": "actuator",
+      "assigned_module": "irrigation",
+      "power_profile": "12V valves",
+      "pinout": "relay board TBD",
+      "tolerance": "zone timeout",
+      "operating_modes": "zone open/close",
+      "state": "not_detected"
+    },
+    {
+      "id": "peristaltic_pump",
+      "title": {
+        "en": "Peristaltic pump",
+        "ru": "Перистальтический насос"
+      },
+      "kind": "actuator",
+      "assigned_module": "irrigation",
+      "power_profile": "12V pump",
+      "pinout": "MOSFET TBD",
+      "tolerance": "dose duration",
+      "operating_modes": "dose",
+      "state": "not_detected"
+    },
+    {
+      "id": "light_sensor",
+      "title": {
+        "en": "Light sensor",
+        "ru": "Датчик освещённости"
+      },
+      "kind": "sensor",
+      "assigned_module": "irrigation",
+      "power_profile": "3.3V I2C/ADC",
+      "pinout": "TBD",
+      "tolerance": "day/night threshold",
+      "operating_modes": "sample",
+      "state": "not_detected"
+    },
+    {
+      "id": "solar_panel",
+      "title": {
+        "en": "Solar panel",
+        "ru": "Солнечная панель"
+      },
+      "kind": "power",
+      "assigned_module": "power",
+      "power_profile": "input",
+      "pinout": "charge controller",
+      "tolerance": "voltage/current limits",
+      "operating_modes": "charge",
+      "state": "not_detected"
+    },
+    {
+      "id": "converter",
+      "title": {
+        "en": "DC/DC converter",
+        "ru": "DC/DC конвертер"
+      },
+      "kind": "power",
+      "assigned_module": "power",
+      "power_profile": "5V/12V rails",
+      "pinout": "power rail",
+      "tolerance": "rail stability",
+      "operating_modes": "supply",
+      "state": "not_detected"
+    },
+    {
+      "id": "battery_monitor",
+      "title": {
+        "en": "Battery monitor",
+        "ru": "Монитор батареи"
+      },
+      "kind": "sensor",
+      "assigned_module": "power",
+      "power_profile": "I2C/ADC",
+      "pinout": "TBD",
+      "tolerance": "voltage sanity",
+      "operating_modes": "sample",
+      "state": "not_detected"
+    },
+    {
+      "id": "cat_feeder_servo",
+      "title": {
+        "en": "Servo dispenser",
+        "ru": "Сервопривод дозатора"
+      },
+      "kind": "actuator",
+      "assigned_module": "cat_feeder",
+      "power_profile": "5-6V",
+      "pinout": "PWM TBD",
+      "tolerance": "portion angle limits",
+      "operating_modes": "dispense, calibrate",
+      "state": "simulated"
+    },
+    {
+      "id": "cat_feeder_motion_sensor",
+      "title": {
+        "en": "Motion sensor",
+        "ru": "Датчик движения"
+      },
+      "kind": "sensor",
+      "assigned_module": "cat_feeder",
+      "power_profile": "3.3V / GPIO",
+      "pinout": "PIR GPIO TBD",
+      "tolerance": "wake debounce",
+      "operating_modes": "wake camera, notify owner",
+      "state": "simulated"
+    },
+    {
+      "id": "cat_feeder_camera",
+      "title": {
+        "en": "Identification camera",
+        "ru": "Камера идентификации"
+      },
+      "kind": "sensor",
+      "assigned_module": "cat_feeder",
+      "power_profile": "5V / CSI or USB",
+      "pinout": "camera input TBD",
+      "tolerance": "video identification confidence",
+      "operating_modes": "identify cat, record request",
+      "state": "simulated"
+    }
+  ],
+  "assignments": [
+    {
+      "id": "turret_camera",
+      "module_id": "turret",
+      "component_id": "camera",
+      "role": "sensor"
+    },
+    {
+      "id": "turret_strobe",
+      "module_id": "turret",
+      "component_id": "strobe",
+      "role": "actuator"
+    },
+    {
+      "id": "turret_piezo",
+      "module_id": "turret",
+      "component_id": "piezo",
+      "role": "actuator"
+    },
+    {
+      "id": "turret_water_pump",
+      "module_id": "turret",
+      "component_id": "water_pump",
+      "role": "actuator"
+    },
+    {
+      "id": "turret_servo_pan_tilt",
+      "module_id": "turret",
+      "component_id": "servo_pan_tilt",
+      "role": "actuator"
+    },
+    {
+      "id": "turret_lidar",
+      "module_id": "turret",
+      "component_id": "lidar",
+      "role": "sensor"
+    },
+    {
+      "id": "irrigation_soil_moisture",
+      "module_id": "irrigation",
+      "component_id": "soil_moisture",
+      "role": "sensor"
+    },
+    {
+      "id": "irrigation_air_temp_humidity",
+      "module_id": "irrigation",
+      "component_id": "air_temp_humidity",
+      "role": "sensor"
+    },
+    {
+      "id": "irrigation_drip_valves",
+      "module_id": "irrigation",
+      "component_id": "drip_valves",
+      "role": "actuator"
+    },
+    {
+      "id": "irrigation_peristaltic_pump",
+      "module_id": "irrigation",
+      "component_id": "peristaltic_pump",
+      "role": "actuator"
+    },
+    {
+      "id": "irrigation_light_sensor",
+      "module_id": "irrigation",
+      "component_id": "light_sensor",
+      "role": "sensor"
+    },
+    {
+      "id": "power_solar_panel",
+      "module_id": "power",
+      "component_id": "solar_panel",
+      "role": "power"
+    },
+    {
+      "id": "power_converter",
+      "module_id": "power",
+      "component_id": "converter",
+      "role": "power"
+    },
+    {
+      "id": "power_battery_monitor",
+      "module_id": "power",
+      "component_id": "battery_monitor",
+      "role": "sensor"
+    },
+    {
+      "id": "cat_feeder_cat_feeder_servo",
+      "module_id": "cat_feeder",
+      "component_id": "cat_feeder_servo",
+      "role": "actuator"
+    },
+    {
+      "id": "cat_feeder_cat_feeder_motion_sensor",
+      "module_id": "cat_feeder",
+      "component_id": "cat_feeder_motion_sensor",
+      "role": "sensor"
+    },
+    {
+      "id": "cat_feeder_cat_feeder_camera",
+      "module_id": "cat_feeder",
+      "component_id": "cat_feeder_camera",
+      "role": "sensor"
+    }
+  ],
+  "templates": {
+    "modules": [
+      {
+        "id": "cat_feeder",
+        "title": {
+          "en": "Cat Feeder",
+          "ru": "Кормушка для кота"
+        },
+        "summary": {
+          "en": "Motion-triggered feeder with camera identification.",
+          "ru": "Кормушка с пробуждением по движению и идентификацией по камере."
+        },
+        "owner_role": "compute_node"
+      },
+      {
+        "id": "turret",
+        "title": {
+          "en": "Turret",
+          "ru": "Турель"
+        },
+        "summary": {
+          "en": "Camera-guided observation and deterrence.",
+          "ru": "Наблюдение и безопасное воздействие с наведением."
+        },
+        "owner_role": "compute_node"
+      },
+      {
+        "id": "irrigation",
+        "title": {
+          "en": "Irrigation",
+          "ru": "Ирригация"
+        },
+        "summary": {
+          "en": "Plant-aware watering module.",
+          "ru": "Модуль полива с библиотекой растений."
+        },
+        "owner_role": "io_node"
+      }
+    ],
+    "components": [
+      {
+        "id": "servo_dispenser",
+        "title": {
+          "en": "Servo dispenser",
+          "ru": "Сервопривод дозатора"
+        },
+        "kind": "actuator",
+        "power_profile": "5-6V",
+        "pinout": "PWM TBD",
+        "tolerance": "portion angle limits",
+        "operating_modes": "dispense, calibrate"
+      },
+      {
+        "id": "motion_sensor",
+        "title": {
+          "en": "Motion sensor",
+          "ru": "Датчик движения"
+        },
+        "kind": "sensor",
+        "power_profile": "3.3V / GPIO",
+        "pinout": "PIR GPIO TBD",
+        "tolerance": "wake debounce",
+        "operating_modes": "wake camera, notify owner"
+      },
+      {
+        "id": "identification_camera",
+        "title": {
+          "en": "Identification camera",
+          "ru": "Камера идентификации"
+        },
+        "kind": "sensor",
+        "power_profile": "5V / CSI or USB",
+        "pinout": "camera input TBD",
+        "tolerance": "video identification confidence",
+        "operating_modes": "identify cat, record request"
+      }
+    ]
+  }
+}

@@ -6,7 +6,7 @@
 
 ## Зачем нужен реестр модулей
 
-Shell на `ESP32` и `Raspberry Pi` должен понимать:
+Shell на `compute node` и `I/O node` должен понимать:
 
 - какие модули существуют;
 - кто владелец каждого модуля;
@@ -18,48 +18,84 @@ Shell на `ESP32` и `Raspberry Pi` должен понимать:
 
 Каждый модуль обязан описываться одинаково.
 
-Минимальный состав:
+Минимальный состав для `platform_registry.v1`:
 
 ```json
 {
-  "id": "strobe",
-  "title": "Strobe",
-  "owner": "rpi",
-  "profile": "turret",
-  "state": "locked",
-  "visible": true,
-  "service_page": true,
-  "manual_page": true,
-  "capabilities": ["arm", "abort", "preset_run"],
-  "locked_reason": "owner_unavailable",
-  "ui_group": "turret"
+  "id": "turret",
+  "title": {
+    "en": "Turret",
+    "ru": "Турель"
+  },
+  "summary": {
+    "en": "Camera-guided module.",
+    "ru": "Модуль наведения и наблюдения."
+  },
+  "owner_role": "compute_node",
+  "runtime_module_id": "turret_bridge",
+  "state": "disconnected",
+  "component_ids": ["camera", "servo_pan_tilt"]
 }
 ```
 
-## Обязательные поля реестра
+Legacy-поля `profile`, `visible`, `service_page`, `manual_page`,
+`capabilities`, `locked_reason` и `ui_group` могут появляться в старых
+документах или payload, но не являются обязательными полями нового registry.
+
+## Актуальный JSON-реестр Settings/Constructor
+
+Рабочий файл host-side реестра:
+
+`raspberry_pi/content/.system/platform_registry.v1.json`
+
+Backend обслуживает его через:
+
+- `GET /api/v1/platform/registry`;
+- `POST /api/v1/platform/registry/constructor`.
+
+`Constructor` в `Settings` больше не является декоративной заглушкой: после
+подтверждения wizard создаёт записи в JSON/config через приложение. Железо при
+этом не обязано быть подключено: новые записи могут иметь состояние `simulated`
+или `not_detected`, пока не появится runtime-проверка.
+
+Структура реестра:
 
 ```json
 {
-  "registry_version": "0.1.0",
-  "generated_by": "esp32-main",
-  "modules": []
+  "schema_version": "platform_registry.v1",
+  "updated_at_ms": 0,
+  "modules": [],
+  "components": [],
+  "assignments": [],
+  "templates": {
+    "modules": [],
+    "components": []
+  }
 }
 ```
+
+Смысл слоёв:
+
+- `modules` — функциональные системы: `turret`, `irrigation`, `power`, будущие
+  пользовательские модули вроде `cat_feeder`;
+- `components` — конкретные элементы: камера, клапан, сервопривод, датчик
+  движения, насос, конвертер;
+- `assignments` — связь component → module, чтобы компонент можно было
+  переназначать без переписывания всей модели;
+- `templates` — стартовые заготовки wizard, не источник runtime-состояния.
 
 ## Канонические id модулей первой версии
 
-- `system_shell`
-- `sync_core`
 - `irrigation`
-- `turret_bridge`
-- `strobe`
-- `strobe_bench`
-- `logs`
-- `settings`
-- `diagnostics`
-- `service_mode`
+- `turret`
+- `power`
+- `cat_feeder` как первый пример custom module
 
-## Канонические ui_group
+Software-сущности вроде `Platform Shell`, `Sync Core`, `Storage Service`,
+`Settings`, `Diagnostics` и `Laboratory` не смешиваются с hardware modules.
+Они живут в отдельном слое `System Services`.
+
+## Legacy ui_group
 
 - `system`
 - `irrigation`
@@ -67,6 +103,10 @@ Shell на `ESP32` и `Raspberry Pi` должен понимать:
 - `service`
 - `settings`
 - `logs`
+
+`ui_group` остаётся compatibility-полем для старых shell payload. Новый
+Settings registry группирует hardware через `modules/components/assignments`,
+а software surfaces через `System Services`.
 
 ## Правило видимости
 
@@ -77,6 +117,32 @@ Shell на `ESP32` и `Raspberry Pi` должен понимать:
 
 - Только владелец модуля может исполнять управляющие команды.
 - Невладелец может только показывать статус, кнопку и причину блокировки.
+- Для новых документов и UI-моделей использовать канонические значения:
+  - `compute_node`
+  - `io_node`
+  - `shared`
+- Legacy alias `rpi` и `esp32` допускаются только как compatibility-layer для
+  уже существующих payload и логов.
+
+## Пример Cat Feeder
+
+`Cat Feeder` не должен использовать `Light Sensor` как смысловой компонент:
+кот не является источником света и не обязан менять освещённость перед
+устройством.
+
+Утверждённый базовый сценарий:
+
+- `Motion Sensor` будит камеру;
+- камера запускает видеоидентификацию;
+- дополнительный сигнал запроса, например мяуканье или событие присутствия,
+  может уведомить владельца;
+- после политики/подтверждения запускается `Servo dispenser`.
+
+Минимальный набор компонентов примера:
+
+- `cat_feeder_motion_sensor`;
+- `cat_feeder_camera`;
+- `cat_feeder_servo`.
 
 ## Связь с shell UI
 

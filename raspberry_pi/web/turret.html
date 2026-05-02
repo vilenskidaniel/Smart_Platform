@@ -4,342 +4,1076 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Smart Platform / Turret</title>
+  <link rel="stylesheet" href="/static/operator_hud.css">
   <style>
     :root {
-      --bg: #eef3ea;
-      --panel: #fcfdf8;
-      --ink: #1e2a22;
-      --muted: #677567;
-      --line: #cdd7cc;
-      --accent: #345e46;
-      --ok: #2f7d4d;
-      --warn: #a36b1f;
-      --fault: #9c3136;
-      --locked: #6f7678;
-      --active: #255f97;
-      --radius: 22px;
-      --shadow: 0 16px 36px rgba(28, 43, 32, 0.08);
-      --mono: "Consolas", monospace;
+      --ink: #edf8ee;
+      --muted: rgba(237, 248, 238, 0.68);
+      --line: rgba(194, 224, 203, 0.18);
+      --panel: rgba(7, 16, 11, 0.58);
+      --panel-strong: rgba(7, 16, 11, 0.76);
+      --accent: #9ac58f;
+      --accent-strong: #c5e7b7;
+      --active: #b7d9a3;
+      --warn: #d4b46a;
+      --fault: #ff4b56;
+      --locked: #7b8585;
+      --control-radius: 24px;
+      --control-circle: 999px;
+      --stage-radius: 30px;
+      --shadow: 0 22px 60px rgba(0, 0, 0, 0.34);
       --sans: "Segoe UI", "Trebuchet MS", sans-serif;
+      --hud-edge: clamp(18px, 2vw, 34px);
+      --bottom-safe: clamp(52px, 7.5vh, 96px);
+      --control-glow: 0 0 0 1px rgba(197, 231, 183, 0.42), 0 0 28px rgba(145, 198, 125, 0.26);
     }
+
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
-      min-height: 100vh;
+      height: 100dvh;
+      overflow: hidden;
       font-family: var(--sans);
       color: var(--ink);
       background:
-        radial-gradient(circle at top right, rgba(66, 106, 77, 0.14), transparent 34%),
-        linear-gradient(180deg, #f6faf4 0%, var(--bg) 100%);
+        radial-gradient(circle at 16% 86%, rgba(80, 215, 129, 0.16), transparent 30%),
+        radial-gradient(circle at 84% 26%, rgba(95, 179, 255, 0.14), transparent 34%),
+        linear-gradient(135deg, #101c16 0%, #050907 72%);
     }
-    .page { max-width: 1180px; margin: 0 auto; padding: 24px 16px 48px; display: grid; gap: 18px; }
-    .hero, .card { background: var(--panel); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid rgba(52, 94, 70, 0.08); }
-    .hero { padding: 22px; background: linear-gradient(135deg, rgba(52, 94, 70, 0.98), rgba(79, 121, 92, 0.9)); color: #f5fbf6; }
-    .hero h1 { margin: 0; font-size: clamp(30px, 5vw, 44px); }
-    .hero p { margin: 8px 0 0; color: rgba(245, 251, 246, 0.84); max-width: 820px; }
-    .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-    .hero-actions { margin-top: 16px; }
-    .layout { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
-    .card { padding: 18px; }
-    .card h2 { margin: 0 0 12px; line-height: 1.1; }
-    .meta { color: var(--muted); font-size: 13px; }
-    .note { border-left: 4px solid var(--warn); padding-left: 12px; color: var(--muted); line-height: 1.5; }
-    .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
-    .tile {
-      border-radius: 18px;
-      border: 1px solid var(--line);
-      padding: 14px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(244, 248, 242, 0.96));
-    }
-    .tile p { margin: 6px 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
-    .badge { display: inline-flex; border-radius: 999px; padding: 8px 12px; font-size: 12px; font-weight: 600; text-transform: uppercase; }
-    .state-online { background: rgba(47,125,77,0.12); color: var(--ok); }
-    .state-service { background: rgba(52,94,70,0.12); color: var(--accent); }
-    .state-locked { background: rgba(111,118,120,0.12); color: var(--locked); }
-    .state-fault { background: rgba(156,49,54,0.12); color: var(--fault); }
-    .state-degraded { background: rgba(163,107,31,0.12); color: var(--warn); }
-    .state-active { background: rgba(37,95,151,0.12); color: var(--active); }
-    .primary, .secondary, .warn, .danger, .ghost-link {
-      appearance: none;
-      border: 0;
-      border-radius: 16px;
-      padding: 12px 16px;
-      cursor: pointer;
+
+    button {
       font: inherit;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
+      color: inherit;
+      -webkit-tap-highlight-color: transparent;
     }
-    .primary { background: var(--accent); color: #f7fbf8; }
-    .secondary { background: rgba(52,94,70,0.08); color: var(--ink); }
-    .warn { background: var(--warn); color: #fffaf3; }
-    .danger { background: var(--fault); color: #fff7f7; }
-    .ghost-link { background: rgba(255,255,255,0.12); color: inherit; border: 1px solid rgba(255,255,255,0.16); }
-    .log {
-      font-family: var(--mono);
+
+    .page {
+      width: 100%;
+      height: 100dvh;
+      padding: var(--shell-safe-top, 96px) 12px 12px;
+      display: grid;
+      min-height: 0;
+    }
+
+    .fpv-stage {
+      position: relative;
+      min-height: 0;
+      height: 100%;
+      border-radius: var(--stage-radius);
+      overflow: hidden;
+      border: 1px solid rgba(201, 237, 216, 0.14);
+      background:
+        radial-gradient(circle at 48% 43%, rgba(74, 130, 96, 0.40), transparent 23%),
+        linear-gradient(135deg, #24382f 0%, #0a130f 62%, #050907 100%);
+      box-shadow: 0 28px 70px rgba(0, 0, 0, 0.34);
+      isolation: isolate;
+      user-select: none;
+      touch-action: none;
+    }
+
+    .fpv-stage::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+      background-size: 42px 42px;
+      opacity: 0.38;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .fpv-stage::after {
+      content: "";
+      position: absolute;
+      inset: 18px;
+      border: 0 solid transparent;
+      border-radius: 22px;
+      pointer-events: none;
+      opacity: 0;
+      z-index: 10;
+      transition: opacity 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+    }
+
+    .fpv-stage[data-capture="video"]::after {
+      border-width: 3px;
+      border-color: rgba(236, 219, 142, 0.88);
+      box-shadow: inset 0 0 30px rgba(236, 219, 142, 0.14), 0 0 28px rgba(236, 219, 142, 0.16);
+      opacity: 1;
+    }
+
+    .video-placeholder {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: rgba(236, 248, 239, 0.76);
+      text-align: center;
+      letter-spacing: 0.02em;
+      z-index: 1;
+    }
+
+    .video-placeholder strong {
+      display: block;
+      font-size: clamp(34px, 6vw, 82px);
+      letter-spacing: -0.06em;
+      color: rgba(244, 252, 244, 0.92);
+    }
+
+    .photo-flash {
+      position: absolute;
+      inset: 18px;
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.62);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 9;
+    }
+
+    .fpv-stage[data-capture="photo"] .photo-flash {
+      animation: photo-pulse 420ms ease-out;
+    }
+
+    @keyframes photo-pulse {
+      0% { opacity: 0; }
+      18% { opacity: 0.82; }
+      100% { opacity: 0; }
+    }
+
+    .reticle {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: clamp(86px, 10vw, 148px);
+      aspect-ratio: 1;
+      transform: translate(-50%, -50%);
+      border: 1px solid rgba(197, 231, 183, 0.36);
+      border-radius: 50%;
+      box-shadow: 0 0 20px rgba(197, 231, 183, 0.12), inset 0 0 18px rgba(197, 231, 183, 0.05);
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .reticle::before,
+    .reticle::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      background: rgba(226, 244, 205, 0.74);
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 10px rgba(197, 231, 183, 0.22);
+    }
+
+    .reticle::before { width: 1px; height: 34%; }
+    .reticle::after { width: 34%; height: 1px; }
+
+    .reticle-dot {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 10px;
+      aspect-ratio: 1;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      border: 1px solid rgba(226, 244, 205, 0.78);
+      background: rgba(5, 9, 7, 0.42);
+    }
+
+    .reticle-corner {
+      position: absolute;
+      width: 16px;
+      aspect-ratio: 1;
+      border-color: rgba(226, 244, 205, 0.72);
+      border-style: solid;
+      opacity: 0.86;
+    }
+
+    .reticle-corner[data-corner="tl"] { left: 13%; top: 13%; border-width: 1px 0 0 1px; }
+    .reticle-corner[data-corner="tr"] { right: 13%; top: 13%; border-width: 1px 1px 0 0; }
+    .reticle-corner[data-corner="bl"] { left: 13%; bottom: 13%; border-width: 0 0 1px 1px; }
+    .reticle-corner[data-corner="br"] { right: 13%; bottom: 13%; border-width: 0 1px 1px 0; }
+
+    .target-box {
+      position: absolute;
+      left: calc(50% + clamp(88px, 9vw, 150px));
+      top: calc(50% - clamp(48px, 5vw, 80px));
+      width: clamp(112px, 10vw, 164px);
+      height: clamp(58px, 6vw, 86px);
+      border: 1px solid rgba(197, 231, 183, 0.32);
+      border-radius: var(--control-radius);
+      box-shadow: 0 0 20px rgba(197, 231, 183, 0.06);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 2;
+      transition: opacity 160ms ease, border-color 160ms ease;
+    }
+
+    .fpv-stage[data-vision-active="true"] .target-box {
+      opacity: 0.74;
+      border-color: rgba(197, 231, 183, 0.46);
+    }
+
+    .target-box span {
+      position: absolute;
+      top: -25px;
+      left: 0;
+      color: rgba(226, 244, 205, 0.56);
+      font-family: var(--sans);
       font-size: 12px;
-      white-space: pre-wrap;
-      background: #18221b;
-      color: #e6f3e8;
-      border-radius: 18px;
-      padding: 14px;
-      min-height: 220px;
-      overflow: auto;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .mode-switch {
+      position: absolute;
+      top: var(--hud-edge);
+      left: var(--hud-edge);
+      width: clamp(172px, 15vw, 226px);
+      height: 56px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+      border: 1px solid rgba(194, 224, 203, 0.24);
+      border-radius: 999px;
+      background: linear-gradient(135deg, rgba(7, 16, 11, 0.82), rgba(11, 27, 18, 0.62));
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+      cursor: pointer;
+      z-index: 6;
+      overflow: hidden;
+    }
+
+    .mode-switch::before {
+      content: "";
+      position: absolute;
+      top: 6px;
+      bottom: 6px;
+      width: calc(50% - 8px);
+      border-radius: 999px;
+      background: rgba(197, 231, 183, 0.16);
+      border: 1px solid rgba(197, 231, 183, 0.26);
+      box-shadow: 0 0 24px rgba(145, 198, 125, 0.14);
+      transition: transform 160ms ease, background 160ms ease;
+      transform: translateX(6px);
+    }
+
+    .fpv-stage[data-mode="automatic"] .mode-switch::before {
+      transform: translateX(calc(100% + 10px));
+      background: rgba(157, 214, 163, 0.14);
+      border-color: rgba(157, 214, 163, 0.24);
+      box-shadow: 0 0 24px rgba(157, 214, 163, 0.12);
+    }
+
+    .mode-switch span {
+      position: relative;
+      z-index: 1;
+      font-family: var(--sans);
+      font-weight: 850;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.035em;
+      opacity: 0.66;
+      text-align: center;
+    }
+
+    .mode-switch .manual-label,
+    .mode-switch .auto-label { color: var(--muted); }
+    .fpv-stage[data-mode="manual"] .manual-label,
+    .fpv-stage[data-mode="automatic"] .auto-label {
+      color: var(--accent-strong);
+      opacity: 1;
+    }
+
+    .telemetry-panel {
+      position: absolute;
+      top: var(--hud-edge);
+      right: var(--hud-edge);
+      width: clamp(176px, 14vw, 224px);
+      display: grid;
+      gap: 7px;
+      z-index: 6;
+      pointer-events: none;
+      border-radius: var(--control-radius);
+      border: 1px solid var(--line);
+      background: rgba(7, 16, 11, 0.44);
+      padding: 12px 14px;
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.18);
+      backdrop-filter: blur(16px);
+    }
+
+    .telemetry-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) max-content;
+      gap: 10px;
+      border-bottom: 1px solid rgba(194, 224, 203, 0.10);
+      padding-bottom: 7px;
+      font-size: 12px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .telemetry-row:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .telemetry-row span:first-child {
+      color: var(--muted);
+    }
+
+    .telemetry-row span:last-child {
+      color: var(--accent-strong);
+      font-weight: 800;
+      text-align: right;
+    }
+
+    .input-locked-banner {
+      position: absolute;
+      left: 50%;
+      top: var(--hud-edge);
+      transform: translateX(-50%);
+      max-width: min(52vw, 520px);
+      border-radius: 999px;
+      border: 1px solid rgba(212, 180, 106, 0.22);
+      background: rgba(7, 16, 11, 0.62);
+      color: rgba(244, 229, 178, 0.88);
+      padding: 10px 14px;
+      z-index: 6;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+      font-size: 13px;
+      font-weight: 700;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 140ms ease;
+    }
+
+    .fpv-stage[data-input-enabled="false"] .input-locked-banner {
+      opacity: 1;
+    }
+
+    .manual-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+
+    .fpv-stage[data-mode="automatic"] .manual-layer {
+      opacity: 1;
+      transform: none;
+    }
+
+    .fpv-stage[data-input-enabled="false"] .manual-layer {
+      pointer-events: none;
+    }
+
+    .fpv-stage[data-mode="manual"][data-input-enabled="false"] .joystick-zone,
+    .fpv-stage[data-mode="manual"][data-input-enabled="false"] .irrigation-cluster,
+    .fpv-stage[data-mode="manual"][data-input-enabled="false"] .weapon-cluster {
+      filter: saturate(0.5);
+      opacity: 0.45;
+    }
+
+    .fpv-stage[data-mode="automatic"] .joystick-zone,
+    .fpv-stage[data-mode="automatic"] .irrigation-cluster,
+    .fpv-stage[data-mode="automatic"] .weapon-button {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .fpv-stage[data-mode="automatic"][data-auto-capture="false"] .capture-button,
+    .fpv-stage[data-mode="automatic"][data-input-enabled="false"] .capture-button {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .joystick-zone {
+      position: absolute;
+      left: var(--hud-edge);
+      bottom: var(--bottom-safe);
+      width: clamp(250px, 22.8vw, 390px);
+      max-width: min(42vw, 390px);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      border: 1px solid rgba(194, 224, 203, 0.32);
+      background: rgba(4, 12, 8, 0.18);
+      box-shadow: inset 0 0 46px rgba(255, 255, 255, 0.05), 0 0 30px rgba(145, 198, 125, 0.10);
+      backdrop-filter: blur(10px);
+      cursor: pointer;
+    }
+
+    .joystick-zone[data-active="true"] {
+      border-color: rgba(197, 231, 183, 0.74);
+      box-shadow: var(--control-glow), inset 0 0 54px rgba(145, 198, 125, 0.08);
+    }
+
+    .joystick-knob {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: clamp(76px, 7.4vw, 116px);
+      aspect-ratio: 1;
+      transform: translate(calc(-50% + var(--stick-x, 0px)), calc(-50% + var(--stick-y, 0px)));
+      border-radius: 50%;
+      border: 1px solid rgba(238, 248, 240, 0.28);
+      background: radial-gradient(circle at 38% 32%, rgba(255, 255, 255, 0.32), rgba(238, 248, 240, 0.15) 48%, rgba(8, 18, 12, 0.32));
+      box-shadow: inset 0 0 28px rgba(255, 255, 255, 0.08), 0 12px 34px rgba(0, 0, 0, 0.28);
+      transition: transform 80ms linear, box-shadow 120ms ease, background 120ms ease;
+      pointer-events: none;
+    }
+
+    .joystick-zone[data-active="true"] .joystick-knob {
+      background: radial-gradient(circle at 38% 32%, rgba(255, 255, 255, 0.52), rgba(95, 179, 255, 0.32) 46%, rgba(8, 18, 12, 0.36));
+      box-shadow: inset 0 0 30px rgba(255, 255, 255, 0.12), 0 0 32px rgba(95, 179, 255, 0.34);
+    }
+
+    .stick-readout {
+      position: absolute;
+      left: 50%;
+      bottom: 10%;
+      transform: translateX(-50%);
+      font-size: 12px;
+      color: rgba(237, 248, 238, 0.68);
+      letter-spacing: 0.05em;
+      pointer-events: none;
+    }
+
+    .irrigation-cluster {
+      position: absolute;
+      left: 50%;
+      bottom: var(--bottom-safe);
+      transform: translateX(-50%);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: clamp(10px, 1.55vw, 24px);
+      pointer-events: auto;
+    }
+
+    .weapon-cluster {
+      position: absolute;
+      right: var(--hud-edge);
+      bottom: var(--bottom-safe);
+      width: clamp(250px, 22.8vw, 390px);
+      max-width: min(42vw, 390px);
+      aspect-ratio: 1;
+      pointer-events: auto;
+    }
+
+    .round-control {
+      appearance: none;
+      border: 1px solid rgba(194, 224, 203, 0.30);
+      border-radius: var(--control-radius);
+      background: radial-gradient(circle at 38% 30%, rgba(255, 255, 255, 0.10), rgba(6, 14, 10, 0.40) 54%, rgba(3, 7, 5, 0.62));
+      color: rgba(237, 248, 238, 0.92);
+      box-shadow: 0 16px 34px rgba(0, 0, 0, 0.26), inset 0 0 18px rgba(255, 255, 255, 0.03);
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease, background 120ms ease, opacity 120ms ease;
+    }
+
+    .round-control:active,
+    .round-control.is-pressed,
+    .round-control.is-feedback {
+      transform: scale(0.96);
+      border-color: rgba(197, 231, 183, 0.96);
+      background: radial-gradient(circle at 38% 30%, rgba(255, 255, 255, 0.24), rgba(145, 198, 125, 0.26) 52%, rgba(4, 10, 7, 0.72));
+      box-shadow: var(--control-glow), inset 0 0 22px rgba(255, 255, 255, 0.06);
+    }
+
+    .round-control[disabled],
+    .round-control[data-state="locked"],
+    .round-control[data-state="fault"] {
+      opacity: 0.56;
+      filter: saturate(0.64);
+    }
+
+    .valve-button {
+      width: clamp(56px, 6.8vw, 90px);
+      border-radius: 50%;
+      font-weight: 900;
+      font-size: clamp(16px, 1.7vw, 22px);
+    }
+
+    .weapon-button {
+      position: absolute;
+      width: clamp(70px, 6.4vw, 104px);
+      border-radius: 50%;
+      font-size: clamp(11px, 1.05vw, 14px);
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      aspect-ratio: 1;
+      padding: 8px;
+    }
+
+    .weapon-button small {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .weapon-button[data-slot="left"] { left: 0; bottom: 6%; }
+    .weapon-button[data-slot="middle"] { left: 24%; top: 25%; }
+    .weapon-button[data-slot="right"] { right: 10%; top: 8%; }
+
+    .weapon-button[data-slot="middle"]:active,
+    .weapon-button[data-slot="middle"].is-pressed,
+    .weapon-button[data-slot="middle"].is-feedback {
+      transform: scale(0.96);
+    }
+
+    .capture-button {
+      position: absolute;
+      right: 6%;
+      bottom: 6%;
+      width: clamp(86px, 7.4vw, 118px);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      font-size: clamp(13px, 1.15vw, 16px);
+      font-weight: 950;
+      letter-spacing: 0.03em;
+      border-color: rgba(237, 248, 238, 0.62);
+      background:
+        radial-gradient(circle at 50% 38%, rgba(255, 255, 255, 0.22), transparent 24%),
+        radial-gradient(circle, rgba(95, 179, 255, 0.16), rgba(5, 12, 8, 0.66));
+    }
+
+    .capture-button:active,
+    .capture-button.is-pressed,
+    .capture-button.is-feedback {
+      transform: scale(0.96);
+    }
+
+    .capture-button.is-recording {
+      border-color: rgba(236, 219, 142, 0.94);
+      box-shadow: 0 0 0 1px rgba(236, 219, 142, 0.48), 0 0 30px rgba(236, 219, 142, 0.26);
+      color: #fff4bf;
+    }
+
+    .operator-toast {
+      position: absolute;
+      left: 50%;
+      bottom: calc(var(--bottom-safe) + clamp(118px, 13vh, 172px));
+      transform: translateX(-50%) translateY(8px);
+      min-width: min(68vw, 340px);
+      max-width: min(78vw, 520px);
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(7, 16, 11, 0.74);
+      color: rgba(237, 248, 238, 0.88);
+      padding: 10px 14px;
+      text-align: center;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 160ms ease, transform 160ms ease;
+      z-index: 7;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .operator-toast.is-visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @media (max-width: 980px) {
+      .fpv-stage {
+        --hud-edge: 12px;
+        --bottom-safe: clamp(42px, 7vh, 72px);
+      }
+      .page { padding: var(--shell-safe-top, 110px) 8px 8px; }
+      .telemetry-panel { width: 178px; }
+      .joystick-zone { width: clamp(180px, 34vw, 290px); max-width: 41vw; }
+      .irrigation-cluster { gap: 8px; }
+      .weapon-cluster { width: clamp(180px, 34vw, 290px); max-width: 41vw; }
+      .target-box { left: 58%; width: 118px; height: 74px; }
+      .operator-toast { bottom: calc(var(--bottom-safe) + 98px); }
+    }
+
+    @media (max-width: 680px) {
+      .telemetry-panel { display: none; }
+      .mode-switch { width: 156px; height: 50px; }
+      .joystick-zone { width: min(46vw, 220px); }
+      .irrigation-cluster { left: 50%; bottom: calc(var(--bottom-safe) + 10px); }
+      .valve-button { width: 48px; }
+      .weapon-cluster { width: min(46vw, 220px); }
+      .weapon-button { width: 62px; }
+      .capture-button { width: 84px; }
     }
   </style>
 </head>
 <body>
   <div class="page">
-    <section class="hero">
-      <div class="badge state-service" id="mode-badge">mode: loading</div>
-      <h1>Turret</h1>
-      <p>Продуктовый контур турели на стороне <code>Raspberry Pi</code>. Здесь видны manual/automatic/service состояния, camera and range availability, action channels и безопасные dry-run сигналы автоматического контура. Глубокая диагностика и service/test сценарии вынесены в отдельную страницу, чтобы основной экран оставался модульным, а не backend-подобным.</p>
-      <div class="row hero-actions">
-        <a class="ghost-link" href="/">Вернуться в shell</a>
-        <a class="ghost-link" href="/service/turret">Laboratory Page</a>
-        <button class="secondary" id="sync-now-btn">Принудительный sync</button>
+    <section class="fpv-stage operator-hud" id="fpv-stage" data-mode="manual" data-input-enabled="true" data-auto-capture="true" data-vision-active="false" data-boost="false" aria-label="Turret FPV control surface">
+      <div class="video-placeholder">
+        <div>
+          <strong>FPV</strong>
+          <span>camera stream placeholder · waiting for physical camera binding</span>
+        </div>
       </div>
-    </section>
+      <div class="photo-flash" aria-hidden="true"></div>
+      <div class="reticle" aria-hidden="true">
+        <span class="reticle-dot"></span>
+        <span class="reticle-corner" data-corner="tl"></span>
+        <span class="reticle-corner" data-corner="tr"></span>
+        <span class="reticle-corner" data-corner="bl"></span>
+        <span class="reticle-corner" data-corner="br"></span>
+      </div>
+      <div class="target-box" aria-hidden="true"><span>vision</span></div>
 
-    <section class="layout" id="overview-grid"></section>
+      <button class="mode-switch" id="mode-switch" type="button" aria-label="Switch turret manual or automatic mode">
+        <span class="manual-label">Manual</span>
+        <span class="auto-label">Auto</span>
+      </button>
+      <div class="input-locked-banner" id="input-locked-banner">Input helpers disabled in Smart Bar</div>
+      <div class="telemetry-panel" id="telemetry-panel" aria-live="polite"></div>
 
-    <section class="layout">
-      <article class="card">
-        <h2>Mode And Safety</h2>
-        <div class="row">
-          <button class="primary" data-mode="manual">Manual</button>
-          <button class="secondary" data-mode="automatic">Automatic</button>
+      <div class="manual-layer" id="manual-layer">
+        <div class="joystick-zone" id="turret-joystick" data-active="false" aria-label="Manual turret aim joystick">
+          <div class="joystick-knob" id="joystick-knob"></div>
+          <div class="stick-readout" id="stick-readout">speed 0%</div>
         </div>
-        <div class="row" style="margin-top:10px;">
-          <button class="danger" data-interlock="emergency">Emergency</button>
-          <button class="warn" data-interlock="fault">Fault</button>
-          <button class="secondary" data-interlock="clear">Clear Interlock</button>
+
+        <div class="irrigation-cluster" id="irrigation-cluster" aria-label="Irrigation valve controls">
+          <button class="round-control valve-button" type="button" data-valve="1">1</button>
+          <button class="round-control valve-button" type="button" data-valve="2">2</button>
+          <button class="round-control valve-button" type="button" data-valve="3">3</button>
+          <button class="round-control valve-button" type="button" data-valve="4">4</button>
+          <button class="round-control valve-button" type="button" data-valve="5">5</button>
         </div>
-        <div class="note" id="interlock-summary" style="margin-top:12px;">Ожидание interlock-статуса...</div>
-      </article>
 
-      <article class="card">
-        <h2>Automatic Dry-Run Signals</h2>
-        <div id="engagement-grid" class="grid"></div>
-      </article>
-    </section>
+        <div class="weapon-cluster" aria-label="Turret weapon controls">
+          <div id="weapon-controls"></div>
+          <button class="round-control capture-button" id="capture-button" type="button" data-state="online" aria-label="Photo tap, video toggle">Capture</button>
+        </div>
+      </div>
 
-    <section class="card">
-      <h2>Sensing Availability</h2>
-      <div class="note">Камера и дальномер уже представлены в продуктовой модели, но пока работают как simulated software-level profiles. Это позволяет честно собирать UX, правила и shell-связность до реальных hardware-binding'ов.</div>
-      <div id="sensing-grid" class="grid" style="margin-top:12px;"></div>
-    </section>
-
-    <section class="card">
-      <h2>Action Channels</h2>
-      <div class="note">Кнопки ниже управляют только runtime-состоянием владельца турели. Реальных actuator-driver'ов здесь пока нет, поэтому изменения отражают owner logic и service safety, а не физическое движение железа.</div>
-      <div id="actions-grid" class="grid" style="margin-top:12px;"></div>
-    </section>
-
-    <section class="card">
-      <h2>Recent Turret Events</h2>
-      <div id="event-log" class="log">Ожидание событий...</div>
+      <div class="operator-toast" id="operator-toast" aria-live="polite"></div>
     </section>
   </div>
 
   <script src="/static/smart_bar.js"></script>
   <script>
-    let turretKeyboardSettings = null;
+    const DESKTOP_CONTROLS_KEY = 'smart-platform.desktop-controls.enabled';
+    const stage = document.getElementById('fpv-stage');
+    const joystick = document.getElementById('turret-joystick');
+    const knob = document.getElementById('joystick-knob');
+    const stickReadout = document.getElementById('stick-readout');
+    const toast = document.getElementById('operator-toast');
+    const captureButton = document.getElementById('capture-button');
+    const movementCodes = new Set();
     const activeKeyboardActions = new Set();
+    const joystickPointer = { active: false, id: null };
+    const capturePress = { timer: null, recording: false, stopping: false, id: '', startedAt: 0, startPromise: null, stopTimer: null, power: 0 };
+    const sessionStats = { audio: 0, strobe: 0, water: 0, photos: 0, videos: 0 };
+    let turretKeyboardSettings = null;
+    let latestRangeText = '-';
+    let latestRangeValue = null;
+    let latestStatus = null;
+    let latestProductView = null;
+    let motionBackendActive = false;
+    let shiftActive = false;
+    let refreshTimer = null;
+    let toastTimer = null;
+
+    const WEAPON_DEFS = [
+      { id: 'audio', slot: 'left', label: 'Piezo', key: 'Q' },
+      { id: 'strobe', slot: 'middle', label: 'Strobe', key: 'W' },
+      { id: 'water', slot: 'right', label: 'Spray', key: 'E' }
+    ];
+
+    function esc(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
 
     async function fetchJson(url, options) {
       const response = await fetch(url, options);
-      return response.json();
+      const payload = await response.json();
+      if (!response.ok) {
+        throw new Error(payload.message || payload.error || `HTTP ${response.status}`);
+      }
+      return payload;
+    }
+
+    function scheduleRefresh(delay = 300) {
+      window.clearTimeout(refreshTimer);
+      refreshTimer = window.setTimeout(() => refresh().catch(() => {}), delay);
+    }
+
+    function readStorage(key) {
+      try {
+        return window.localStorage.getItem(key);
+      } catch (_error) {
+        return null;
+      }
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add('is-visible');
+      window.clearTimeout(toastTimer);
+      toastTimer = window.setTimeout(() => toast.classList.remove('is-visible'), 1500);
+    }
+
+    function pulseControl(element) {
+      if (!element) return;
+      element.classList.add('is-feedback');
+      window.setTimeout(() => element.classList.remove('is-feedback'), 220);
+    }
+
+    function currentBindings() {
+      const settings = turretKeyboardSettings || {};
+      return {
+        aim_up: 'ArrowUp',
+        aim_down: 'ArrowDown',
+        aim_left: 'ArrowLeft',
+        aim_right: 'ArrowRight',
+        irrigation_zone_1: 'Digit1',
+        irrigation_zone_2: 'Digit2',
+        irrigation_zone_3: 'Digit3',
+        irrigation_zone_4: 'Digit4',
+        irrigation_zone_5: 'Digit5',
+        piezo: 'KeyQ',
+        strobe: 'KeyW',
+        water: 'KeyE',
+        capture: 'Space',
+        power_modifier: 'Shift',
+        ...((settings.bindings) || {})
+      };
+    }
+
+    function keyboardControlsAllowed() {
+      const settings = turretKeyboardSettings || {};
+      const stored = readStorage(DESKTOP_CONTROLS_KEY);
+      return stored !== '0' && settings.desktop_controls_enabled !== false && settings.turret_manual_enabled !== false;
+    }
+
+    function manualControlsAllowed() {
+      return isManualMode() && keyboardControlsAllowed();
+    }
+
+    function autoCaptureAllowed() {
+      const settings = turretKeyboardSettings || {};
+      return settings.allow_auto_capture !== false;
+    }
+
+    function captureControlsAllowed() {
+      return keyboardControlsAllowed() && (isManualMode() || autoCaptureAllowed());
+    }
+
+    function maxRecordingMs() {
+      const seconds = Number((turretKeyboardSettings || {}).max_recording_seconds || 30);
+      const clamped = Math.min(36000, Math.max(5, Number.isFinite(seconds) ? seconds : 30));
+      return clamped * 1000;
+    }
+
+    function updateInputState() {
+      const enabled = keyboardControlsAllowed();
+      stage.dataset.inputEnabled = String(enabled);
+      stage.dataset.autoCapture = String(autoCaptureAllowed());
+      if (!enabled) {
+        resetManualControls({ stopCapture: true });
+      }
+      updateCaptureAvailability();
+      rerenderTelemetry();
+    }
+
+    function isManualMode() {
+      return stage.dataset.mode === 'manual';
+    }
+
+    function powerPercent(event) {
+      const settings = turretKeyboardSettings || {};
+      return event && event.shiftKey ? (settings.shift_power_percent || 100) : (settings.base_power_percent || 50);
+    }
+
+    function updateBoostState(active) {
+      shiftActive = Boolean(active);
+      stage.dataset.boost = String(shiftActive);
+      rerenderTelemetry();
     }
 
     async function loadKeyboardSettings() {
       try {
         const settings = await fetchJson('/api/v1/settings', { cache: 'no-store' });
-        turretKeyboardSettings = settings.keyboard || null;
-        return settings;
+        const turretPolicies = settings.turret_policies || {};
+        turretKeyboardSettings = {
+          ...((settings.keyboard) || {}),
+          desktop_controls_enabled: ((settings.interface) || {}).desktop_controls_enabled !== false,
+          allow_auto_capture: turretPolicies.allow_auto_capture !== false,
+          max_recording_seconds: Math.min(36000, Math.max(5, Number(turretPolicies.max_recording_seconds || 30)))
+        };
       } catch (_error) {
         turretKeyboardSettings = null;
-        return null;
       }
+      updateInputState();
     }
 
-    function badgeClass(state) {
-      if (state === 'active') return 'badge state-active';
-      if (state === 'online') return 'badge state-online';
-      if (state === 'degraded') return 'badge state-degraded';
-      if (state === 'fault') return 'badge state-fault';
-      if (state === 'service') return 'badge state-service';
-      return 'badge state-locked';
-    }
-
-    function boolLabel(value) {
-      return value ? 'true' : 'false';
-    }
-
-    function setModeBadge(mode) {
-      const badge = document.getElementById('mode-badge');
-      const cls = mode === 'automatic'
-        ? 'state-active'
-        : mode === 'service_test'
-        ? 'state-service'
-        : mode === 'fault' || mode === 'emergency'
-        ? 'state-fault'
-        : 'state-online';
-      badge.className = `badge ${cls}`;
-      badge.textContent = `mode: ${mode}`;
-    }
-
-    function renderOverview(productView) {
-      const cards = [
-        { title: 'Turret State', payload: productView.overview || {} },
-        { title: 'Manual Console', payload: productView.manual_console || {} },
-        { title: 'Automatic Defense', payload: productView.automatic_defense || {} },
-        { title: 'Service Lane', payload: productView.service_lane || {} }
-      ];
-
-      document.getElementById('overview-grid').innerHTML = cards.map(card => `
-        <article class="card">
-          <div class="row" style="justify-content:space-between;">
-            <h2 style="margin:0;">${card.title}</h2>
-            <span class="${badgeClass(card.payload.state || 'locked')}">${card.payload.state || 'unknown'}</span>
-          </div>
-          <p class="meta" style="margin-top:10px;">${card.payload.summary || 'No summary yet.'}</p>
-          <p class="meta">block_reason: ${card.payload.block_reason || 'none'}</p>
-        </article>
-      `).join('');
-    }
-
-    function renderEngagement(productView) {
-      const engagement = productView.engagement || {};
-      const automatic = productView.automatic_defense || {};
-      const cards = [
-        {
-          id: 'automation_ready',
-          title: 'Automation Ready',
-          value: engagement.automation_ready,
-          text: automatic.summary || 'Arms the automatic defense baseline.',
-        },
-        {
-          id: 'target_locked',
-          title: 'Target Locked',
-          value: engagement.target_locked,
-          text: 'Dry-run target acquisition gate for strobe / water / audio in automatic.',
-        },
-        {
-          id: 'vision_tracking',
-          title: 'Vision Tracking',
-          value: engagement.vision_tracking,
-          text: 'Tracking signal coming from the simulated vision path.',
-        }
-      ];
-
-      document.getElementById('engagement-grid').innerHTML = cards.map(card => `
-        <article class="tile">
-          <div class="row" style="justify-content:space-between;">
-            <strong>${card.title}</strong>
-            <span class="${badgeClass(card.value ? 'active' : 'locked')}">${boolLabel(card.value)}</span>
-          </div>
-          <p>${card.text}</p>
-          <div class="row" style="margin-top:10px;">
-            <button class="secondary" data-flag="${card.id}" data-value="1">Enable</button>
-            <button class="secondary" data-flag="${card.id}" data-value="0">Disable</button>
-          </div>
-        </article>
-      `).join('');
-
-      for (const button of document.querySelectorAll('button[data-flag]')) {
-        button.addEventListener('click', () => {
-          postAndRefresh(`/api/v1/turret/runtime/flag?name=${button.dataset.flag}&value=${button.dataset.value}`);
-        });
+    function setMode(mode) {
+      const normalized = mode === 'automatic' ? 'automatic' : 'manual';
+      stage.dataset.mode = normalized;
+      document.getElementById('mode-switch').setAttribute('aria-pressed', String(normalized === 'automatic'));
+      document.title = `Smart Platform / ${normalized === 'automatic' ? 'Turret Auto' : 'Turret Manual'}`;
+      if (normalized !== 'manual') {
+        resetManualControls({ stopCapture: false });
       }
+      updateInputState();
     }
 
-    function renderSensing(productView) {
+    function renderTelemetry(status, productView) {
       const sensing = productView.sensing || [];
-      document.getElementById('sensing-grid').innerHTML = sensing.map(item => `
-        <article class="tile">
-          <div class="row" style="justify-content:space-between;">
-            <strong>${item.title}</strong>
-            <span class="${badgeClass(item.state)}">${item.state}</span>
-          </div>
-          <p>enabled: ${boolLabel(item.enabled)}</p>
-          <p>profile: ${item.profile_label || '-'}</p>
-          <p>simulated: ${boolLabel(item.simulated)}</p>
-          <p>${item.summary || ''}</p>
-          ${item.reading_mm !== undefined ? `<p>reading_mm: ${item.reading_mm === null ? '-' : item.reading_mm}</p>` : ''}
-        </article>
+      const range = sensing.find((item) => item.id === 'range') || {};
+      const rangeIsReal = range.enabled && range.state !== 'offline' && range.simulated !== true && range.reading_mm !== null && range.reading_mm !== undefined;
+      latestRangeValue = rangeIsReal ? range.reading_mm : null;
+      latestRangeText = rangeIsReal ? `${latestRangeValue} mm` : '--';
+      const vision = sensing.find((item) => item.id === 'vision') || {};
+      const visionActive = vision.enabled && vision.simulated !== true && (status.vision_tracking || status.target_locked);
+      stage.dataset.visionActive = String(Boolean(visionActive));
+      document.getElementById('telemetry-panel').innerHTML = [
+        ['INPUT', keyboardControlsAllowed() ? 'ON' : 'OFF'],
+        ['SHIFT', shiftActive ? 'BOOST' : 'BASE'],
+        ['LIDAR', latestRangeText],
+        ['PIEZO Q', sessionStats.audio],
+        ['STROBE W', sessionStats.strobe],
+        ['SPRAY E', sessionStats.water],
+        ['PHOTO', sessionStats.photos],
+        ['VIDEO', sessionStats.videos]
+      ].map(([label, value]) => `
+        <div class="telemetry-row">
+          <span>${esc(label)}</span>
+          <span>${esc(value)}</span>
+        </div>
       `).join('');
+    }
+
+    function rerenderTelemetry() {
+      if (!latestStatus && !latestProductView) {
+        return;
+      }
+      renderTelemetry(latestStatus || { active_mode: stage.dataset.mode }, latestProductView || {});
+    }
+
+    function syncHeldControlState() {
+      for (const button of document.querySelectorAll('[data-action-toggle]')) {
+        const actionId = button.dataset.actionToggle;
+        const held = [...activeKeyboardActions].some((key) => key.startsWith(`${actionId}:`));
+        button.classList.toggle('is-pressed', held);
+      }
+      for (const button of document.querySelectorAll('[data-valve]')) {
+        const held = activeKeyboardActions.has(`valve:${button.dataset.valve}`);
+        button.classList.toggle('is-pressed', held);
+      }
+    }
+
+    function updateCaptureAvailability() {
+      if (!captureButton) return;
+      captureButton.disabled = captureButton.dataset.cameraBlocked === '1' || !captureControlsAllowed();
+      captureButton.title = captureControlsAllowed()
+        ? (captureButton.dataset.cameraTitle || 'Photo tap, video hold')
+        : 'Capture disabled by input helpers or automatic capture policy';
     }
 
     function renderActions(productView) {
       const actions = productView.actions || [];
-      document.getElementById('actions-grid').innerHTML = actions.map(action => `
-        <article class="tile">
-          <div class="row" style="justify-content:space-between;">
-            <strong>${action.title}</strong>
-            <span class="${badgeClass(action.state)}">${action.state}</span>
-          </div>
-          <p>enabled: ${boolLabel(action.enabled)}</p>
-          <p>ready: ${boolLabel(action.ready)}</p>
-          <p>block_reason: ${action.block_reason || 'none'}</p>
-          <p>${action.summary || ''}</p>
-          <div class="row" style="margin-top:10px;">
-            <button class="secondary" data-action="${action.id}" data-enabled="1">Enable</button>
-            <button class="secondary" data-action="${action.id}" data-enabled="0">Disable</button>
-          </div>
-        </article>
-      `).join('');
+      const byId = new Map(actions.map(action => [action.id, action]));
+      document.getElementById('weapon-controls').innerHTML = WEAPON_DEFS.map(def => {
+        const action = byId.get(def.id) || { id: def.id, title: def.label, state: 'locked', enabled: false };
+        return `
+          <button class="round-control weapon-button" type="button"
+            data-action-toggle="${esc(def.id)}"
+            data-state="${esc(action.state || 'locked')}"
+            data-enabled="${action.enabled ? '1' : '0'}"
+            data-slot="${esc(def.slot)}"
+            aria-label="${esc(action.title || def.label)} ${esc(action.state || 'locked')}">
+            <span>${esc(def.label)}<small>${esc(def.key)}</small></span>
+          </button>
+        `;
+      }).join('');
 
-      for (const button of document.querySelectorAll('button[data-action]')) {
-        button.addEventListener('click', () => {
-          postAndRefresh(`/api/v1/turret/runtime/subsystem?id=${button.dataset.action}&enabled=${button.dataset.enabled}`);
-        });
-      }
-    }
-
-    function renderEvents(eventLog) {
-      const entries = eventLog.entries || [];
-      if (!entries.length) {
-        document.getElementById('event-log').textContent = 'Событий пока нет.';
-        return;
-      }
-
-      document.getElementById('event-log').textContent = entries.map(entry => {
-        const details = entry.details && Object.keys(entry.details).length
-          ? ` ${JSON.stringify(entry.details)}`
-          : '';
-        return `[${entry.timestamp_ms} ms] ${String(entry.level || '').toUpperCase()} ${entry.type}: ${entry.message}${details}`;
-      }).join('\n');
+      const camera = byId.get('camera') || {};
+      captureButton.dataset.state = camera.state || 'online';
+      captureButton.dataset.cameraBlocked = ['locked', 'fault'].includes(camera.state || '') ? '1' : '0';
+      captureButton.dataset.cameraTitle = camera.state ? `Camera: ${camera.state}` : 'Photo tap, video hold';
+      updateCaptureAvailability();
+      syncHeldControlState();
     }
 
     function renderStatus(status) {
       const runtime = status.runtime || {};
       const productView = runtime.product_view || {};
-
-      setModeBadge(status.active_mode || 'manual');
-      document.getElementById('interlock-summary').innerHTML = [
-        `emergency_latched: ${runtime.interlocks?.emergency_latched}`,
-        `fault_latched: ${runtime.interlocks?.fault_latched}`,
-        `fault_reason: ${runtime.interlocks?.fault_reason || 'none'}`,
-        `peer_reachable: ${status.peer_node?.reachable}`,
-        `last_sync_ms: ${status.sync_status?.last_sync_ms}`
-      ].join('<br>');
-
-      renderOverview(productView);
-      renderEngagement(productView);
-      renderSensing(productView);
+      latestStatus = status;
+      latestProductView = productView;
+      setMode(status.active_mode || 'manual');
+      renderTelemetry(status, productView);
       renderActions(productView);
-      renderEvents(status.event_log || {});
+      updateInputState();
     }
 
     async function refresh() {
-      const status = await fetchJson('/api/v1/turret/status');
+      const status = await fetchJson('/api/v1/turret/status', { cache: 'no-store' });
       renderStatus(status);
     }
 
-    async function postAndRefresh(url) {
-      await fetchJson(url, { method: 'POST' });
-      await refresh();
+    async function postRuntime(url) {
+      const payload = await fetchJson(url, { method: 'POST' });
+      scheduleRefresh();
+      return payload;
+    }
+
+    async function setSubsystem(actionId, enabled, refreshDelay = 900) {
+      const payload = await fetchJson(`/api/v1/turret/runtime/subsystem?id=${encodeURIComponent(actionId)}&enabled=${enabled ? '1' : '0'}`, { method: 'POST' });
+      scheduleRefresh(refreshDelay);
+      return payload;
+    }
+
+    async function applyRequestedMode() {
+      const requested = new URLSearchParams(window.location.search).get('mode');
+      if (!['manual', 'automatic'].includes(requested || '')) {
+        return;
+      }
+      setMode(requested);
+      await postRuntime(`/api/v1/turret/runtime/mode?value=${encodeURIComponent(requested)}`);
+    }
+
+    function clampVector(x, y) {
+      const length = Math.hypot(x, y);
+      if (length <= 1) {
+        return { x, y, length };
+      }
+      return { x: x / length, y: y / length, length: 1 };
+    }
+
+    function applyJoystickVector(rawX, rawY) {
+      const vector = clampVector(rawX, rawY);
+      const radius = Math.max(24, joystick.clientWidth / 2 - 4);
+      joystick.style.setProperty('--stick-x', `${vector.x * radius}px`);
+      joystick.style.setProperty('--stick-y', `${vector.y * radius}px`);
+      joystick.dataset.active = String(vector.length > 0.04);
+      stickReadout.textContent = `speed ${Math.round(vector.length * 100)}%`;
+      return vector;
+    }
+
+    function movementVectorFromKeys() {
+      const bindings = currentBindings();
+      let x = 0;
+      let y = 0;
+      if (movementCodes.has(bindings.aim_left)) x -= 1;
+      if (movementCodes.has(bindings.aim_right)) x += 1;
+      if (movementCodes.has(bindings.aim_up)) y -= 1;
+      if (movementCodes.has(bindings.aim_down)) y += 1;
+      if (x || y) {
+        const normalized = clampVector(x, y);
+        return { x: normalized.x, y: normalized.y };
+      }
+      return { x: 0, y: 0 };
+    }
+
+    function updateKeyboardJoystick() {
+      if (joystickPointer.active) {
+        return;
+      }
+      const vector = movementVectorFromKeys();
+      applyJoystickVector(vector.x, vector.y);
+      setMotionBackendActive(Boolean(vector.x || vector.y)).catch(() => {});
+    }
+
+    async function setMotionBackendActive(active) {
+      if (motionBackendActive === active) {
+        return;
+      }
+      motionBackendActive = active;
+      await postRuntime(`/api/v1/turret/runtime/subsystem?id=motion&enabled=${active ? '1' : '0'}`);
+    }
+
+    function resetManualControls(options = {}) {
+      const { stopCapture = true } = options;
+      const actionIdsToRelease = [...new Set([...activeKeyboardActions]
+        .map((key) => key.split(':')[0])
+        .filter((id) => ['audio', 'strobe', 'water'].includes(id)))];
+      movementCodes.clear();
+      activeKeyboardActions.clear();
+      applyJoystickVector(0, 0);
+      joystickPointer.active = false;
+      joystickPointer.id = null;
+      setMotionBackendActive(false).catch(() => {});
+      actionIdsToRelease.forEach((actionId) => setSubsystem(actionId, false, 350).catch(() => {}));
+      if (stopCapture && capturePress.recording) {
+        stopVideoCapture().catch(() => {});
+      }
+      for (const element of document.querySelectorAll('.is-pressed')) {
+        element.classList.remove('is-pressed');
+      }
+    }
+
+    function pointerVector(event) {
+      const rect = joystick.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      return clampVector((event.clientX - cx) / (rect.width / 2), (event.clientY - cy) / (rect.height / 2));
+    }
+
+    joystick.addEventListener('pointerdown', (event) => {
+      if (!manualControlsAllowed()) return;
+      joystickPointer.active = true;
+      joystickPointer.id = event.pointerId;
+      joystick.setPointerCapture(event.pointerId);
+      const vector = pointerVector(event);
+      applyJoystickVector(vector.x, vector.y);
+      setMotionBackendActive(vector.length > 0.04).catch(() => {});
+    });
+
+    joystick.addEventListener('pointermove', (event) => {
+      if (!joystickPointer.active || joystickPointer.id !== event.pointerId) return;
+      const vector = pointerVector(event);
+      applyJoystickVector(vector.x, vector.y);
+      setMotionBackendActive(vector.length > 0.04).catch(() => {});
+    });
+
+    function releaseJoystickPointer(event) {
+      if (!joystickPointer.active || joystickPointer.id !== event.pointerId) return;
+      joystickPointer.active = false;
+      joystickPointer.id = null;
+      applyJoystickVector(0, 0);
+      setMotionBackendActive(false).catch(() => {});
+    }
+
+    joystick.addEventListener('pointerup', releaseJoystickPointer);
+    joystick.addEventListener('pointercancel', releaseJoystickPointer);
+
+    function valveForCode(code, bindings) {
+      for (let index = 1; index <= 5; index += 1) {
+        if (code === bindings[`irrigation_zone_${index}`]) {
+          return String(index);
+        }
+      }
+      return '';
+    }
+
+    function actionForCode(code, bindings) {
+      if (code === bindings.piezo) return { id: 'audio', title: 'Piezo' };
+      if (code === bindings.strobe) return { id: 'strobe', title: 'Strobe' };
+      if (code === bindings.water) return { id: 'water', title: 'Water spray' };
+      return null;
+    }
+
+    function movementCode(code, bindings) {
+      return [bindings.aim_up, bindings.aim_down, bindings.aim_left, bindings.aim_right].includes(code);
     }
 
     function ignoreKeyboardTarget(target) {
@@ -348,87 +1082,290 @@
       return tag === 'input' || tag === 'textarea' || tag === 'select' || target.isContentEditable;
     }
 
-    function keyboardActionForCode(code, bindings) {
-      const movement = [bindings.aim_up, bindings.aim_down, bindings.aim_left, bindings.aim_right];
-      if (movement.includes(code)) return { id: 'motion', title: 'manual motion' };
-      if (code === bindings.piezo) return { id: 'audio', title: 'piezo audio' };
-      if (code === bindings.strobe) return { id: 'strobe', title: 'strobe' };
-      if (code === bindings.water) return { id: 'water', title: 'water spray' };
-      if (code === bindings.capture) return { id: 'camera', title: 'video capture gate' };
-      return null;
+    function beginCapture(power) {
+      if (!captureControlsAllowed() || captureButton.disabled || capturePress.stopping) {
+        return;
+      }
+      if (capturePress.recording) {
+        stopVideoCapture().catch((error) => showToast(`Capture failed: ${error.message || error}`));
+        return;
+      }
+      if (capturePress.timer) {
+        return;
+      }
+      capturePress.power = power;
+      captureButton.classList.add('is-pressed');
+      capturePress.timer = window.setTimeout(() => {
+        capturePress.timer = null;
+        startVideoCapture().catch((error) => showToast(`Video start failed: ${error.message || error}`));
+      }, 460);
     }
 
-    async function handleTurretKeyboard(event, enabled) {
+    async function endCapture() {
+      captureButton.classList.remove('is-pressed');
+      if (capturePress.timer) {
+        window.clearTimeout(capturePress.timer);
+        capturePress.timer = null;
+        await takePhoto();
+        return;
+      }
+    }
+
+    async function takePhoto() {
+      pulseControl(captureButton);
+      stage.dataset.capture = 'photo';
+      showToast('Photo captured');
+      window.setTimeout(() => {
+        if (stage.dataset.capture === 'photo') {
+          delete stage.dataset.capture;
+        }
+      }, 430);
+      sessionStats.photos += 1;
+      rerenderTelemetry();
+      fetchJson(`/api/v1/turret/capture?kind=photo&phase=photo&power_percent=${capturePress.power}`, { method: 'POST' })
+        .then(() => scheduleRefresh())
+        .catch((error) => showToast(`Photo failed: ${error.message || error}`));
+    }
+
+    async function startVideoCapture() {
+      capturePress.recording = true;
+      capturePress.startedAt = Date.now();
+      captureButton.classList.add('is-recording');
+      stage.dataset.capture = 'video';
+      showToast('Video recording started');
+      capturePress.stopTimer = window.setTimeout(() => {
+        stopVideoCapture().catch((error) => showToast(`Auto-stop failed: ${error.message || error}`));
+      }, maxRecordingMs());
+      try {
+        capturePress.startPromise = fetchJson(`/api/v1/turret/capture?kind=video&phase=video_start&power_percent=${capturePress.power}`, { method: 'POST' });
+        const payload = await capturePress.startPromise;
+        capturePress.id = ((payload.artifact || {}).capture_id || '');
+        scheduleRefresh();
+      } catch (error) {
+        window.clearTimeout(capturePress.stopTimer);
+        capturePress.stopTimer = null;
+        capturePress.recording = false;
+        capturePress.startPromise = null;
+        captureButton.classList.remove('is-recording');
+        delete stage.dataset.capture;
+        throw error;
+      }
+    }
+
+    async function stopVideoCapture() {
+      if (!capturePress.recording || capturePress.stopping) {
+        return;
+      }
+      capturePress.stopping = true;
+      try {
+        if (capturePress.startPromise) {
+          await capturePress.startPromise;
+        }
+        const duration = Math.max(0, Date.now() - capturePress.startedAt);
+        const params = new URLSearchParams({
+          kind: 'video',
+          phase: 'video_stop',
+          capture_id: capturePress.id,
+          duration_ms: String(duration),
+          power_percent: String(capturePress.power)
+        });
+        await fetchJson(`/api/v1/turret/capture?${params.toString()}`, { method: 'POST' });
+        sessionStats.videos += 1;
+        rerenderTelemetry();
+        showToast('Video recording saved');
+      } finally {
+        window.clearTimeout(capturePress.stopTimer);
+        capturePress.stopTimer = null;
+        capturePress.recording = false;
+        capturePress.stopping = false;
+        capturePress.id = '';
+        capturePress.startedAt = 0;
+        capturePress.startPromise = null;
+        captureButton.classList.remove('is-recording');
+        delete stage.dataset.capture;
+        scheduleRefresh();
+      }
+    }
+
+    captureButton.addEventListener('pointerdown', (event) => {
+      if (!captureControlsAllowed()) return;
+      event.preventDefault();
+      captureButton.setPointerCapture(event.pointerId);
+      beginCapture(powerPercent(event));
+    });
+
+    captureButton.addEventListener('pointerup', (event) => {
+      event.preventDefault();
+      endCapture().catch((error) => showToast(`Capture failed: ${error.message || error}`));
+    });
+
+    captureButton.addEventListener('pointercancel', () => {
+      endCapture().catch(() => {});
+    });
+
+    document.getElementById('mode-switch').addEventListener('click', () => {
+      const next = stage.dataset.mode === 'manual' ? 'automatic' : 'manual';
+      setMode(next);
+      pulseControl(document.getElementById('mode-switch'));
+      postRuntime(`/api/v1/turret/runtime/mode?value=${encodeURIComponent(next)}`)
+        .then(() => showToast(next === 'manual' ? 'Manual mode' : 'Automatic mode'))
+        .catch((error) => showToast(`Mode switch failed: ${error.message || error}`));
+    });
+
+    document.addEventListener('click', (event) => {
+      const actionButton = event.target.closest('[data-action-toggle]');
+      if (actionButton) {
+        event.preventDefault();
+        return;
+      }
+
+      const valveButton = event.target.closest('[data-valve]');
+      if (valveButton && manualControlsAllowed()) {
+        pulseControl(valveButton);
+        showToast(`Irrigation zone ${valveButton.dataset.valve}`);
+      }
+    });
+
+    document.addEventListener('pointerdown', (event) => {
+      const control = event.target.closest('.round-control');
+      if (control && (control !== captureButton || captureControlsAllowed())) control.classList.add('is-pressed');
+      const actionButton = event.target.closest('[data-action-toggle]');
+      if (actionButton && manualControlsAllowed()) {
+        event.preventDefault();
+        if (['locked', 'fault'].includes(actionButton.dataset.state || '')) {
+          showToast(`${actionButton.textContent.trim()} unavailable`);
+          return;
+        }
+        const actionId = actionButton.dataset.actionToggle;
+        actionButton.setPointerCapture?.(event.pointerId);
+        if (sessionStats[actionId] !== undefined) {
+          sessionStats[actionId] += 1;
+        }
+        setSubsystem(actionId, true, 1200)
+          .then(() => showToast(`${actionButton.textContent.trim()} active`))
+          .catch((error) => showToast(`Action failed: ${error.message || error}`));
+      }
+    });
+
+    document.addEventListener('pointerup', (event) => {
+      const control = event.target.closest('.round-control');
+      if (control) control.classList.remove('is-pressed');
+      const actionButton = event.target.closest('[data-action-toggle]');
+      if (actionButton) {
+        event.preventDefault();
+        setSubsystem(actionButton.dataset.actionToggle, false, 350).catch(() => {});
+      }
+    });
+
+    document.addEventListener('pointercancel', () => {
+      for (const element of document.querySelectorAll('.round-control.is-pressed')) {
+        element.classList.remove('is-pressed');
+      }
+    });
+
+    async function handleTurretKeyboard(event, pressed) {
       if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey || ignoreKeyboardTarget(event.target)) {
         return;
       }
-      const settings = turretKeyboardSettings || {};
-      const bindings = {
-        aim_up: 'ArrowUp',
-        aim_down: 'ArrowDown',
-        aim_left: 'ArrowLeft',
-        aim_right: 'ArrowRight',
-        piezo: 'KeyQ',
-        strobe: 'KeyW',
-        water: 'KeyE',
-        capture: 'Space',
-        ...((settings.bindings) || {})
-      };
-      if (settings.turret_manual_enabled === false) {
+      const bindings = currentBindings();
+      if (event.key === 'Shift' || event.code === bindings.power_modifier || (bindings.power_modifier === 'Shift' && event.key === 'Shift')) {
+        updateBoostState(pressed ? true : event.shiftKey);
+      }
+      if (!keyboardControlsAllowed()) {
         return;
       }
-      const modeText = document.getElementById('mode-badge')?.textContent || '';
-      if (!modeText.includes('manual')) {
+
+      if (event.code === bindings.capture) {
+        event.preventDefault();
+        if (captureControlsAllowed() && pressed && !event.repeat) {
+          beginCapture(powerPercent(event));
+        } else if (captureControlsAllowed() && !pressed) {
+          await endCapture();
+        }
         return;
       }
-      const action = keyboardActionForCode(event.code, bindings);
+
+      if (!isManualMode()) {
+        return;
+      }
+
+      if (movementCode(event.code, bindings)) {
+        event.preventDefault();
+        if (pressed) {
+          movementCodes.add(event.code);
+        } else {
+          movementCodes.delete(event.code);
+        }
+        updateKeyboardJoystick();
+        return;
+      }
+
+      const valve = valveForCode(event.code, bindings);
+      if (valve) {
+        event.preventDefault();
+        const button = document.querySelector(`[data-valve="${valve}"]`);
+        const valveKey = `valve:${valve}`;
+        if (pressed && !event.repeat) {
+          activeKeyboardActions.add(valveKey);
+          button?.classList.add('is-pressed');
+          showToast(`Irrigation zone ${valve}`);
+        } else if (!pressed) {
+          activeKeyboardActions.delete(valveKey);
+          button?.classList.remove('is-pressed');
+        }
+        return;
+      }
+
+      const action = actionForCode(event.code, bindings);
       if (!action) {
         return;
       }
       const key = `${action.id}:${event.code}`;
-      if (enabled && activeKeyboardActions.has(key)) {
+      if (pressed && activeKeyboardActions.has(key)) {
         return;
       }
       event.preventDefault();
-      if (enabled) {
+      const button = document.querySelector(`[data-action-toggle="${action.id}"]`);
+      if (pressed) {
         activeKeyboardActions.add(key);
+        button?.classList.add('is-pressed');
+        if (sessionStats[action.id] !== undefined) {
+          sessionStats[action.id] += 1;
+        }
+        await setSubsystem(action.id, true, 1200);
+        showToast(`${action.title} ${powerPercent(event)}%`);
       } else {
         activeKeyboardActions.delete(key);
+        button?.classList.remove('is-pressed');
+        await setSubsystem(action.id, false, 350);
       }
-      const power = event.shiftKey ? (settings.shift_power_percent || 100) : (settings.base_power_percent || 50);
-      await fetchJson(`/api/v1/turret/runtime/subsystem?id=${encodeURIComponent(action.id)}&enabled=${enabled ? '1' : '0'}`, { method: 'POST' });
-      document.getElementById('interlock-summary').innerHTML += `<br>key: ${action.title}, power intent: ${power}%`;
-      await refresh();
     }
-
-    for (const button of document.querySelectorAll('button[data-mode]')) {
-      button.addEventListener('click', () => {
-        postAndRefresh(`/api/v1/turret/runtime/mode?value=${button.dataset.mode}`);
-      });
-    }
-
-    for (const button of document.querySelectorAll('button[data-interlock]')) {
-      button.addEventListener('click', () => {
-        postAndRefresh(`/api/v1/turret/runtime/interlock?value=${button.dataset.interlock}`);
-      });
-    }
-
-    document.getElementById('sync-now-btn').addEventListener('click', () => {
-      postAndRefresh('/api/v1/sync/refresh');
-    });
 
     document.addEventListener('keydown', (event) => {
-      handleTurretKeyboard(event, true).catch(() => {});
+      handleTurretKeyboard(event, true).catch((error) => showToast(`Key action failed: ${error.message || error}`));
     });
 
     document.addEventListener('keyup', (event) => {
-      handleTurretKeyboard(event, false).catch(() => {});
+      handleTurretKeyboard(event, false).catch((error) => showToast(`Key action failed: ${error.message || error}`));
     });
 
-    loadKeyboardSettings().finally(() => refresh()).catch(err => {
-      document.getElementById('event-log').textContent = `Ошибка загрузки: ${err}`;
+    window.addEventListener('blur', resetManualControls);
+
+    window.addEventListener('smart-platform:desktop-controls-updated', () => {
+      updateInputState();
     });
-    setInterval(() => refresh().catch(() => {}), 2500);
+
+    window.addEventListener('storage', (event) => {
+      if (event.key === DESKTOP_CONTROLS_KEY) {
+        updateInputState();
+      }
+    });
+
+    loadKeyboardSettings()
+      .then(() => applyRequestedMode())
+      .finally(() => refresh())
+      .catch((error) => showToast(`Turret load failed: ${error.message || error}`));
+    window.setInterval(() => refresh().catch(() => {}), 3000);
   </script>
 </body>
 </html>

@@ -1,0 +1,13 @@
+{
+  "schema_version": "turret-capture-artifact.v1",
+  "capture_id": "turret_photo_20260502_002022_960_b7635c95",
+  "kind": "photo",
+  "phase": "photo",
+  "status": "captured",
+  "created_at_utc": "2026-05-02T00:20:22.960537Z",
+  "source_surface": "turret_manual_fpv",
+  "module_id": "turret_bridge",
+  "camera_binding": "placeholder_until_physical_camera",
+  "power_percent": 50,
+  "artifact_note": "Metadata placeholder created before real camera frame transport is wired."
+}

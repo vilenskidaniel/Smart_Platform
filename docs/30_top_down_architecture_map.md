@@ -30,11 +30,11 @@
 Если смотреть не по мелким техническим слоям, а по крупным продуктовым работам, то от текущей точки остаются примерно 7 больших шагов:
 
 1. зафиксировать skeleton архитектуры и имена крупных классов;
-2. довести `System Shell v1` до понятного продуктового состояния;
+2. довести `Platform Shell v1` до понятного продуктового состояния;
 3. довести `Irrigation v1` как локальный автономный контур `ESP32`;
 4. довести `Turret v1` как turret-owner на `Raspberry Pi`;
 5. довести `Gallery v1` как глобальный content explorer;
-6. довести `Laboratory / Service/Test v1` как отдельный тестовый контур;
+6. довести `Laboratory / Laboratory` как отдельный тестовый контур;
 7. пройти hardware/power/wake интеграцию и живую обкатку.
 
 То есть этапов еще много, но они уже должны управляться не десятками внутренних сущностей, а этими шестью крупными направлениями.
@@ -43,7 +43,7 @@
 
 У продукта есть только 5 верхних блоков:
 
-1. `System Shell`
+1. `Platform Shell`
 2. `Irrigation`
 3. `Turret`
 4. `Gallery`
@@ -59,7 +59,7 @@
 
 - always-on sentinel;
 - владелец `Irrigation`;
-- локальный `Service/Test` для своей зоны;
+- локальный `Laboratory` для своей зоны;
 - power/wake supervisor;
 - хранение локальных данных на `SD`;
 - fallback shell.
@@ -148,14 +148,14 @@ Skeleton-файлы для этого этапа:
 
 После этого документа уже можно безопасно идти не во все стороны сразу, а по одному крупному блоку:
 
-1. уточнить skeleton для `System Shell v1`;
+1. уточнить skeleton для `Platform Shell v1`;
 2. затем для `Irrigation v1`;
 3. затем для `Turret v1`;
 4. затем для `Gallery v1`;
-5. затем для `Laboratory / Service/Test v1`.
+5. затем для `Laboratory / Laboratory`.
 
-Для `System Shell v1` следующий уровень детализации уже вынесен отдельно:
+Для `Platform Shell v1` следующий уровень детализации уже вынесен отдельно:
 
-- [31_system_shell_class_map.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/docs/31_system_shell_class_map.md)
-- [system_shell_esp32_blueprint.h](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/skeletons/system_shell_esp32_blueprint.h)
-- [system_shell_raspberry_pi_blueprint.py](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/skeletons/system_shell_raspberry_pi_blueprint.py)
+- [31_platform_shell_class_map.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/docs/31_platform_shell_class_map.md)
+- [platform_shell_esp32_blueprint.h](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/skeletons/platform_shell_esp32_blueprint.h)
+- [platform_shell_raspberry_pi_blueprint.py](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/skeletons/platform_shell_raspberry_pi_blueprint.py)

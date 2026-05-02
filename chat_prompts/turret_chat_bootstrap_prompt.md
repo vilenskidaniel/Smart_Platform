@@ -88,7 +88,7 @@
   - `dual-board connected`
   - `manual`
   - `automatic`
-  - `service_test`
+  - `laboratory`
   - `warm standby`
   - `peer missing`
   - `degraded sensing`
@@ -147,14 +147,14 @@
 - включает:
   - live video
   - crosshair
-  - green auto-detection box
+  - truthful vision/target gate, hidden while vision/target tracking is simulated, offline, or inactive
   - статусы readiness важных подсистем
   - media capture
 - product-level доступ к `strobe` существует отсюда как к action channel
 
 3. Deep Engineering Layer
 - user-facing имя: `Laboratory`
-- внутренний stage-term: `Service/Test v1`
+- внутренний stage-term: `Laboratory`
 - здесь живут:
   - component qualification
   - actuator probes
@@ -167,7 +167,7 @@
 Manual FPV layout, который уже считается важной частью product intent:
 - live video
 - crosshair
-- auto-detection box
+- soft vision/target gate only when the vision stack is active
 - верхняя правая строка статусов:
   - `arm / emergency power`
   - `manual`

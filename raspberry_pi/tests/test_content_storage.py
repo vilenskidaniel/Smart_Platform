@@ -43,6 +43,9 @@ class ContentStorageTests(unittest.TestCase):
         )
         self.assertTrue(all("file_count" in entry for entry in status["paths"]))
         self.assertTrue(all("total_bytes" in entry for entry in status["paths"]))
+        libraries = next(entry for entry in status["paths"] if entry["id"] == "libraries")
+        self.assertEqual("/irrigation?library=plants", libraries["app_url"])
+        self.assertIn("plant_profile_count", libraries["metadata"])
 
     def test_cleanup_preview_and_confirm_stay_inside_content_root(self) -> None:
         root = PROJECT_ROOT / ".tmp_test_content_cleanup"

@@ -647,6 +647,53 @@ class BridgeState:
         )
         return normalize_report_entry(entry)
 
+    def record_turret_capture(
+        self,
+        *,
+        kind: str,
+        phase: str,
+        capture_id: str,
+        artifact_path: str,
+        artifact_url: str,
+        gallery_url: str,
+        duration_ms: int = 0,
+        power_percent: int = 0,
+        status: str = "",
+    ) -> dict[str, Any]:
+        normalized_kind = kind.strip().lower()
+        normalized_phase = phase.strip().lower()
+        if normalized_kind not in {"photo", "video"}:
+            raise ValueError("kind must be photo or video")
+        if normalized_phase not in {"photo", "video_start", "video_stop"}:
+            raise ValueError("phase must be photo, video_start, or video_stop")
+        if not capture_id.strip():
+            raise ValueError("capture_id is required")
+
+        message_kind = "photo" if normalized_kind == "photo" else "video"
+        message_action = {
+            "photo": "captured",
+            "video_start": "recording started",
+            "video_stop": "recording stopped",
+        }[normalized_phase]
+        entry = self._platform_log.add(
+            "turret_runtime",
+            "info",
+            f"turret_{normalized_kind}_capture_{normalized_phase}",
+            f"turret {message_kind} {message_action}",
+            module_id="turret_bridge",
+            capture_id=capture_id.strip(),
+            capture_kind=normalized_kind,
+            capture_phase=normalized_phase,
+            capture_status=status.strip(),
+            artifact_path=artifact_path.strip(),
+            artifact_url=artifact_url.strip(),
+            gallery_url=gallery_url.strip(),
+            duration_ms=max(0, int(duration_ms or 0)),
+            power_percent=max(0, int(power_percent or 0)),
+            active_mode=self._active_mode,
+        )
+        return normalize_report_entry(entry)
+
     def build_module_route_info(self, module_id: str) -> dict[str, Any]:
         with self._lock:
             module = self._modules.get(module_id)

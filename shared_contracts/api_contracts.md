@@ -142,6 +142,8 @@
 - `/api/v1/content/status`
 - `/api/v1/content/cleanup?target={whitelisted_target}&confirm=0|1`
 - `/api/v1/settings`
+- `/api/v1/platform/registry`
+- `/api/v1/platform/registry/constructor`
 - `/api/v1/host/open?target={whitelisted_target}`
 - `/api/v1/sync/heartbeat`
 - `/api/v1/sync/state`
@@ -176,7 +178,8 @@
       "app_supported": true,
       "app_url": "/gallery?tab=media&kind=audio",
       "cleanup_supported": true,
-      "cleanup_reason": ""
+      "cleanup_reason": "",
+      "metadata": {}
     }
   ]
 }
@@ -193,6 +196,67 @@ Legacy boolean поля вроде `assets_ready`, `audio_ready`, `animations_re
 Рекомендуемый порядок user-facing storage cards: `project_root`, `libraries`
 или plant library, `video`, `audio`, `gallery_reports`, `gallery`, `assets`,
 `animations`, `content_root`.
+
+`libraries` / `Plant Library` является irrigation-linked slice. Для него
+`app_url` должен вести в irrigation/library context, а `metadata` может
+публиковать `plant_profile_count`, полученный из
+`content/libraries/plant_profiles.v1.json`.
+
+## Settings Sync And Component Options
+
+`GET/POST /api/v1/settings` хранит не только внешний вид, но и durable UI
+модель для sync и component engineering fields:
+
+```json
+{
+  "synchronization": {
+    "preferred_mode": "auto",
+    "selected_domains": {
+      "service_link": true,
+      "module_state": true,
+      "shared_preferences": true,
+      "reports_history": true,
+      "plant_library": true,
+      "media_content": true,
+      "component_registry": true,
+      "software_versions": true
+    }
+  },
+  "component_field_options": {
+    "component_kind": ["sensor", "actuator"],
+    "pinout": ["TBD", "ESP32 GPIO TBD"]
+  }
+}
+```
+
+Если `preferred_mode = auto`, backend/client нормализуют все
+`selected_domains` в `true`. Если пользователь вручную меняет любой пункт и
+выбран не весь список, UI переводит `preferred_mode` в `manual_review`.
+`media_content` включает фото, видео, аудио и gallery reports.
+`software_versions` в первом рабочем варианте сравнивает версии RPi, ESP и
+Web UI, без попытки выдавать доменные версии там, где нет truthful scan.
+`component_field_options` используется как список подсказок для всех полей
+того же инженерного типа.
+
+Settings UI применяет изменения optimistic-first: клиент сразу обновляет
+локальную модель и внешний вид, а `POST /api/v1/settings` выполняется
+debounce/background. Backend должен быть идемпотентным к частым частичным
+изменениям одной durable settings-модели.
+
+## Platform Registry And Constructor
+
+`GET /api/v1/platform/registry` возвращает host-side JSON-реестр
+`platform_registry.v1`, где hardware modules, components, assignments и
+templates разделены явно.
+
+`POST /api/v1/platform/registry/constructor` принимает draft из modal wizard
+`Settings > Constructor` и создаёт/обновляет записи модуля, компонента и связи
+между ними. Endpoint не должен требовать подключённого железа: новые записи
+могут быть `simulated` или `not_detected`, пока runtime-проверки не добавлены.
+
+Пример Cat Feeder фиксируется через датчик движения, а не через датчик
+освещённости: motion sensor будит камеру, после чего видеоидентификация и
+событие запроса могут уведомить владельца или запустить выдачу корма.
 
 ## Host Path Actions
 
@@ -276,11 +340,28 @@ Legacy boolean поля вроде `assets_ready`, `audio_ready`, `animations_re
 - `GET /api/v1/turret/events`
 - `GET /api/v1/turret/drivers`
 - `GET /api/v1/turret/scenarios`
+- `GET /api/v1/turret/captures`
 - `POST /api/v1/turret/runtime/mode`
 - `POST /api/v1/turret/runtime/subsystem`
 - `POST /api/v1/turret/runtime/flag`
 - `POST /api/v1/turret/runtime/interlock`
 - `POST /api/v1/turret/scenarios/run`
+- `POST /api/v1/turret/capture`
+
+`POST /api/v1/turret/capture` records a Manual FPV media artifact before the real
+camera transport is wired. `kind=photo&phase=photo` creates a Gallery photo
+metadata artifact. `kind=video&phase=video_start` creates a Video metadata
+artifact with `status=recording`; `kind=video&phase=video_stop&capture_id=...`
+finalizes it with `duration_ms`. Each accepted capture also writes a
+`media_capture` report entry so Gallery can show the operator history.
+
+Manual FPV video UX uses `turret_policies.max_recording_seconds` from
+`GET /api/v1/settings` as the browser-side auto-stop limit. The setting is
+normalized to `30` seconds by default, clamped to a minimum of `5` seconds and a
+maximum of `36000` seconds.
+`turret_policies.allow_auto_capture` controls whether the shared photo/video
+capture button remains available in Automatic FPV. Manual weapon, valve, and
+aim controls stay hidden in Automatic regardless of that policy.
 
 ## Platform Log Snapshot
 
@@ -396,7 +477,7 @@ Legacy boolean поля вроде `assets_ready`, `audio_ready`, `animations_re
       "type": "runtime_mode_changed",
       "message": "turret runtime mode updated",
       "details": {
-        "active_mode": "service_test"
+        "active_mode": "laboratory"
       }
     },
     {
@@ -469,7 +550,7 @@ Current query filters:
       "source": "turret_runtime",
       "entry_type": "mode_change",
       "source_surface": "turret",
-      "source_mode": "service_test",
+      "source_mode": "laboratory",
       "module_id": "turret_bridge",
       "title": "Runtime Mode Changed",
       "message": "turret runtime mode updated",
@@ -477,7 +558,7 @@ Current query filters:
       "result": "recorded",
       "duration_ms": null,
       "parameters": {
-        "active_mode": "service_test"
+        "active_mode": "laboratory"
       },
       "raw_type": "runtime_mode_changed"
     }
@@ -597,7 +678,7 @@ is the shell in a sane state for the next board/module step, and what should hap
     {
       "id": "esp32_strobe_bench",
       "title": "ESP32 / Strobe Bench",
-      "owner_scope": "esp32",
+      "owner_scope": "io_node",
       "route": "/service?tool=strobe_bench",
       "status": "blocked",
       "summary": "Short pulse and preset bring-up for the bench strobe should happen before integrated turret tests.",

@@ -226,6 +226,8 @@ def _infer_entry_type(source: str, raw_type: str, parameters: dict[str, Any]) ->
         return "session"
     if raw_type == "operator_note":
         return "operator_note"
+    if "capture" in raw_type:
+        return "media_capture"
     if raw_type.startswith("scenario_"):
         return "scenario"
     if "interlock" in raw_type:
