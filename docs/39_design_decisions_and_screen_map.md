@@ -209,6 +209,16 @@ UI-следствия:
 
 ## 7. Laboratory Page
 
+Current implementation note:
+
+- `/service` is the unified `Laboratory` workspace and should be treated as the
+  canonical implementation target.
+- `Turret Service Lane` is available at `/service?tool=turret_service`.
+- `Raspberry Pi Touch Display` is available at
+  `/service?tool=rpi_touch_display`.
+- old `/service/turret` and `/service/displays` pages are compatibility
+  surfaces only; do not design new features around them.
+
 Пользовательское имя:
 
 - `Laboratory`

@@ -106,6 +106,8 @@
 - `firmware_esp32/src/web/ShellSnapshotFacade.cpp`
 - `raspberry_pi/web/service.html`
 - `raspberry_pi/web/service_turret.html`
+- `raspberry_pi/web/service_displays.html`
+- `raspberry_pi/web/static/operator_hud.css`
 - `raspberry_pi/server.py`
 - `raspberry_pi/bridge_state.py`
 - `raspberry_pi/laboratory_readiness.py`
@@ -185,3 +187,17 @@
 3. Стандартизация skeleton для всех laboratory slices.
 4. Улучшение связи между `Laboratory` действиями и `Gallery > Reports`.
 5. Развитие readiness/preflight/operator note flow для реального bring-up.
+
+## Current Laboratory Workspace Note
+
+- `/service` is now the unified `Laboratory` workspace, not the old launcher
+  template.
+- `Turret Service Lane` lives in the unified workspace at
+  `/service?tool=turret_service`.
+- `Raspberry Pi Touch Display` lives in the unified workspace at
+  `/service?tool=rpi_touch_display`.
+- old `/service/turret` and `/service/displays` pages are compatibility
+  surfaces only until physical smoke testing confirms no unique control was
+  missed.
+- future Laboratory operator panels should reuse
+  `raspberry_pi/web/static/operator_hud.css` and opt in with `operator-hud`.
