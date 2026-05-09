@@ -2,60 +2,69 @@
 
 ## Роль Файла
 
-Этот файл должен стать новым каноническим описанием `Laboratory` как единого инженерного workspace.
+Этот файл должен стать новым каноническим описанием `Laboratory` как единого инженерного рабочего пространства.
 
 ## Статус
 
-- текущий статус: `active draft`
-- этот файл задает новый модульный active canon для `Laboratory`; donor docs ниже остаются deep-spec и readiness residue
+- текущий статус: `активный черновик`
+- этот файл задает новый модульный активный канон для `Laboratory`; донорские документы ниже остаются слоем детальной реализации и остатком readiness-описания
 
-## Donor Источники Для Первого Переноса
+## Донорские Источники Для Первого Переноса
 
 - donor mapping для этого файла зафиксирован в `knowledge_base/17_open_questions_and_migration.md`;
-- `briefs/laboratory.md` и `chat_prompts/laboratory_prompt.md` остаются active companion sources для module framing and workflow sync.
+- [briefs/laboratory.md](c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/briefs/laboratory.md) и [chat_prompts/laboratory_prompt.md](c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/chat_prompts/laboratory_prompt.md) остаются вспомогательными источниками для согласования рамки модуля и рабочего процесса.
 
-## Settled Truths
+## Установленные Истины
 
-- `Laboratory` — единое workspace, а не набор старых service pages
+- `Laboratory` — единое рабочее пространство, а не набор старых сервисных страниц
 - пользовательский слой называется `Записи сессии`
-- `Laboratory` не имеет прямого export-path в `Gallery > Reports`
+- `Laboratory` не имеет прямого пути выгрузки в `Gallery > Reports`
 
-## Canon
+## Канон
 
 ### 1. Роль И Пользовательский Итог
 
-`Laboratory` - это user-facing инженерный workspace платформы для bring-up, qualification, diagnostics, profile tuning и owner-aware проверки компонентов и модульных срезов через само приложение.
+`Laboratory` - это пользовательское инженерное рабочее пространство платформы для первичного запуска, проверки готовности, диагностики, подбора профилей и проверки компонентов и модульных срезов через само приложение.
 
 Для пользователя `Laboratory` должен давать такой итог:
 
-- единый вход в инженерную работу без прыжков между legacy service pages;
-- понятную категорийную IA для телефона, `8-inch` дисплея и desktop browser;
-- честную видимость owner context, power context и blocked behavior;
-- рабочие карточки компонентов с expected-result guidance, реакцией системы и записью локального результата;
-- явный review/apply path в `Settings` без молчаливого повышения laboratory values до system truth.
+- единый вход в инженерную работу без прыжков между устаревшими сервисными страницами;
+- общий каркас с единой навигацией, `Записями сессии`, `Конструктором` и явным маршрутом `Сохранить выбор -> Settings`, но с разными специализированными карточками и рабочими срезами внутри;
+- браузер на настольном экране как главный рабочий режим для глубокой инженерной работы;
+- телефон и `8-inch` дисплей как честные поверхности входа и проверки для статусов, выбора категории и базовых безопасных действий без притворства полным настольным режимом;
+- честную видимость контекста владельца узла, контекста питания и причин блокировки;
+- рабочие карточки компонентов с ожидаемым результатом, реакцией системы и записью локального итога;
+- явный контур просмотра и применения через `Settings` без молчаливого повышения laboratory-значений до системной истины.
 
 `Laboratory` не является:
 
-- пользовательским `Reports` viewer;
+- пользовательским просмотром `Reports`;
 - заменой `Settings`;
-- отдельной верхнеуровневой `Diagnostics` page;
-- launcher-страницей для старых `/service/*` routes.
+- отдельной верхнеуровневой страницей диагностики;
+- страницей-запускателем для старых маршрутов `/service/*`.
 
 ### 2. IA И Группы Компонентов
 
-Канонический route для workspace:
+Канонический маршрут рабочего пространства:
 
 - `/service`
 
 Нормативная IA:
 
 - одна страница в app-like стиле;
-- category-first rail на первом уровне;
-- second-level slice rail внутри выбранной категории;
-- рабочая область справа или ниже, в зависимости от density/layout mode;
-- без полного page reload при переключении категорий и slices.
+- одна страница в стиле приложения;
+- панель категорий на первом уровне;
+- панель срезов внутри выбранной категории;
+- рабочая область справа или ниже, в зависимости от плотности и режима раскладки;
+- без полной перезагрузки страницы при переключении категорий и срезов.
 
-Current active category rail должен следовать реальному shared hub contract:
+Правило единого рабочего пространства:
+
+- `Laboratory` остается одной общей рабочей средой с единым языком состояний, слоем сессии, потоком работы `Конструктора` и контуром переноса в `Settings`;
+- отдельные срезы компонентов могут иметь разные инструменты, элементы управления и глубину сценариев внутри этого каркаса;
+- система не должна скатываться обратно в набор почти независимых сервисных страниц, где общий слой существует только формально.
+
+Текущая панель категорий должна следовать реальному общему контракту laboratory-узла:
 
 1. `Обзор`
 2. `Свет`
@@ -67,7 +76,7 @@ Current active category rail должен следовать реальному 
 8. `Дисплеи`
 9. `Экспериментальное`
 
-Representative second-level slices текущего baseline:
+Примеры срезов второго уровня в текущем базовом наборе:
 
 - `Строб`
 - `ESP32 / Стендовый строб`
@@ -87,121 +96,153 @@ Representative second-level slices текущего baseline:
 - `Профиль дальномера HC-SR04`
 - `Прием нового модуля`
 
-Категории и slices не должны строиться по owner/vendor map. Owner truth отражается статусом, blocked behavior и handoff semantics, а не названием rail.
+Категории и срезы не должны строиться по карте владельцев или производителей. Истина о владельце отражается статусом, блокировкой и семантикой передачи управления, а не названием панели.
 
-### Bench Profiles Inside Laboratory
+### Стендовые Профили Внутри Laboratory
 
-`Laboratory` должен уметь держать owner-side engineering profiles внутри общего workspace, не превращая каждый такой профиль в отдельную top-level product page.
+`Laboratory` должен уметь держать инженерные профили на стороне владельца узла внутри общего рабочего пространства, не превращая каждый такой профиль в отдельную верхнеуровневую продуктовую страницу.
 
-Первый зафиксированный baseline этого класса:
+Первый зафиксированный базовый набор этого класса:
 
 - семейство `strobe` уже разведено на product/turret `strobe` и laboratory/bench `strobe_bench`;
-- `strobe_bench` считается owner-side engineering profile на стороне текущего `ESP32`-based bench/runtime path;
-- engineering-gated command family для такого slice может включать `arm`, `disarm`, `stop`, `abort`, `pulse`, `burst`, `loop`, `continuous on` и `preset`;
-- safe preset run и live status допускаются как часть одной рабочей card, а не как набор разрозненных POST methods.
+- `strobe_bench` считается инженерным профилем на стороне владельца узла в текущем стендовом и runtime-контуре `ESP32`;
+- семейство инженерно ограниченных команд для такого среза может включать `arm`, `disarm`, `stop`, `abort`, `pulse`, `burst`, `loop`, `continuous on` и `preset`;
+- безопасный запуск пресета и живой статус допустимы как часть одной рабочей карточки, а не как набор разрозненных POST-методов.
 
-При этом active canon не фиксирует как вечную истину:
+При этом активный канон не фиксирует как вечную истину:
 
-- legacy compatibility route вроде `/service/strobe`;
+- старый маршрут совместимости вроде `/service/strobe`;
 - конкретный tab set `Overview`, `Pulse`, `Burst`, `Loop`, `Continuous`, `Presets`;
 - текущую форму первого software-stage как окончательную IA всей laboratory-секции `Свет`.
 
-### 3. Обзор, Header И Screen Flow
+### 3. Обзор, Заголовок И Порядок Движения По Экрану
 
-`Обзор` - это summary-only slice, а не центр всей работы.
+`Обзор` - это сводный срез, а не центр всей работы.
 
 На `Обзоре` должны быть:
 
-- сводка топологии стенда и board visibility;
-- readiness summary и preflight snapshot;
+- сводка топологии стенда и видимости плат;
+- сводка готовности и preflight-снимок;
 - bring-up order с текущим статусом;
-- видимость доступных и blocked групп;
-- сводка локального session context и draft state;
-- быстрый вход в `Constructor` и review layer без подмены реальных карточек.
+- видимость доступных и заблокированных групп;
+- сводка локального контекста сессии и состояния черновика;
+- быстрый вход в `Конструктор` и слой просмотра без подмены реальных карточек.
 
 На `Обзоре` не должны жить:
 
-- полные controls всех cards;
-- большой backend-log dump;
+- полный набор элементов управления всех карточек;
+- большой дамп серверного журнала;
 - императивный `next_action` как главный рабочий центр страницы.
 
-`Laboratory` header должен оставаться видимым при смене активного тела и держать:
+Заголовок `Laboratory` должен оставаться видимым при смене активного тела и держать:
 
 - название страницы;
-- active owner/access status;
-- выбранный power context;
-- profile source state: default from `Settings`, local draft, saved profile;
-- индикатор unsaved changes.
+- активный статус владельца и доступа;
+- выбранный контекст питания;
+- состояние источника профиля: значение по умолчанию из `Settings`, локальный черновик, сохраненный профиль;
+- индикатор несохраненных изменений.
 
-Screen-flow baseline:
+Базовый порядок движения по экрану:
 
 1. `Home -> Laboratory`
 2. выбор категории
-3. выбор slice
-4. работа в card
+3. выбор среза
+4. работа в карточке
 5. локальная запись результата в `Записи сессии`
-6. при необходимости explicit `Сохранить выбор` -> `Settings`
+6. при необходимости явный переход `Сохранить выбор` -> `Settings`
 
-Browser mode и fullscreen mode - это два layout modes одной и той же страницы. Они должны менять плотность и компоновку, но не терять shell status, owner context, power context или local session visibility.
+Режим браузера и полноэкранный режим - это два режима раскладки одной и той же страницы. Они должны менять плотность и компоновку, но не терять shell-статус, контекст владельца, контекст питания или видимость локальной сессии.
 
-### 4. Working Card Skeleton
+Базовый приоритет настольного режима на текущем этапе:
 
-Каждая рабочая card должна иметь единый базовый каркас, даже если controls у component families разные.
+- основной инженерный путь проектируется прежде всего для браузера на настольном экране;
+- телефонный путь обязан оставаться пригодным для чтения статусов, выбора категории и среза и безопасных базовых действий;
+- `8-inch` дисплей остается важной проверочной поверхностью, но не обязан быть главной моделью раскладки для всех плотных карточек.
+
+### Конструктор И Сборка Черновика
+
+`Конструктор` является явным внутренним слоем `Laboratory`, а не второй версией `Settings` и не свободной свалкой для несовместимых карточек.
+
+Нормативная роль `Конструктора`:
+
+- прием нового или еще не типизированного модуля;
+- сборка черновой карточки или профиля из повторяемых laboratory-блоков;
+- подготовка рассмотренных кандидатов перед явным переносом в `Settings`.
+
+Правила:
+
+- результат `Конструктора` по умолчанию остается локальным laboratory-черновиком до явного просмотра и применения;
+- `Конструктор` использует тот же язык состояний, сессии и сохранения, что и обычные рабочие карточки;
+- `Конструктор` не вводит отдельный словарь интерфейса, который расходится с обычными срезами.
+
+### 4. Каркас Рабочей Карточки
+
+Каждая рабочая карточка должна иметь единый базовый каркас, даже если элементы управления у разных семейств компонентов отличаются.
 
 Обязательные зоны:
 
-1. card title;
-2. owner/status/power/context chips;
-3. component selection и specification block;
-4. wiring/power instruction block;
-5. structured status cards;
-6. scenario-specific controls и forms;
-7. current default profile from `Settings` и local draft block;
-8. visible system reaction / result area;
-9. `Сохранить выбор` action.
+1. заголовок карточки;
+2. чипы владельца, статуса, питания и контекста;
+3. блок выбора компонента и его спецификации;
+4. блок инструкций по подключению и питанию;
+5. структурированные карточки состояния;
+6. элементы управления и формы, связанные со сценарием;
+7. текущий профиль по умолчанию из `Settings` и блок локального черновика;
+8. видимая зона реакции системы и результата;
+9. действие `Сохранить выбор`.
 
-Optional zones:
+Дополнительные зоны:
 
-- state table, если она реально помогает тесту;
-- console or diagnostic trace foldout;
+- таблица состояния, если она реально помогает тесту;
+- сворачиваемая консоль или диагностический след;
 - graphs;
-- photos and wiring diagrams;
-- calibration hints;
-- preview of future runtime profile.
+- графики;
+- фотографии и схемы подключения;
+- подсказки по калибровке;
+- предварительный показ будущего runtime-профиля.
 
-Practical rule:
+Практическое правило:
 
-- card получает tools под тип компонента, а не один универсальный control set;
-- blocked reason и next step должны быть видимы в card до tooltip/detail layer;
-- expected-result hints и system reaction area нужны прямо в рабочей области, а не только в hidden logs.
+- карточка получает инструменты под тип компонента, а не один универсальный набор элементов управления;
+- причина блокировки и следующий шаг должны быть видимы в карточке до слоя подсказок и деталей;
+- подсказки по ожидаемому результату и зона реакции системы нужны прямо в рабочей области, а не только в скрытых журналах.
 
-### Repeatable Engineering Scenarios
+Текущий набор повторяемых блоков для большинства карточек:
 
-`Laboratory` может держать repeatable browser-driven scenario packs еще до появления полного hardware binding слоя.
+- заголовок контекста с владельцем, статусом и питанием;
+- предусловия, схема подключения и ограничения запуска;
+- элементы управления и действия сценария;
+- видимый блок реакции и результата;
+- локальный для среза блок `Записи сессии`;
+- блок сравнения черновика и сохраненного профиля там, где есть путь переноса в `Settings`.
+
+### Повторяемые Инженерные Сценарии
+
+`Laboratory` может держать повторяемые сценарные наборы, запускаемые из браузера, еще до появления полного слоя аппаратной привязки.
 
 Нормативный смысл:
 
-- scenario run остается частью конкретной working card или component slice, а не отдельной top-level page;
-- dry-run scenarios допустимы как подготовка и verification layer до live hardware execution;
-- compatibility names конкретных scenario packs не считаются вечной vocabulary-истиной;
-- результат scenario run должен писаться в `Записи сессии` как `pass`, `warn`, `fail`, `blocked`, `skipped` или `note`, а не растворяться в безымянном raw log dump.
+- запуск сценария остается частью конкретной рабочей карточки или среза компонента, а не отдельной верхнеуровневой страницей;
+- сухие сценарии допустимы как подготовительный и проверочный слой до живого запуска на оборудовании;
+- имена сценарных наборов из слоя совместимости не считаются вечной словарной истиной;
+- результат запуска сценария должен писаться в `Записи сессии` как `pass`, `warn`, `fail`, `blocked`, `skipped` или `note`, а не растворяться в безымянном сыром журнале.
 
-### 5. Session Notes, Drafts And Save To Settings
+### 5. Записи Сессии, Черновики И Перенос В Settings
 
-У `Laboratory` есть lightweight session layer с пользовательским именем:
+У `Laboratory` есть легкий слой сессии с пользовательским именем:
 
 - `Записи сессии`
 
 Этот слой должен хранить как минимум:
 
-- operator;
-- objective;
-- selected power context;
-- hardware profile;
+- оператор;
+- цель;
+- выбранный контекст питания;
+- аппаратный профиль;
 - external module label, если он участвует;
-- active category и active slice;
-- local notes и результаты pass;
-- local draft до promotion в `Settings`.
+- активная категория и активный срез;
+- локальные заметки и результаты прохода;
+- локальный черновик до переноса в `Settings`.
 
 Минимальные session entry types `v1`:
 
@@ -215,124 +256,143 @@ Practical rule:
 Нормативные правила:
 
 - `Записи сессии` остаются локальным рабочим следом `Laboratory`;
-- они могут восстанавливаться после reload;
+- они могут восстанавливаться после перезагрузки страницы;
 - по умолчанию они не синхронизируются между узлами;
 - они не уходят напрямую в `Gallery > Reports`.
 
-Current backend/session profile:
+Текущий профиль серверной стороны и сессии:
 
-- canonical session backend сейчас держится на `Raspberry Pi` через `/api/v1/laboratory/session*` и `/api/v1/laboratory/event`;
-- mirrored shells, например `ESP32`, могут держать local-draft fallback, но UX-смысл остается тем же: легкий local working context, а не heavy session console.
+- канонический серверный контур сессии сейчас держится на `Raspberry Pi` через `/api/v1/laboratory/session*` и `/api/v1/laboratory/event`;
+- зеркальные оболочки, например `ESP32`, могут держать локальный черновой запасной контур, но смысл для пользователя остается тем же: легкий локальный рабочий след, а не тяжелая инженерная консоль.
 
-`Сохранить выбор` -> `Settings` является explicit promotion path:
+`Сохранить выбор` -> `Settings` является явным путем переноса:
 
 1. берутся только подтвержденные поля текущей card;
-2. показывается diff против persistent profile;
-3. выбирается persistent target;
+2. показывается разница против постоянного профиля;
+3. выбирается постоянная цель записи;
 4. результат записывается в `Settings`;
-5. new or updated profile становится default next entry point для этой card.
+5. новый или обновленный профиль становится входным профилем по умолчанию для этой карточки.
 
-Никакой отдельный slider change inside `Laboratory` не должен автоматически становиться system truth.
+Никакое отдельное изменение ползунка внутри `Laboratory` не должно автоматически становиться системной истиной.
 
-### 6. Power Context, Owner Context And Blocked Behavior
+### 6. Контекст Питания, Контекст Владельца И Блокировка
 
-Минимальный visible power context `v1`:
+Минимальный видимый контекст питания `v1`:
 
 - `Bench PSU`
 - `LiFePO4 battery`
 
 Если slice зависит от voltage-sensitive или bench-sensitive flow, battery context должен:
 
-- либо переводить часть controls в advisory-only state;
-- либо честно блокировать unsafe calibration path;
-- всегда оставлять operator-visible reason и путь возврата к bench mode.
+- либо переводить часть элементов управления в предупредительный режим;
+- либо честно блокировать небезопасный путь калибровки;
+- всегда оставлять видимую для оператора причину и путь возврата к bench-режиму.
 
-Owner-context rules:
+Правила контекста владельца:
 
-- peer-owned slices остаются видимыми;
-- local shell не притворяется owner-side executor;
-- blocked slice обязан показывать причину и next step до глубокого tooltip;
-- `Displays` slice остается visibly blocked в `ESP32`-only shell, пока `Raspberry Pi` не доступен.
+- срезы, принадлежащие другому узлу, остаются видимыми;
+- локальная оболочка не притворяется исполнителем на стороне владельца;
+- заблокированный срез обязан показывать причину и следующий шаг до глубокого слоя подсказок;
+- срез `Displays` остается видимо заблокированным в оболочке только на `ESP32`, пока `Raspberry Pi` недоступен.
 
-Shared contract rule:
+Сквозное правило общего контракта:
 
-- browser mode и fullscreen mode должны сохранять owner/status visibility;
-- Home-to-Laboratory navigation должна сохранять board context, а не терять его внутри workspace.
+- режим браузера и полноэкранный режим должны сохранять видимость владельца и статуса;
+- переход `Home -> Laboratory` должен сохранять контекст плат, а не терять его внутри рабочего пространства.
 
-### 7. Reference Media, Reports Boundary And Shared UI Rules
+### 7. Справочные Материалы, Граница С Reports И Сквозные UI-Правила
 
-`Laboratory` не ведет изолированный media world. Он подтягивает из `Gallery`:
+`Laboratory` не ведет изолированный мир медиа. Он подтягивает из `Gallery`:
 
-- reference photos;
-- wiring diagrams;
-- other useful visual reference artifacts.
+- справочные фотографии;
+- схемы подключения;
+- другие полезные визуальные справочные артефакты.
 
-Boundary with `Reports`:
+Граница с `Reports`:
 
-- console lines, calibration notes, state-table comparisons, local operator notes и вся последовательность laboratory passes не уходят по умолчанию в `Gallery > Reports`;
-- `Reports` живут для автономно и системно зафиксированных product events;
-- useful media artifacts могут потом быть attached through `Gallery > Media`, но engineering result itself остается anchored to `Laboratory` session record.
+- строки консоли, заметки по калибровке, сравнения по таблице состояния, локальные заметки оператора и вся последовательность laboratory-проходов по умолчанию не уходят в `Gallery > Reports`;
+- `Reports` живут для автономно и системно зафиксированных product-level событий;
+- полезные медиа-артефакты потом могут быть привязаны через `Gallery > Media`, но сам инженерный результат остается привязанным к записи сессии `Laboratory`.
 
-Shared UI rules, important specifically for `Laboratory`:
+Сквозные UI-правила, особенно важные для `Laboratory`:
 
-- global bar остается видимым и в fullscreen;
-- fullscreen уплотняет рабочую область, а не скрывает shell truth;
-- blocked and locked slices stay visible and explained;
-- unsupported or planned slices stay visible as honest placeholders.
+- общая верхняя панель остается видимой и в полноэкранном режиме;
+- полноэкранный режим уплотняет рабочую область, а не скрывает shell-истину;
+- заблокированные и закрытые политикой срезы остаются видимыми и объяснимыми;
+- неподдерживаемые или только запланированные срезы остаются видимыми как честные заглушки.
 
-### 8. Controller Profiles И Работа С Компонентами
+### 8. Профили Управления И Работа С Компонентами
 
-`Laboratory` работает с component slices в трех базовых профилях:
+`Laboratory` работает со срезами компонентов в трех базовых профилях:
 
-- owner-side slices;
-- peer-owned slices с owner-aware handoff or blocked behavior;
-- laboratory-local experimental profiles.
+- срезы на стороне владельца узла;
+- срезы, принадлежащие другому узлу, с учетом передачи управления или блокировки;
+- локальные экспериментальные профили `Laboratory`.
 
-Current shared hub contract, который должен считаться active baseline:
+Текущий общий контракт узла, который должен считаться активной опорой:
 
-- source of the shared workspace lives in `raspberry_pi/web/service.html` and is mirrored to `firmware_esp32/data/service/index.html`;
-- при изменении IA этого workspace mirror behavior должен оставаться выровненным между двумя shell implementations;
-- fallback hub text на `ESP32` не должен откатываться к старому flat launcher, если LittleFS page missing.
+- исходный шаблон общего лабораторного экрана живет в `raspberry_pi/web/service.html`, а зеркальный входной экран для `ESP32` - в `firmware_esp32/data/service/index.html`;
+- при изменении IA этого рабочего пространства зеркальное поведение должно оставаться выровненным между двумя реализациями оболочки;
+- запасной экран на `ESP32` не должен откатываться к старому плоскому запускателю, если страница в `LittleFS` отсутствует.
 
-Experimental profile rule:
+Правило экспериментального профиля:
 
-- `HC-SR04`-class range profiles, stepper drives, motion wake experiments, unknown/custom module intake и часть audio profiles остаются laboratory-local до explicit review/apply promotion;
+- профили дальномеров класса `HC-SR04`, шаговые приводы, эксперименты с пробуждением по движению, прием неизвестных модулей и часть аудиопрофилей остаются локальными для `Laboratory` до явного просмотра и переноса;
 - они не должны притворяться product-ready module controls.
 
-`Displays` rule:
+### 8.1 Реальные Кодовые Опоры Текущего Слоя
+
+Чтобы `Laboratory` не описывался абстрактно, ниже фиксируем реальные текущие опоры в коде:
+
+- `raspberry_pi/web/service.html` - общий лабораторный экран на стороне `Raspberry Pi`;
+- `raspberry_pi/web/service_turret.html` и `raspberry_pi/web/service_displays.html` - живые специализированные страницы совместимости для турели и дисплеев;
+- `raspberry_pi/server.py` - текущий HTTP-вход, который реально отдает `/service`, `/service/turret` и `/service/displays`;
+- `raspberry_pi/laboratory_session.py` - хранит контекст сессии `Laboratory`, включая `owner_node_id`, `power_context`, `view_mode`, `active_tool` и `module_id`;
+- `raspberry_pi/laboratory_readiness.py` - строит preflight и порядок запуска оборудования для `Laboratory`, включая шаги `rpi_display_checks`, `esp32_strobe_bench`, `esp32_irrigation_service` и `session_review`;
+- `raspberry_pi/tests/test_laboratory_readiness.py` - проверяет, что peer-owned шаги блокируются до появления узла-владельца и что маршруты `rpi_touch_display` и `session_review` остаются корректными;
+- `firmware_esp32/src/web/WebShellServer.cpp` - держит безопасные запасные экраны и не должен подменять новый laboratory-хаб старым плоским запускателем, если `LittleFS` еще не загружен;
+- `firmware_esp32/src/web/ShellSnapshotFacade.cpp` - публикует shell snapshot с навигацией, где `Laboratory` закреплен как `/service`.
+
+Правило для `Displays`:
 
 - `Displays` является first-level Laboratory category;
 - owner-side `Raspberry Pi Touch Display` qualification остается отдельным slice и не смешивается с `Camera` UX.
 
-### 9. Acceptance Hooks
+### 9. Проверочные Критерии
 
-Минимальные acceptance hooks текущего этапа:
+Минимальные проверочные критерии текущего этапа:
 
-1. `Laboratory` открывается как unified `/service` workspace и на `ESP32`, и на `Raspberry Pi`;
-2. category rail и second-level slice rail переключаются in-page без full reload;
-3. `Home -> Laboratory` сохраняет board visibility и owner context;
-4. readiness summary и bring-up sequence видимы на `Обзоре`, но не подменяют рабочие cards;
-5. peer-owned slices остаются visibly blocked и explained вместо fake ownership;
-6. browser/fullscreen modes оба пригодны к работе и сохраняют одинаковую context truth;
-7. operator может записать `pass / warn / fail / blocked / skipped / note` из активного slice без перехода в `Reports`;
-8. explicit `Сохранить выбор` дает review/apply path в `Settings`.
+1. `Laboratory` открывается как единое рабочее пространство `/service` и на `ESP32`, и на `Raspberry Pi`;
+2. панель категорий и панель срезов второго уровня переключаются на месте без полной перезагрузки;
+3. `Home -> Laboratory` сохраняет видимость плат и контекст владельца;
+4. сводка готовности и порядок запуска видимы на `Обзоре`, но не подменяют рабочие карточки;
+5. срезы другого узла остаются видимо заблокированными и объясненными вместо ложного локального владения;
+6. режим браузера и полноэкранный режим оба пригодны к работе и сохраняют одну и ту же истину контекста;
+7. оператор может записать `pass / warn / fail / blocked / skipped / note` из активного среза без перехода в `Reports`;
+8. явное действие `Сохранить выбор` дает контур просмотра и применения в `Settings`.
 
-Практические readiness passes, которые остаются важными:
+Минимальные проверяемые черты текущего кода:
 
-- `ESP32` only phone pass;
-- `Raspberry Pi` only phone pass;
-- dual-board phone pass;
-- dedicated `Raspberry Pi Touch Display` pass with pattern and touch-grid checks.
+- `raspberry_pi/laboratory_session.py` допускает только `bench_psu` и `battery` как `power_context`, а также `browser` и `fullscreen` как `view_mode`;
+- `raspberry_pi/laboratory_readiness.py` уже различает `ready`, `attention` и `blocked` и не разрешает делать вид, будто peer-owned срез уже локально доступен;
+- `firmware_esp32/src/web/WebShellServer.cpp` прямо подсказывает загрузить `LittleFS` через `pio run -t uploadfs`, если полноценный laboratory-экран на устройстве еще не поднят.
+
+Практические readiness-проходы, которые остаются важными:
+
+- телефонный проход только с `ESP32`;
+- телефонный проход только с `Raspberry Pi`;
+- телефонный проход с двумя платами;
+- отдельный проход `Raspberry Pi Touch Display` с проверкой шаблонов и сенсорной сетки.
 
 ### 10. Нормативные Примеры И Форматы
 
-Нормативные route examples:
+Нормативные примеры маршрутов:
 
 - workspace: `/service`
 - current turret compatibility slice: `/service?tool=turret_service`
 - current display compatibility slice: `/service?tool=rpi_touch_display`
 
-Пример lightweight session context payload:
+Пример легкого payload контекста сессии:
 
 ```json
 {
@@ -346,7 +406,7 @@ Experimental profile rule:
 }
 ```
 
-Пример session note entry:
+Пример записи сессии:
 
 ```json
 {
@@ -357,7 +417,7 @@ Experimental profile rule:
 }
 ```
 
-Пример minimal readiness sequence:
+Пример минимальной последовательности readiness-проверки:
 
 1. shell and readiness smoke
 2. peer link and owner handoff
@@ -367,17 +427,17 @@ Experimental profile rule:
 6. `Laboratory / Experimental Profiles`
 7. `Laboratory` session review before the next bundle
 
-## Open Questions
+## Открытые Вопросы
 
-- какая глубина сценарных ladder-проходов нужна прямо в файле, а какая должна жить в acceptance и field layers
-- где именно провести будущую границу между reusable generic card skeleton и module-specific card templates без перегруза `Laboratory`
+- какая глубина сценарных лестничных проходов нужна прямо в файле, а какая должна жить в acceptance- и field-слоях
+- где именно провести будущую границу между повторяемым общим каркасом карточки и специализированными шаблонами без перегруза `Laboratory`
 
 ## TODO
 
-- после стабилизации active draft переаудировать laboratory donor residue в migration ledger и оставить только deep implementation/readiness detail without active authority role
-- после следующего pass проверить, можно ли дальше схлопнуть readiness residue без потери practical testing detail
+- после стабилизации активного черновика переаудировать laboratory-остаток в migration ledger и оставить только глубокие детали реализации и readiness без роли активного канона
+- после следующего прохода проверить, можно ли дальше схлопнуть readiness-остаток без потери практических деталей тестирования
 
 ## TBD
 
-- итоговая форма reusable component-card templates
-- future equivalent session contract on direct `ESP32` shell beyond local-draft fallback
+- итоговая форма повторяемых шаблонов карточек компонентов
+- будущий эквивалентный контракт сессии на прямой оболочке `ESP32` сверх локального чернового запасного контура
