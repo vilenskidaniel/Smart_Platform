@@ -34,21 +34,20 @@
 Приоритет чтения и принятия решений:
 
 1. `foundation_prompt.md`
-2. `docs/50_laboratory_v1_workspace_spec.md`
-3. `docs/41_laboratory_testing_readiness.md`
-4. `docs/46_safety_risk_and_failure_matrix.md`
-5. `docs/47_acceptance_and_validation_matrix.md`
-6. `docs/26_v1_product_spec.md`
-7. `docs/39_design_decisions_and_screen_map.md`
-8. `docs/53_shared_ui_state_and_interaction_contract.md`
-9. `docs/52_settings_v1_persistent_system_spec.md`
-10. `docs/51_gallery_v1_content_and_reports_spec.md`
-11. `briefs/laboratory.md` только как вспомогательный слой
+2. `knowledge_base/README.md`
+3. `knowledge_base/12_laboratory_module.md`
+4. `knowledge_base/06_shared_ui_contract.md`
+5. `knowledge_base/07_data_registry_storage_and_persistence.md`
+6. `knowledge_base/08_safety_acceptance_and_field_operations.md`
+7. `briefs/laboratory.md` только как вспомогательный слой
+8. `knowledge_base/17_open_questions_and_migration.md`, если нужен explicit donor status или unresolved residue map
 
 Практическое правило:
 
-- если `briefs/laboratory.md` расходится с `docs/50_laboratory_v1_workspace_spec.md`, новым каноном считается `docs/50_laboratory_v1_workspace_spec.md`;
-- если локальная идея по `Laboratory` начинает менять общий язык состояний, блокировок, tooltip, fullscreen, input helpers или bar/home behavior, сильнее становится `docs/53_shared_ui_state_and_interaction_contract.md`, а не локальная стилистическая привычка;
+- legacy donor sources для `Laboratory` больше не входят в primary reading order;
+- если `briefs/laboratory.md` расходится с active canon, новым каноном считается `knowledge_base/12_laboratory_module.md`;
+- если active canon still has a concrete gap around deep workspace detail, readiness residue or adjacent `Settings` / `Gallery` boundaries, сначала смотреть migration ledger и только потом открывать donor residue точечно;
+- если локальная идея по `Laboratory` начинает менять общий язык состояний, блокировок, tooltip, fullscreen, input helpers или bar/home behavior, сильнее становится `knowledge_base/06_shared_ui_contract.md`, а не локальная стилистическая привычка;
 - если код расходится с этим каноном, сначала разложить его на `keep`, `adapt`, `rewrite`, а не спрашивать пользователя заново “как вообще должно быть”.
 
 ## Что Laboratory Значит В Проекте

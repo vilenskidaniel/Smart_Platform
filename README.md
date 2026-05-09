@@ -2,8 +2,8 @@
 
 `Smart Platform` — это общая платформа для двух узлов:
 
-- `ESP32` как локальный автономный контур полива, части сервисных функций и fallback shell;
-- `Raspberry Pi` как владелец турели, камеры, media и тяжелой логики.
+- текущий `ESP32` baseline как always-on I/O и controller profile для полива, части сервисных функций и fallback shell;
+- текущий `Raspberry Pi` baseline как turret-compute и controller profile для турели, камеры, media и тяжелой логики.
 
 Главная идея платформы:
 
@@ -16,7 +16,7 @@
 
 Аппаратный источник истины для текущего проекта:
 
-- [docs/smart_platform_workshop_inventory.xlsx](docs/smart_platform_workshop_inventory.xlsx)
+- [knowledge_base/resources/smart_platform_workshop_inventory.xlsx](knowledge_base/resources/smart_platform_workshop_inventory.xlsx)
 - именно этот workbook фиксирует подтвержденное наличие, ownership, power baseline и закупочные обновления;
 - старые preliminary inventory-заметки больше не считаем источником истины.
 
@@ -40,9 +40,11 @@
 
 ## Кто чем владеет
 
+Ниже зафиксирован текущий working baseline, а не вечная архитектурная привязка модулей к конкретным платам.
+
 ### `ESP32`
 
-Локальная зона `ESP32`:
+Текущий controller profile на `ESP32`:
 
 - полив;
 - локальные датчики среды и почвы;
@@ -53,7 +55,7 @@
 
 ### `Raspberry Pi`
 
-Локальная зона `Raspberry Pi`:
+Текущий controller profile на `Raspberry Pi`:
 
 - турель;
 - основная камера `IMX219 130°`;
@@ -116,29 +118,25 @@
 - открывает shell в app-like окне браузера;
 - может быть использован как основная точка входа для тестирования на `Windows PC`.
 
-Практическая модель входа для всех устройств описана в [docs/48_browser_entry_and_host_launch.md](docs/48_browser_entry_and_host_launch.md).
+Практическая модель входа для всех устройств описана в [knowledge_base/04_runtime_topology_controller_profiles_and_sync.md](knowledge_base/04_runtime_topology_controller_profiles_and_sync.md) и [knowledge_base/05_shell_navigation_and_screen_map.md](knowledge_base/05_shell_navigation_and_screen_map.md).
 
 ## С чего начинать
 
 Если работа идет из другого чата, сначала читать в таком порядке:
 
-1. [docs/smart_platform_workshop_inventory.xlsx](docs/smart_platform_workshop_inventory.xlsx)
-2. [docs/26_v1_product_spec.md](docs/26_v1_product_spec.md)
-3. [docs/01_product_decisions.md](docs/01_product_decisions.md)
-4. [docs/02_system_architecture.md](docs/02_system_architecture.md)
-5. [docs/05_ui_shell_and_navigation.md](docs/05_ui_shell_and_navigation.md)
-6. [docs/39_design_decisions_and_screen_map.md](docs/39_design_decisions_and_screen_map.md)
-7. [docs/40_platform_shell_navigation_alignment.md](docs/40_platform_shell_navigation_alignment.md)
-8. [docs/09_master_design_plan.md](docs/09_master_design_plan.md)
-9. [docs/28_legacy_migration_map.md](docs/28_legacy_migration_map.md)
-10. [docs/30_top_down_architecture_map.md](docs/30_top_down_architecture_map.md)
-11. [docs/27_platform_shell_v1_spec.md](docs/27_platform_shell_v1_spec.md)
-12. [docs/31_platform_shell_class_map.md](docs/31_platform_shell_class_map.md)
-13. [docs/32_current_shell_role_mapping.md](docs/32_current_shell_role_mapping.md)
-14. [docs/33_shell_snapshot_schema.md](docs/33_shell_snapshot_schema.md)
-15. [shared_contracts/shell_snapshot_contract.md](shared_contracts/shell_snapshot_contract.md)
+1. [knowledge_base/README.md](knowledge_base/README.md)
+2. [knowledge_base/01_project_scope_and_goals.md](knowledge_base/01_project_scope_and_goals.md)
+3. [knowledge_base/02_system_terms_and_design_rules.md](knowledge_base/02_system_terms_and_design_rules.md)
+4. [knowledge_base/03_platform_architecture_and_module_relationships.md](knowledge_base/03_platform_architecture_and_module_relationships.md)
+5. [knowledge_base/04_runtime_topology_controller_profiles_and_sync.md](knowledge_base/04_runtime_topology_controller_profiles_and_sync.md)
+6. [knowledge_base/05_shell_navigation_and_screen_map.md](knowledge_base/05_shell_navigation_and_screen_map.md)
+7. [knowledge_base/06_shared_ui_contract.md](knowledge_base/06_shared_ui_contract.md)
+8. [knowledge_base/07_data_registry_storage_and_persistence.md](knowledge_base/07_data_registry_storage_and_persistence.md)
+9. [knowledge_base/08_safety_acceptance_and_field_operations.md](knowledge_base/08_safety_acceptance_and_field_operations.md)
+10. [knowledge_base/09_repository_layout_and_code_map.md](knowledge_base/09_repository_layout_and_code_map.md)
+11. [knowledge_base/resources/smart_platform_workshop_inventory.xlsx](knowledge_base/resources/smart_platform_workshop_inventory.xlsx)
 
-Stage-документы `12+` читать уже после этого, когда нужен исторический и технический контекст.
+Если в active canon обнаружен knowledge gap, сначала сверяться с [knowledge_base/17_open_questions_and_migration.md](knowledge_base/17_open_questions_and_migration.md), а не возвращаться к legacy reading order вслепую.
 
 ## Рекомендуемый ход работы
 
@@ -159,10 +157,9 @@ Stage-документы `12+` читать уже после этого, ког
 
 Подробный переходный план:
 
-- [docs/34_modular_chat_transition_plan.md](docs/34_modular_chat_transition_plan.md)
-- [docs/35_irrigation_v1_software_stage.md](docs/35_irrigation_v1_software_stage.md)
-- [docs/36_turret_v1_software_stage.md](docs/36_turret_v1_software_stage.md)
-- [docs/37_turret_product_context_map.md](docs/37_turret_product_context_map.md)
+- [knowledge_base/17_open_questions_and_migration.md](knowledge_base/17_open_questions_and_migration.md)
+- [knowledge_base/10_irrigation_module.md](knowledge_base/10_irrigation_module.md)
+- [knowledge_base/11_turret_module.md](knowledge_base/11_turret_module.md)
 - [briefs/README.md](briefs/README.md)
 - [WORKFLOW_FOR_OTHER_CHATS.md](WORKFLOW_FOR_OTHER_CHATS.md)
 

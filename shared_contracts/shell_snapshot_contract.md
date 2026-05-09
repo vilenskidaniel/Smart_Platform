@@ -196,7 +196,7 @@ Snapshot не обязан публиковать один заранее выб
     "owner_title": "I/O node",
     "owner_node_id": "esp32-main",
     "owner_available": false,
-    "state": "locked",
+    "state": "blocked",
     "block_reason": "owner_unavailable",
     "canonical_path": "/irrigation",
     "canonical_url": "",
@@ -205,6 +205,14 @@ Snapshot не обязан публиковать один заранее выб
   }
 ]
 ```
+
+### Допустимые `module_cards[*].state`
+
+- `online`
+- `degraded`
+- `blocked`
+- `locked`
+- `fault`
 
 ### Допустимые `product_block`
 
@@ -243,6 +251,8 @@ Legacy alias для совместимости:
 - truthful hardware profile можно показывать отдельно через `owner_node_id`,
   `node_type` или `owner_title` вроде `Compute node · Raspberry Pi`;
 - `owner_scope = shared` не должен маскироваться как ownership конкретной платой;
+- `offline` остается vocabulary для node health, `owner_available` и related summaries/reasons, а не для `module_cards[*].state`;
+- engineering/service compatibility wording может жить в aliases или `block_reason`, но не как module-card `state`;
 - в `desktop_smoke` preview-path может оставаться `local`, но `owner_available`
   и `summary` обязаны честно отражать отсутствие реального owner-device.
 
@@ -346,6 +356,6 @@ Legacy alias для совместимости:
 
 ## Связанные документы
 
-- [../docs/26_v1_product_spec.md](../docs/26_v1_product_spec.md)
-- [../docs/27_platform_shell_v1_spec.md](../docs/27_platform_shell_v1_spec.md)
-- [../docs/33_shell_snapshot_schema.md](../docs/33_shell_snapshot_schema.md)
+- [../knowledge_base/01_project_scope_and_goals.md](../knowledge_base/01_project_scope_and_goals.md)
+- [../knowledge_base/05_shell_navigation_and_screen_map.md](../knowledge_base/05_shell_navigation_and_screen_map.md)
+- [../knowledge_base/15_platform_services_and_shared_content.md](../knowledge_base/15_platform_services_and_shared_content.md)

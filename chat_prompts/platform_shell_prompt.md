@@ -22,15 +22,19 @@
 Читать в таком порядке:
 
 1. `foundation_prompt.md`
-2. `docs/05_ui_shell_and_navigation.md`
-3. `docs/40_platform_shell_navigation_alignment.md`
-4. `docs/39_design_decisions_and_screen_map.md`
-5. `docs/53_shared_ui_state_and_interaction_contract.md`
-6. `docs/27_platform_shell_v1_spec.md`
-7. `docs/47_acceptance_and_validation_matrix.md`
-8. `docs/48_browser_entry_and_host_launch.md`
-9. `docs/49_shell_runtime_and_chat_guardrails.md`
-10. `briefs/platform_shell_ui.md`
+2. `knowledge_base/README.md`
+3. `knowledge_base/05_shell_navigation_and_screen_map.md`
+4. `knowledge_base/06_shared_ui_contract.md`
+5. `knowledge_base/04_runtime_topology_controller_profiles_and_sync.md`
+6. `shared_contracts/shell_snapshot_contract.md`
+7. `briefs/platform_shell_ui.md`
+8. `knowledge_base/17_open_questions_and_migration.md`, если нужен explicit donor status или unresolved shell residue map
+
+Практическое правило:
+
+- legacy donor sources для `Platform Shell` больше не входят в primary reading order;
+- если active canon still has a concrete gap around shell alignment, compatibility routes or implementation residue, сначала смотреть migration ledger и только потом открывать donor residue точечно;
+- если donor detail расходится с active canon, сильнее становятся `knowledge_base/05_shell_navigation_and_screen_map.md`, `knowledge_base/06_shared_ui_contract.md`, `knowledge_base/04_runtime_topology_controller_profiles_and_sync.md` и `shared_contracts/shell_snapshot_contract.md`.
 
 ## Установленные Истины
 

@@ -36,14 +36,14 @@
 Приоритет чтения:
 
 1. `foundation_prompt.md`
-2. `docs/README.md`
-3. `docs/26_v1_product_spec.md`
-4. `docs/53_shared_ui_state_and_interaction_contract.md`, если задача трогает shared UI language
-5. `docs/04_sync_and_ownership.md`
-6. `docs/29_shared_content_and_sd_strategy.md`
-7. `docs/46_safety_risk_and_failure_matrix.md`
-8. `docs/47_acceptance_and_validation_matrix.md`
-9. нужные deep-docs затронутых модулей
+2. `knowledge_base/README.md`
+3. `knowledge_base/01_project_scope_and_goals.md`
+4. `knowledge_base/06_shared_ui_contract.md`, если задача трогает shared UI language
+5. `knowledge_base/04_runtime_topology_controller_profiles_and_sync.md`
+6. `knowledge_base/07_data_registry_storage_and_persistence.md`
+7. `knowledge_base/08_safety_acceptance_and_field_operations.md`
+8. нужные модульные файлы `knowledge_base/10-16`
+9. legacy donor sources только как transfer-source
 10. соответствующие модульные prompt-ы
 
 ## Модель Работы

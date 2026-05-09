@@ -31,8 +31,8 @@
 Перед новым отдельным чатом:
 
 1. открыть [README.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/README.md);
-2. открыть [docs/smart_platform_workshop_inventory.xlsx](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/docs/smart_platform_workshop_inventory.xlsx);
-3. открыть [docs/34_modular_chat_transition_plan.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/docs/34_modular_chat_transition_plan.md);
+2. открыть [knowledge_base/resources/smart_platform_workshop_inventory.xlsx](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/knowledge_base/resources/smart_platform_workshop_inventory.xlsx);
+3. открыть [chat_prompts/README.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/chat_prompts/README.md);
 4. выбрать только один основной brief;
 5. при необходимости добрать support-briefы.
 

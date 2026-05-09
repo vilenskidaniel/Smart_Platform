@@ -59,7 +59,7 @@
 - внутри уже есть owner-aware workspace;
 - первый углубленный slice уже существует для `strobe`;
 - будущие срезы должны повторять ту же модель, а не разъезжаться по разным стилям.
-- аппаратный источник истины по наличию и ownership держим в `docs/smart_platform_workshop_inventory.xlsx`.
+- аппаратный источник истины по наличию и ownership держим в `knowledge_base/resources/smart_platform_workshop_inventory.xlsx`.
 
 ## Первая обязательная структура вкладок
 

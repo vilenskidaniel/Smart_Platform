@@ -22,12 +22,18 @@
 Читать в таком порядке:
 
 1. `foundation_prompt.md`
-2. `docs/26_v1_product_spec.md`
-3. `docs/29_shared_content_and_sd_strategy.md`
-4. `docs/39_design_decisions_and_screen_map.md`
-5. `docs/51_gallery_v1_content_and_reports_spec.md`
-6. `docs/46_safety_risk_and_failure_matrix.md`
-7. `docs/47_acceptance_and_validation_matrix.md`
+2. `knowledge_base/README.md`
+3. `knowledge_base/13_gallery_module.md`
+4. `knowledge_base/07_data_registry_storage_and_persistence.md`
+5. `knowledge_base/15_platform_services_and_shared_content.md`
+6. `knowledge_base/08_safety_acceptance_and_field_operations.md`
+7. `knowledge_base/17_open_questions_and_migration.md`, если нужен explicit donor status или unresolved residue map
+
+Практическое правило:
+
+- legacy donor sources для `Gallery` больше не входят в primary reading order;
+- если active canon still has a concrete gap around report detail, mirrored storage residue or safety wording, сначала смотреть migration ledger и только потом открывать donor residue точечно;
+- если donor detail расходится с active canon, сильнее становятся `knowledge_base/13_gallery_module.md`, `knowledge_base/07_data_registry_storage_and_persistence.md` и `knowledge_base/15_platform_services_and_shared_content.md`.
 
 ## Установленные Истины
 

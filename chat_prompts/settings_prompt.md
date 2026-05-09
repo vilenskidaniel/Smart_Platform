@@ -22,13 +22,19 @@
 Читать в таком порядке:
 
 1. `foundation_prompt.md`
-2. `docs/26_v1_product_spec.md`
-3. `docs/40_platform_shell_navigation_alignment.md`
-4. `docs/52_settings_v1_persistent_system_spec.md`
-5. `docs/53_shared_ui_state_and_interaction_contract.md`
-6. `docs/29_shared_content_and_sd_strategy.md`
-7. `docs/46_safety_risk_and_failure_matrix.md`
-8. `docs/47_acceptance_and_validation_matrix.md`
+2. `knowledge_base/README.md`
+3. `knowledge_base/14_settings_module.md`
+4. `knowledge_base/06_shared_ui_contract.md`
+5. `knowledge_base/07_data_registry_storage_and_persistence.md`
+6. `knowledge_base/08_safety_acceptance_and_field_operations.md`
+7. `knowledge_base/15_platform_services_and_shared_content.md`
+8. `knowledge_base/17_open_questions_and_migration.md`, если нужен explicit donor status или unresolved residue map
+
+Практическое правило:
+
+- legacy donor sources для `Settings` больше не входят в primary reading order;
+- если active canon still has a concrete gap around save/apply detail, storage residue or safety wording, сначала смотреть migration ledger и только потом открывать donor residue точечно;
+- если donor detail расходится с active canon, сильнее становятся `knowledge_base/14_settings_module.md`, `knowledge_base/06_shared_ui_contract.md` и `knowledge_base/07_data_registry_storage_and_persistence.md`.
 
 ## Установленные Истины
 

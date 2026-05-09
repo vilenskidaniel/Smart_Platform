@@ -6,7 +6,9 @@
 
 ## Роль Модуля
 
-Этот prompt отвечает за продуктовый модуль полива на стороне `ESP32`.
+Этот prompt отвечает за продуктовый модуль полива.
+
+Текущий implementation baseline использует временный controller profile на `ESP32`, но это не считается вечной архитектурной истиной модуля.
 
 Он покрывает:
 
@@ -22,16 +24,24 @@
 Читать в таком порядке:
 
 1. `foundation_prompt.md`
-2. `docs/26_v1_product_spec.md`
-3. `docs/35_irrigation_v1_software_stage.md`
-4. `docs/44_esp32_hardware_and_io_map.md`
-5. `docs/46_safety_risk_and_failure_matrix.md`
-6. `docs/47_acceptance_and_validation_matrix.md`
+2. `knowledge_base/README.md`
+3. `knowledge_base/10_irrigation_module.md`
+4. `knowledge_base/04_runtime_topology_controller_profiles_and_sync.md`
+5. `knowledge_base/08_safety_acceptance_and_field_operations.md`
+6. `knowledge_base/16_hardware_component_profiles.md`
 7. `briefs/irrigation_module.md`
+8. `knowledge_base/17_open_questions_and_migration.md`, если нужен explicit donor status или unresolved residue map
+
+Практическое правило:
+
+- legacy donor sources для `Irrigation` больше не входят в primary reading order;
+- если active canon still has a concrete gap around stage behavior, software baseline or current electrical residue, сначала смотреть migration ledger и только потом открывать donor residue точечно;
+- если brief или donor detail расходится с active canon, сильнее становятся `knowledge_base/10_irrigation_module.md`, `knowledge_base/08_safety_acceptance_and_field_operations.md` и `knowledge_base/16_hardware_component_profiles.md`.
 
 ## Установленные Истины
 
-- Owner `Irrigation` = `ESP32`.
+- `Irrigation` не привязан навсегда к `ESP32`.
+- Текущий временный controller profile для `Irrigation` = `ESP32`.
 - Product route = `/irrigation`.
 - Service route = `/service/irrigation`.
 - Подтвержденный baseline: `5` зон, `5` клапанов, `5` датчиков влажности почвы.

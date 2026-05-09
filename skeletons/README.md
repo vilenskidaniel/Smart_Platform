@@ -26,8 +26,8 @@
 Специализированные карты по продуктовым блокам:
 
 - `Platform Shell`:
-  - [31_platform_shell_class_map.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/docs/31_platform_shell_class_map.md)
-  - [33_shell_snapshot_schema.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/docs/33_shell_snapshot_schema.md)
+  - [05_shell_navigation_and_screen_map.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/knowledge_base/05_shell_navigation_and_screen_map.md)
+  - [shell_snapshot_contract.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/shared_contracts/shell_snapshot_contract.md)
   - `platform_shell_esp32_blueprint.h`
   - `platform_shell_raspberry_pi_blueprint.py`
   - `shell_snapshot_facade_esp32_blueprint.h`

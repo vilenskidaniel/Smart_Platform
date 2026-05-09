@@ -22,18 +22,19 @@
 Перед любыми изменениями нужно открыть:
 
 1. [README.md](README.md)
-2. [docs/smart_platform_workshop_inventory.xlsx](docs/smart_platform_workshop_inventory.xlsx)
-3. [docs/26_v1_product_spec.md](docs/26_v1_product_spec.md)
-4. [docs/01_product_decisions.md](docs/01_product_decisions.md)
-5. [docs/02_system_architecture.md](docs/02_system_architecture.md)
-6. [docs/05_ui_shell_and_navigation.md](docs/05_ui_shell_and_navigation.md)
-7. [docs/39_design_decisions_and_screen_map.md](docs/39_design_decisions_and_screen_map.md)
-8. [docs/53_shared_ui_state_and_interaction_contract.md](docs/53_shared_ui_state_and_interaction_contract.md)
-9. [docs/40_platform_shell_navigation_alignment.md](docs/40_platform_shell_navigation_alignment.md)
-10. [docs/09_master_design_plan.md](docs/09_master_design_plan.md)
-11. [docs/34_modular_chat_transition_plan.md](docs/34_modular_chat_transition_plan.md)
-12. [briefs/README.md](briefs/README.md)
-13. только после этого нужный brief-файл
+2. [knowledge_base/resources/smart_platform_workshop_inventory.xlsx](knowledge_base/resources/smart_platform_workshop_inventory.xlsx)
+3. [knowledge_base/README.md](knowledge_base/README.md)
+4. [knowledge_base/01_project_scope_and_goals.md](knowledge_base/01_project_scope_and_goals.md)
+5. [knowledge_base/02_system_terms_and_design_rules.md](knowledge_base/02_system_terms_and_design_rules.md)
+6. [knowledge_base/03_platform_architecture_and_module_relationships.md](knowledge_base/03_platform_architecture_and_module_relationships.md)
+7. [knowledge_base/04_runtime_topology_controller_profiles_and_sync.md](knowledge_base/04_runtime_topology_controller_profiles_and_sync.md)
+8. [knowledge_base/05_shell_navigation_and_screen_map.md](knowledge_base/05_shell_navigation_and_screen_map.md)
+9. [knowledge_base/06_shared_ui_contract.md](knowledge_base/06_shared_ui_contract.md)
+10. [knowledge_base/07_data_registry_storage_and_persistence.md](knowledge_base/07_data_registry_storage_and_persistence.md)
+11. [knowledge_base/08_safety_acceptance_and_field_operations.md](knowledge_base/08_safety_acceptance_and_field_operations.md)
+12. [knowledge_base/09_repository_layout_and_code_map.md](knowledge_base/09_repository_layout_and_code_map.md)
+13. [briefs/README.md](briefs/README.md)
+14. только после этого нужный brief-файл
 
 ## Главные правила
 
@@ -55,10 +56,10 @@
 - Legacy bench/donor-репозитории использовать только как источник идей и выборочной миграции, а не как основной рабочий корень.
 - Не склеивать старые проекты напрямую.
 - Не переносить код без понимания его владельца и зоны ответственности.
-- Аппаратный источник истины по наличию, ownership и power baseline - `docs/smart_platform_workshop_inventory.xlsx`.
+- Аппаратный источник истины по наличию, ownership и power baseline - `knowledge_base/resources/smart_platform_workshop_inventory.xlsx`.
 - Не ломать правило одинакового дизайна на `ESP32` и `Raspberry Pi`.
 - Не прятать недоступные разделы полностью: лучше показывать их как серые, но кликабельные с короткой причиной и подсказкой, что нужно сделать дальше.
-- Если работа затрагивает состояния, кнопки, карточки, tooltip, fullscreen, input helpers или общий язык блокировок, нужно опираться на `docs/53_shared_ui_state_and_interaction_contract.md`.
+- Если работа затрагивает состояния, кнопки, карточки, tooltip, fullscreen, input helpers или общий язык блокировок, нужно опираться на `knowledge_base/06_shared_ui_contract.md`.
 - Инженерный режим открывает дополнительные функции, но не создает отдельную цветовую или смысловую семантику состояний.
 - Истина о shared UI-state идет `backend first`: один и тот же узел и один и тот же режим не должны рассказывать разную правду на bar-панели, home, `Laboratory`, `Turret` и `Settings`.
 - Общие предпочтения `fullscreen` и `input helpers` считаются shared preferences и должны удерживаться одновременно в `Settings` и в bar-панели без конкурирующих источников истины.
@@ -103,9 +104,9 @@
 
 - Если речь идет о “втором пункте” модульной очереди, это `Irrigation v1`.
 - Если речь идет про `Этап 2` master-plan, это `Platform Shell`.
-- Если чат начинает уходить в слишком много внутренних сущностей, вернуться к [docs/26_v1_product_spec.md](docs/26_v1_product_spec.md).
-- Если работа идет по shell/navigation drift, открыть [docs/40_platform_shell_navigation_alignment.md](docs/40_platform_shell_navigation_alignment.md).
-- Если нужна карта перехода между чатами, открыть [docs/34_modular_chat_transition_plan.md](docs/34_modular_chat_transition_plan.md).
+- Если чат начинает уходить в слишком много внутренних сущностей, вернуться к [knowledge_base/01_project_scope_and_goals.md](knowledge_base/01_project_scope_and_goals.md) и [knowledge_base/03_platform_architecture_and_module_relationships.md](knowledge_base/03_platform_architecture_and_module_relationships.md).
+- Если работа идет по shell/navigation drift, сначала открыть [knowledge_base/05_shell_navigation_and_screen_map.md](knowledge_base/05_shell_navigation_and_screen_map.md) и [knowledge_base/06_shared_ui_contract.md](knowledge_base/06_shared_ui_contract.md).
+- Если нужна карта перехода между чатами, открыть [chat_prompts/README.md](chat_prompts/README.md) и [knowledge_base/09_repository_layout_and_code_map.md](knowledge_base/09_repository_layout_and_code_map.md).
 - Stage-документы и узкие контракты читать только после базовых product-level файлов.
 
 ## Полезная практика
@@ -117,10 +118,15 @@
 
 ## Guardrails Для Активных UI/Shell Чатов
 
-- До работы по shell/home/bar сначала открыть [docs/48_browser_entry_and_host_launch.md](docs/48_browser_entry_and_host_launch.md) и [docs/49_shell_runtime_and_chat_guardrails.md](docs/49_shell_runtime_and_chat_guardrails.md).
+- До работы по shell/home/bar сначала открыть [knowledge_base/04_runtime_topology_controller_profiles_and_sync.md](knowledge_base/04_runtime_topology_controller_profiles_and_sync.md) и [knowledge_base/05_shell_navigation_and_screen_map.md](knowledge_base/05_shell_navigation_and_screen_map.md).
 - В runtime-модели всегда отдельно различать host node, module owner, current browser client и entry context.
 - Не смешивать `host launch` и `browser entry` в одну сущность даже тогда, когда на `Windows` они выглядят как один пользовательский сценарий.
+- Начинать с owning file или problem file, а не с широкого repo tour по соседним подсистемам.
+- Если один из узлов уже имеет подходящий helper или state-layer, лучше расширять его, чем создавать второй параллельный контур.
+- Не переносить крупные UI-блоки между `Raspberry Pi` и `ESP32` вслепую: это могут быть разные поколения одной и той же surface.
 - При shared UI edits проверять не только source-файл, но и live-served asset на рабочем порту.
 - Длинные JS-файлы править маленькими hunks в порядке следования кода, а не большими смешанными patch-блоками.
+- После существенной UI/shell правки минимум такой: `get_errors` по измененному файлу, затем проверка live-served версии asset/page, затем узкий behavior check на рабочем route.
+- Stale browser cache считается реальным источником ложных выводов и должен исключаться перед следующими выводами о regression или успехе правки.
 - После regression сначала вернуть рабочее поведение в этом же slice, и только потом расширять scope.
 - Если пользователь ограничил задачу до конкретного runtime slice, например только PC/browser path, сначала закрыть именно его.

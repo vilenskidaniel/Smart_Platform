@@ -67,4 +67,4 @@
 
 Если работа идет в отдельном чате, следующий документ для этого блока:
 
-- [27_platform_shell_v1_spec.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/docs/27_platform_shell_v1_spec.md)
+- [05_shell_navigation_and_screen_map.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/knowledge_base/05_shell_navigation_and_screen_map.md)

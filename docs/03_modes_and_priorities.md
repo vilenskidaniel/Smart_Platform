@@ -1,77 +1,14 @@
 # Modes And Priorities
 
-## Основные режимы платформы
+Статус документа:
 
-### 1. Emergency / Abort
+- legacy compatibility stub only;
+- active terminology and priority/safety canon теперь живут в `knowledge_base/02_system_terms_and_design_rules.md`, `knowledge_base/04_runtime_topology_controller_profiles_and_sync.md` и `knowledge_base/08_safety_acceptance_and_field_operations.md`;
+- compatibility mode wording, command arbitration order и strobe-sensitive override rules уже сведены в active canon;
+- этот donor-файл больше не несет уникального mode/priority authority и может быть удален вместе со всем legacy donor layer.
 
-Это самый высокий приоритет.
+## Related Active Files
 
-Назначение:
-
-- мгновенно остановить опасное действие;
-- перевести модуль или систему в безопасное состояние;
-- зафиксировать причину и журнал события.
-
-### 2. Fault / Safety Interlock
-
-Этот режим включается, если:
-
-- обнаружена ошибка модуля;
-- отсутствует обязательный владелец;
-- есть конфликт состояния;
-- нарушено правило безопасности.
-
-В этом режиме:
-
-- модуль нельзя запускать штатно;
-- UI показывает понятную причину блокировки;
-- журнал получает запись о fault-событии.
-
-### 3. Service / Test Mode
-
-Это специальный режим для разработчиков, сервисных инженеров и тестировщиков.
-
-В этом режиме:
-
-- автоматические сценарии должны быть отключены или жестко ограничены;
-- доступны тестовые страницы модулей;
-- разрешены сервисные команды и диагностические пресеты;
-- действия выполняются только через безопасные сценарии и interlock-проверки.
-
-### 4. Manual Mode
-
-Ручной режим используется оператором из браузера.
-
-### 5. Automatic Mode
-
-Автоматический режим используется сценариями системы.
-
-### 6. Background Sync / Telemetry
-
-Это самый низкий приоритет.
-
-Сюда относятся:
-
-- синхронизация логов;
-- обмен статусом;
-- обновление визуальных данных;
-- фоновые heartbeat-пакеты.
-
-## Итоговый приоритет команд
-
-1. `Emergency / Abort`
-2. `Fault / Safety Interlock`
-3. `Service / Test Mode`
-4. `Manual Mode`
-5. `Automatic Mode`
-6. `Background Sync / Telemetry`
-
-## Правило для стробоскопа
-
-Стробоскоп особенно чувствителен к конфликту режимов, поэтому для него дополнительно действует правило:
-
-- `Emergency` всегда останавливает текущий шаблон;
-- `Fault` запрещает новый запуск;
-- `Laboratory` блокирует автоматическое использование турелью, пока сервисная сессия не завершена;
-- `Manual` имеет приоритет над автоматическим сценарием;
-- автоматический режим разрешен только на владельце модуля.
+- [../knowledge_base/02_system_terms_and_design_rules.md](../knowledge_base/02_system_terms_and_design_rules.md)
+- [../knowledge_base/04_runtime_topology_controller_profiles_and_sync.md](../knowledge_base/04_runtime_topology_controller_profiles_and_sync.md)
+- [../knowledge_base/08_safety_acceptance_and_field_operations.md](../knowledge_base/08_safety_acceptance_and_field_operations.md)

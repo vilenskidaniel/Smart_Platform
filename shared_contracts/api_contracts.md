@@ -6,7 +6,7 @@
 
 - это не документ уровня продукта;
 - состав API не равен списку пользовательских модулей `v1`;
-- для продуктового scope сначала читать [26_v1_product_spec.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/docs/26_v1_product_spec.md).
+- для продуктового scope сначала читать [01_project_scope_and_goals.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/knowledge_base/01_project_scope_and_goals.md).
 - для shell-level snapshot читать отдельный [shell_snapshot_contract.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/shared_contracts/shell_snapshot_contract.md).
 
 Это черновой, но уже рабочий словарь сущностей для новой платформы.

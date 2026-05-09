@@ -1,116 +1,13 @@
-# Стратегия общего контента и `SD`
+# Shared Content And SD Strategy
 
 Статус документа:
 
-- supporting storage-strategy doc, а не primary product spec для `Gallery`;
-- читать после `docs/51_gallery_v1_content_and_reports_spec.md`, `docs/50_laboratory_v1_workspace_spec.md` и `docs/52_settings_v1_persistent_system_spec.md`;
-- если content vocabulary или границы `Gallery`, `Reports`, `Laboratory` и `Settings` расходятся с каноническим слоем, приоритет у primary docs, а этот файл нужно дочищать или сокращать.
+- legacy compatibility stub only;
+- active storage/data canon теперь живет в `knowledge_base/07_data_registry_storage_and_persistence.md`, а active service/shared-content canon — в `knowledge_base/15_platform_services_and_shared_content.md`;
+- `LittleFS/SD` split, mirrored logical paths, diagnostics boundary и unresolved backend-gap notes уже сведены в active canon;
+- этот donor-файл больше не несет уникального shared-content authority и может быть удален вместе со всем legacy donor layer.
 
-Этот документ фиксирует единое правило хранения тяжелого контента для `Smart Platform v1`.
+## Related Active Files
 
-Важно:
-
-- подробная user-facing структура `Gallery`, модель `Reports` и граница с evidence-layer `Laboratory` уже зафиксированы в `docs/51_gallery_v1_content_and_reports_spec.md`;
-- здесь держим только storage-model, mirrored content rules и owner-truth, которые нужны для реализации этой канонической модели.
-
-## 1. Что считаем тяжелым контентом
-
-В отдельное хранилище выносим:
-
-- `/assets` — изображения, иконки и крупные графические наборы;
-- `/audio` — звуки, озвучку, сигналы и будущие звуковые профили;
-- `/animations` — анимации, видеофрагменты и другие тяжелые медиа;
-- `/libraries` — крупные библиотеки данных:
-  - каталог растений
-  - сценарии полива
-  - справочники и шаблоны
-- `/gallery` — глобальная галерея платформы и связанные медиа- и отчетные артефакты.
-
-## 2. Где это хранится
-
-### На `ESP32`
-
-- легкий shell и fallback-страницы остаются в `LittleFS`;
-- физический `TF Micro SD Card Module` используется как SPI-расширение хранения на `ESP32`;
-- тяжелый контент и большие библиотеки данных лежат на `SD`;
-- зеркальная копия `Gallery` тоже относится к хранилищу на `SD`;
-- `SD` также используется как приемник резервных копий turret-файлов при sync-передаче с `Raspberry Pi`;
-- shell не должен зависеть от наличия тяжелого контента для самого факта запуска.
-
-### На `Raspberry Pi`
-
-- та же структура каталогов должна существовать в локальной файловой системе;
-- `Raspberry Pi` хранит зеркальную копию тех же каталогов;
-- `Gallery` и поток медиа- и отчетных данных тоже должны иметь локальную зеркальную копию;
-- shell и runtime могут читать эти данные напрямую.
-
-## 3. Почему модель именно такая
-
-- `ESP32` не стоит перегружать крупными файлами в `LittleFS`;
-- у платы `ESP32` слишком маленький встроенный объем памяти для тяжелых ассетов и зеркальных копий;
-- `Raspberry Pi` удобнее использовать как более вместительный узел для зеркала и синхронизации;
-- одинаковые пути на обеих сторонах не плодят разные URL и не усложняют интерфейс.
-
-## 4. Единая структура каталогов
-
-Обе стороны должны понимать один и тот же набор путей:
-
-- `/assets/...`
-- `/audio/...`
-- `/animations/...`
-- `/libraries/...`
-- `/gallery/...`
-
-Это правило относится и к локальному обслуживанию файлов, и к будущей синхронизации между узлами.
-
-## 5. `Gallery` как дерево контента
-
-`Gallery` как user-facing страница и структура вкладок уже подробно описаны в `docs/51_gallery_v1_content_and_reports_spec.md`.
-
-Для storage-strategy здесь фиксируем только то, что обязательно для реализации этой модели:
-
-- весь user-facing content path материализуется через общее дерево `/gallery`, а не через разрозненные owner-specific storage worlds;
-- `Gallery` остается shared/virtual page, но каждый объект хранения сохраняет truthful metadata о фактическом owner/source/storage node;
-- mirrored storage должен поддерживать вкладки `Plants`, `Media` и `Reports`, не смешивая их в один raw dump;
-- storage-слой для `Reports` обязан хранить метаданные, достаточные для короткой mixed-source ленты действий;
-- laboratory session bundle, console output, state-table rows и циклы `pass / warn / fail` по умолчанию остаются в evidence-layer `Laboratory`, а не уходят в `Reports`;
-- `Content Storage` может существовать как внутренняя diagnostics surface для readiness, path operations и low-level inspection, но не как user-facing замена `Gallery`.
-
-## 6. Что уже делаем на этом этапе
-
-- `ESP32` отдает shell из `LittleFS`, а тяжелый контент ищет на `SD`;
-- `Raspberry Pi` отдает тяжелый контент из локального `content_root`;
-- обе стороны должны уметь отдавать готовность хранилища в `GET /api/v1/shell/snapshot`;
-- `GET /api/v1/content/status` остается прямым служебным API-методом для глубокой диагностики хранилища;
-- опорная схема библиотек зафиксирована в [content_library_contract.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/shared_contracts/content_library_contract.md).
-
-Важно:
-
-- `Settings` не собирает основную картину из `GET /api/v1/content/status`, а читает `snapshot.storage`;
-- прямой `GET /api/v1/content/status` нужен для служебной диагностики хранилища;
-- этот API-метод не считается заменой пользовательской `Gallery`.
-
-## 7. Что пока остается неполным
-
-- точный pinout и реальное подключение `SD` к `ESP32` еще требуют аппаратного подтверждения на целевой плате;
-- автоматическая синхронизация между `ESP32 SD` и `Raspberry Pi` пока не реализована;
-- большие библиотеки растений и сценариев пока описаны как контракт и структура, а не как производственный набор данных.
-
-## 8. Практическое правило для следующих этапов
-
-Если файл:
-
-- нужен для первого экрана shell;
-- мал по размеру;
-- нужен даже без `SD`;
-
-его можно оставить в `LittleFS`.
-
-Если файл:
-
-- media-тяжелый;
-- относится к библиотекам данных;
-- может расти по объему;
-- должен одинаково жить на `ESP32` и `Raspberry Pi`;
-
-его нужно проектировать под зеркальное хранилище контента.
+- [../knowledge_base/07_data_registry_storage_and_persistence.md](../knowledge_base/07_data_registry_storage_and_persistence.md)
+- [../knowledge_base/15_platform_services_and_shared_content.md](../knowledge_base/15_platform_services_and_shared_content.md)

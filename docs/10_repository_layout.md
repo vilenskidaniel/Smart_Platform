@@ -1,115 +1,12 @@
 # Repository Layout
 
-Этот файл фиксирует целевую структуру репозитория `Smart Platform`.
+Статус документа:
 
-Главный принцип:
+- legacy compatibility stub only;
+- active repository map и target layout direction теперь живут в `knowledge_base/09_repository_layout_and_code_map.md`;
+- target future structure, code ownership rules и anti-duplication constraints уже сведены в active canon;
+- этот donor-файл больше не несет уникального repository-layout authority и может быть удален вместе со всем legacy donor layer.
 
-- не складывать всё в один `main.cpp`;
-- не смешивать `ESP32`, `Raspberry Pi`, `web UI` и общие контракты;
-- держать архитектуру понятной для параллельной работы из разных чатов.
+## Related Active Files
 
-Важно:
-
-- соседние donor/legacy-репозитории не являются частью целевой структуры `Smart Platform`;
-- после подтвержденной выборочной миграции знаний и кода donor-слой должен удаляться из рабочего контекста, чтобы не плодить вторую архитектурную правду.
-
-## Целевая структура верхнего уровня
-
-```text
-Smart_Platform/
-|-- README.md
-|-- WORKFLOW_FOR_OTHER_CHATS.md
-|-- docs/
-|-- briefs/
-|-- shared_contracts/
-|-- firmware_esp32/
-|-- raspberry_pi/
-|-- web_ui/
-```
-
-## Назначение каталогов
-
-### docs/
-
-Здесь лежат архитектурные решения, дорожные карты, тестовые стратегии и проектные договоренности.
-
-### briefs/
-
-Здесь лежат короткие брифы по отдельным модулям, чтобы другой чат мог быстро взять задачу на модуль без чтения всего проекта.
-
-### shared_contracts/
-
-Здесь лежат общие контракты между:
-
-- `ESP32`
-- `Raspberry Pi`
-- `web_ui`
-- сервисными инструментами
-
-### firmware_esp32/
-
-Здесь живет новая прошивка `ESP32`.
-
-Будущая структура:
-
-```text
-firmware_esp32/
-|-- platformio.ini
-|-- README.md
-|-- include/
-|-- src/
-|-- lib/
-|-- data/
-|-- test/
-```
-
-### raspberry_pi/
-
-Здесь живет турельный и серверный контур `Raspberry Pi`.
-
-Будущая структура:
-
-```text
-raspberry_pi/
-|-- README.md
-|-- app/
-|-- modules/
-|-- services/
-|-- tests/
-|-- scripts/
-```
-
-### web_ui/
-
-Здесь живет общий фронтенд и shell интерфейса.
-
-Будущая структура:
-
-```text
-web_ui/
-|-- README.md
-|-- shell/
-|-- pages/
-|-- components/
-|-- styles/
-|-- assets/
-|-- i18n/
-```
-
-## Правило владения кодом
-
-- Все `ESP32`-модули живут только в `firmware_esp32/`.
-- Вся логика `Raspberry Pi` живет только в `raspberry_pi/`.
-- Общие типы и API описываются только в `shared_contracts/`.
-- Дизайн, страницы и визуальные компоненты описываются в `web_ui/`.
-
-## Что делать нельзя
-
-- Копировать один и тот же контракт в разные каталоги.
-- Дублировать бизнес-логику в `ESP32` shell и `Raspberry Pi` shell.
-- Держать UI-решения внутри hardware-модулей.
-- Смешивать сервисный интерфейс и runtime-safety в одном большом файле.
-
-## Первый фактический результат пункта 1
-
-После фиксации этого файла структура репозитория становится официальной и может использоваться как основа для следующих этапов.
+- [../knowledge_base/09_repository_layout_and_code_map.md](../knowledge_base/09_repository_layout_and_code_map.md)

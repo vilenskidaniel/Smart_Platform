@@ -6,7 +6,7 @@
 
 - он описывает внутренние состояния, ownership и системные поля;
 - он не заменяет продуктовую модель `v1`;
-- для верхнего уровня сначала читать [26_v1_product_spec.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/docs/26_v1_product_spec.md).
+- для верхнего уровня сначала читать [01_project_scope_and_goals.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/knowledge_base/01_project_scope_and_goals.md).
 
 Этот контракт нужен, чтобы все слои платформы одинаково называли:
 

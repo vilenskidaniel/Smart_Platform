@@ -24,12 +24,12 @@
 При конфликте использовать такой приоритет:
 
 1. явные инструкции пользователя в текущем чате;
-2. `docs/README.md` и primary docs, на которые он указывает;
+2. `knowledge_base/README.md` и active primary docs нового канона;
 3. deep-spec документы нужного модуля;
 4. модульный prompt-файл;
 5. briefs и supporting docs;
 6. текущая реализация в коде;
-7. старые prompt-ы, stage-docs и compatibility-слои;
+7. старый donor-layer, старые prompt-ы, stage-docs и compatibility-слои;
 8. внешние доноры, legacy-источники и старые проекты.
 
 Практический вывод:
@@ -138,14 +138,14 @@
 
 Если по ходу работы выясняется новая устойчивая истина, ее нужно переносить в:
 
-- docs;
+- `knowledge_base/`;
 - нужный модульный prompt;
 - `cross_module_prompt.md`, если это правило задевает несколько модулей;
 - `chat_prompts/README.md`, если меняется сама структура prompt-системы.
 
 ## Общий UI Канон Для Всех Чатов
 
-Если задача затрагивает общий язык состояний, блокировок, подсказок, fullscreen, input helpers, карточек или shared controls, нужно открыть `docs/53_shared_ui_state_and_interaction_contract.md` и считать его обязательным каноном.
+Если задача затрагивает общий язык состояний, блокировок, подсказок, fullscreen, input helpers, карточек или shared controls, нужно открыть `knowledge_base/06_shared_ui_contract.md` и держать именно его как первичный общий UI канон.
 
 Базовые правила:
 
@@ -158,6 +158,12 @@
 - `input helpers` тоже живут в `Settings` и bar-панели как shared state, но функционально относятся только к FPV/operator surfaces и не должны отключать `Laboratory`;
 - `Home` в bar-панели остается обязательной экстренной точкой возврата и не должен исчезать из shared shell-language;
 - `Gallery > Reports` хранит короткие автономно и системно зафиксированные product-level события, а локальные laboratory-записи сессии не поднимаются туда автоматически.
+
+Если задача правит shared shell/UI asset, минимальный validation path такой:
+
+- сначала `get_errors` по измененному файлу;
+- затем проверка, что рабочий route или live-served asset действительно отдает новую версию;
+- только потом узкий behavior check и соседние доработки.
 
 ## Что Обязательно Проверять В Любом Модуле
 

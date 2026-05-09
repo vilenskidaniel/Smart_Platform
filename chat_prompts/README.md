@@ -2,6 +2,10 @@
 
 Этот каталог хранит канонические prompt-контракты для новых специализированных чатов по `Smart_Platform`.
 
+Активный человеческий слой документации теперь должен начинаться с `knowledge_base/README.md`.
+
+Старый donor-only слой считается только источником переноса смысла в новый канон и не должен использоваться как active reading path.
+
 Использовать их нужно не как набор разрозненных подсказок, а как управляемую систему работы:
 
 1. сначала общий фундамент;
@@ -30,6 +34,27 @@
 - для `Laboratory` пользовательский слой называется `Записи сессии`, а `Gallery > Reports` остается только для автономно и системно зафиксированных product-level событий;
 - если задача реально задевает несколько продуктовых блоков, не пытаться решать все внутри одного модульного prompt-а: перейти в `cross_module_prompt.md`.
 
+## Рекомендуемый Порядок Модульных Чатов
+
+На текущем этапе безопаснее идти по одному крупному product block за чат:
+
+1. `Platform Shell`
+2. `Irrigation`
+3. `Turret`
+4. `Gallery`
+5. `Laboratory`
+
+После этого возвращаться в coordination/cross-module layer для:
+
+- синтеза изменений между модулями;
+- сверки ownership, handoff и sync semantics;
+- подготовки live integration и финальной cleanup-волны.
+
+Важно не путать:
+
+- `Этап 2` master-plan может относиться к shell-stage;
+- второй модульный чат после shell в этой очереди считается `Irrigation`.
+
 ## Общие Правила Для Всех Новых Prompt-Файлов
 
 Каждый новый специализированный чат обязан удерживать следующие правила:
@@ -44,7 +69,7 @@
 - не оставлять устаревшие исходники, prompt-ы, compatibility-описания или дублирующие слои как будто они равноправны новому канону;
 - если из донора берется полезная идея, переносить ее через вырезку и замещение, а не через бесконечное копирование;
 - проектная документация должна умнеть по ходу работы: новые договоренности нужно вносить в docs и prompt-слой, а не держать только в переписке;
-- если задача трогает shared UI semantics, сначала открыть `docs/53_shared_ui_state_and_interaction_contract.md` и не придумывать локальный канон рядом с ним;
+- если задача трогает shared UI semantics, сначала открыть `knowledge_base/06_shared_ui_contract.md` и не придумывать локальный канон рядом с ним;
 - новый чат должен активно задавать пользователю вопросы по функционалу, интерфейсу, логике, ограничениям и приоритетам, если это помогает нарастить каркас деталями;
 - вопросы должны идти от общего к частному и помогать дорастить модуль, а не заставлять пользователя повторять уже установленную истину;
 - после UI/JS edits проверять не только source, но и live-served asset на реальном порту;
@@ -88,11 +113,12 @@
 
 До старта нового чата полезно открыть:
 
+- [knowledge_base/README.md](../knowledge_base/README.md)
 - [README.md](../README.md)
 - [WORKFLOW_FOR_OTHER_CHATS.md](../WORKFLOW_FOR_OTHER_CHATS.md)
-- [docs/README.md](../docs/README.md)
-- [docs/53_shared_ui_state_and_interaction_contract.md](../docs/53_shared_ui_state_and_interaction_contract.md)
-- [docs/48_browser_entry_and_host_launch.md](../docs/48_browser_entry_and_host_launch.md)
-- [docs/49_shell_runtime_and_chat_guardrails.md](../docs/49_shell_runtime_and_chat_guardrails.md)
+- [knowledge_base/06_shared_ui_contract.md](../knowledge_base/06_shared_ui_contract.md)
+- [knowledge_base/04_runtime_topology_controller_profiles_and_sync.md](../knowledge_base/04_runtime_topology_controller_profiles_and_sync.md)
+- [knowledge_base/05_shell_navigation_and_screen_map.md](../knowledge_base/05_shell_navigation_and_screen_map.md)
+- [shared_contracts/shell_snapshot_contract.md](../shared_contracts/shell_snapshot_contract.md)
 
 Этого достаточно, чтобы новый чат не повторял уже пройденные ошибки по launch flow, bar regressions, fullscreen restore, stale browser assets и устаревшим prompt-слоям.

@@ -6,7 +6,9 @@
 
 ## Роль Модуля
 
-Этот prompt отвечает за owner-side turret module на `Raspberry Pi`.
+Этот prompt отвечает за модуль `Turret`.
+
+Текущий implementation baseline использует временный controller profile на `Raspberry Pi`, но это не считается вечной архитектурной истиной модуля.
 
 Он покрывает:
 
@@ -22,17 +24,24 @@
 Читать в таком порядке:
 
 1. `foundation_prompt.md`
-2. `docs/26_v1_product_spec.md`
-3. `docs/37_turret_product_context_map.md`
-4. `docs/39_design_decisions_and_screen_map.md`
-5. `docs/45_rpi_turret_hardware_and_io_map.md`
-6. `docs/46_safety_risk_and_failure_matrix.md`
-7. `docs/47_acceptance_and_validation_matrix.md`
-8. `briefs/turret_bridge_module.md`
+2. `knowledge_base/README.md`
+3. `knowledge_base/11_turret_module.md`
+4. `knowledge_base/04_runtime_topology_controller_profiles_and_sync.md`
+5. `knowledge_base/08_safety_acceptance_and_field_operations.md`
+6. `knowledge_base/16_hardware_component_profiles.md`
+7. `briefs/turret_bridge_module.md`
+8. `knowledge_base/17_open_questions_and_migration.md`, если нужен explicit donor status или unresolved residue map
+
+Практическое правило:
+
+- legacy donor sources для `Turret` больше не входят в primary reading order;
+- если в `knowledge_base/11_turret_module.md`, `knowledge_base/16_hardware_component_profiles.md` и brief все еще есть конкретный unresolved gap, только тогда смотреть migration ledger и уже после этого открывать donor residue точечно;
+- если brief расходится с active canon, сильнее становится `knowledge_base/11_turret_module.md` и связанный hardware canon.
 
 ## Установленные Истины
 
-- Owner `Turret` = `Raspberry Pi`.
+- `Turret` не привязан навсегда к `Raspberry Pi`.
+- Текущий временный controller profile для `Turret` = `Raspberry Pi`.
 - Product route = `/turret`.
 - Service route = `/service/turret`.
 - `Manual`, `Automatic`, `Laboratory` и `warm standby` — части одной owner-side модели.

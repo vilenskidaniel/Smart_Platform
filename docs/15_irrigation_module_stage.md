@@ -1,79 +1,13 @@
 # Stage 15 - Irrigation Module On ESP32
 
-Этот этап добавляет второй реальный модуль новой платформы после `strobe_bench`.
+Статус документа:
 
-Важно:
+- legacy compatibility stub only;
+- active `Irrigation` module canon теперь живет в `knowledge_base/10_irrigation_module.md`;
+- bootstrap dry-run baseline, safe-output default, API surface и hardware-confirmation constraints уже сведены в active canon;
+- этот donor-файл больше не несет уникального irrigation bootstrap authority и может быть удален вместе со всем legacy donor layer.
 
-- этот документ описывает bootstrap-этап `Irrigation`;
-- software-level фиксация `Irrigation v1` вынесена отдельно в
-  [35_irrigation_v1_software_stage.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/docs/35_irrigation_v1_software_stage.md).
+## Related Active Files
 
-## Что сделано
-
-- Добавлен `IrrigationController` в `firmware_esp32`.
-- Контроллер уже подключен к `setup()` и `loop()`.
-- Добавлены web-маршруты:
-  - `/irrigation`
-  - `/api/v1/irrigation/status`
-  - `/api/v1/irrigation/zones`
-  - `/api/v1/irrigation/start`
-  - `/api/v1/irrigation/stop`
-- Добавлена отдельная страница полива в `LittleFS`.
-- Главный shell теперь умеет вести на страницу полива.
-
-## Почему модуль сейчас в dry-run
-
-На этом этапе реальные выводы насоса и клапанов оставлены выключенными по умолчанию.
-
-Это сделано специально:
-
-- новая аппаратная часть Smart Platform еще не зафиксирована окончательно;
-- не подтверждены драйверы клапанов и уровень активации;
-- shell, сценарии и тестировщики уже могут работать с живым модулем без риска случайного запуска железа.
-
-Именно поэтому в коде используется `kEnableRealOutputsByDefault = false`.
-
-## Что уже можно тестировать
-
-Даже в `dry-run` режиме уже можно проверять:
-
-- отображение модуля в shell;
-- работу страницы `/irrigation`;
-- запуск одной зоны вручную;
-- остановку активной зоны;
-- реакцию JSON API;
-- симуляцию изменения влажности и времени полива;
-- сценарии, которые позже будут обращаться к модулю полива через API.
-
-## Ограничения этапа
-
-- Пока поддерживается только одна активная зона одновременно.
-- Реальные датчики влажности еще не подключены.
-- Реальные клапаны и насос по умолчанию не управляются.
-- Состояние модуля в общем registry пока не содержит отдельной текстовой телеметрии уровня "какая именно зона активна"; эту деталь пока показывает сама страница `/irrigation`.
-
-## TODO
-
-`TODO(stage-irrigation-hardware)`
-
-- подтвердить реальные пины и драйверы клапанов;
-- зафиксировать безопасный уровень активации насоса и зон;
-- включить аппаратные выходы только после проверки стенда.
-
-`TODO(stage-irrigation-sensors)`
-
-- подключить реальные датчики влажности;
-- заменить симуляцию на реальные измерения;
-- добавить состояние деградации при отсутствии датчиков.
-
-`TODO(stage-irrigation-schedules)`
-
-- добавить расписания и автоматические сценарии;
-- синхронизировать их между `ESP32` и `Raspberry Pi`.
-
-## Полезные ссылки
-
-- Страница полива: `/irrigation`
-- Статус системы: `/api/v1/system`
-- Статус полива: `/api/v1/irrigation/status`
-- Зоны полива: `/api/v1/irrigation/zones`
+- [../knowledge_base/10_irrigation_module.md](../knowledge_base/10_irrigation_module.md)
+- [../knowledge_base/16_hardware_component_profiles.md](../knowledge_base/16_hardware_component_profiles.md)

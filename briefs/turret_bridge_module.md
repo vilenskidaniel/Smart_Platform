@@ -73,7 +73,7 @@
 
 Главная сводка нового контекста вынесена отдельно:
 
-- [37_turret_product_context_map.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/docs/37_turret_product_context_map.md)
+- [11_turret_module.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/knowledge_base/11_turret_module.md)
 
 Дополнительная фиксация по action layers:
 
@@ -81,8 +81,9 @@
   - как turret action в `manual FPV`
   - как отдельный laboratory slice в `Laboratory`
 - `audio` сейчас не углубляется вместе со `strobe`;
-- для `audio` сначала нужен отдельный briefing по hardware, mounting и power:
-  - [38_turret_audio_briefing.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/docs/38_turret_audio_briefing.md)
+- для `audio` hardware, mounting, Bluetooth и power baseline теперь нужно брать из:
+  - [11_turret_module.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/knowledge_base/11_turret_module.md)
+  - [16_hardware_component_profiles.md](/c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/knowledge_base/16_hardware_component_profiles.md)
 
 ## Что модуль не должен делать
 
