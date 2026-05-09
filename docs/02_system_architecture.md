@@ -23,12 +23,12 @@
 
 Важно:
 
-- `Laboratory` — user-facing имя;
-- внутреннее stage-name `Laboratory` можно сохранять в roadmap и технических brief-файлах.
+- `Laboratory` — пользовательское имя;
+- внутреннее имя стадии `Laboratory` можно сохранять в roadmap и технических brief-файлах.
 - `Diagnostics` и `Test Bench` считаем alias-именами того же инженерного контура;
-- `Gallery` — shared virtual section shell, а не модуль одного owner.
+- `Gallery` — общий виртуальный раздел оболочки, а не модуль одного владельца.
 
-## 2. Platform Services
+## 2. Сервисы платформы
 
 Эти части не являются самостоятельными продуктами, но нужны всем блокам:
 

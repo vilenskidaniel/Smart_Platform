@@ -81,6 +81,11 @@
 - primary: `26_v1_product_spec.md`
 - supporting: `01_product_decisions.md`, `39_design_decisions_and_screen_map.md`
 
+### Shared UI State And Interaction
+
+- primary: `53_shared_ui_state_and_interaction_contract.md`
+- supporting: `39_design_decisions_and_screen_map.md`, `40_platform_shell_navigation_alignment.md`, `50_laboratory_v1_workspace_spec.md`, `52_settings_v1_persistent_system_spec.md`
+
 ### Shell And Navigation
 
 - primary: `05_ui_shell_and_navigation.md`
@@ -141,14 +146,15 @@
 6. [10_repository_layout.md](./10_repository_layout.md)
 7. [29_shared_content_and_sd_strategy.md](./29_shared_content_and_sd_strategy.md)
 8. [39_design_decisions_and_screen_map.md](./39_design_decisions_and_screen_map.md)
-9. [50_laboratory_v1_workspace_spec.md](./50_laboratory_v1_workspace_spec.md)
-10. [51_gallery_v1_content_and_reports_spec.md](./51_gallery_v1_content_and_reports_spec.md)
-11. [52_settings_v1_persistent_system_spec.md](./52_settings_v1_persistent_system_spec.md)
-12. [43_field_onboarding_and_operations.md](./43_field_onboarding_and_operations.md)
-13. [44_esp32_hardware_and_io_map.md](./44_esp32_hardware_and_io_map.md)
-14. [45_rpi_turret_hardware_and_io_map.md](./45_rpi_turret_hardware_and_io_map.md)
-15. [46_safety_risk_and_failure_matrix.md](./46_safety_risk_and_failure_matrix.md)
-16. [47_acceptance_and_validation_matrix.md](./47_acceptance_and_validation_matrix.md)
+9. [53_shared_ui_state_and_interaction_contract.md](./53_shared_ui_state_and_interaction_contract.md)
+10. [50_laboratory_v1_workspace_spec.md](./50_laboratory_v1_workspace_spec.md)
+11. [51_gallery_v1_content_and_reports_spec.md](./51_gallery_v1_content_and_reports_spec.md)
+12. [52_settings_v1_persistent_system_spec.md](./52_settings_v1_persistent_system_spec.md)
+13. [43_field_onboarding_and_operations.md](./43_field_onboarding_and_operations.md)
+14. [44_esp32_hardware_and_io_map.md](./44_esp32_hardware_and_io_map.md)
+15. [45_rpi_turret_hardware_and_io_map.md](./45_rpi_turret_hardware_and_io_map.md)
+16. [46_safety_risk_and_failure_matrix.md](./46_safety_risk_and_failure_matrix.md)
+17. [47_acceptance_and_validation_matrix.md](./47_acceptance_and_validation_matrix.md)
 
 После этого уже читать конкретные deep-docs по нужному модулю.
 
@@ -159,10 +165,11 @@
 1. [26_v1_product_spec.md](./26_v1_product_spec.md)
 2. [05_ui_shell_and_navigation.md](./05_ui_shell_and_navigation.md)
 3. [39_design_decisions_and_screen_map.md](./39_design_decisions_and_screen_map.md)
-4. [50_laboratory_v1_workspace_spec.md](./50_laboratory_v1_workspace_spec.md)
-5. [41_laboratory_testing_readiness.md](./41_laboratory_testing_readiness.md)
-6. [46_safety_risk_and_failure_matrix.md](./46_safety_risk_and_failure_matrix.md)
-7. [47_acceptance_and_validation_matrix.md](./47_acceptance_and_validation_matrix.md)
+4. [53_shared_ui_state_and_interaction_contract.md](./53_shared_ui_state_and_interaction_contract.md)
+5. [50_laboratory_v1_workspace_spec.md](./50_laboratory_v1_workspace_spec.md)
+6. [41_laboratory_testing_readiness.md](./41_laboratory_testing_readiness.md)
+7. [46_safety_risk_and_failure_matrix.md](./46_safety_risk_and_failure_matrix.md)
+8. [47_acceptance_and_validation_matrix.md](./47_acceptance_and_validation_matrix.md)
 
 ### Если чат работает с `Turret`
 
@@ -170,18 +177,20 @@
 2. [05_ui_shell_and_navigation.md](./05_ui_shell_and_navigation.md)
 3. [37_turret_product_context_map.md](./37_turret_product_context_map.md)
 4. [39_design_decisions_and_screen_map.md](./39_design_decisions_and_screen_map.md)
-5. [45_rpi_turret_hardware_and_io_map.md](./45_rpi_turret_hardware_and_io_map.md)
-6. [46_safety_risk_and_failure_matrix.md](./46_safety_risk_and_failure_matrix.md)
-7. [47_acceptance_and_validation_matrix.md](./47_acceptance_and_validation_matrix.md)
+5. [53_shared_ui_state_and_interaction_contract.md](./53_shared_ui_state_and_interaction_contract.md)
+6. [45_rpi_turret_hardware_and_io_map.md](./45_rpi_turret_hardware_and_io_map.md)
+7. [46_safety_risk_and_failure_matrix.md](./46_safety_risk_and_failure_matrix.md)
+8. [47_acceptance_and_validation_matrix.md](./47_acceptance_and_validation_matrix.md)
 
 ### Если чат работает с `Irrigation`
 
 1. [26_v1_product_spec.md](./26_v1_product_spec.md)
 2. [05_ui_shell_and_navigation.md](./05_ui_shell_and_navigation.md)
-3. [04_sync_and_ownership.md](./04_sync_and_ownership.md)
-4. [44_esp32_hardware_and_io_map.md](./44_esp32_hardware_and_io_map.md)
-5. [46_safety_risk_and_failure_matrix.md](./46_safety_risk_and_failure_matrix.md)
-6. [47_acceptance_and_validation_matrix.md](./47_acceptance_and_validation_matrix.md)
+3. [53_shared_ui_state_and_interaction_contract.md](./53_shared_ui_state_and_interaction_contract.md)
+4. [04_sync_and_ownership.md](./04_sync_and_ownership.md)
+5. [44_esp32_hardware_and_io_map.md](./44_esp32_hardware_and_io_map.md)
+6. [46_safety_risk_and_failure_matrix.md](./46_safety_risk_and_failure_matrix.md)
+7. [47_acceptance_and_validation_matrix.md](./47_acceptance_and_validation_matrix.md)
 
 ### Если чат работает с `Gallery`
 
@@ -189,29 +198,32 @@
 2. [05_ui_shell_and_navigation.md](./05_ui_shell_and_navigation.md)
 3. [29_shared_content_and_sd_strategy.md](./29_shared_content_and_sd_strategy.md)
 4. [39_design_decisions_and_screen_map.md](./39_design_decisions_and_screen_map.md)
-5. [51_gallery_v1_content_and_reports_spec.md](./51_gallery_v1_content_and_reports_spec.md)
-6. [46_safety_risk_and_failure_matrix.md](./46_safety_risk_and_failure_matrix.md)
-7. [47_acceptance_and_validation_matrix.md](./47_acceptance_and_validation_matrix.md)
+5. [53_shared_ui_state_and_interaction_contract.md](./53_shared_ui_state_and_interaction_contract.md)
+6. [51_gallery_v1_content_and_reports_spec.md](./51_gallery_v1_content_and_reports_spec.md)
+7. [46_safety_risk_and_failure_matrix.md](./46_safety_risk_and_failure_matrix.md)
+8. [47_acceptance_and_validation_matrix.md](./47_acceptance_and_validation_matrix.md)
 
 ### Если чат работает с `Settings`
 
 1. [26_v1_product_spec.md](./26_v1_product_spec.md)
 2. [05_ui_shell_and_navigation.md](./05_ui_shell_and_navigation.md)
 3. [40_platform_shell_navigation_alignment.md](./40_platform_shell_navigation_alignment.md)
-4. [52_settings_v1_persistent_system_spec.md](./52_settings_v1_persistent_system_spec.md)
-5. [29_shared_content_and_sd_strategy.md](./29_shared_content_and_sd_strategy.md)
-6. [46_safety_risk_and_failure_matrix.md](./46_safety_risk_and_failure_matrix.md)
-7. [47_acceptance_and_validation_matrix.md](./47_acceptance_and_validation_matrix.md)
+4. [53_shared_ui_state_and_interaction_contract.md](./53_shared_ui_state_and_interaction_contract.md)
+5. [52_settings_v1_persistent_system_spec.md](./52_settings_v1_persistent_system_spec.md)
+6. [29_shared_content_and_sd_strategy.md](./29_shared_content_and_sd_strategy.md)
+7. [46_safety_risk_and_failure_matrix.md](./46_safety_risk_and_failure_matrix.md)
+8. [47_acceptance_and_validation_matrix.md](./47_acceptance_and_validation_matrix.md)
 
 ### Если чат работает с data model или save flows
 
 1. [26_v1_product_spec.md](./26_v1_product_spec.md)
 2. [05_ui_shell_and_navigation.md](./05_ui_shell_and_navigation.md)
 3. [29_shared_content_and_sd_strategy.md](./29_shared_content_and_sd_strategy.md)
-4. [50_laboratory_v1_workspace_spec.md](./50_laboratory_v1_workspace_spec.md)
-5. [51_gallery_v1_content_and_reports_spec.md](./51_gallery_v1_content_and_reports_spec.md)
-6. [52_settings_v1_persistent_system_spec.md](./52_settings_v1_persistent_system_spec.md)
-7. [46_safety_risk_and_failure_matrix.md](./46_safety_risk_and_failure_matrix.md)
+4. [53_shared_ui_state_and_interaction_contract.md](./53_shared_ui_state_and_interaction_contract.md)
+5. [50_laboratory_v1_workspace_spec.md](./50_laboratory_v1_workspace_spec.md)
+6. [51_gallery_v1_content_and_reports_spec.md](./51_gallery_v1_content_and_reports_spec.md)
+7. [52_settings_v1_persistent_system_spec.md](./52_settings_v1_persistent_system_spec.md)
+8. [46_safety_risk_and_failure_matrix.md](./46_safety_risk_and_failure_matrix.md)
 
 ## 5. Правила Для Дальнейшей Переписи Docs
 

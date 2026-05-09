@@ -19,17 +19,17 @@
 Здесь фиксируем только тот coordination-gap, без которого реальные board-by-board проходы быстро превращаются в ad-hoc operator memory:
 
 - явную предварительную проверку внутри `Laboratory`;
-- канонический порядок bring-up;
-- owner-aware blocked visibility;
-- session/evidence continuity внутри `Laboratory`;
-- handoff подтвержденных результатов в `Settings` без смешивания с user-facing history.
+- канонический порядок первичного ввода в работу;
+- видимость блокировок с учетом владельца;
+- непрерывность рабочего контекста и записей сессии внутри `Laboratory`;
+- передачу подтвержденных результатов в `Settings` без смешивания с пользовательской историей.
 
-## What We Need Before Smooth Hardware Testing
+## Что нужно перед плавным аппаратным тестированием
 
-1. A visible preflight state inside `Laboratory`.
-2. A canonical bring-up order for `shared`, `ESP32`, and `Raspberry Pi` steps.
-3. Honest visibility for blocked peer-owned slices.
-4. Persistent session evidence inside `Laboratory` itself.
+1. Видимое предполетное состояние внутри `Laboratory`.
+2. Канонический порядок первичного ввода в работу для шагов `shared`, `ESP32` и `Raspberry Pi`.
+3. Честная видимость заблокированных срезов удаленного узла.
+4. Постоянные локальные записи сессии внутри самого `Laboratory`.
 5. A way to grow into testcase pass/fail recording without rebuilding the shell again.
 6. A stable path for experimental modules such as `HC-SR04`-class range sensors and stepper drives.
 7. A visible manual power context for bench-sensitive slices such as strobe qualification.
@@ -91,41 +91,41 @@ For the current baseline, we should treat a board as "entered the system" only w
 - the shell does not pretend peer-owned routes are local;
 - `Laboratory` keeps the same board visibility after navigation from `Home`.
 
-## Registration And Onboarding Gap
+## Пробел в регистрации и первичном запуске
 
-This part must stay explicit before real bench testing starts:
+Эта часть должна оставаться явной до начала реального стендового тестирования:
 
-- we already have transport-level node identity and sync registration;
-- we do not yet have a full user-facing onboarding wizard;
-- we do not yet have the old donor `login -> Wi-Fi setup -> normal mode` flow reworked for the new shell;
-- we intentionally did not migrate the legacy cookie/auth flow as-is.
+- у нас уже есть транспортный уровень идентичности узла и регистрации синхронизации;
+- у нас пока нет полного пользовательского мастера первичного запуска;
+- мы еще не переработали старый донорский поток `login -> Wi-Fi setup -> normal mode` под новую оболочку;
+- мы сознательно не переносили старый cookie/auth-поток как есть.
 
-So for the first physical passes, "device registration" means:
+Поэтому для первых физических проходов "регистрация устройства" означает:
 
-- the shell is reachable;
-- the node is visible in the top ribbon;
-- peer presence is reflected through heartbeat/snapshot state.
+- оболочка доступна;
+- узел виден в верхней ленте;
+- наличие удаленного узла отражается через состояние heartbeat/snapshot.
 
-It does not yet mean:
+Это пока не означает:
 
-- guided first-run onboarding;
-- captive setup wizard;
-- persistent user-facing device registry page.
+- управляемый первичный запуск;
+- мастер начальной настройки;
+- постоянную пользовательскую страницу реестра устройств.
 
-## Donor Strengths We Keep
+## Сильные стороны донора, которые сохраняем
 
-Legacy desktop files were stronger than the current baseline in four practical areas:
+Старые настольные файлы были сильнее текущего базового состояния в четырех практических областях:
 
 1. explicit connection status instead of vague readiness language;
 2. session lifecycle visibility;
-3. recommended next action after connection;
+3. краткая summary готовности после подключения;
 4. persistent operator trace.
 
 We adapt those strengths into the web shell like this:
 
 - connection visibility becomes top-bar board chips on `Home` and `Laboratory`;
-- recommended next action becomes `Laboratory` readiness;
-- persistent operator/session trace continues to move into the `Laboratory` session bundle.
+- summary readiness becomes сводкой `Laboratory`, а не отдельным императивным блоком работы;
+- persistent operator/session trace continues to move into local `Laboratory` session notes.
 
 This order is intentionally board-aware:
 
@@ -140,10 +140,10 @@ This order is intentionally board-aware:
   - overall readiness;
   - preflight checklist;
   - bring-up sequence with current status;
-  - next recommended action.
+  - summary of the current readiness without replacing the real work inside component cards.
 - the bring-up sequence now includes a direct `Raspberry Pi / Displays` step with deep link to `Laboratory / Displays`.
 
-## Session And Evidence Baseline Added In This Step
+## Session Context Baseline Added In This Step
 
 - Raspberry Pi now exposes a small laboratory session contract:
   - `GET /api/v1/laboratory/session`
@@ -152,13 +152,12 @@ This order is intentionally board-aware:
   - `POST /api/v1/laboratory/session/update`
   - `POST /api/v1/laboratory/session/finish`
   - `POST /api/v1/laboratory/event`
-- `POST /api/v1/laboratory/event` по умолчанию создает запись только внутри laboratory session/evidence слоя и не должен сам по себе превращаться в `Gallery > Reports` entry без явного product-level export;
-- shared `Laboratory` hub now includes a visible `Session Backbone` block above the category rail flow;
-- the operator can record `pass`, `warn`, `fail`, and note entries from the active slice without leaving the hub;
-- the display page now records explicit display-lab evidence instead of keeping everything only in a local page log;
-- session entries carry laboratory context fields such as session id, operator, objective, hardware profile, external module, power context, view mode, and active slice;
-- mirrored shells can keep a local draft session if Raspberry Pi backend session API is not available, while preserving the same laboratory metadata model;
-- `Gallery > Reports` is not the default sink for these engineering records; it remains reserved for short user-facing history of real system actions.
+  - `POST /api/v1/laboratory/event` по умолчанию создает запись только внутри local session-notes слоя `Laboratory` и не должен сам по себе превращаться в `Gallery > Reports` entry;
+  - текущий backend-contract с `session/context/start/update/finish` остается полезным как носитель рабочего контекста, но пользовательская цель — не громоздкий отдельный side-panel, а легкий контекст и локальные записи сессии;
+  - оператор может записывать отметки `pass`, `warn`, `fail`, `blocked`, `skipped` и заметки из активного среза, не выходя из текущей карточки;
+  - страница дисплея и другие глубокие срезы могут держать локальные записи проверки, не превращая их в отдельный пользовательский `Reports`-поток;
+  - записи сессии несут поля лабораторного контекста, такие как идентификатор сессии, оператор, цель, аппаратный профиль, внешний модуль, контекст питания, режим просмотра и активный срез;
+  - при недоступности API сессии локальный черновик сессии на устройстве остается допустимым fallback-путем.
 
 ## Smartphone Smoke Checklist
 
