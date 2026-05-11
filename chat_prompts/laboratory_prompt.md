@@ -39,14 +39,12 @@
 4. `knowledge_base/06_shared_ui_contract.md`
 5. `knowledge_base/07_data_registry_storage_and_persistence.md`
 6. `knowledge_base/08_safety_acceptance_and_field_operations.md`
-7. `briefs/laboratory.md` только как вспомогательный слой
-8. `knowledge_base/17_open_questions_and_migration.md`, если нужен explicit donor status или unresolved residue map
+7. `knowledge_base/17_open_questions_and_migration.md`, если нужен historical migration status или карта прошлых переносов
 
 Практическое правило:
 
-- legacy donor sources для `Laboratory` больше не входят в primary reading order;
-- если `briefs/laboratory.md` расходится с active canon, новым каноном считается `knowledge_base/12_laboratory_module.md`;
-- если в активном каноне еще есть конкретный пробел вокруг глубоких деталей рабочего пространства, остатков readiness-слоя или соседних границ `Settings` / `Gallery`, сначала смотреть migration ledger и только потом точечно открывать donor-остаток;
+- legacy donor sources для `Laboratory` больше не входят в active workspace и primary reading order;
+- если в активном каноне еще есть конкретный пробел вокруг глубоких деталей рабочего пространства, остатков readiness-слоя или соседних границ `Settings` / `Gallery`, сначала смотреть migration ledger, а затем реальные кодовые опоры и текущие implementation anchors;
 - если локальная идея по `Laboratory` начинает менять общий язык состояний, блокировок, tooltip, fullscreen, input helpers или bar/home behavior, сильнее становится `knowledge_base/06_shared_ui_contract.md`, а не локальная стилистическая привычка;
 - если код расходится с этим каноном, сначала разложить его на `keep`, `adapt`, `rewrite`, а не спрашивать пользователя заново “как вообще должно быть”.
 
@@ -601,7 +599,7 @@
 - старого `Laboratory` prompt-а;
 - старых сервисных страниц;
 - донорской реализации;
-- brief-а, который уже расходится с deep-spec;
+- summary-layer файла, который уже расходится с deep-spec;
 
 нельзя оставлять старый источник как второй действующий канон.
 
@@ -695,27 +693,27 @@
 
 ## Реальные Кодовые Опоры Для Локального Старта
 
-- `firmware_esp32/data/service/index.html`
-- `firmware_esp32/data/service/strobe.html`
-- `firmware_esp32/data/service/irrigation.html`
-- `firmware_esp32/src/web/WebShellServer.cpp`
-- `firmware_esp32/src/web/ShellSnapshotFacade.cpp`
-- `raspberry_pi/web/service.html`
-- `raspberry_pi/web/service_turret.html`
-- `raspberry_pi/web/service_displays.html`
-- `raspberry_pi/server.py`
-- `raspberry_pi/bridge_state.py`
-- `raspberry_pi/laboratory_session.py`
-- `raspberry_pi/laboratory_readiness.py`
-- `raspberry_pi/report_feed.py`
-- `raspberry_pi/tests/test_laboratory_readiness.py`
+- `io_firmware/data/service/index.html`
+- `io_firmware/data/service/strobe.html`
+- `io_firmware/data/service/irrigation.html`
+- `io_firmware/src/web/WebShellServer.cpp`
+- `io_firmware/src/web/ShellSnapshotFacade.cpp`
+- `host_runtime/web/service.html`
+- `host_runtime/web/service_turret.html`
+- `host_runtime/web/service_displays.html`
+- `host_runtime/server.py`
+- `host_runtime/bridge_state.py`
+- `host_runtime/laboratory_session.py`
+- `host_runtime/laboratory_readiness.py`
+- `host_runtime/report_feed.py`
+- `host_runtime/tests/test_laboratory_readiness.py`
 
 Используй эти файлы не как декоративный список, а как реальные точки опоры:
 
-- когда речь о маршруте `/service` и реальной выдаче страниц, сначала смотри `raspberry_pi/server.py` и `raspberry_pi/web/service*.html`;
-- когда речь о `Записях сессии`, `power_context`, `view_mode`, `active_tool` и `module_id`, сначала смотри `raspberry_pi/laboratory_session.py`;
-- когда речь о preflight, bring-up order, blocked peer-owned шагах и readiness summary, сначала смотри `raspberry_pi/laboratory_readiness.py` и `raspberry_pi/tests/test_laboratory_readiness.py`;
-- когда речь о зеркалировании shell на `ESP32`, запасном поведении и обязательности `LittleFS`, сначала смотри `firmware_esp32/src/web/WebShellServer.cpp` и `firmware_esp32/src/web/ShellSnapshotFacade.cpp`.
+- когда речь о маршруте `/service` и реальной выдаче страниц, сначала смотри `host_runtime/server.py` и `host_runtime/web/service*.html`;
+- когда речь о `Записях сессии`, `power_context`, `view_mode`, `active_tool` и `module_id`, сначала смотри `host_runtime/laboratory_session.py`;
+- когда речь о preflight, bring-up order, blocked peer-owned шагах и readiness summary, сначала смотри `host_runtime/laboratory_readiness.py` и `host_runtime/tests/test_laboratory_readiness.py`;
+- когда речь о зеркалировании shell на `ESP32`, запасном поведении и обязательности `LittleFS`, сначала смотри `io_firmware/src/web/WebShellServer.cpp` и `io_firmware/src/web/ShellSnapshotFacade.cpp`.
 
 ## Критерий Готовности Для Laboratory-Шага
 

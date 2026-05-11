@@ -8,12 +8,12 @@
 
 - текущий статус: `active draft`
 
-## Donor Источники Для Первого Переноса
+## Донорские Источники Для Первого Переноса
 
 - donor mapping для этого файла зафиксирован в `knowledge_base/17_open_questions_and_migration.md`;
 - `shared_contracts/shell_snapshot_contract.md` остается active companion contract для snapshot/routing truth.
 
-## Settled Truths
+## Установленные Истины
 
 - host, viewer и controller profile — разные сущности
 - `ESP32` и `Raspberry Pi` не считаются вечными owner-ярлыками модулей
@@ -33,6 +33,21 @@
 - `host launch` и `browser entry` — это разные слои;
 - viewer может входить через URL host-side shell и при этом работать с peer-owned модулем;
 - host не должен притворяться owner-side runtime только потому, что именно он отдал HTML пользователю.
+
+### Shell Surface, Runtime Host И Physical Device Truth
+
+Для этого проекта опасно схлопывать несколько разных ответов на вопрос “что это за устройство?”.
+
+- `current_shell` описывает family опубликованной shell-surface, а не устройство, которое пользователь сейчас держит в руках;
+- `runtime.host` описывает машину, где сейчас реально работает backend/server;
+- `viewers` описывают конкретные браузеры и устройства просмотра;
+- `nodes.current` и `nodes.peer` описывают physical platform nodes, а не viewer-сессии.
+
+Практические примеры, которые нужно считать нормой, а не исключением:
+
+- `Windows laptop` может одновременно быть `runtime.host`, текущим `desktop` viewer и временным smoke-host для shell family `raspberry_pi`, пока `ESP32` остается отдельным physical peer node;
+- на втором этапе тестирования голый `Raspberry Pi` с экраном и камерой должен оставаться отдельным physical node и одновременно давать отдельный `display` viewer, не стирая различие между этим экраном и Windows laptop viewer;
+- bar, `Settings`, `Laboratory` и другие shared shell surfaces не должны показывать `current_shell.node_type` как будто это “текущее устройство пользователя”.
 
 ### Host launch, browser entry и viewer detection
 
@@ -87,6 +102,7 @@
 - shell может быть поднят на временном desktop/laptop host для smoke или development entry;
 - такой host не становится автоматическим owner модуля;
 - если есть более сильный runtime source, например `runtime_profile`, `viewers` или routing truth в snapshot, они важнее простых loopback-эвристик.
+- если published shell family относится к `Raspberry Pi`, это не означает, что текущий viewer или runtime host тоже являются `Raspberry Pi`.
 
 ## 3. Controller Profiles Для Модулей
 

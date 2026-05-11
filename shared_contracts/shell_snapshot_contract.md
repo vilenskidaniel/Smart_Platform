@@ -37,6 +37,7 @@
 {
   "node_id": "esp32-main",
   "node_type": "esp32",
+  "identity_scope": "shell_surface",
   "shell_base_url": "http://192.168.4.1",
   "ui_shell_version": "0.1.0",
   "active_mode": "manual",
@@ -46,6 +47,13 @@
 ```
 
 `current_shell` описывает shell-surface, а не physical host-machine.
+
+Дополнительные правила интерпретации:
+
+- `current_shell.node_type` и `current_shell.identity_scope` описывают family и scope опубликованной shell-surface, а не текущий viewer-device;
+- actual backend/server host должен читаться из `runtime.host`, а текущий browser/device пользователя — из `viewers`;
+- в `desktop_smoke` нормально иметь одновременно `current_shell.node_type = raspberry_pi`, `runtime.host.kind = desktop_host` и `viewers[*].viewer_kind = desktop`;
+- при display-qualification bare `Raspberry Pi` с экраном и камерой может одновременно фигурировать как physical node в `nodes` и как `display` viewer в `viewers`, не заменяя собой laptop viewer.
 
 ## `runtime`
 
@@ -88,6 +96,7 @@ Snapshot не обязан публиковать один заранее выб
 - читать массив `viewers`;
 - сопоставлять локальный `viewer_id`;
 - на этой основе вычислять `current browser client`.
+- не подменять этим массивом `runtime.host` и physical `nodes`.
 
 ## `nodes`
 

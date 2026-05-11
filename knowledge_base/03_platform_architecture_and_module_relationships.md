@@ -8,12 +8,12 @@
 
 - текущий статус: `active draft`
 
-## Donor Источники Для Первого Переноса
+## Донорские Источники Для Первого Переноса
 
 - donor mapping для этого файла зафиксирован в `knowledge_base/17_open_questions_and_migration.md`;
 - specific legacy donor paths больше не считаются обязательным reading path для этого active file.
 
-## Settled Truths
+## Установленные Истины
 
 - связи между модулями описываются как связи ролей и потоков, а не как жесткая привязка к одной плате
 

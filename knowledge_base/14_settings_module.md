@@ -2,29 +2,29 @@
 
 ## Роль Файла
 
-Этот файл должен стать новым каноническим описанием `Settings` как persistent system layer.
+Этот файл должен стать новым каноническим описанием `Settings` как постоянного системного слоя.
 
 ## Статус
 
 - текущий статус: `active draft`
-- этот файл задает новый модульный active canon для `Settings`; donor docs ниже остаются detail and implementation residue
+- этот файл задает новый модульный активный канон для `Settings`; историческое состояние переноса держим в `knowledge_base/17_open_questions_and_migration.md`
 
-## Donor Источники Для Первого Переноса
+## Донорские Источники Для Первого Переноса
 
 - donor mapping для этого файла зафиксирован в `knowledge_base/17_open_questions_and_migration.md`;
-- `chat_prompts/settings_prompt.md` остается active companion source для module wording and scope discipline.
+- `chat_prompts/settings_prompt.md` остается prompt-layer companion source для рабочего режима чата.
 
-## Settled Truths
+## Установленные Истины
 
 - `Settings` хранит persistent truth и shared preferences
 - constructor, registry, profiles и save/apply описываются отдельно от runtime state
 - current controller profile не должен маскироваться под вечный module ownership
 
-## Canon
+## Канон
 
 ### 1. Роль И Пользовательский Итог
 
-`Settings` - это одна глобальная persistent page платформы.
+`Settings` - это одна глобальная постоянная страница платформы.
 
 Для пользователя `Settings` должен давать такой итог:
 
@@ -60,7 +60,7 @@
 9. `Constructor`
 10. `Diagnostics`
 
-Этот порядок уже materialized in current shell implementations and therefore counts as active module truth.
+Этот порядок уже материализован в текущих shell-реализациях и поэтому считается активной модульной истиной.
 
 Назначение разделов:
 
@@ -79,7 +79,7 @@
 
 ### 3. Shared Preferences And Shell Coupling
 
-`Settings` хранит shared preferences, которые должны оставаться одной и той же truth across shell surfaces.
+`Settings` хранит shared preferences, которые должны оставаться одной и той же истиной на всех shell-поверхностях.
 
 Минимальный обязательный набор `v1`:
 
@@ -105,11 +105,11 @@ Theme and operator-input semantics for the current baseline:
 - disabled `Keyboard controls` не скрывает связанные bindings и power-profile fields: они остаются видимыми, заблокированными и объясняют следующий шаг;
 - `Shift` считается конфигурируемым power modifier baseline для operator controls: по умолчанию `50%`, с modifier `100%`, пока пользователь явно не переназначит эти значения.
 
-`Settings` stores the preference. Shell surfaces may honor it incrementally, but they must not invent a conflicting parallel preference layer.
+`Settings` хранит это предпочтение. Shell-поверхности могут поддерживать его поэтапно, но не должны придумывать конфликтующий параллельный слой настроек.
 
 ### 4. Profiles, Registry And Constructor
 
-`Settings` is the durable home for profiles, registry entries and constructor scaffolds.
+`Settings` является постоянным домом для профилей, registry-записей и constructor-scaffold сущностей.
 
 Здесь живут разные persistent entities:
 
@@ -129,7 +129,7 @@ Theme and operator-input semantics for the current baseline:
 
 Constructor-scaffold entries по умолчанию считаются staged, draft or simulated until explicit confirmation/apply path completes.
 
-Promotion from `Laboratory`:
+Перенос из `Laboratory`:
 
 - `Laboratory` may emit reviewed candidates or profile updates into `Settings`;
 - they do not silently become durable product settings just because they were observed in a session;
@@ -138,7 +138,7 @@ Promotion from `Laboratory`:
 
 ### 5. Save, Apply, Defaults And Origin Tracking
 
-`Settings` follows an optimistic but honest persistence model.
+`Settings` следует optimistic-first, но честной модели сохранения.
 
 Нужно сохранить:
 
@@ -242,9 +242,20 @@ Representative persistent policy families at the current stage:
 
 Unavailable policies stay visible with a short reason and the next step, rather than being hidden.
 
-### 8. Acceptance Hooks
+### 7.1 Реальные Кодовые Опоры Текущего Слоя
 
-Минимальные acceptance hooks текущего этапа:
+Чтобы `Settings` оставался связанным с реальным persistent layer, ниже фиксируем текущие implementation anchors:
+
+- `host_runtime/settings_store.py` - persistent JSON-backed `SettingsStore` для owner-side system settings;
+- `host_runtime/web/settings.html` - current `/settings` page на стороне `Raspberry Pi`;
+- `io_firmware/data/settings/index.html` - mirror `/settings` page на стороне `ESP32`;
+- `host_runtime/server.py` - HTTP-entry для `GET/POST /api/v1/settings`;
+- `host_runtime/tests/test_settings_store.py` - tests persistence и validation для settings layer;
+- `host_runtime/content/.system/settings_state.json` - фактический persisted state, который использует текущий store.
+
+### 8. Проверочные Критерии
+
+Минимальные проверочные критерии текущего этапа:
 
 1. `/settings` exists on current shells as a persistent settings surface;
 2. canonical rail order remains `Appearance -> Runtime -> Sync -> Storage -> Modules -> Components -> Services -> Policies -> Constructor -> Diagnostics`;
@@ -317,7 +328,7 @@ Unavailable policies stay visible with a short reason and the next step, rather 
 
 ## TODO
 
-- после стабилизации active draft переаудировать settings donor residue в migration ledger и оставить только useful detail reminders without active authority role
+- после стабилизации active draft переаудировать settings migration-state в ledger и оставить там только исторически полезные detail reminders
 - позже разнести service/storage-specific residue между `knowledge_base/07` и `knowledge_base/15`
 
 ## TBD

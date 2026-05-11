@@ -6,7 +6,7 @@
 
 ## Роль Модуля
 
-Этот prompt отвечает за `Settings` как центральную persistent page состояния и конфигурации платформы.
+Этот prompt отвечает за `Settings` как центральную постоянную страницу состояния и конфигурации платформы.
 
 Он покрывает:
 
@@ -28,17 +28,17 @@
 5. `knowledge_base/07_data_registry_storage_and_persistence.md`
 6. `knowledge_base/08_safety_acceptance_and_field_operations.md`
 7. `knowledge_base/15_platform_services_and_shared_content.md`
-8. `knowledge_base/17_open_questions_and_migration.md`, если нужен explicit donor status или unresolved residue map
+8. `knowledge_base/17_open_questions_and_migration.md`, если нужен historical migration status или карта прошлых переносов
 
 Практическое правило:
 
-- legacy donor sources для `Settings` больше не входят в primary reading order;
-- если active canon still has a concrete gap around save/apply detail, storage residue or safety wording, сначала смотреть migration ledger и только потом открывать donor residue точечно;
-- если donor detail расходится с active canon, сильнее становятся `knowledge_base/14_settings_module.md`, `knowledge_base/06_shared_ui_contract.md` и `knowledge_base/07_data_registry_storage_and_persistence.md`.
+- legacy donor sources для `Settings` больше не входят в active workspace и primary reading order;
+- если в active canon еще есть конкретный пробел вокруг save/apply detail, storage residue или safety wording, сначала смотреть migration ledger, а затем текущие storage, shell и settings contracts;
+- если historical migration note расходится с active canon, сильнее становятся `knowledge_base/14_settings_module.md`, `knowledge_base/06_shared_ui_contract.md` и `knowledge_base/07_data_registry_storage_and_persistence.md`.
 
 ## Установленные Истины
 
-- `Settings` — persistent system page, а не свалка runtime diagnostics.
+- `Settings` — постоянная системная страница, а не свалка runtime diagnostics.
 - Нужно отдельно различать:
   - host
   - viewer device
@@ -51,7 +51,7 @@
 - `Modules`, `Components` и `System Services` не смешиваются.
 - Constructor — не декоративная заглушка: он должен вести к реальному registry/config flow.
 - Shared preference `fullscreen` живет в `Settings`, но отражается и в bar-панели как та же самая истина.
-- `Input helpers` или `ARM`-подобный режим тоже живут в `Settings` и bar-панели как shared state, но функционально относятся только к FPV/operator surfaces и не должны отключать `Laboratory`.
+- `Input helpers` или `ARM`-подобный режим тоже живут в `Settings` и bar-панели как общее состояние, но функционально относятся только к FPV- и operator-поверхностям и не должны отключать `Laboratory`.
 - Новый constructor scaffold по умолчанию остается `simulated` или неподтвержденным, пока он не прошел явный путь подтверждения и применения.
 - `Sync` управляется через `selected_domains`, `Auto` и `Manual review`.
 - Storage actions идут только через preview/confirm и backend root-boundary checks.
@@ -63,8 +63,8 @@
 
 1. Что пользователь хочет изменить: вид интерфейса, поведение системы, модульную конфигурацию, storage или sync.
 2. Что должно быть видно как текущее состояние, а что как редактируемая настройка.
-3. Где нужен clear disabled-state explanation.
-4. Что должно оставаться local, а что shared.
+3. Где нужно ясное disabled-state explanation.
+4. Что должно оставаться локальным, а что общим.
 5. Что уже работает хорошо и идет в `keep`.
 6. Что оставить как `TODO` или `TBD`.
 
@@ -99,7 +99,7 @@
 ### TBD
 
 - окончательная multi-node precedence model для некоторых shared preferences;
-- полная audit-trail модель для больших registry and profile changes.
+- полная audit-trail модель для больших registry- и profile-изменений.
 
 ## Cross-Module Trigger
 
@@ -107,5 +107,5 @@
 
 - shared preferences across nodes;
 - `Laboratory -> Settings` save/apply semantics;
-- `Gallery` and reports provenance settings;
+- настройки `Gallery` и provenance для `Reports`;
 - shell-level language, theme, fullscreen, input-helper or launch-context contracts.

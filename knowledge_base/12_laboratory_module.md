@@ -7,12 +7,12 @@
 ## Статус
 
 - текущий статус: `активный черновик`
-- этот файл задает новый модульный активный канон для `Laboratory`; донорские документы ниже остаются слоем детальной реализации и остатком readiness-описания
+- этот файл задает новый модульный активный канон для `Laboratory`; историческое состояние переноса держим в `knowledge_base/17_open_questions_and_migration.md`
 
 ## Донорские Источники Для Первого Переноса
 
 - donor mapping для этого файла зафиксирован в `knowledge_base/17_open_questions_and_migration.md`;
-- [briefs/laboratory.md](c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/briefs/laboratory.md) и [chat_prompts/laboratory_prompt.md](c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/chat_prompts/laboratory_prompt.md) остаются вспомогательными источниками для согласования рамки модуля и рабочего процесса.
+- [chat_prompts/laboratory_prompt.md](c:/Users/vilen/OneDrive/Dokumentumok/PlatformIO/Projects/Smart_Platform/chat_prompts/laboratory_prompt.md) остается prompt-layer companion source для рабочего режима чата.
 
 ## Установленные Истины
 
@@ -331,7 +331,7 @@
 
 Текущий общий контракт узла, который должен считаться активной опорой:
 
-- исходный шаблон общего лабораторного экрана живет в `raspberry_pi/web/service.html`, а зеркальный входной экран для `ESP32` - в `firmware_esp32/data/service/index.html`;
+- исходный шаблон общего лабораторного экрана живет в `host_runtime/web/service.html`, а зеркальный входной экран для `ESP32` - в `io_firmware/data/service/index.html`;
 - при изменении IA этого рабочего пространства зеркальное поведение должно оставаться выровненным между двумя реализациями оболочки;
 - запасной экран на `ESP32` не должен откатываться к старому плоскому запускателю, если страница в `LittleFS` отсутствует.
 
@@ -344,14 +344,14 @@
 
 Чтобы `Laboratory` не описывался абстрактно, ниже фиксируем реальные текущие опоры в коде:
 
-- `raspberry_pi/web/service.html` - общий лабораторный экран на стороне `Raspberry Pi`;
-- `raspberry_pi/web/service_turret.html` и `raspberry_pi/web/service_displays.html` - живые специализированные страницы совместимости для турели и дисплеев;
-- `raspberry_pi/server.py` - текущий HTTP-вход, который реально отдает `/service`, `/service/turret` и `/service/displays`;
-- `raspberry_pi/laboratory_session.py` - хранит контекст сессии `Laboratory`, включая `owner_node_id`, `power_context`, `view_mode`, `active_tool` и `module_id`;
-- `raspberry_pi/laboratory_readiness.py` - строит preflight и порядок запуска оборудования для `Laboratory`, включая шаги `rpi_display_checks`, `esp32_strobe_bench`, `esp32_irrigation_service` и `session_review`;
-- `raspberry_pi/tests/test_laboratory_readiness.py` - проверяет, что peer-owned шаги блокируются до появления узла-владельца и что маршруты `rpi_touch_display` и `session_review` остаются корректными;
-- `firmware_esp32/src/web/WebShellServer.cpp` - держит безопасные запасные экраны и не должен подменять новый laboratory-хаб старым плоским запускателем, если `LittleFS` еще не загружен;
-- `firmware_esp32/src/web/ShellSnapshotFacade.cpp` - публикует shell snapshot с навигацией, где `Laboratory` закреплен как `/service`.
+- `host_runtime/web/service.html` - общий лабораторный экран на стороне `Raspberry Pi`;
+- `host_runtime/web/service_turret.html` и `host_runtime/web/service_displays.html` - живые специализированные страницы совместимости для турели и дисплеев;
+- `host_runtime/server.py` - текущий HTTP-вход, который реально отдает `/service`, `/service/turret` и `/service/displays`;
+- `host_runtime/laboratory_session.py` - хранит контекст сессии `Laboratory`, включая `owner_node_id`, `power_context`, `view_mode`, `active_tool` и `module_id`;
+- `host_runtime/laboratory_readiness.py` - строит preflight и порядок запуска оборудования для `Laboratory`, включая шаги `rpi_display_checks`, `esp32_strobe_bench`, `esp32_irrigation_service` и `session_review`;
+- `host_runtime/tests/test_laboratory_readiness.py` - проверяет, что peer-owned шаги блокируются до появления узла-владельца и что маршруты `rpi_touch_display` и `session_review` остаются корректными;
+- `io_firmware/src/web/WebShellServer.cpp` - держит безопасные запасные экраны и не должен подменять новый laboratory-хаб старым плоским запускателем, если `LittleFS` еще не загружен;
+- `io_firmware/src/web/ShellSnapshotFacade.cpp` - публикует shell snapshot с навигацией, где `Laboratory` закреплен как `/service`.
 
 Правило для `Displays`:
 
@@ -370,18 +370,20 @@
 6. режим браузера и полноэкранный режим оба пригодны к работе и сохраняют одну и ту же истину контекста;
 7. оператор может записать `pass / warn / fail / blocked / skipped / note` из активного среза без перехода в `Reports`;
 8. явное действие `Сохранить выбор` дает контур просмотра и применения в `Settings`.
+9. одновременный проход с `Windows laptop` и bare `Raspberry Pi` с экраном и камерой не должен смешивать `runtime host`, `current viewer`, список `viewers` и physical `nodes` в `Laboratory` и `Display Laboratory`.
 
 Минимальные проверяемые черты текущего кода:
 
-- `raspberry_pi/laboratory_session.py` допускает только `bench_psu` и `battery` как `power_context`, а также `browser` и `fullscreen` как `view_mode`;
-- `raspberry_pi/laboratory_readiness.py` уже различает `ready`, `attention` и `blocked` и не разрешает делать вид, будто peer-owned срез уже локально доступен;
-- `firmware_esp32/src/web/WebShellServer.cpp` прямо подсказывает загрузить `LittleFS` через `pio run -t uploadfs`, если полноценный laboratory-экран на устройстве еще не поднят.
+- `host_runtime/laboratory_session.py` допускает только `bench_psu` и `battery` как `power_context`, а также `browser` и `fullscreen` как `view_mode`;
+- `host_runtime/laboratory_readiness.py` уже различает `ready`, `attention` и `blocked` и не разрешает делать вид, будто peer-owned срез уже локально доступен;
+- `io_firmware/src/web/WebShellServer.cpp` прямо подсказывает загрузить `LittleFS` через `pio run -t uploadfs`, если полноценный laboratory-экран на устройстве еще не поднят.
 
 Практические readiness-проходы, которые остаются важными:
 
 - телефонный проход только с `ESP32`;
 - телефонный проход только с `Raspberry Pi`;
 - телефонный проход с двумя платами;
+- dual-viewer проход с `Windows laptop` и bare `Raspberry Pi` с экраном и камерой, где shell одновременно показывает desktop-viewer, display-viewer, `runtime host` и physical nodes без схлопывания ролей;
 - отдельный проход `Raspberry Pi Touch Display` с проверкой шаблонов и сенсорной сетки.
 
 ### 10. Нормативные Примеры И Форматы

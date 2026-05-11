@@ -1,0 +1,2781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Smart Platform / Settings</title>
+  <style>
+    :root {
+      --bg: #dce5dd;
+      --panel: rgba(251, 252, 248, 0.92);
+      --panel-strong: #f9fcf6;
+      --panel-soft: rgba(255, 255, 255, 0.62);
+      --panel-glass: rgba(249, 252, 246, 0.76);
+      --ink: #1a2620;
+      --muted: #657469;
+      --line: rgba(52, 79, 61, 0.14);
+      --line-strong: rgba(52, 79, 61, 0.24);
+      --accent: #2f5d43;
+      --accent-soft: rgba(47, 93, 67, 0.12);
+      --accent-strong: #214331;
+      --hero-a: rgba(30, 61, 43, 0.98);
+      --hero-b: rgba(71, 108, 79, 0.96);
+      --hero-c: rgba(168, 193, 145, 0.52);
+      --hero-ink: #f3fbf2;
+      --ok: #2f7d4d;
+      --ok-soft: rgba(47, 125, 77, 0.14);
+      --warn: #9b6619;
+      --warn-soft: rgba(155, 102, 25, 0.14);
+      --fault: #a43a3a;
+      --fault-soft: rgba(164, 58, 58, 0.14);
+      --shadow: 0 24px 54px rgba(21, 33, 25, 0.12);
+      --radius: 28px;
+      --radius-sm: 20px;
+      --display: "Bahnschrift SemiCondensed", "Arial Narrow", "Trebuchet MS", sans-serif;
+      --sans: "Segoe UI Variable Text", "Segoe UI", "Trebuchet MS", sans-serif;
+      --mono: "Consolas", "SFMono-Regular", monospace;
+      --page-gap: 18px;
+      --section-pad: 20px;
+      --shell-safe-top: calc(var(--smart-platform-bar-height, 56px) + 18px);
+    }
+
+    body[data-theme="dawn"] {
+      --bg: #e7ddd1;
+      --panel: rgba(255, 249, 239, 0.92);
+      --panel-strong: #fffbf3;
+      --panel-soft: rgba(255, 248, 236, 0.7);
+      --panel-glass: rgba(255, 250, 241, 0.82);
+      --ink: #302217;
+      --muted: #7c6956;
+      --line: rgba(120, 86, 54, 0.15);
+      --line-strong: rgba(120, 86, 54, 0.25);
+      --accent: #8b5d2b;
+      --accent-soft: rgba(139, 93, 43, 0.12);
+      --accent-strong: #6e451e;
+      --hero-a: rgba(98, 60, 24, 0.98);
+      --hero-b: rgba(153, 105, 52, 0.96);
+      --hero-c: rgba(224, 188, 126, 0.46);
+      --hero-ink: #fff8ef;
+      --ok: #68843b;
+      --ok-soft: rgba(104, 132, 59, 0.14);
+      --warn: #9d6418;
+      --warn-soft: rgba(157, 100, 24, 0.14);
+      --fault: #a24239;
+      --fault-soft: rgba(162, 66, 57, 0.14);
+      --shadow: 0 24px 54px rgba(60, 37, 17, 0.12);
+    }
+
+    body[data-theme="studio"] {
+      --bg: #dce2e7;
+      --panel: rgba(248, 251, 253, 0.92);
+      --panel-strong: #fcfdfe;
+      --panel-soft: rgba(255, 255, 255, 0.68);
+      --panel-glass: rgba(248, 251, 253, 0.82);
+      --ink: #18232a;
+      --muted: #62717a;
+      --line: rgba(57, 84, 103, 0.15);
+      --line-strong: rgba(57, 84, 103, 0.24);
+      --accent: #31546b;
+      --accent-soft: rgba(49, 84, 107, 0.12);
+      --accent-strong: #213b4c;
+      --hero-a: rgba(25, 48, 61, 0.98);
+      --hero-b: rgba(68, 97, 118, 0.96);
+      --hero-c: rgba(158, 184, 198, 0.48);
+      --hero-ink: #f5fbfe;
+      --ok: #326f60;
+      --ok-soft: rgba(50, 111, 96, 0.14);
+      --warn: #93662b;
+      --warn-soft: rgba(147, 102, 43, 0.14);
+      --fault: #9c4141;
+      --fault-soft: rgba(156, 65, 65, 0.14);
+      --shadow: 0 24px 54px rgba(18, 34, 43, 0.12);
+    }
+
+    body[data-density="compact"] {
+      --page-gap: 14px;
+      --section-pad: 16px;
+      --radius: 24px;
+      --radius-sm: 18px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: var(--sans);
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, color-mix(in srgb, var(--hero-c) 74%, transparent), transparent 34%),
+        radial-gradient(circle at right center, color-mix(in srgb, var(--accent-soft) 58%, transparent), transparent 28%),
+        linear-gradient(180deg, color-mix(in srgb, var(--panel-strong) 68%, white) 0%, var(--bg) 100%);
+      transition: background 180ms ease, color 180ms ease;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+      background-size: 22px 22px;
+      mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.2), transparent 74%);
+      opacity: 0.26;
+    }
+
+    a { color: inherit; }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    .page {
+      position: relative;
+      z-index: 1;
+      max-width: 1460px;
+      margin: 0 auto;
+      height: 100vh;
+      min-height: 100vh;
+      padding: calc(var(--shell-safe-top) + 8px) 18px 24px;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      gap: var(--page-gap);
+    }
+
+    .card {
+      background: var(--panel-glass);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+
+    .hero {
+      padding: 6px 2px 0;
+      background: transparent;
+      border: 0;
+      box-shadow: none;
+      backdrop-filter: none;
+      color: var(--ink);
+    }
+
+    .hero::after {
+      display: none;
+    }
+
+    .hero-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+
+    .hero-copy {
+      display: block;
+      max-width: none;
+    }
+
+    .hero-kicker,
+    .section-kicker,
+    .panel-kicker,
+    .metric-kicker,
+    .rail-kicker {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .hero h1,
+    .section-title,
+    .rail-title,
+    .metric-title {
+      margin: 0;
+      font-family: var(--display);
+      letter-spacing: -0.03em;
+    }
+
+    .hero h1 {
+      font-size: clamp(38px, 5.4vw, 60px);
+      line-height: 0.92;
+    }
+
+    .hero p,
+    .section-copy,
+    .section-note,
+    .muted,
+    .rail-copy,
+    .metric-copy,
+    .detail-copy {
+      margin: 0;
+      line-height: 1.55;
+    }
+
+    .hero p {
+      display: none;
+    }
+
+    .hero-pills,
+    .hero-actions,
+    .chip-row,
+    .option-row,
+    .action-row,
+    .rail-actions,
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .pill,
+    .status-chip,
+    .hero-link,
+    .inline-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 36px;
+      padding: 8px 13px;
+      border-radius: 999px;
+      font-size: 13px;
+      line-height: 1;
+      text-decoration: none;
+      border: 1px solid var(--line);
+    }
+
+    .pill,
+    .hero-link {
+      border-color: rgba(255, 255, 255, 0.16);
+      background: rgba(255, 255, 255, 0.08);
+      color: inherit;
+    }
+
+    .status-chip,
+    .inline-chip {
+      background: var(--panel-soft);
+      color: var(--muted);
+    }
+
+    .pill[data-tone="ok"],
+    .status-chip[data-tone="ok"],
+    .inline-chip[data-tone="ok"] {
+      background: var(--ok-soft);
+      color: var(--ok);
+      border-color: color-mix(in srgb, var(--ok) 24%, transparent);
+    }
+
+    .pill[data-tone="warn"],
+    .status-chip[data-tone="warn"],
+    .inline-chip[data-tone="warn"] {
+      background: var(--warn-soft);
+      color: var(--warn);
+      border-color: color-mix(in srgb, var(--warn) 24%, transparent);
+    }
+
+    .pill[data-tone="fault"],
+    .status-chip[data-tone="fault"],
+    .inline-chip[data-tone="fault"] {
+      background: var(--fault-soft);
+      color: var(--fault);
+      border-color: color-mix(in srgb, var(--fault) 24%, transparent);
+    }
+
+    .settings-shell {
+      display: grid;
+      grid-template-columns: 300px minmax(0, 1fr);
+      gap: var(--page-gap);
+      align-items: stretch;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .settings-rail,
+    .section-panel,
+    .detail-card,
+    .metric-card,
+    .perk-card,
+    .theme-card,
+    .empty-state,
+    .candidate-card {
+      background: linear-gradient(180deg, color-mix(in srgb, var(--panel-strong) 86%, white), color-mix(in srgb, var(--panel-strong) 92%, var(--bg)));
+    }
+
+    .settings-rail {
+      position: sticky;
+      top: var(--shell-safe-top);
+      padding: var(--section-pad);
+      display: grid;
+      gap: 14px;
+      min-height: 0;
+      max-height: 100%;
+      overflow: auto;
+      overscroll-behavior: contain;
+      scrollbar-gutter: stable;
+    }
+
+    .rail-block {
+      display: grid;
+      gap: 10px;
+      padding: 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--line);
+      background: var(--panel-soft);
+    }
+
+    .rail-title {
+      font-size: 26px;
+      line-height: 0.98;
+    }
+
+    .rail-copy {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .search-shell {
+      position: relative;
+    }
+
+    .search-input {
+      width: 100%;
+      min-height: 48px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: color-mix(in srgb, var(--panel-strong) 82%, white);
+      color: var(--ink);
+      outline: none;
+      transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+    }
+
+    .search-input:focus {
+      border-color: color-mix(in srgb, var(--accent) 34%, transparent);
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 10%, transparent);
+    }
+
+    .rail-nav {
+      display: grid;
+      gap: 8px;
+    }
+
+    .rail-button {
+      appearance: none;
+      width: 100%;
+      text-align: left;
+      padding: 12px 14px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: color-mix(in srgb, var(--panel-strong) 82%, white);
+      color: var(--ink);
+      cursor: pointer;
+      display: grid;
+      gap: 4px;
+      transition: transform 150ms ease, border-color 150ms ease, background 150ms ease, box-shadow 150ms ease;
+    }
+
+    .rail-button:hover,
+    .rail-button:focus-visible {
+      transform: translateY(-1px);
+      border-color: color-mix(in srgb, var(--accent) 28%, transparent);
+      background: color-mix(in srgb, var(--accent) 7%, white);
+      outline: none;
+    }
+
+    .rail-button[data-active="true"] {
+      border-color: color-mix(in srgb, var(--accent) 36%, transparent);
+      background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 12%, white), color-mix(in srgb, var(--accent) 6%, white));
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    }
+
+    .rail-button strong {
+      font-size: 15px;
+      line-height: 1.2;
+    }
+
+    .rail-button span {
+      display: none;
+    }
+
+    .action-button,
+    .ghost-button {
+      appearance: none;
+      border: 1px solid var(--line);
+      background: color-mix(in srgb, var(--panel-strong) 82%, white);
+      color: var(--ink);
+      border-radius: 16px;
+      min-height: 42px;
+      padding: 10px 14px;
+      text-decoration: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: transform 150ms ease, border-color 150ms ease, background 150ms ease;
+    }
+
+    .action-button:hover,
+    .action-button:focus-visible,
+    .ghost-button:hover,
+    .ghost-button:focus-visible {
+      transform: translateY(-1px);
+      border-color: color-mix(in srgb, var(--accent) 28%, transparent);
+      background: color-mix(in srgb, var(--accent) 7%, white);
+      outline: none;
+    }
+
+    .settings-detail {
+      min-width: 0;
+      display: grid;
+      gap: var(--page-gap);
+      min-height: 0;
+      max-height: 100%;
+      overflow: auto;
+      overscroll-behavior: contain;
+      padding-right: 4px;
+      scrollbar-gutter: stable;
+    }
+
+    .section-panel {
+      padding: var(--section-pad);
+      display: grid;
+      gap: 16px;
+      scroll-margin-top: calc(var(--shell-safe-top) + 12px);
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .section-kicker,
+    .panel-kicker,
+    .metric-kicker,
+    .rail-kicker {
+      color: var(--accent);
+    }
+
+    .section-title {
+      font-size: clamp(28px, 4vw, 40px);
+      line-height: 0.98;
+    }
+
+    .section-copy,
+    .detail-copy,
+    .metric-copy,
+    .section-note,
+    .muted {
+      color: var(--muted);
+    }
+
+    .section-stack,
+    .detail-stack,
+    .toggle-list,
+    .info-stack,
+    .diagnostics-stack {
+      display: grid;
+      gap: 12px;
+    }
+
+    .overview-grid,
+    .detail-grid,
+    .perk-grid,
+    .theme-grid,
+    .sync-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .overview-grid {
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+    }
+
+    .detail-grid,
+    .theme-grid,
+    .sync-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .perk-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .metric-card {
+      grid-column: span 3;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .metric-card[data-span="6"] {
+      grid-column: span 6;
+    }
+
+    .metric-card[data-tone="ok"] {
+      border-color: color-mix(in srgb, var(--ok) 22%, transparent);
+    }
+
+    .metric-card[data-tone="warn"] {
+      border-color: color-mix(in srgb, var(--warn) 22%, transparent);
+    }
+
+    .metric-card[data-tone="fault"] {
+      border-color: color-mix(in srgb, var(--fault) 22%, transparent);
+    }
+
+    .metric-title {
+      font-size: clamp(22px, 3vw, 30px);
+      line-height: 1;
+    }
+
+    .metric-stack,
+    .info-stack {
+      display: grid;
+      gap: 10px;
+    }
+
+    .metric-row,
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      padding-top: 10px;
+      border-top: 1px solid var(--line);
+      font-size: 14px;
+    }
+
+    .metric-row:first-child,
+    .info-row:first-child {
+      padding-top: 0;
+      border-top: 0;
+    }
+
+    .metric-row strong,
+    .info-row strong {
+      color: var(--ink);
+    }
+
+    .metric-row span:last-child,
+    .info-row span:last-child {
+      text-align: right;
+      color: var(--ink);
+      min-width: 0;
+      max-width: 62%;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    .detail-card,
+    .candidate-card {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.04;
+      letter-spacing: -0.02em;
+      font-family: var(--display);
+    }
+
+    .toggle {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: center;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--panel-soft);
+    }
+
+    .toggle.is-disabled {
+      opacity: 0.72;
+    }
+
+    .toggle-copy {
+      display: grid;
+      gap: 0;
+    }
+
+    .toggle-copy strong {
+      font-size: 14px;
+      line-height: 1.3;
+    }
+
+    .toggle-copy span {
+      display: none;
+    }
+
+    .switch {
+      appearance: none;
+      position: relative;
+      width: 52px;
+      height: 30px;
+      margin: 0;
+      border-radius: 999px;
+      border: 1px solid var(--line-strong);
+      background: rgba(120, 132, 122, 0.18);
+      cursor: pointer;
+      transition: background 160ms ease, border-color 160ms ease;
+    }
+
+    .switch::after {
+      content: "";
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow: 0 3px 8px rgba(18, 28, 21, 0.18);
+      transition: transform 160ms ease;
+    }
+
+    .switch:checked {
+      background: var(--accent);
+      border-color: color-mix(in srgb, var(--accent) 70%, #ffffff);
+    }
+
+    .switch:checked::after {
+      transform: translateX(22px);
+    }
+
+    .switch:disabled {
+      cursor: not-allowed;
+    }
+
+    .option-chip,
+    .theme-option {
+      position: relative;
+      display: inline-flex;
+    }
+
+    .option-chip input,
+    .theme-option input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .option-chip span {
+      min-height: 42px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: color-mix(in srgb, var(--panel-strong) 84%, white);
+      color: var(--muted);
+      font-size: 13px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      transition: border-color 160ms ease, background 160ms ease, color 160ms ease;
+    }
+
+    .option-chip input:checked + span {
+      color: var(--accent);
+      border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+      background: color-mix(in srgb, var(--accent) 11%, white);
+    }
+
+    .theme-grid {
+      align-items: stretch;
+    }
+
+    .theme-card {
+      min-height: 148px;
+      border-radius: 22px;
+      border: 1px solid var(--line);
+      padding: 16px;
+      cursor: pointer;
+      display: grid;
+      gap: 12px;
+      transition: transform 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+    }
+
+    .theme-card[data-theme-preview="meadow"] {
+      background: linear-gradient(180deg, rgba(50, 93, 67, 0.18), rgba(249, 252, 246, 0.96));
+    }
+
+    .theme-card[data-theme-preview="dawn"] {
+      background: linear-gradient(180deg, rgba(139, 93, 43, 0.18), rgba(255, 251, 243, 0.96));
+    }
+
+    .theme-card[data-theme-preview="studio"] {
+      background: linear-gradient(180deg, rgba(49, 84, 107, 0.18), rgba(252, 253, 254, 0.96));
+    }
+
+    .theme-card:hover,
+    .theme-card:focus-within {
+      transform: translateY(-2px);
+      border-color: color-mix(in srgb, var(--accent) 28%, transparent);
+      box-shadow: 0 14px 24px rgba(19, 31, 23, 0.08);
+    }
+
+    .status-chip[title],
+    .inline-chip[title],
+    .rail-button[title],
+    .metric-card[title],
+    .detail-card[title],
+    .candidate-card[title],
+    .toggle[title],
+    .action-button[title],
+    .ghost-button[title],
+    .theme-card[title],
+    .search-input[title] {
+      cursor: help;
+    }
+
+    .theme-option input:checked + .theme-card {
+      border-color: color-mix(in srgb, var(--accent) 42%, transparent);
+      box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 20%, transparent);
+    }
+
+    .theme-name {
+      font-family: var(--display);
+      font-size: 24px;
+      line-height: 1;
+      margin: 0;
+    }
+
+    .theme-swatch-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .theme-swatch {
+      width: 26px;
+      height: 26px;
+      border-radius: 999px;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    .theme-card[data-theme-preview="meadow"] .theme-swatch:nth-child(1) { background: #274d38; }
+    .theme-card[data-theme-preview="meadow"] .theme-swatch:nth-child(2) { background: #588062; }
+    .theme-card[data-theme-preview="meadow"] .theme-swatch:nth-child(3) { background: #dce5dd; }
+    .theme-card[data-theme-preview="dawn"] .theme-swatch:nth-child(1) { background: #7e4f21; }
+    .theme-card[data-theme-preview="dawn"] .theme-swatch:nth-child(2) { background: #c28e4e; }
+    .theme-card[data-theme-preview="dawn"] .theme-swatch:nth-child(3) { background: #f2e6d8; }
+    .theme-card[data-theme-preview="studio"] .theme-swatch:nth-child(1) { background: #254556; }
+    .theme-card[data-theme-preview="studio"] .theme-swatch:nth-child(2) { background: #69859a; }
+    .theme-card[data-theme-preview="studio"] .theme-swatch:nth-child(3) { background: #e1e8ec; }
+
+    .perk-grid {
+      align-items: stretch;
+    }
+
+    .perk-card {
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 16px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .perk-card.is-disabled {
+      opacity: 0.76;
+    }
+
+    .perk-copy {
+      display: grid;
+      gap: 6px;
+    }
+
+    .perk-title {
+      margin: 0;
+      font-size: 22px;
+      font-family: var(--display);
+      line-height: 1.02;
+      letter-spacing: -0.02em;
+    }
+
+    .perk-copy p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 14px;
+    }
+
+    .perk-toggle {
+      margin-top: auto;
+    }
+
+    details {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--panel-soft);
+      overflow: hidden;
+    }
+
+    summary {
+      cursor: pointer;
+      padding: 12px 14px;
+      font-weight: 700;
+      list-style: none;
+    }
+
+    summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .code-block {
+      margin: 0;
+      padding: 0 14px 14px;
+      white-space: pre-wrap;
+      overflow: auto;
+      font: 12px/1.5 var(--mono);
+      color: #e8f5e8;
+      background: #152019;
+      min-height: 170px;
+    }
+
+    .empty-state {
+      padding: 28px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      display: grid;
+      gap: 12px;
+      text-align: center;
+      place-items: center;
+    }
+
+    .empty-state h2 {
+      margin: 0;
+      font-family: var(--display);
+      font-size: 34px;
+      line-height: 1;
+    }
+
+    .toast-stack {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 30;
+      display: grid;
+      gap: 10px;
+      pointer-events: none;
+    }
+
+    .toast {
+      min-width: min(360px, calc(100vw - 36px));
+      padding: 14px 16px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: rgba(249, 252, 246, 0.96);
+      color: var(--ink);
+      box-shadow: 0 18px 36px rgba(18, 30, 22, 0.14);
+    }
+
+    .toast[data-tone="ok"] {
+      border-color: color-mix(in srgb, var(--ok) 22%, transparent);
+    }
+
+    .toast[data-tone="warn"] {
+      border-color: color-mix(in srgb, var(--warn) 22%, transparent);
+    }
+
+    .toast strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    @media (max-width: 1220px) {
+      .metric-card {
+        grid-column: span 6;
+      }
+    }
+
+    @media (max-width: 1100px) {
+      .page {
+        height: auto;
+        min-height: 100vh;
+      }
+
+      .settings-shell {
+        grid-template-columns: minmax(0, 1fr);
+        overflow: visible;
+      }
+
+      .settings-rail {
+        position: static;
+        max-height: none;
+        overflow: visible;
+      }
+
+      .rail-nav {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      }
+
+      .settings-detail {
+        max-height: none;
+        overflow: visible;
+      }
+    }
+
+    @media (max-width: 860px) {
+      .overview-grid,
+      .detail-grid,
+      .perk-grid,
+      .theme-grid,
+      .sync-grid,
+      .rail-nav {
+        grid-template-columns: 1fr;
+      }
+
+      .metric-card,
+      .metric-card[data-span="6"] {
+        grid-column: span 1;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .page {
+        height: auto;
+        min-height: 100vh;
+        padding-inline: 12px;
+        padding-bottom: 42px;
+      }
+
+      .hero,
+      .settings-rail,
+      .section-panel,
+      .empty-state,
+      .toast {
+        border-radius: 24px;
+      }
+
+      .hero-head,
+      .section-head,
+      .metric-row,
+      .info-row {
+        flex-direction: column;
+      }
+
+      .metric-row span:last-child,
+      .info-row span:last-child {
+        text-align: left;
+        max-width: none;
+      }
+
+      .toggle {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .rail-nav {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding-bottom: 2px;
+      }
+
+      .rail-button {
+        min-width: 220px;
+      }
+
+      .toast-stack {
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="card hero" id="hero"></section>
+    <div class="settings-shell">
+      <aside class="card settings-rail" id="settings-rail"></aside>
+      <main class="settings-detail" id="settings-detail"></main>
+    </div>
+  </div>
+
+  <div class="toast-stack" id="toast-stack" aria-live="polite"></div>
+
+  <script src="/static/smart_bar.js"></script>
+  <script>
+    const SETTINGS_FALLBACK_KEY = 'smart-platform.settings.page';
+    const VIEWER_STORAGE_KEY = 'smart-platform.viewer.id';
+    const DESKTOP_CONTROLS_KEY = 'smart-platform.desktop-controls.enabled';
+    const FULLSCREEN_STORAGE_KEY = 'smart-platform.fullscreen.enabled';
+    const SETTINGS_LANGUAGE_KEY = 'smart-platform.settings.language';
+    const DEFAULT_SETTINGS = {
+      schema_version: 'settings.v1',
+      updated_at_ms: 0,
+      interface: {
+        language: 'en',
+        desktop_controls_enabled: true,
+        fullscreen_enabled: false,
+        show_advanced_diagnostics: false,
+      },
+      style: {
+        theme: 'meadow',
+        density: 'comfortable',
+      },
+      synchronization: {
+        preferred_mode: 'auto',
+        prefer_peer_continuity: true,
+      },
+      turret_policies: {
+        silent_observation: true,
+        allow_animal_deterrence: true,
+        allow_auto_water_action: false,
+        return_to_warm_standby: true,
+        do_not_target_people: true,
+      },
+      irrigation: {
+        prefer_driest_zone: true,
+        block_automatic_during_service: true,
+        require_sensor_health: true,
+      },
+    };
+    const SECTION_ORDER = ['overview', 'bar', 'interface', 'synchronization', 'policies', 'modules', 'style', 'diagnostics'];
+    const COPY = {
+      en: {
+        pageTitle: 'Settings',
+        pageSubtitle: 'Persistent platform choices for synchronization, interface defaults, and policy baselines. Laboratory keeps experiments local; Settings keeps durable operator intent.',
+        savedServer: 'Saved on device',
+        savedBrowser: 'Saved in this browser only',
+        saving: 'Saving...',
+        storageServer: 'Device-backed persistence',
+        storageBrowser: 'Browser-only persistence',
+        node: 'Node',
+        peer: 'Peer',
+        backToShell: 'Back To Shell',
+        gallery: 'Gallery',
+        laboratory: 'Laboratory',
+        reports: 'Open Reports',
+        platform: 'Platform',
+        continuity: 'Peer Continuity',
+        storage: 'Storage',
+        persistence: 'Persistence',
+        system: 'System',
+        overview: 'Overview',
+        overviewLead: 'The first pass is about orientation: topology, persistence, shell promises, and what this page is allowed to control.',
+        bar: 'Bar',
+        barLead: 'Top-bar behavior belongs near the top because it changes the feel of every page in the shell.',
+        interface: 'Interface',
+        synchronization: 'Synchronization',
+        turretPolicies: 'Turret Policies',
+        policies: 'Policies',
+        policiesLead: 'Persistent safety and automation intent is visible here as durable product policy, not as temporary lab mood.',
+        irrigation: 'Irrigation',
+        modules: 'Modules',
+        modulesLead: 'Owner-aware module baselines live here without pretending this page is the full module UI.',
+        style: 'Style',
+        diagnostics: 'Diagnostics',
+        systemLead: 'Stable shell contract, ownership map, and route vocabulary.',
+        syncLead: 'Peer reachability and continuity rules stay visible here, not hidden in raw logs.',
+        interfaceLead: 'Browser-facing defaults that the shell can honor without pretending Laboratory presets are product settings.',
+        turretLead: 'Persistent policy baselines. Unsupported rules stay visible and disabled.',
+        irrigationLead: 'Owner-side irrigation baseline stays explicit even when the ESP32 owner is absent.',
+        styleLead: 'Quiet page-level presentation choices stored for the operator.',
+        diagnosticsLead: 'Live payloads stay available, but no longer dominate the page.',
+        searchSettings: 'Search Settings',
+        searchLead: 'Filter the rail and the detail pane together.',
+        searchPlaceholder: 'Filter sections, controls, and notes',
+        searchEmptyTitle: 'No matching settings',
+        searchEmptyBody: 'Clear the filter or use a broader term to bring sections back into view.',
+        clearFilter: 'Clear filter',
+        quickActions: 'Quick Actions',
+        runtimeSummary: 'Runtime Summary',
+        visibleSections: 'Visible sections',
+        systemFrame: 'System Frame',
+        routeVocabulary: 'Route Vocabulary',
+        shellPromise: 'Shell promise',
+        barBehavior: 'Bar Behavior',
+        barPreview: 'Bar Preview',
+        barPendingHint: 'Fullscreen, tooltip depth, and time-date formatting are the next live wiring slice. This pass sets hierarchy and keeps current controls honest.',
+        barLocale: 'Bar locale',
+        barDateTime: 'Time and date',
+        barTooltips: 'Tooltip depth',
+        followsShellLocale: 'Follows shell locale',
+        mediumDetailed: 'Medium detailed',
+        themePreview: 'Theme Preview',
+        surfaceDensity: 'Surface Density',
+        perkLive: 'Live policy',
+        perkDisabled: 'Visible, disabled',
+        moduleStatus: 'Module Status',
+        candidatePath: 'Promotion Path',
+        candidateBody: 'Laboratory candidates do not silently become product settings. Reviewed promotions land here as module-facing baselines.',
+        shellSurface: 'Shell surface',
+        runtimeHost: 'Runtime host',
+        currentViewer: 'Current viewer',
+        currentNode: 'Current node',
+        peerNode: 'Peer node',
+        ownershipSummary: 'Ownership summary',
+        runtimeProfile: 'Runtime profile',
+        activeMode: 'Active mode',
+        navigationRoutes: 'Navigation routes',
+        reportsPointer: 'Reports pointer',
+        moduleAvailability: 'Module availability',
+        syncEnabled: 'Background sync',
+        syncState: 'Sync state',
+        peerReachability: 'Peer reachability',
+        preferredMode: 'Sync review mode',
+        preferPeerContinuity: 'Prefer peer continuity when the peer is ready',
+        auto: 'Automatic',
+        manualReview: 'Manual review',
+        language: 'Language',
+        fullscreen: 'Fullscreen',
+        enabled: 'Enabled',
+        disabled: 'Disabled',
+        desktopControls: 'Desktop controls in top bar',
+        advancedDiagnostics: 'Show expanded diagnostics',
+        theme: 'Theme',
+        density: 'Density',
+        comfortable: 'Comfortable',
+        compact: 'Compact',
+        meadow: 'Meadow',
+        dawn: 'Dawn',
+        studio: 'Studio',
+        turretSilent: 'Silent observation',
+        turretAnimal: 'Allow animal deterrence',
+        turretWater: 'Allow automatic water action',
+        turretStandby: 'Return to warm standby after target loss',
+        turretPeople: 'Do not target people',
+        turretPeopleHint: 'Visible by design, but not wired into runtime gates yet.',
+        irrigationDriest: 'Prefer driest eligible zone',
+        irrigationServiceBlock: 'Block automatic watering during service/test',
+        irrigationSensorHealth: 'Require healthy sensors for automatic watering',
+        irrigationOwnerState: 'Irrigation owner state',
+        routeMode: 'Route mode',
+        lastSaved: 'Last saved',
+        refreshLiveData: 'Refresh live data',
+        openStorageDiagnostics: 'Open Storage Diagnostics',
+        shellSnapshot: 'Shell snapshot',
+        contentStatus: 'Content status',
+        syncPayload: 'Sync payload',
+        diagnosticsHidden: 'Expanded diagnostics are hidden. Use the interface switch above to expose live payloads.',
+        settingsHint: 'The rest of the shell can adopt these preferences incrementally.',
+        labBoundary: 'Laboratory presets stay separate until explicit review and promotion.',
+        irrigationHint: 'This is a stored baseline for later owner-side apply on ESP32. It is not a fake local irrigation controller.',
+        notYet: 'Not yet',
+        online: 'online',
+        offline: 'offline',
+        degraded: 'degraded',
+        blocked: 'blocked',
+        pending: 'pending',
+        ready: 'ready',
+        localOnly: 'local only',
+        routeLocal: 'Local',
+        routeHandoff: 'Owner handoff',
+        routeBlocked: 'Blocked',
+        routeVirtual: 'Virtual',
+        routeUnknown: 'Unknown',
+        saveFallbackHint: 'Server endpoint unavailable. Preferences were saved locally in this browser.',
+      },
+      ru: {
+        pageTitle: 'Настройки',
+        pageSubtitle: 'Постоянный слой platform choices для синхронизации, интерфейса и policy baseline. Laboratory оставляет эксперименты локальными, а Settings хранит устойчивое намерение оператора.',
+        savedServer: 'Сохранено на устройстве',
+        savedBrowser: 'Сохранено только в браузере',
+        saving: 'Сохранение...',
+        storageServer: 'Сохранение на устройстве',
+        storageBrowser: 'Сохранение только в браузере',
+        node: 'Узел',
+        peer: 'Соседний узел',
+        backToShell: 'Вернуться в shell',
+        gallery: 'Gallery',
+        laboratory: 'Laboratory',
+        reports: 'Открыть Reports',
+        platform: 'Платформа',
+        continuity: 'Peer continuity',
+        storage: 'Хранилище',
+        persistence: 'Сохранение',
+        system: 'System',
+        overview: 'Overview',
+        overviewLead: 'Первый проход решает ориентацию: topology, persistence, shell promises и границы того, что эта страница вообще имеет право контролировать.',
+        bar: 'Bar',
+        barLead: 'Top-bar поведение должно быть почти наверху, потому что оно меняет ощущение от каждой страницы shell.',
+        interface: 'Interface',
+        synchronization: 'Synchronization',
+        turretPolicies: 'Turret Policies',
+        policies: 'Policies',
+        policiesLead: 'Устойчивые safety и automation rules должны читаться как product policy, а не как временный лабораторный режим.',
+        irrigation: 'Irrigation',
+        modules: 'Modules',
+        modulesLead: 'Owner-aware baselines живут здесь без притворства, что Settings заменяет полноценные module pages.',
+        style: 'Style',
+        diagnostics: 'Diagnostics',
+        systemLead: 'Спокойный контур shell, ownership map и route vocabulary.',
+        syncLead: 'Reachability и continuity не прячутся в сырых логах, а остаются читаемыми прямо здесь.',
+        interfaceLead: 'Browser-facing defaults для shell без притворства, что Laboratory presets уже стали product settings.',
+        turretLead: 'Постоянные policy baselines. Неподдерживаемые правила остаются видимыми и disabled.',
+        irrigationLead: 'Owner-side irrigation baseline остаётся явным даже когда ESP32 сейчас недоступен.',
+        styleLead: 'Тихие page-level choices, которые сохраняются для оператора.',
+        diagnosticsLead: 'Live payloads остаются доступны, но больше не захватывают всю страницу.',
+        searchSettings: 'Search Settings',
+        searchLead: 'Один фильтр для rail и detail pane.',
+        searchPlaceholder: 'Фильтр по разделам, controls и notes',
+        searchEmptyTitle: 'Ничего не найдено',
+        searchEmptyBody: 'Сбрось фильтр или задай более широкий термин, чтобы вернуть разделы.',
+        clearFilter: 'Сбросить фильтр',
+        quickActions: 'Quick Actions',
+        runtimeSummary: 'Runtime Summary',
+        visibleSections: 'Видимые разделы',
+        systemFrame: 'System Frame',
+        routeVocabulary: 'Route Vocabulary',
+        shellPromise: 'Shell promise',
+        barBehavior: 'Bar Behavior',
+        barPreview: 'Bar Preview',
+        barPendingHint: 'Fullscreen, tooltip depth и time-date formatting пойдут в следующий живой wiring slice. Сейчас фиксируется hierarchy и честные текущие controls.',
+        barLocale: 'Bar locale',
+        barDateTime: 'Time and date',
+        barTooltips: 'Tooltip depth',
+        followsShellLocale: 'Следует shell locale',
+        mediumDetailed: 'Средне подробно',
+        themePreview: 'Theme Preview',
+        surfaceDensity: 'Surface Density',
+        perkLive: 'Live policy',
+        perkDisabled: 'Visible, disabled',
+        moduleStatus: 'Module Status',
+        candidatePath: 'Promotion Path',
+        candidateBody: 'Laboratory candidates не должны тихо становиться product settings. После review они приземляются сюда как module-facing baselines.',
+        shellSurface: 'Поверхность shell',
+        runtimeHost: 'Хост runtime',
+        currentViewer: 'Текущий viewer',
+        currentNode: 'Текущий узел',
+        peerNode: 'Соседний узел',
+        ownershipSummary: 'Ownership summary',
+        runtimeProfile: 'Runtime profile',
+        activeMode: 'Active mode',
+        navigationRoutes: 'Навигационные маршруты',
+        reportsPointer: 'Указатель на Reports',
+        moduleAvailability: 'Доступность модулей',
+        syncEnabled: 'Фоновый sync',
+        syncState: 'Состояние sync',
+        peerReachability: 'Доступность peer',
+        preferredMode: 'Режим review для sync',
+        preferPeerContinuity: 'Предпочитать continuity через peer, когда он готов',
+        auto: 'Автоматически',
+        manualReview: 'Ручной review',
+        language: 'Язык',
+        fullscreen: 'Fullscreen',
+        enabled: 'Включено',
+        disabled: 'Выключено',
+        desktopControls: 'Desktop controls в верхнем bar',
+        advancedDiagnostics: 'Показывать расширенную diagnostics',
+        theme: 'Тема',
+        density: 'Плотность',
+        comfortable: 'Обычная',
+        compact: 'Компактная',
+        meadow: 'Meadow',
+        dawn: 'Dawn',
+        studio: 'Studio',
+        turretSilent: 'Silent observation',
+        turretAnimal: 'Разрешить animal deterrence',
+        turretWater: 'Разрешить automatic water action',
+        turretStandby: 'Возвращаться в warm standby после потери цели',
+        turretPeople: 'Не стрелять в людей',
+        turretPeopleHint: 'Это правило должно быть видно всегда, но runtime wiring пока не опубликован.',
+        irrigationDriest: 'Выбирать самую сухую eligible zone',
+        irrigationServiceBlock: 'Блокировать automatic watering во время service/test',
+        irrigationSensorHealth: 'Требовать healthy sensors для automatic watering',
+        irrigationOwnerState: 'Состояние irrigation owner',
+        routeMode: 'Route mode',
+        lastSaved: 'Последнее сохранение',
+        refreshLiveData: 'Обновить live data',
+        openStorageDiagnostics: 'Открыть Storage Diagnostics',
+        shellSnapshot: 'Shell snapshot',
+        contentStatus: 'Content status',
+        syncPayload: 'Sync payload',
+        diagnosticsHidden: 'Расширенная diagnostics скрыта. Включи её через switch выше, если нужен живой payload.',
+        settingsHint: 'Остальной shell может подхватывать эти preferences поэтапно.',
+        labBoundary: 'Laboratory presets остаются отдельными до явного review и promotion.',
+        irrigationHint: 'Это сохранённый baseline для будущего owner-side apply на ESP32, а не притворное локальное управление irrigation.',
+        notYet: 'Пока нет',
+        online: 'online',
+        offline: 'offline',
+        degraded: 'degraded',
+        blocked: 'blocked',
+        pending: 'pending',
+        ready: 'ready',
+        localOnly: 'только локально',
+        routeLocal: 'Локально',
+        routeHandoff: 'Owner handoff',
+        routeBlocked: 'Blocked',
+        routeVirtual: 'Virtual',
+        routeUnknown: 'Unknown',
+        saveFallbackHint: 'Server endpoint недоступен. Preferences сохранены только в этом браузере.',
+      },
+    };
+    Object.assign(COPY.en, {
+      overview: 'Overview',
+      bar: 'Top Bar',
+      interface: 'Interface',
+      synchronization: 'Synchronization',
+      policies: 'Policies',
+      modules: 'Modules',
+      style: 'Style',
+      diagnostics: 'Diagnostics',
+      searchSettings: 'Find Settings',
+      visibleSections: 'Sections',
+      systemFrame: 'System Frame',
+      routeVocabulary: 'Route Vocabulary',
+      shellPromise: 'Shell Routes',
+      barBehavior: 'Top Bar Behavior',
+      barPreview: 'Preview',
+      themePreview: 'Themes',
+      surfaceDensity: 'Density',
+      shellSurface: 'Shell surface',
+      runtimeHost: 'Runtime host',
+      currentViewer: 'Current viewer',
+      currentNode: 'Current node',
+      peerNode: 'Peer node',
+      ownershipSummary: 'Ownership map',
+      runtimeProfile: 'Runtime profile',
+      activeMode: 'Active mode',
+      navigationRoutes: 'Routes',
+      reportsPointer: 'Reports link',
+      moduleAvailability: 'Visible modules',
+      syncEnabled: 'Background sync',
+      syncState: 'Sync status',
+      peerReachability: 'Peer reachability',
+      preferredMode: 'Sync mode',
+      browserStorageLabel: 'Browser only',
+      deviceStorageLabel: 'Saved on device',
+      browserStorageTip: 'The server endpoint is unavailable, so these choices live only in this browser profile.',
+      deviceStorageTip: 'These choices are saved by the shell on this device and reused by the Settings page and the compact bar.',
+      previewState: 'Preview',
+      serviceMode: 'Service',
+      fault: 'Fault',
+      localShellActive: 'Local shell is active',
+      peerOwnerOffline: 'Peer owner is offline',
+      peerVisiblePending: 'Peer is reachable, but sync is still pending',
+      peerOwnerReady: 'Peer owner is ready',
+      turretShort: 'Turret',
+      irrigationShort: 'Irrigation',
+      settingsShort: 'Settings',
+      turretSmokeTip: 'This page runs in desktop smoke mode. Turret screens are available only as a preview until the real Raspberry Pi owner device is attached.',
+      irrigationOfflineTip: 'Irrigation belongs to the ESP32 owner. Until that board is reachable, this module stays unavailable here.',
+      moduleReadyTip: 'The owner side needed for this module is available.',
+      moduleDegradedTip: 'The module is reachable, but one or more runtime conditions still limit it.',
+      moduleLockedTip: 'The module is intentionally blocked by the current ownership or safety state.',
+      moduleFaultTip: 'The module reported a fault and needs attention before use.',
+      storagePathTip: 'The shell content root on this host. Long paths are shortened in the card to avoid horizontal overflow.',
+    });
+    Object.assign(COPY.ru, {
+      pageSubtitle: 'Постоянные настройки платформы для интерфейса, синхронизации и базовых политик.',
+      savedServer: 'Сохранено на устройстве',
+      savedBrowser: 'Сохранено только в браузере',
+      storageServer: 'Сохранение на устройстве',
+      storageBrowser: 'Сохранение только в браузере',
+      gallery: 'Галерея',
+      laboratory: 'Лаборатория',
+      overview: 'Обзор',
+      overviewLead: 'Короткая сводка по оболочке, соседнему узлу и тому, где реально сохраняются настройки.',
+      bar: 'Верхняя панель',
+      barLead: 'Здесь находятся настройки, которые сразу меняют поведение compact bar и всей оболочки.',
+      interface: 'Интерфейс',
+      synchronization: 'Синхронизация',
+      turretPolicies: 'Политики турели',
+      policies: 'Политики',
+      policiesLead: 'Постоянные правила безопасности и автоматизации.',
+      modules: 'Модули',
+      modulesLead: 'Базовые настройки модулей с учётом владельца и доступности оборудования.',
+      style: 'Оформление',
+      diagnostics: 'Диагностика',
+      systemLead: 'Спокойный контур оболочки, карта владения и словарь маршрутов.',
+      syncLead: 'Статус связи с соседним узлом и правила продолжения работы при потере связи.',
+      interfaceLead: 'Настройки интерфейса, которые оболочка может применять сразу.',
+      turretLead: 'Базовые правила поведения турели. Неподдерживаемые правила остаются видимыми.',
+      irrigationLead: 'Сохранённая база для ирригации без притворства, что этот экран заменяет полноценный owner-side UI.',
+      styleLead: 'Темы и плотность интерфейса для текущего оператора.',
+      diagnosticsLead: 'Живые payload доступны ниже, но не перегружают основной экран.',
+      searchSettings: 'Поиск настроек',
+      searchLead: 'Один фильтр для списка разделов и содержимого справа.',
+      searchPlaceholder: 'Найти раздел или настройку',
+      searchEmptyTitle: 'Совпадений не найдено',
+      searchEmptyBody: 'Очистите фильтр или используйте более общий запрос.',
+      clearFilter: 'Сбросить фильтр',
+      quickActions: 'Быстрые действия',
+      runtimeSummary: 'Сводка',
+      visibleSections: 'Разделы',
+      systemFrame: 'Контур системы',
+      routeVocabulary: 'Словарь маршрутов',
+      shellPromise: 'Маршруты оболочки',
+      barBehavior: 'Поведение верхней панели',
+      barPreview: 'Предпросмотр',
+      barPendingHint: 'Полный экран, язык и элементы управления панели применяются сразу ко всей оболочке и compact bar.',
+      barLocale: 'Язык панели',
+      barDateTime: 'Дата и время',
+      barTooltips: 'Подсказки',
+      followsShellLocale: 'Следуют выбранному языку оболочки',
+      mediumDetailed: 'Подробные',
+      themePreview: 'Темы',
+      surfaceDensity: 'Плотность',
+      perkLive: 'Действует',
+      perkDisabled: 'Видно, но пока не действует',
+      moduleStatus: 'Состояние модуля',
+      candidatePath: 'Путь публикации',
+      candidateBody: 'Эксперимент из Лаборатории не становится продуктовой настройкой автоматически. Сначала review, потом перенос в базовые настройки.',
+      shellSurface: 'Поверхность shell',
+      runtimeHost: 'Хост runtime',
+      currentViewer: 'Текущий viewer',
+      currentNode: 'Текущий узел',
+      peerNode: 'Соседний узел',
+      ownershipSummary: 'Карта владения',
+      runtimeProfile: 'Профиль запуска',
+      activeMode: 'Активный режим',
+      navigationRoutes: 'Маршруты',
+      reportsPointer: 'Ссылка на Reports',
+      moduleAvailability: 'Видимых модулей',
+      syncEnabled: 'Фоновая синхронизация',
+      syncState: 'Статус синхронизации',
+      peerReachability: 'Доступность соседнего узла',
+      preferredMode: 'Режим синхронизации',
+      preferPeerContinuity: 'При наличии соседа продолжать работу через него без лишних переключений',
+      auto: 'Автоматически',
+      manualReview: 'После проверки',
+      fullscreen: 'Полный экран',
+      enabled: 'Включено',
+      disabled: 'Выключено',
+      desktopControls: 'Показывать desktop-элементы в верхней панели',
+      advancedDiagnostics: 'Показывать расширенную диагностику',
+      theme: 'Тема',
+      density: 'Плотность',
+      comfortable: 'Обычная',
+      compact: 'Компактная',
+      turretSilent: 'Тихое наблюдение',
+      turretAnimal: 'Разрешить отпугивание животных',
+      turretWater: 'Разрешить автоматическое водяное воздействие',
+      turretStandby: 'Возвращаться в тёплый standby после потери цели',
+      turretPeople: 'Не нацеливаться на людей',
+      turretPeopleHint: 'Это правило видно всегда. Когда runtime-gate появится, оно должно остаться обязательным.',
+      irrigationDriest: 'Выбирать самую сухую доступную зону',
+      irrigationServiceBlock: 'Блокировать автоматический полив во время service/test',
+      irrigationSensorHealth: 'Требовать исправные датчики для автоматического полива',
+      irrigationOwnerState: 'Состояние владельца ирригации',
+      routeMode: 'Маршрут',
+      lastSaved: 'Последнее сохранение',
+      refreshLiveData: 'Обновить данные',
+      openStorageDiagnostics: 'Открыть диагностику хранилища',
+      shellSnapshot: 'Снимок оболочки',
+      contentStatus: 'Состояние контента',
+      syncPayload: 'Payload синхронизации',
+      diagnosticsHidden: 'Расширенная диагностика скрыта. Включите её выше, если нужен живой payload.',
+      settingsHint: 'Остальные страницы оболочки постепенно подхватывают эти настройки.',
+      labBoundary: 'Экспериментальные профили Лаборатории остаются отдельными до явного review и публикации.',
+      irrigationHint: 'Это сохранённый baseline для owner-side применения на ESP32, а не локальный fake-controller.',
+      notYet: 'Ещё не сохранялось',
+      online: 'в сети',
+      offline: 'не в сети',
+      degraded: 'ограничено',
+      blocked: 'заблокировано',
+      pending: 'ожидание',
+      ready: 'готово',
+      localOnly: 'локально',
+      routeLocal: 'Локально',
+      routeHandoff: 'Передача владельцу',
+      routeBlocked: 'Недоступно',
+      routeVirtual: 'Виртуально',
+      routeUnknown: 'Неизвестно',
+      saveFallbackHint: 'Серверный endpoint недоступен. Настройки сохранены только в браузере.',
+      browserStorageLabel: 'Только в браузере',
+      deviceStorageLabel: 'На устройстве',
+      browserStorageTip: 'Серверный endpoint сейчас недоступен, поэтому изменения сохранены только в локальном хранилище браузера.',
+      deviceStorageTip: 'Настройки сохраняются файлом оболочки на этом устройстве и подхватываются страницей Settings и compact bar.',
+      previewState: 'Предпросмотр',
+      serviceMode: 'Сервис',
+      fault: 'Ошибка',
+      localShellActive: 'Локальная оболочка активна',
+      peerOwnerOffline: 'Соседний узел сейчас недоступен',
+      peerVisiblePending: 'Соседний узел виден, но синхронизация ещё не готова',
+      peerOwnerReady: 'Соседний узел готов',
+      turretShort: 'Турель',
+      irrigationShort: 'Ирригация',
+      settingsShort: 'Настройки',
+      turretSmokeTip: 'Страница запущена в режиме desktop smoke. Экран турели доступен только как предпросмотр, пока реальное Raspberry Pi устройство не подключено.',
+      irrigationOfflineTip: 'Ирригация принадлежит ESP32. Пока соседний узел недоступен, модуль остаётся заблокирован.',
+      moduleReadyTip: 'Нужная owner-side часть модуля сейчас доступна.',
+      moduleDegradedTip: 'Модуль доступен, но одна или несколько runtime-проверок пока ограничивают его.',
+      moduleLockedTip: 'Модуль намеренно заблокирован текущим состоянием владения или безопасности.',
+      moduleFaultTip: 'Модуль сообщил об ошибке и требует внимания перед использованием.',
+      storagePathTip: 'Корневая папка контента на этом хосте. Длинный путь сокращён, чтобы не ломать раскладку.',
+    });
+    const state = {
+      snapshot: null,
+      content: null,
+      sync: null,
+      settings: normalizeSettings(DEFAULT_SETTINGS),
+      settingsStorage: 'loading',
+      saveState: 'idle',
+      saveMessage: '',
+      runtimeError: '',
+      saveResetTimer: 0,
+      searchQuery: '',
+      activeSection: 'overview',
+      pendingScrollId: '',
+      toastTimer: 0,
+    };
+
+    function esc(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function tipAttrs(text) {
+      const normalized = String(text || '').trim();
+      if (!normalized) {
+        return '';
+      }
+      const safe = esc(normalized);
+      return ` title="${safe}" aria-label="${safe}"`;
+    }
+
+    function readStorage(key) {
+      try {
+        return window.localStorage.getItem(key);
+      } catch (_error) {
+        return null;
+      }
+    }
+
+    function writeStorage(key, value) {
+      try {
+        window.localStorage.setItem(key, value);
+      } catch (_error) {
+        return;
+      }
+    }
+
+    function clone(value) {
+      return JSON.parse(JSON.stringify(value));
+    }
+
+    function isSmokeRuntime(snapshot) {
+      return String((((snapshot || {}).current_shell || {}).runtime_profile || '')).trim().toLowerCase() === 'desktop_smoke';
+    }
+
+    function runtimeHost(snapshot) {
+      return ((snapshot || {}).runtime || {}).host || {};
+    }
+
+    function hostKindLabel(kind) {
+      const normalized = String(kind || '').trim().toLowerCase();
+      if (normalized === 'windows_desktop') {
+        return 'Windows desktop';
+      }
+      if (normalized === 'raspberry_pi') {
+        return 'Raspberry Pi';
+      }
+      if (normalized === 'esp32') {
+        return 'ESP32';
+      }
+      if (!normalized) {
+        return 'unknown host';
+      }
+      return normalized.replace(/_/g, ' ');
+    }
+
+    function runtimeHostLabel(snapshot) {
+      const host = runtimeHost(snapshot);
+      const kindLabel = hostKindLabel(host.kind);
+      const title = String(host.title || '').trim();
+      if (title && title !== kindLabel) {
+        return `${kindLabel} / ${title}`;
+      }
+      return title || kindLabel;
+    }
+
+    function normalizeViewerKind(kind) {
+      const normalized = String(kind || 'desktop').toLowerCase();
+      if (['phone', 'tablet', 'display', 'desktop'].includes(normalized)) {
+        return normalized;
+      }
+      return 'desktop';
+    }
+
+    function viewerKindLabel(kind) {
+      const normalized = normalizeViewerKind(kind);
+      if (normalized === 'phone') {
+        return 'phone';
+      }
+      if (normalized === 'tablet') {
+        return 'tablet';
+      }
+      if (normalized === 'display') {
+        return 'Raspberry Pi display';
+      }
+      return 'desktop';
+    }
+
+    function snapshotViewers(snapshot) {
+      const provided = Array.isArray((snapshot || {}).viewers) ? snapshot.viewers : [];
+      return provided.map((viewer) => {
+        const kind = normalizeViewerKind(viewer.viewer_kind);
+        return {
+          viewer_id: String(viewer.viewer_id || ''),
+          viewer_kind: kind,
+          title: String(viewer.title || viewerKindLabel(kind)),
+          page: String(viewer.page || '/'),
+        };
+      });
+    }
+
+    function currentViewer(snapshot) {
+      const viewers = snapshotViewers(snapshot);
+      let viewerId = '';
+      try {
+        viewerId = String(localStorage.getItem(VIEWER_STORAGE_KEY) || '');
+      } catch (_error) {
+        viewerId = '';
+      }
+      return viewers.find((viewer) => viewerId && viewer.viewer_id === viewerId) || viewers[0] || null;
+    }
+
+    function currentViewerLabel(snapshot) {
+      const viewer = currentViewer(snapshot);
+      if (!viewer) {
+        return 'unknown viewer';
+      }
+      const kindLabel = viewerKindLabel(viewer.viewer_kind);
+      const title = viewer.title && viewer.title !== kindLabel ? `${kindLabel} / ${viewer.title}` : kindLabel;
+      const page = viewer.page && viewer.page !== '/' ? ` / ${viewer.page}` : '';
+      return `${title}${page}`;
+    }
+
+    function shellSurfaceTitle(snapshot) {
+      const shell = (snapshot || {}).current_shell || {};
+      const nodeType = String(shell.node_type || '').toLowerCase();
+      if (nodeType === 'raspberry_pi') {
+        return 'Raspberry Pi shell surface';
+      }
+      if (nodeType === 'esp32') {
+        return 'ESP32 shell surface';
+      }
+      return 'Smart Platform shell surface';
+    }
+
+    function nodeStatusLabel(node, fallbackTitle) {
+      const title = String(node.title || fallbackTitle).trim() || fallbackTitle;
+      const health = healthLabel(node.health || (node.reachable === false ? 'offline' : 'online'));
+      return `${title} / ${health}`;
+    }
+
+    function compactPathLabel(value) {
+      const text = String(value || '').trim();
+      if (!text) {
+        return '-';
+      }
+      if (text.length <= 36) {
+        return text;
+      }
+      const normalized = text.replace(/\\/g, '/');
+      const segments = normalized.split('/').filter(Boolean);
+      if (segments.length <= 4) {
+        return text;
+      }
+      return `.../${segments.slice(-4).join('/')}`;
+    }
+
+    function boolValue(value, fallback) {
+      if (typeof value === 'boolean') {
+        return value;
+      }
+      if (typeof value === 'string') {
+        return ['1', 'true', 'yes', 'on'].includes(value.trim().toLowerCase());
+      }
+      return fallback;
+    }
+
+    function choiceValue(value, allowed, fallback) {
+      const normalized = String(value ?? '').trim().toLowerCase();
+      return allowed.includes(normalized) ? normalized : fallback;
+    }
+
+    function numberValue(value, fallback) {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : fallback;
+    }
+
+    function normalizeSettings(raw) {
+      const payload = raw && typeof raw === 'object' ? raw : {};
+      const interfaceSettings = payload.interface && typeof payload.interface === 'object' ? payload.interface : {};
+      const styleSettings = payload.style && typeof payload.style === 'object' ? payload.style : {};
+      const syncSettings = payload.synchronization && typeof payload.synchronization === 'object' ? payload.synchronization : {};
+      const turretPolicies = payload.turret_policies && typeof payload.turret_policies === 'object' ? payload.turret_policies : {};
+      const irrigationSettings = payload.irrigation && typeof payload.irrigation === 'object' ? payload.irrigation : {};
+
+      return {
+        schema_version: 'settings.v1',
+        updated_at_ms: numberValue(payload.updated_at_ms, 0),
+        interface: {
+          language: choiceValue(interfaceSettings.language, ['en', 'ru'], 'en'),
+          desktop_controls_enabled: boolValue(interfaceSettings.desktop_controls_enabled, true),
+          fullscreen_enabled: boolValue(interfaceSettings.fullscreen_enabled, false),
+          show_advanced_diagnostics: boolValue(interfaceSettings.show_advanced_diagnostics, false),
+        },
+        style: {
+          theme: choiceValue(styleSettings.theme, ['meadow', 'dawn', 'studio'], 'meadow'),
+          density: choiceValue(styleSettings.density, ['comfortable', 'compact'], 'comfortable'),
+        },
+        synchronization: {
+          preferred_mode: choiceValue(syncSettings.preferred_mode, ['auto', 'manual_review'], 'auto'),
+          prefer_peer_continuity: boolValue(syncSettings.prefer_peer_continuity, true),
+        },
+        turret_policies: {
+          silent_observation: boolValue(turretPolicies.silent_observation, true),
+          allow_animal_deterrence: boolValue(turretPolicies.allow_animal_deterrence, true),
+          allow_auto_water_action: boolValue(turretPolicies.allow_auto_water_action, false),
+          return_to_warm_standby: boolValue(turretPolicies.return_to_warm_standby, true),
+          do_not_target_people: true,
+        },
+        irrigation: {
+          prefer_driest_zone: boolValue(irrigationSettings.prefer_driest_zone, true),
+          block_automatic_during_service: boolValue(irrigationSettings.block_automatic_during_service, true),
+          require_sensor_health: boolValue(irrigationSettings.require_sensor_health, true),
+        },
+      };
+    }
+
+    function normalizeSyncPayload(raw) {
+      const payload = raw && typeof raw === 'object' ? raw : {};
+      if (Object.prototype.hasOwnProperty.call(payload, 'enabled')) {
+        return {
+          source: 'rpi',
+          enabled: !!payload.enabled,
+          last_push_ok: !!payload.last_push_ok,
+          last_sync_ms: numberValue(payload.last_sync_ms, 0),
+          last_error: String(payload.last_error || ''),
+          peer_reachable: !!(((state.snapshot || {}).nodes || {}).peer || {}).reachable,
+          peer_sync_ready: !!(((state.snapshot || {}).nodes || {}).peer || {}).sync_ready,
+          raw: payload,
+        };
+      }
+      return {
+        source: 'esp32',
+        enabled: true,
+        last_push_ok: !!payload.peer_sync_ready,
+        last_sync_ms: 0,
+        last_error: '',
+        peer_reachable: !!payload.peer_reachable,
+        peer_sync_ready: !!payload.peer_sync_ready,
+        raw: payload,
+      };
+    }
+
+    function t(key) {
+      const language = (state.settings && state.settings.interface && state.settings.interface.language) || 'en';
+      const dictionary = COPY[language] || COPY.en;
+      return dictionary[key] || COPY.en[key] || key;
+    }
+
+    function setDeepValue(target, path, value) {
+      const segments = path.split('.');
+      let cursor = target;
+      while (segments.length > 1) {
+        const segment = segments.shift();
+        if (!cursor[segment] || typeof cursor[segment] !== 'object') {
+          cursor[segment] = {};
+        }
+        cursor = cursor[segment];
+      }
+      cursor[segments[0]] = value;
+    }
+
+    function applyVisualSettings() {
+      document.body.dataset.theme = state.settings.style.theme;
+      document.body.dataset.density = state.settings.style.density;
+      document.documentElement.lang = state.settings.interface.language;
+      document.title = state.settings.interface.language === 'ru' ? 'Smart Platform / Настройки' : 'Smart Platform / Settings';
+      writeStorage(DESKTOP_CONTROLS_KEY, state.settings.interface.desktop_controls_enabled ? '1' : '0');
+      writeStorage(FULLSCREEN_STORAGE_KEY, state.settings.interface.fullscreen_enabled ? '1' : '0');
+      writeStorage(SETTINGS_LANGUAGE_KEY, state.settings.interface.language);
+    }
+
+    function broadcastSettingsUpdate() {
+      try {
+        window.dispatchEvent(new CustomEvent('smart-platform:settings-updated', {
+          detail: clone(state.settings),
+        }));
+      } catch (_error) {
+        return;
+      }
+    }
+
+    async function fetchJson(url, options) {
+      const response = await fetch(url, Object.assign({ cache: 'no-store' }, options || {}));
+      if (!response.ok) {
+        throw new Error(`${response.status} ${response.statusText}`.trim());
+      }
+      return response.json();
+    }
+
+    async function fetchSyncJson() {
+      try {
+        return await fetchJson('/api/v1/sync/status');
+      } catch (_statusError) {
+        return fetchJson('/api/v1/sync/state');
+      }
+    }
+
+    async function loadSettings() {
+      try {
+        const payload = await fetchJson('/api/v1/settings');
+        state.settings = normalizeSettings(payload);
+        state.settingsStorage = 'server';
+        state.saveMessage = '';
+      } catch (_error) {
+        const raw = readStorage(SETTINGS_FALLBACK_KEY);
+        if (raw) {
+          try {
+            state.settings = normalizeSettings(JSON.parse(raw));
+          } catch (_parseError) {
+            state.settings = normalizeSettings(DEFAULT_SETTINGS);
+          }
+        }
+        state.settingsStorage = 'browser';
+      }
+      applyVisualSettings();
+      broadcastSettingsUpdate();
+    }
+
+    function showToast(title, body, tone) {
+      const toastStack = document.getElementById('toast-stack');
+      if (!toastStack) {
+        return;
+      }
+      toastStack.innerHTML = `
+        <div class="toast" data-tone="${esc(tone || 'ok')}">
+          <strong>${esc(title)}</strong>
+          <div>${esc(body)}</div>
+        </div>
+      `;
+      window.clearTimeout(state.toastTimer);
+      state.toastTimer = window.setTimeout(() => {
+        toastStack.innerHTML = '';
+      }, 2400);
+    }
+
+    async function saveSettings(nextSettings) {
+      state.saveState = 'saving';
+      state.saveMessage = '';
+      state.settings = normalizeSettings(nextSettings);
+      applyVisualSettings();
+      broadcastSettingsUpdate();
+      render();
+
+      try {
+        const payload = await fetchJson('/api/v1/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(state.settings),
+        });
+        state.settings = normalizeSettings(payload);
+        state.settingsStorage = 'server';
+        state.saveMessage = '';
+        showToast(t('savedServer'), t('settingsHint'), 'ok');
+      } catch (_error) {
+        writeStorage(SETTINGS_FALLBACK_KEY, JSON.stringify(state.settings));
+        state.settingsStorage = 'browser';
+        state.saveMessage = t('saveFallbackHint');
+        showToast(t('savedBrowser'), t('saveFallbackHint'), 'warn');
+      }
+
+      state.saveState = 'saved';
+      window.clearTimeout(state.saveResetTimer);
+      state.saveResetTimer = window.setTimeout(() => {
+        state.saveState = 'idle';
+        renderHero();
+        renderRail();
+      }, 1400);
+      render();
+    }
+
+    function routeModeLabel(value) {
+      const normalized = String(value || '').toLowerCase();
+      if (normalized === 'local') {
+        return t('routeLocal');
+      }
+      if (normalized === 'handoff') {
+        return t('routeHandoff');
+      }
+      if (normalized === 'blocked') {
+        return t('routeBlocked');
+      }
+      if (normalized === 'virtual') {
+        return t('routeVirtual');
+      }
+      return t('routeUnknown');
+    }
+
+    function healthLabel(value) {
+      const normalized = String(value || '').toLowerCase();
+      if (normalized === 'online') {
+        return t('online');
+      }
+      if (normalized === 'offline') {
+        return t('offline');
+      }
+      if (normalized === 'degraded') {
+        return t('degraded');
+      }
+      if (normalized === 'blocked') {
+        return t('blocked');
+      }
+      if (normalized === 'ready') {
+        return t('ready');
+      }
+      if (normalized === 'pending') {
+        return t('pending');
+      }
+      return normalized || t('routeUnknown');
+    }
+
+    function toneForState(value) {
+      const normalized = String(value || '').toLowerCase();
+      if (['online', 'ready'].includes(normalized)) {
+        return 'ok';
+      }
+      if (['offline', 'fault', 'blocked'].includes(normalized)) {
+        return 'fault';
+      }
+      return 'warn';
+    }
+
+    function lastSavedLabel() {
+      if (!state.settings.updated_at_ms) {
+        return t('notYet');
+      }
+      return new Date(state.settings.updated_at_ms).toLocaleString(state.settings.interface.language);
+    }
+
+    function syncStateLabel() {
+      const sync = state.sync || {};
+      if (!sync.enabled) {
+        return t('localOnly');
+      }
+      if (!sync.peer_reachable) {
+        return t('offline');
+      }
+      if (sync.peer_sync_ready || sync.last_push_ok) {
+        return t('ready');
+      }
+      return t('pending');
+    }
+
+    function localizedNodeSummary(node, fallbackKey) {
+      const summary = String((node || {}).summary || '').trim();
+      if (summary === 'Local shell is active') {
+        return t('localShellActive');
+      }
+      if (summary === 'Peer owner is offline') {
+        return t('peerOwnerOffline');
+      }
+      if (summary === 'Peer is visible but sync is pending') {
+        return t('peerVisiblePending');
+      }
+      if (summary === 'Peer owner is ready') {
+        return t('peerOwnerReady');
+      }
+      return summary || t(fallbackKey);
+    }
+
+    function persistenceInfo() {
+      if (state.settingsStorage === 'server') {
+        return {
+          label: t('deviceStorageLabel'),
+          tone: 'ok',
+          tip: t('deviceStorageTip'),
+        };
+      }
+      return {
+        label: t('browserStorageLabel'),
+        tone: 'warn',
+        tip: t('browserStorageTip'),
+      };
+    }
+
+    function moduleDisplayState(module) {
+      if (!module) {
+        return { label: t('routeUnknown'), tone: 'warn', tip: t('moduleLockedTip') };
+      }
+
+      if (isSmokeRuntime(state.snapshot) && module.id === 'turret_bridge') {
+        return { label: t('previewState'), tone: 'warn', tip: t('turretSmokeTip') };
+      }
+
+      if (module.state === 'fault') {
+        return { label: t('fault'), tone: 'fault', tip: t('moduleFaultTip') };
+      }
+      if (module.state === 'service') {
+        return { label: t('serviceMode'), tone: 'warn', tip: t('moduleDegradedTip') };
+      }
+      if (module.state === 'degraded') {
+        return { label: t('degraded'), tone: 'warn', tip: t('moduleDegradedTip') };
+      }
+      if (module.state === 'locked') {
+        return { label: t('blocked'), tone: 'warn', tip: module.id === 'irrigation' ? t('irrigationOfflineTip') : t('moduleLockedTip') };
+      }
+      if (module.id === 'irrigation' && !module.owner_available) {
+        return { label: t('offline'), tone: 'warn', tip: t('irrigationOfflineTip') };
+      }
+      return { label: t('ready'), tone: 'ok', tip: t('moduleReadyTip') };
+    }
+
+    function moduleById(id) {
+      const cards = (state.snapshot && state.snapshot.module_cards) || [];
+      return cards.find((item) => item.id === id) || null;
+    }
+
+    function infoRow(label, value) {
+      return `<div class="info-row"><strong>${esc(label)}</strong><span>${esc(value)}</span></div>`;
+    }
+
+    function metricRow(label, value) {
+      return `<div class="metric-row"><strong>${esc(label)}</strong><span>${esc(value)}</span></div>`;
+    }
+
+    function radioChip(path, value, label, currentValue) {
+      const id = `${path.replace(/\./g, '-')}-${value}`;
+      return `
+        <label class="option-chip" for="${esc(id)}"${tipAttrs(label)}>
+          <input id="${esc(id)}" type="radio" name="${esc(path)}" data-setting-path="${esc(path)}" value="${esc(value)}" ${value === currentValue ? 'checked' : ''}>
+          <span>${esc(label)}</span>
+        </label>
+      `;
+    }
+
+    function toggleControl(path, checked, title, hint, disabled) {
+      return `
+        <label class="toggle${disabled ? ' is-disabled' : ''}"${tipAttrs(hint)}>
+          <span class="toggle-copy">
+            <strong>${esc(title)}</strong>
+          </span>
+          <input class="switch" type="checkbox" data-setting-path="${esc(path)}" ${checked ? 'checked' : ''} ${disabled ? 'disabled' : ''}>
+        </label>
+      `;
+    }
+
+    function metricCard(card) {
+      return `
+        <article class="metric-card" data-tone="${esc(card.tone)}" data-span="${esc(card.span || '3')}"${tipAttrs(card.tip || card.body)}>
+          <div class="metric-kicker">${esc(card.eyebrow)}</div>
+          <h3 class="metric-title">${esc(card.title)}</h3>
+          <p class="metric-copy">${esc(card.body)}</p>
+          <div class="metric-stack">${card.metrics.map((metric) => metricRow(metric[0], metric[1])).join('')}</div>
+        </article>
+      `;
+    }
+
+    function detailCard(kicker, title, body, contentHtml) {
+      return `
+        <div class="detail-card"${tipAttrs(body)}>
+          <div class="panel-head">
+            <div>
+              <div class="panel-kicker">${esc(kicker)}</div>
+              <h3 class="panel-title">${esc(title)}</h3>
+            </div>
+          </div>
+          ${contentHtml}
+        </div>
+      `;
+    }
+
+    function perkCard(path, checked, title, hint, disabled) {
+      return `
+        <article class="perk-card${disabled ? ' is-disabled' : ''}"${tipAttrs(hint)}>
+          <div class="panel-head">
+            <span class="inline-chip" data-tone="${disabled ? 'warn' : 'ok'}">${esc(disabled ? t('perkDisabled') : t('perkLive'))}</span>
+          </div>
+          <div class="perk-copy">
+            <h3 class="perk-title">${esc(title)}</h3>
+          </div>
+          <div class="perk-toggle">
+            ${toggleControl(path, checked, title, hint, disabled)}
+          </div>
+        </article>
+      `;
+    }
+
+    function themeOption(value, title, body, currentValue) {
+      const id = `style-theme-${value}`;
+      return `
+        <label class="theme-option" for="${esc(id)}">
+          <input id="${esc(id)}" type="radio" name="style.theme" data-setting-path="style.theme" value="${esc(value)}" ${value === currentValue ? 'checked' : ''}>
+          <span class="theme-card" data-theme-preview="${esc(value)}"${tipAttrs(body)}>
+            <span class="theme-swatch-row">
+              <span class="theme-swatch"></span>
+              <span class="theme-swatch"></span>
+              <span class="theme-swatch"></span>
+            </span>
+            <span>
+              <strong class="theme-name">${esc(title)}</strong>
+            </span>
+            <span class="detail-copy">${esc(body)}</span>
+          </span>
+        </label>
+      `;
+    }
+
+    function sectionIdFromHash(hashValue) {
+      const raw = String(hashValue || window.location.hash || '').replace(/^#/, '').trim().toLowerCase();
+      return SECTION_ORDER.includes(raw) ? raw : '';
+    }
+
+    function ensureActiveSection(visibleSections) {
+      const ids = visibleSections.map((section) => section.id);
+      if (!ids.length) {
+        state.activeSection = 'overview';
+        return;
+      }
+      if (!ids.includes(state.activeSection)) {
+        state.activeSection = ids[0];
+      }
+    }
+
+    function syncHash(sectionId) {
+      if (!sectionId || state.searchQuery) {
+        return;
+      }
+      try {
+        window.history.replaceState(null, '', `#${sectionId}`);
+      } catch (_error) {
+        return;
+      }
+    }
+
+    function matchesSearch(section, query) {
+      if (!query) {
+        return true;
+      }
+      return section.searchText.includes(query);
+    }
+
+    function buildSections() {
+      const snapshot = state.snapshot || {};
+      const current = ((snapshot.nodes || {}).current || {});
+      const peer = ((snapshot.nodes || {}).peer || {});
+      const shell = snapshot.current_shell || {};
+      const shellSurface = shellSurfaceTitle(snapshot);
+      const hostLabel = runtimeHostLabel(snapshot);
+      const viewerLabel = currentViewerLabel(snapshot);
+      const currentNodeLabel = nodeStatusLabel(current, 'Current node');
+      const peerNodeLabel = nodeStatusLabel(peer, 'Peer node');
+      const navigation = snapshot.navigation || {};
+      const content = state.content || {};
+      const irrigationModule = moduleById('irrigation') || {};
+      const turretModule = moduleById('turret_bridge') || {};
+      const sync = state.sync || {};
+      const persistence = persistenceInfo();
+      const turretStatus = moduleDisplayState(turretModule);
+      const irrigationStatus = moduleDisplayState(irrigationModule);
+      const syncCards = [
+        {
+          eyebrow: t('syncEnabled'),
+          title: sync.enabled ? t('online') : t('localOnly'),
+          tone: sync.enabled ? 'ok' : 'warn',
+          body: t('syncLead'),
+          metrics: [[t('preferredMode'), state.settings.synchronization.preferred_mode === 'auto' ? t('auto') : t('manualReview')]],
+        },
+        {
+          eyebrow: t('syncState'),
+          title: syncStateLabel(),
+          tone: toneForState(syncStateLabel()),
+          body: sync.last_error || t('settingsHint'),
+          metrics: [[t('peerReachability'), sync.peer_reachable ? t('online') : t('offline')]],
+        },
+      ];
+      const overviewCards = [
+        {
+          eyebrow: t('platform'),
+          title: shellSurface,
+          tone: toneForState(current.health),
+          body: hostLabel,
+          metrics: [
+            [t('currentViewer'), viewerLabel],
+            [t('runtimeProfile'), shell.runtime_profile || 'unknown'],
+            [t('moduleAvailability'), `${(snapshot.module_cards || []).length || 0}`],
+          ],
+        },
+        {
+          eyebrow: t('continuity'),
+          title: peer.title || 'ESP32',
+          tone: toneForState(peer.health),
+          body: localizedNodeSummary(peer, 'peerOwnerOffline'),
+          metrics: [
+            [t('syncState'), syncStateLabel()],
+            [t('peerReachability'), peer.reachable ? t('online') : t('offline')],
+            [t('ownershipSummary'), (((snapshot.summaries || {}).diagnostics || {}).ownership_summary || '-')],
+          ],
+        },
+        {
+          eyebrow: t('storage'),
+          title: String(content.storage || ((snapshot.summaries || {}).content || {}).storage_kind || 'filesystem'),
+          tone: content.content_root_exists === false ? 'fault' : 'ok',
+          body: compactPathLabel(content.content_root || ''),
+          tip: `${t('storagePathTip')} ${String(content.content_root || '').trim()}`,
+          metrics: [
+            ['assets', String(!!content.assets_ready)],
+            ['audio', String(!!content.audio_ready)],
+            ['libraries', String(!!content.libraries_ready)],
+          ],
+        },
+        {
+          eyebrow: t('persistence'),
+          title: persistence.label,
+          tone: persistence.tone,
+          body: t('settingsHint'),
+          tip: persistence.tip,
+          metrics: [
+            [t('lastSaved'), lastSavedLabel()],
+            [t('language'), state.settings.interface.language.toUpperCase()],
+            [t('theme'), t(state.settings.style.theme)],
+          ],
+        },
+      ];
+
+      return [
+        {
+          id: 'overview',
+          title: t('overview'),
+          summary: t('overviewLead'),
+          searchText: `${t('overview')} ${t('system')} ${t('platform')} ${t('continuity')} ${t('routeVocabulary')} ${t('labBoundary')}`.toLowerCase(),
+          html: `
+            <section class="card section-panel" id="overview" data-section-id="overview">
+              <div class="section-head"${tipAttrs(t('overviewLead'))}>
+                <div>
+                  <div class="section-kicker">${esc(t('overview'))}</div>
+                  <h2 class="section-title">${esc(t('pageTitle'))}</h2>
+                </div>
+                <span class="inline-chip" data-tone="${persistence.tone}"${tipAttrs(persistence.tip)}>${esc(persistence.label)}</span>
+              </div>
+              <div class="overview-grid">${overviewCards.map((card) => metricCard(card)).join('')}</div>
+              <div class="detail-grid">
+                ${detailCard(t('systemFrame'), t('system'), t('systemLead'), `
+                  <div class="info-stack">
+                    ${infoRow(t('shellSurface'), shellSurface)}
+                    ${infoRow(t('runtimeHost'), hostLabel)}
+                    ${infoRow(t('currentViewer'), viewerLabel)}
+                    ${infoRow(t('currentNode'), currentNodeLabel)}
+                    ${infoRow(t('peerNode'), peerNodeLabel)}
+                    ${infoRow(t('ownershipSummary'), (((snapshot.summaries || {}).diagnostics || {}).ownership_summary || '-'))}
+                  </div>
+                `)}
+                ${detailCard(t('routeVocabulary'), t('shellPromise'), t('settingsHint'), `
+                  <div class="info-stack">
+                    ${infoRow(t('navigationRoutes'), `${navigation.settings || '/settings'} · ${navigation.service || '/service'} · ${navigation.content || '/content'}`)}
+                    ${infoRow(t('reportsPointer'), String(navigation.logs || '/gallery?tab=reports'))}
+                    ${infoRow(t('moduleAvailability'), `${(snapshot.module_cards || []).length || 0}`)}
+                  </div>
+                  <div class="chip-row">
+                    <span class="status-chip" data-tone="${esc(turretStatus.tone)}"${tipAttrs(turretStatus.tip)}>${esc(t('turretShort'))}: ${esc(turretStatus.label)}</span>
+                    <span class="status-chip" data-tone="${esc(irrigationStatus.tone)}"${tipAttrs(irrigationStatus.tip)}>${esc(t('irrigationShort'))}: ${esc(irrigationStatus.label)}</span>
+                    <span class="status-chip" data-tone="${esc(persistence.tone)}"${tipAttrs(persistence.tip)}>${esc(t('settingsShort'))}: ${esc(persistence.label)}</span>
+                  </div>
+                  <p class="section-note">${esc(t('labBoundary'))}</p>
+                `)}
+              </div>
+            </section>
+          `,
+        },
+        {
+          id: 'bar',
+          title: t('bar'),
+          summary: t('barLead'),
+          searchText: `${t('bar')} ${t('language')} ${t('desktopControls')} ${t('barLocale')} ${t('barDateTime')} ${t('barTooltips')}`.toLowerCase(),
+          html: `
+            <section class="card section-panel" id="bar" data-section-id="bar">
+              <div class="section-head"${tipAttrs(t('barLead'))}>
+                <div>
+                  <div class="section-kicker">${esc(t('bar'))}</div>
+                  <h2 class="section-title">${esc(t('barBehavior'))}</h2>
+                </div>
+                <span class="inline-chip" data-tone="warn"${tipAttrs(t('barPendingHint'))}>${esc(t('barPreview'))}</span>
+              </div>
+              <div class="detail-grid">
+                ${detailCard(t('bar'), t('barBehavior'), t('interfaceLead'), `
+                  <div class="option-row">
+                    ${radioChip('interface.language', 'en', 'EN', state.settings.interface.language)}
+                    ${radioChip('interface.language', 'ru', 'RU', state.settings.interface.language)}
+                  </div>
+                  <div class="toggle-list">
+                    ${toggleControl('interface.fullscreen_enabled', state.settings.interface.fullscreen_enabled, t('fullscreen'), t('barPendingHint'), false)}
+                    ${toggleControl('interface.desktop_controls_enabled', state.settings.interface.desktop_controls_enabled, t('desktopControls'), t('settingsHint'), false)}
+                  </div>
+                `)}
+                ${detailCard(t('barPreview'), t('runtimeSummary'), t('barPendingHint'), `
+                  <div class="info-stack">
+                    ${infoRow(t('barLocale'), state.settings.interface.language.toUpperCase())}
+                    ${infoRow(t('fullscreen'), state.settings.interface.fullscreen_enabled ? t('enabled') : t('disabled'))}
+                    ${infoRow(t('barDateTime'), t('followsShellLocale'))}
+                    ${infoRow(t('barTooltips'), t('mediumDetailed'))}
+                    ${infoRow(t('syncState'), syncStateLabel())}
+                  </div>
+                  <p class="section-note">${esc(t('barPendingHint'))}</p>
+                `)}
+              </div>
+            </section>
+          `,
+        },
+        {
+          id: 'interface',
+          title: t('interface'),
+          summary: t('interfaceLead'),
+          searchText: `${t('interface')} ${t('advancedDiagnostics')} ${t('runtimeProfile')} ${t('navigationRoutes')} ${t('reportsPointer')}`.toLowerCase(),
+          html: `
+            <section class="card section-panel" id="interface" data-section-id="interface">
+              <div class="section-head"${tipAttrs(t('interfaceLead'))}>
+                <div>
+                  <div class="section-kicker">${esc(t('interface'))}</div>
+                  <h2 class="section-title">${esc(t('interface'))}</h2>
+                </div>
+              </div>
+              <div class="detail-grid">
+                ${detailCard(t('shellPromise'), t('system'), t('systemLead'), `
+                  <div class="info-stack">
+                    ${infoRow(t('runtimeProfile'), shell.runtime_profile || 'unknown')}
+                    ${infoRow(t('activeMode'), shell.active_mode || 'manual')}
+                    ${infoRow(t('navigationRoutes'), `${navigation.settings || '/settings'} · ${navigation.service || '/service'} · ${navigation.content || '/content'}`)}
+                    ${infoRow(t('reportsPointer'), String(navigation.logs || '/gallery?tab=reports'))}
+                  </div>
+                `)}
+                ${detailCard(t('interface'), t('runtimeSummary'), t('settingsHint'), `
+                  <div class="toggle-list">
+                    ${toggleControl('interface.show_advanced_diagnostics', state.settings.interface.show_advanced_diagnostics, t('advancedDiagnostics'), t('diagnosticsLead'), false)}
+                  </div>
+                  <div class="info-stack">
+                    ${infoRow(t('lastSaved'), lastSavedLabel())}
+                    ${infoRow(t('theme'), t(state.settings.style.theme))}
+                    ${infoRow(t('density'), t(state.settings.style.density))}
+                  </div>
+                `)}
+              </div>
+            </section>
+          `,
+        },
+        {
+          id: 'synchronization',
+          title: t('synchronization'),
+          summary: t('syncLead'),
+          searchText: `${t('synchronization')} ${t('syncState')} ${t('peerReachability')} ${t('preferredMode')} ${t('preferPeerContinuity')}`.toLowerCase(),
+          html: `
+            <section class="card section-panel" id="synchronization" data-section-id="synchronization">
+              <div class="section-head"${tipAttrs(t('syncLead'))}>
+                <div>
+                  <div class="section-kicker">${esc(t('synchronization'))}</div>
+                  <h2 class="section-title">${esc(t('synchronization'))}</h2>
+                </div>
+                <div class="status-row">
+                  ${syncCards.map((card) => `<span class="status-chip" data-tone="${esc(card.tone)}"${tipAttrs(card.body)}>${esc(card.eyebrow)}: ${esc(card.title)}</span>`).join('')}
+                </div>
+              </div>
+              <div class="sync-grid">
+                ${detailCard(t('runtimeSummary'), t('syncState'), t('syncLead'), `
+                  <div class="info-stack">
+                    ${infoRow(t('syncEnabled'), String(!!sync.enabled))}
+                    ${infoRow(t('syncState'), syncStateLabel())}
+                    ${infoRow(t('peerReachability'), sync.peer_reachable ? t('online') : t('offline'))}
+                    ${infoRow(t('lastSaved'), lastSavedLabel())}
+                  </div>
+                `)}
+                ${detailCard(t('quickActions'), t('preferredMode'), t('syncLead'), `
+                  <div class="option-row">
+                    ${radioChip('synchronization.preferred_mode', 'auto', t('auto'), state.settings.synchronization.preferred_mode)}
+                    ${radioChip('synchronization.preferred_mode', 'manual_review', t('manualReview'), state.settings.synchronization.preferred_mode)}
+                  </div>
+                  <div class="toggle-list">
+                    ${toggleControl('synchronization.prefer_peer_continuity', state.settings.synchronization.prefer_peer_continuity, t('preferPeerContinuity'), t('syncLead'), false)}
+                  </div>
+                  <div class="action-row">
+                    <button class="action-button" type="button" data-action="refresh-runtime">${esc(t('refreshLiveData'))}</button>
+                    <a class="action-button" href="/content">${esc(t('openStorageDiagnostics'))}</a>
+                  </div>
+                `)}
+              </div>
+            </section>
+          `,
+        },
+        {
+          id: 'policies',
+          title: t('policies'),
+          summary: t('policiesLead'),
+          searchText: `${t('policies')} ${t('turretPolicies')} ${t('turretSilent')} ${t('turretAnimal')} ${t('turretWater')} ${t('turretPeople')}`.toLowerCase(),
+          html: `
+            <section class="card section-panel" id="policies" data-section-id="policies">
+              <div class="section-head"${tipAttrs(t('policiesLead'))}>
+                <div>
+                  <div class="section-kicker">${esc(t('policies'))}</div>
+                  <h2 class="section-title">${esc(t('turretPolicies'))}</h2>
+                </div>
+                <span class="inline-chip" data-tone="${esc(turretStatus.tone)}"${tipAttrs(turretStatus.tip)}>${esc(t('turretShort'))}: ${esc(turretStatus.label)}</span>
+              </div>
+              <div class="perk-grid">
+                ${perkCard('turret_policies.silent_observation', state.settings.turret_policies.silent_observation, t('turretSilent'), t('labBoundary'), false)}
+                ${perkCard('turret_policies.allow_animal_deterrence', state.settings.turret_policies.allow_animal_deterrence, t('turretAnimal'), t('labBoundary'), false)}
+                ${perkCard('turret_policies.allow_auto_water_action', state.settings.turret_policies.allow_auto_water_action, t('turretWater'), t('labBoundary'), false)}
+                ${perkCard('turret_policies.return_to_warm_standby', state.settings.turret_policies.return_to_warm_standby, t('turretStandby'), t('labBoundary'), false)}
+                ${perkCard('turret_policies.do_not_target_people', state.settings.turret_policies.do_not_target_people, t('turretPeople'), t('turretPeopleHint'), true)}
+              </div>
+            </section>
+          `,
+        },
+        {
+          id: 'modules',
+          title: t('modules'),
+          summary: t('modulesLead'),
+          searchText: `${t('modules')} ${t('irrigation')} ${t('irrigationDriest')} ${t('irrigationSensorHealth')} ${t('candidatePath')}`.toLowerCase(),
+          html: `
+            <section class="card section-panel" id="modules" data-section-id="modules">
+              <div class="section-head"${tipAttrs(t('modulesLead'))}>
+                <div>
+                  <div class="section-kicker">${esc(t('modules'))}</div>
+                  <h2 class="section-title">${esc(t('irrigation'))}</h2>
+                </div>
+                <span class="inline-chip" data-tone="${esc(irrigationStatus.tone)}"${tipAttrs(irrigationStatus.tip)}>${esc(t('moduleStatus'))}: ${esc(irrigationStatus.label)}</span>
+              </div>
+              <div class="detail-grid">
+                ${detailCard(t('moduleStatus'), t('irrigation'), t('irrigationLead'), `
+                  <div class="info-stack">
+                    ${infoRow(t('irrigationOwnerState'), irrigationModule.owner_available ? t('ready') : t('offline'))}
+                    ${infoRow(t('routeMode'), routeModeLabel(irrigationModule.route_mode || 'blocked'))}
+                    ${infoRow(t('peerReachability'), peer.reachable ? t('online') : t('offline'))}
+                  </div>
+                  <div class="toggle-list">
+                    ${toggleControl('irrigation.prefer_driest_zone', state.settings.irrigation.prefer_driest_zone, t('irrigationDriest'), t('irrigationHint'), false)}
+                    ${toggleControl('irrigation.block_automatic_during_service', state.settings.irrigation.block_automatic_during_service, t('irrigationServiceBlock'), t('irrigationHint'), false)}
+                    ${toggleControl('irrigation.require_sensor_health', state.settings.irrigation.require_sensor_health, t('irrigationSensorHealth'), t('irrigationHint'), false)}
+                  </div>
+                `)}
+                <article class="candidate-card"${tipAttrs(t('candidateBody'))}>
+                  <div class="panel-head">
+                    <div>
+                      <div class="panel-kicker">${esc(t('candidatePath'))}</div>
+                      <h3 class="panel-title">${esc(t('laboratory'))} -> ${esc(t('modules'))}</h3>
+                    </div>
+                  </div>
+                  <p class="detail-copy">${esc(t('candidateBody'))}</p>
+                  <p class="section-note">${esc(t('labBoundary'))}</p>
+                </article>
+              </div>
+            </section>
+          `,
+        },
+        {
+          id: 'style',
+          title: t('style'),
+          summary: t('styleLead'),
+          searchText: `${t('style')} ${t('theme')} ${t('density')} ${t('meadow')} ${t('dawn')} ${t('studio')}`.toLowerCase(),
+          html: `
+            <section class="card section-panel" id="style" data-section-id="style">
+              <div class="section-head"${tipAttrs(t('styleLead'))}>
+                <div>
+                  <div class="section-kicker">${esc(t('style'))}</div>
+                  <h2 class="section-title">${esc(t('style'))}</h2>
+                </div>
+                <span class="inline-chip" data-tone="ok"${tipAttrs(t('styleLead'))}>${esc(t('theme'))}: ${esc(t(state.settings.style.theme))}</span>
+              </div>
+              <div class="detail-grid">
+                ${detailCard(t('themePreview'), t('theme'), t('styleLead'), `
+                  <div class="theme-grid">
+                    ${themeOption('meadow', t('meadow'), t('platform'), state.settings.style.theme)}
+                    ${themeOption('dawn', t('dawn'), t('continuity'), state.settings.style.theme)}
+                    ${themeOption('studio', t('studio'), t('persistence'), state.settings.style.theme)}
+                  </div>
+                `)}
+                ${detailCard(t('surfaceDensity'), t('density'), t('settingsHint'), `
+                  <div class="option-row">
+                    ${radioChip('style.density', 'comfortable', t('comfortable'), state.settings.style.density)}
+                    ${radioChip('style.density', 'compact', t('compact'), state.settings.style.density)}
+                  </div>
+                `)}
+              </div>
+            </section>
+          `,
+        },
+        {
+          id: 'diagnostics',
+          title: t('diagnostics'),
+          summary: t('diagnosticsLead'),
+          searchText: `${t('diagnostics')} ${t('shellSnapshot')} ${t('contentStatus')} ${t('syncPayload')}`.toLowerCase(),
+          html: `
+            <section class="card section-panel" id="diagnostics" data-section-id="diagnostics">
+              <div class="section-head"${tipAttrs(t('diagnosticsLead'))}>
+                <div>
+                  <div class="section-kicker">${esc(t('diagnostics'))}</div>
+                  <h2 class="section-title">${esc(t('diagnostics'))}</h2>
+                </div>
+                <span class="inline-chip" data-tone="${state.settings.interface.show_advanced_diagnostics ? 'ok' : 'warn'}"${tipAttrs(t('diagnosticsLead'))}>${esc(state.settings.interface.show_advanced_diagnostics ? t('ready') : t('blocked'))}</span>
+              </div>
+              ${state.runtimeError ? `<p class="muted">${esc(state.runtimeError)}</p>` : ''}
+              <details ${state.settings.interface.show_advanced_diagnostics ? 'open' : ''}>
+                <summary>${esc(t('diagnostics'))}</summary>
+                <div class="diagnostics-stack">
+                  ${state.settings.interface.show_advanced_diagnostics ? `
+                    <details open>
+                      <summary>${esc(t('shellSnapshot'))}</summary>
+                      <pre class="code-block">${esc(JSON.stringify(state.snapshot || {}, null, 2))}</pre>
+                    </details>
+                    <details open>
+                      <summary>${esc(t('contentStatus'))}</summary>
+                      <pre class="code-block">${esc(JSON.stringify(state.content || {}, null, 2))}</pre>
+                    </details>
+                    <details open>
+                      <summary>${esc(t('syncPayload'))}</summary>
+                      <pre class="code-block">${esc(JSON.stringify((state.sync || {}).raw || {}, null, 2))}</pre>
+                    </details>
+                  ` : `<p class="muted" style="padding: 0 14px 14px;">${esc(t('diagnosticsHidden'))}</p>`}
+                </div>
+              </details>
+            </section>
+          `,
+        },
+      ];
+    }
+
+    function filteredSections() {
+      const query = state.searchQuery.trim().toLowerCase();
+      return buildSections().filter((section) => matchesSearch(section, query));
+    }
+
+    function isMobileSectionLayout() {
+      return window.matchMedia('(max-width: 760px)').matches;
+    }
+
+    function renderHero() {
+      document.getElementById('hero').innerHTML = `
+        <div class="hero-head">
+          <div class="hero-copy">
+            <h1>${esc(t('pageTitle'))}</h1>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderRail() {
+      const sections = filteredSections();
+      ensureActiveSection(sections);
+      const snapshot = state.snapshot || {};
+      const current = ((snapshot.nodes || {}).current || {});
+      const peer = ((snapshot.nodes || {}).peer || {});
+      const persistence = persistenceInfo();
+      document.getElementById('settings-rail').innerHTML = `
+        <div class="rail-block">
+          <div class="rail-kicker">${esc(t('searchSettings'))}</div>
+          <h2 class="rail-title"${tipAttrs(t('searchLead'))}>${esc(t('searchSettings'))}</h2>
+          <div class="search-shell">
+            <input class="search-input" type="search" data-action="search-settings" placeholder="${esc(t('searchPlaceholder'))}" value="${esc(state.searchQuery)}"${tipAttrs(t('searchLead'))}>
+          </div>
+          ${state.searchQuery ? `<button class="ghost-button" type="button" data-action="clear-search"${tipAttrs(t('clearFilter'))}>${esc(t('clearFilter'))}</button>` : ''}
+        </div>
+        <div class="rail-block">
+          <div class="rail-kicker">${esc(t('visibleSections'))}</div>
+          <p class="rail-copy">${esc(t('visibleSections'))}: ${sections.length}</p>
+          <div class="rail-nav">
+            ${sections.map((section) => `
+              <button class="rail-button" type="button" data-section-target="${esc(section.id)}" data-active="${section.id === state.activeSection ? 'true' : 'false'}"${tipAttrs(section.summary)}>
+                <strong>${esc(section.title)}</strong>
+                <span>${esc(section.summary)}</span>
+              </button>
+            `).join('')}
+          </div>
+        </div>
+        <div class="rail-block">
+          <div class="rail-kicker">${esc(t('runtimeSummary'))}</div>
+          <div class="info-stack">
+            ${infoRow(t('shellSurface'), shellSurfaceTitle(state.snapshot || {}))}
+            ${infoRow(t('runtimeHost'), runtimeHostLabel(state.snapshot || {}))}
+            ${infoRow(t('currentViewer'), currentViewerLabel(state.snapshot || {}))}
+            ${infoRow(t('settingsShort'), persistence.label)}
+            ${infoRow(t('syncState'), syncStateLabel())}
+          </div>
+        </div>
+        <div class="rail-block">
+          <div class="rail-kicker">${esc(t('quickActions'))}</div>
+          <div class="rail-actions">
+            <a class="action-button" href="/"${tipAttrs(t('backToShell'))}>${esc(t('backToShell'))}</a>
+            <a class="action-button" href="/gallery"${tipAttrs(t('gallery'))}>${esc(t('gallery'))}</a>
+            <a class="action-button" href="/service"${tipAttrs(t('laboratory'))}>${esc(t('laboratory'))}</a>
+            <a class="action-button" href="/gallery?tab=reports"${tipAttrs(t('reports'))}>${esc(t('reports'))}</a>
+            <button class="action-button" type="button" data-action="refresh-runtime"${tipAttrs(t('refreshLiveData'))}>${esc(t('refreshLiveData'))}</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderDetail() {
+      const sections = filteredSections();
+      ensureActiveSection(sections);
+      syncHash(state.activeSection);
+      const detail = document.getElementById('settings-detail');
+      if (!sections.length) {
+        detail.innerHTML = `
+          <section class="empty-state">
+            <h2>${esc(t('searchEmptyTitle'))}</h2>
+            <p class="muted">${esc(t('searchEmptyBody'))}</p>
+            <button class="action-button" type="button" data-action="clear-search">${esc(t('clearFilter'))}</button>
+          </section>
+        `;
+        return;
+      }
+      const renderedSections = isMobileSectionLayout()
+        ? sections.filter((section) => section.id === state.activeSection)
+        : sections;
+      detail.innerHTML = renderedSections.map((section) => section.html).join('');
+      if (state.pendingScrollId) {
+        const targetId = state.pendingScrollId;
+        state.pendingScrollId = '';
+        window.requestAnimationFrame(() => {
+          const element = document.getElementById(targetId);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        });
+      }
+    }
+
+    function render(preserveSearchFocus) {
+      const hadSearchFocus = preserveSearchFocus;
+      applyVisualSettings();
+      renderHero();
+      renderRail();
+      renderDetail();
+      if (hadSearchFocus) {
+        const input = document.querySelector('[data-action="search-settings"]');
+        if (input instanceof HTMLInputElement) {
+          input.focus();
+          input.setSelectionRange(input.value.length, input.value.length);
+        }
+      }
+    }
+
+    async function refreshRuntime() {
+      try {
+        const [snapshot, contentStatus, syncPayload] = await Promise.all([
+          fetchJson('/api/v1/shell/snapshot'),
+          fetchJson('/api/v1/content/status'),
+          fetchSyncJson(),
+        ]);
+        state.snapshot = snapshot;
+        state.content = contentStatus;
+        state.sync = normalizeSyncPayload(syncPayload);
+        state.runtimeError = '';
+      } catch (error) {
+        state.runtimeError = `Settings runtime load error: ${error}`;
+      }
+      render();
+    }
+
+    document.addEventListener('input', (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement)) {
+        return;
+      }
+      if (target.dataset.action === 'search-settings') {
+        state.searchQuery = String(target.value || '').trim().toLowerCase();
+        render(true);
+      }
+    });
+
+    document.addEventListener('change', (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement)) {
+        return;
+      }
+      if (target.dataset.action === 'search-settings') {
+        return;
+      }
+      const path = target.dataset.settingPath;
+      if (!path) {
+        return;
+      }
+      const nextSettings = clone(state.settings);
+      setDeepValue(nextSettings, path, target.type === 'checkbox' ? target.checked : target.value);
+      saveSettings(nextSettings).catch((error) => {
+        state.runtimeError = `Settings save error: ${error}`;
+        render();
+      });
+    });
+
+    document.addEventListener('click', (event) => {
+      const target = event.target instanceof HTMLElement ? event.target.closest('[data-action], [data-section-target]') : null;
+      if (!target) {
+        return;
+      }
+      const sectionTarget = target.getAttribute('data-section-target');
+      if (sectionTarget) {
+        state.activeSection = sectionTarget;
+        state.pendingScrollId = sectionTarget;
+        render();
+        return;
+      }
+
+      const action = target.getAttribute('data-action');
+      if (action === 'refresh-runtime') {
+        refreshRuntime().catch(() => {});
+        return;
+      }
+      if (action === 'clear-search') {
+        state.searchQuery = '';
+        render();
+      }
+    });
+
+    window.addEventListener('hashchange', () => {
+      const sectionId = sectionIdFromHash(window.location.hash);
+      if (!sectionId) {
+        return;
+      }
+      state.activeSection = sectionId;
+      state.pendingScrollId = sectionId;
+      render();
+    });
+
+    window.addEventListener('resize', () => {
+      render();
+    });
+
+    async function initialize() {
+      const initialSection = sectionIdFromHash(window.location.hash);
+      if (initialSection) {
+        state.activeSection = initialSection;
+        state.pendingScrollId = initialSection;
+      }
+      render();
+      await loadSettings();
+      render();
+      await refreshRuntime();
+      window.setInterval(() => {
+        refreshRuntime().catch(() => {});
+      }, 5000);
+    }
+
+    initialize().catch((error) => {
+      state.runtimeError = `Settings bootstrap error: ${error}`;
+      render();
+    });
+  </script>
+</body>
+</html>

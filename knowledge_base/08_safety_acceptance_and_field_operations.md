@@ -8,12 +8,12 @@
 
 - текущий статус: `active draft`
 
-## Donor Источники Для Первого Переноса
+## Донорские Источники Для Первого Переноса
 
 - donor mapping для этого файла зафиксирован в `knowledge_base/17_open_questions_and_migration.md`;
 - specific legacy donor paths больше не считаются обязательным reading path для этого active file.
 
-## Settled Truths
+## Установленные Истины
 
 - blocked и safety truth должны быть честными и видимыми
 - acceptance не должен теряться в чисто narrative тексте
@@ -168,6 +168,7 @@ Dual-node mode:
 
 - shell на любом узле показывает обе платы и их availability;
 - peer-owned маршруты открываются через owner-aware handoff, а не через притворство локальным владельцем;
+- одновременные `Windows laptop` viewer и bare `Raspberry Pi` display-viewer остаются раздельно видимыми вместе с `runtime host`, `shell surface` и physical nodes;
 - shared shell truth и shared preferences остаются согласованными;
 - `Gallery` работает как mixed-source surface;
 - `Laboratory` показывает связанную readiness картину и рекомендуемый следующий инженерный шаг.

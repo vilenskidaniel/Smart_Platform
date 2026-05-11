@@ -168,6 +168,135 @@ function Resolve-AppBrowserExe {
     return $null
 }
 
+function Ensure-WindowApi {
+    if ("SmartPlatformWindowApi" -as [type]) {
+        return
+    }
+
+    Add-Type -TypeDefinition @"
+using System;
+using System.Runtime.InteropServices;
+
+public static class SmartPlatformWindowApi {
+    [DllImport("user32.dll")]
+    public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);
+}
+"@
+}
+
+function Find-BrowserWindowHandle {
+    param(
+        [object]$Process,
+        [datetime]$EarliestStartTime,
+        [string]$TitleHint = "Smart Platform",
+        [int]$TimeoutMs = 10000
+    )
+
+    $deadline = (Get-Date).AddMilliseconds($TimeoutMs)
+    $processName = ""
+    $launchFloor = if ($EarliestStartTime) { $EarliestStartTime } else { (Get-Date).AddSeconds(-15) }
+
+    try {
+        $processName = [string]$Process.ProcessName
+    } catch {
+        $processName = ""
+    }
+
+    while ((Get-Date) -lt $deadline) {
+        $seenProcessIds = @{}
+        $candidates = @()
+
+        if ($Process -is [System.Diagnostics.Process]) {
+            try {
+                if (-not $Process.HasExited) {
+                    $Process.Refresh()
+                    $seenProcessIds[$Process.Id] = $true
+                    $candidates += $Process
+                }
+            } catch {
+            }
+        }
+
+        if ($processName) {
+            try {
+                $related = Get-Process -Name $processName -ErrorAction SilentlyContinue |
+                    Sort-Object `
+                        @{ Expression = {
+                            try {
+                                if ($TitleHint -and $_.MainWindowTitle -like "*$TitleHint*") { 1 } else { 0 }
+                            } catch {
+                                0
+                            }
+                        }; Descending = $true }, `
+                        @{ Expression = {
+                            try {
+                                if ($_.StartTime -ge $launchFloor) { 1 } else { 0 }
+                            } catch {
+                                0
+                            }
+                        }; Descending = $true }, `
+                        @{ Expression = {
+                            try {
+                                $_.StartTime
+                            } catch {
+                                Get-Date 0
+                            }
+                        }; Descending = $true }
+                foreach ($candidate in $related) {
+                    if (-not $seenProcessIds.ContainsKey($candidate.Id)) {
+                        $seenProcessIds[$candidate.Id] = $true
+                        $candidates += $candidate
+                    }
+                }
+            } catch {
+            }
+        }
+
+        foreach ($candidate in $candidates) {
+            try {
+                $candidate.Refresh()
+                if ($candidate.MainWindowHandle -and $candidate.MainWindowHandle -ne [IntPtr]::Zero) {
+                    return $candidate.MainWindowHandle
+                }
+            } catch {
+            }
+        }
+
+        Start-Sleep -Milliseconds 200
+    }
+
+    return [IntPtr]::Zero
+}
+
+function Maximize-BrowserWindow {
+    param(
+        [object]$Process,
+        [datetime]$EarliestStartTime,
+        [string]$TitleHint = "Smart Platform",
+        [int]$TimeoutMs = 10000
+    )
+
+    Ensure-WindowApi
+    $windowHandle = Find-BrowserWindowHandle -Process $Process -EarliestStartTime $EarliestStartTime -TitleHint $TitleHint -TimeoutMs $TimeoutMs
+    if ($windowHandle -eq [IntPtr]::Zero) {
+        return $false
+    }
+
+    [SmartPlatformWindowApi]::ShowWindowAsync($windowHandle, 3) | Out-Null
+
+    $followUpDeadline = (Get-Date).AddMilliseconds(1800)
+    while ((Get-Date) -lt $followUpDeadline) {
+        Start-Sleep -Milliseconds 200
+        $nextHandle = Find-BrowserWindowHandle -Process $Process -EarliestStartTime $EarliestStartTime -TitleHint $TitleHint -TimeoutMs 200
+        if ($nextHandle -ne [IntPtr]::Zero -and $nextHandle -ne $windowHandle) {
+            [SmartPlatformWindowApi]::ShowWindowAsync($nextHandle, 3) | Out-Null
+            $windowHandle = $nextHandle
+        }
+    }
+
+    return $true
+}
+
 function Open-ShellBrowser {
     param(
         [string]$Url,
@@ -177,11 +306,14 @@ function Open-ShellBrowser {
     if ($Mode -eq "App") {
         $browserExe = Resolve-AppBrowserExe
         if ($browserExe) {
-            Start-Process -FilePath $browserExe -ArgumentList @(
+            $launchStartedAt = Get-Date
+            $browserProcess = Start-Process -FilePath $browserExe -WindowStyle Hidden -PassThru -ArgumentList @(
                 "--app=$Url",
+                "--start-maximized",
                 "--new-window",
                 "--disable-session-crashed-bubble"
-            ) | Out-Null
+            )
+            Maximize-BrowserWindow -Process $browserProcess -EarliestStartTime $launchStartedAt | Out-Null
             return
         }
     }
@@ -226,7 +358,7 @@ $pythonExe = Resolve-PythonExe -Requested $PythonExe
 $bindHost = Resolve-BindHost -Mode $EntryMode -Requested $BindHost
 $publicBaseUrl = Resolve-PublicBaseUrl -Mode $EntryMode -Requested $PublicBaseUrl -ResolvedPort $Port
 $syncEnabledValue = if ($DisableSync.IsPresent) { "0" } else { "1" }
-$appPath = Join-Path $repoRoot "raspberry_pi/app.py"
+$appPath = Join-Path $repoRoot "host_runtime/app.py"
 $runtimeDir = Get-RuntimeDir
 $serverLogPath = Join-Path $runtimeDir "rpi-shell-host.log"
 $runtimeScriptPath = Write-HostRuntimeScript -RuntimeDir $runtimeDir -RepoRoot $repoRoot -ResolvedBindHost $bindHost -ResolvedPort $Port -ResolvedPublicBaseUrl $publicBaseUrl -ResolvedPythonExe $pythonExe -ResolvedAppPath $appPath -ResolvedSyncEnabledValue $syncEnabledValue -ResolvedServerLogPath $serverLogPath

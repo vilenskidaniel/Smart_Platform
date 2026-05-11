@@ -8,12 +8,12 @@
 
 - текущий статус: `active draft`
 
-## Donor Источники Для Первого Переноса
+## Донорские Источники Для Первого Переноса
 
 - donor mapping для этого файла зафиксирован в `knowledge_base/17_open_questions_and_migration.md`;
-- `chat_prompts/foundation_prompt.md` остается active companion source для синхронизации терминов и prompt-layer wording.
+- `chat_prompts/foundation_prompt.md` остается prompt-layer companion source для синхронизации терминов и prompt-layer wording.
 
-## Settled Truths
+## Установленные Истины
 
 - идти от общего к частному
 - один термин = один смысл

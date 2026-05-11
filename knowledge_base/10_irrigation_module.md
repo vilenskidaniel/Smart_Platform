@@ -7,14 +7,14 @@
 ## Статус
 
 - текущий статус: `active draft`
-- этот файл задает новый модульный active canon для `Irrigation`; stage-docs ниже остаются donor и implementation-residue
+- этот файл задает новый модульный активный канон для `Irrigation`; историческое состояние переноса держим в `knowledge_base/17_open_questions_and_migration.md`
 
-## Donor Источники Для Первого Переноса
+## Донорские Источники Для Первого Переноса
 
 - donor mapping для этого файла зафиксирован в `knowledge_base/17_open_questions_and_migration.md`;
-- `briefs/irrigation_module.md` и `chat_prompts/irrigation_prompt.md` остаются active companion sources для module wording and working scope.
+- `chat_prompts/irrigation_prompt.md` остается prompt-layer companion source для рабочего режима чата.
 
-## Settled Truths
+## Установленные Истины
 
 - `Irrigation` описывается как продуктовый модуль полива
 - текущий controller profile не равен вечной архитектурной истине модуля
@@ -194,6 +194,17 @@ Overlay effect boundary:
 - product-significant outcomes могут подниматься в platform activity и дальше в `Gallery > Reports`;
 - engineering/service traces остаются в `Laboratory` session layer и не должны напрямую засорять `Reports`.
 
+### 8.1 Реальные Кодовые Опоры Текущего Слоя
+
+Чтобы `Irrigation` не оставался только словарем продукта, ниже фиксируем реальные текущие implementation surfaces:
+
+- `io_firmware/src/modules/irrigation/IrrigationController.cpp` - owner-side controller для зон, sensor state, auto baseline и safe output behavior на `ESP32`;
+- `io_firmware/data/irrigation/index.html` - текущая пользовательская page `/irrigation` на стороне `ESP32`;
+- `io_firmware/data/service/irrigation.html` - owner-side service-экран для инженерной проверки зон, sensor profiles и fault simulation;
+- `host_runtime/server.py` - shell-side HTTP-вход, который уже держит irrigation endpoints вроде `/api/v1/irrigation/status`, `/api/v1/irrigation/zones`, `/api/v1/irrigation/start` и `/api/v1/irrigation/automatic`.
+
+Отдельного выделенного irrigation test-slice в репозитории пока нет, поэтому текущий acceptance baseline для модуля нужно читать через controller behavior, page route и эти owner-side endpoints.
+
 ### 9. Safety And Acceptance Hooks
 
 Для `Irrigation` в текущем active canon важны такие safety hooks:
@@ -261,7 +272,12 @@ Overlay effect boundary:
 
 ## TODO
 
-- после стабилизации active draft переаудировать irrigation donor residue в migration ledger и оставить только исторически полезный bootstrap/detail слой
+- подключить реальные датчики и калибровку вместо полной sensor simulation;
+- подтвердить безопасные уровни активации для реального peristaltic pump и valve cascade;
+- добавить расписания и более богатые automatic scenarios поверх текущего baseline;
+- описать и затем реализовать синхронизацию irrigation scenarios и связанных state-последствий между `ESP32` и `Raspberry Pi`;
+- зафиксировать owner-visible water reserve model с раздельными summary для drip irrigation и turret spraying и минимум двумя sensor entry points на `ESP32` и `Raspberry Pi`;
+- подготовить данные для turret manual HUD overlay: valve visibility, air temperature, air humidity и irrigation water reserve summary;
 - после следующего module pass проверить, можно ли дальше схлопнуть implementation residue без потери current working baseline
 
 ## TBD

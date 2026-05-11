@@ -4,7 +4,7 @@
 
 Активный человеческий слой документации теперь должен начинаться с `knowledge_base/README.md`.
 
-Старый donor-only слой считается только источником переноса смысла в новый канон и не должен использоваться как active reading path.
+Старый donor-only слой считается только источником переноса смысла в новый канон и не должен использоваться как активный порядок чтения.
 
 Использовать их нужно не как набор разрозненных подсказок, а как управляемую систему работы:
 
@@ -77,7 +77,7 @@
 - длинные JS-файлы править маленькими hunks в порядке следования кода;
 - не переносить большие куски между `Raspberry Pi` и `ESP32` как будто это один и тот же implementation generation;
 - инженерный режим открывает дополнительные функции, но не создает отдельную цветовую или смысловую систему состояний;
-- не строить fullscreen/tooltips так, чтобы первый клик пользователя тратился на побочный effect и ломал основное действие;
+- не строить fullscreen/tooltips так, чтобы первый клик пользователя тратился на побочный эффект и ломал основное действие;
 - не оставлять browser-native tooltip параллельно custom tooltip;
 - hover tooltip во всех shell-поверхностях появляется с задержкой около `500 ms`, располагается рядом с курсором или местом наведения, закрывается или отменяется сразу при сдвиге курсора больше `3 px` и не держится дольше `6 s`;
 - короткая причина blocked/locked состояния и следующий шаг должны быть видимы прямо на экране, а tooltip нужен для подробностей;
@@ -86,7 +86,7 @@
 - выбранный язык должен применяться ко всему видимому тексту; дополнительные локали могут быть `TODO`-заглушками, если переводной модуль еще не заполнен;
 - hardware modules, hardware components, software services и storage slices не смешиваются в одном списке;
 - `Settings` не держит отдельную секцию `Platform Nodes`: физический quick status остается в bar-панели, а продуктовая связь с платами живет в `Modules`;
-- `fullscreen` и `input helpers` считаются shared preferences: их truth живет в `Settings`, отражается в bar-панели и читается рабочими страницами;
+- `fullscreen` и `input helpers` считаются общими настройками: их truth живет в `Settings`, отражается в bar-панели и читается рабочими страницами;
 - `Home` остается обязательным control bar-панели как экстренный возврат на главную страницу и переход к дефолтному состоянию оболочки, заданному в `Settings`;
 - `Sync` в `Settings` управляется списком `selected_domains`: `Auto` включает все, ручное изменение переводит режим в `Manual review`;
 - утвержденный sync-набор: service link, module state, shared preferences, reports/logs, plant library, media content (`photo/video/audio/gallery reports`), component registry, software versions (`RPi/ESP/Web UI`);
@@ -122,4 +122,4 @@
 - [knowledge_base/05_shell_navigation_and_screen_map.md](../knowledge_base/05_shell_navigation_and_screen_map.md)
 - [shared_contracts/shell_snapshot_contract.md](../shared_contracts/shell_snapshot_contract.md)
 
-Этого достаточно, чтобы новый чат не повторял уже пройденные ошибки по launch flow, bar regressions, fullscreen restore, stale browser assets и устаревшим prompt-слоям.
+Этого достаточно, чтобы новый чат не повторял уже пройденные ошибки по launch flow, bar regressions, fullscreen restore, устаревшим browser assets и старым prompt-слоям.

@@ -15,7 +15,7 @@
 3. нужный модульный prompt
 4. `chat_prompts/cross_module_prompt.md`, если задача задевает несколько модулей, sync, общие контракты, docs или prompt-слой
 
-Если координационный чат создает новый prompt для отдельного продуктового блока, он должен попадать именно туда, а не смешиваться с постоянными product briefs.
+Если координационный чат создает новый prompt для отдельного продуктового блока, он должен попадать именно туда, а не смешиваться с постоянными product summaries или вторыми точками входа.
 
 ## Что читать в первую очередь
 
@@ -33,8 +33,8 @@
 10. [knowledge_base/07_data_registry_storage_and_persistence.md](knowledge_base/07_data_registry_storage_and_persistence.md)
 11. [knowledge_base/08_safety_acceptance_and_field_operations.md](knowledge_base/08_safety_acceptance_and_field_operations.md)
 12. [knowledge_base/09_repository_layout_and_code_map.md](knowledge_base/09_repository_layout_and_code_map.md)
-13. [briefs/README.md](briefs/README.md)
-14. только после этого нужный brief-файл
+13. после этого выбрать один основной модульный файл в `knowledge_base/`
+14. затем открыть соответствующий prompt-файл в `chat_prompts/`
 
 ## Главные правила
 
@@ -51,8 +51,8 @@
 - Вопросы должны идти от общего к частному и помогать наращивать каркас деталями.
 - Если задача начинает тянуть второй большой блок, нужно остановиться, зафиксировать решение в docs и вынести следующий блок в отдельный чат.
 - Для новой разработки `Smart Platform` рабочий корень — сам этот репозиторий.
-- Для `ESP32` использовать `firmware_esp32/platformio.ini`.
-- Для `Raspberry Pi` использовать каталог `raspberry_pi/`.
+- Для `ESP32` использовать `io_firmware/platformio.ini`.
+- Для `Raspberry Pi` использовать каталог `host_runtime/`.
 - Legacy bench/donor-репозитории использовать только как источник идей и выборочной миграции, а не как основной рабочий корень.
 - Не склеивать старые проекты напрямую.
 - Не переносить код без понимания его владельца и зоны ответственности.

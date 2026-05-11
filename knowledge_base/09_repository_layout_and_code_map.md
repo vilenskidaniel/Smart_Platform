@@ -8,15 +8,15 @@
 
 - текущий статус: `active draft`
 
-## Donor Источники Для Первого Переноса
+## Донорские Источники Для Первого Переноса
 
 - donor mapping для этого файла зафиксирован в `knowledge_base/17_open_questions_and_migration.md`;
-- `README.md` остается active companion entry file для repo-level onboarding.
+- `README.md` остается companion entry file для repo-level onboarding.
 
-## Settled Truths
+## Установленные Истины
 
 - человек должен быстро понимать, где docs, prompts и code
-- donor-layer и active-layer должны быть явно разделены
+- historical migration context и active-layer должны быть явно разделены
 
 ## 1. Корень Репозитория
 
@@ -25,7 +25,7 @@
 На верхнем уровне сейчас важно различать:
 
 - активный human-facing canon;
-- donor documentation layer;
+- historical migration context;
 - prompt-layer для AI workflows;
 - working code для `ESP32`, `Raspberry Pi`, web surfaces и shared contracts.
 
@@ -38,15 +38,22 @@
 
 Текущий working code живет прежде всего в этих каталогах:
 
-- `firmware_esp32/` — PlatformIO firmware side;
-- `raspberry_pi/` — Python runtime, shell server, sync, registry, reports, laboratory and turret layers;
+- `io_firmware/` — PlatformIO firmware side;
+- `host_runtime/` — Python runtime, shell server, sync, registry, reports, laboratory and turret layers;
 - `shared_contracts/` — общие machine/human-readable contracts;
 - `tools/` — host launchers и supporting entry tooling.
 
 Важно:
 
-- каталог `web_ui/` существует как target/future layout marker, но current working web surfaces сегодня в основном живут в `raspberry_pi/web/` и `firmware_esp32/data/`;
+- каталог `web_ui/` существует как target/future layout marker, но current working web surfaces сегодня в основном живут в `host_runtime/web/` и `io_firmware/data/`;
 - это нужно читать честно, а не делать вид, что target structure уже полностью материализована.
+- каталоги `host_runtime/` и `io_firmware/` описывают current role-oriented implementation families, а не полную runtime-онтологию всех устройств, которые система может одновременно видеть.
+
+Из этого следует:
+
+- нельзя читать `host_runtime/` как утверждение, что текущий runtime host, viewer и owner-side physical node всегда совпадают;
+- нельзя выводить из имени каталога, что текущий viewer, runtime host и owner-side physical node совпадают;
+- даже после top-level rename имя каталога не должно читаться как безопасная user-facing truth о конкретной плате.
 
 ## 3. Где Лежит Новый Канон
 
@@ -56,17 +63,40 @@ Target layout нужен как directional map для cleanup и refactor work,
 
 Верхнеуровневой целевой структурой считаем:
 
-- `firmware_esp32/` для `ESP32` firmware, embedded assets и platform-side tests;
-- `raspberry_pi/` для turret/runtime/server layers, host-side services и tests;
+- `io_firmware/` для `ESP32` firmware, embedded assets и platform-side tests;
+- `host_runtime/` для turret/runtime/server layers, host-side services и tests;
 - `shared_contracts/` для общих contracts, schema-like interfaces и machine/human-readable agreements;
 - `web_ui/` как future shared shell/frontend home, когда current web surfaces будут достаточно отделены от host-specific runtimes.
 
 Ownership rules для repo cleanup и будущего layout alignment:
 
-- `ESP32`-specific implementation не должна расползаться за пределы `firmware_esp32/`;
-- `Raspberry Pi` runtime and service logic не должна расползаться за пределы `raspberry_pi/`;
+- `ESP32`-specific implementation не должна расползаться за пределы `io_firmware/`;
+- `Raspberry Pi` runtime and service logic не должна расползаться за пределы `host_runtime/`;
 - shared contracts описываются один раз в `shared_contracts/`, а не копируются в platform-specific trees;
 - visual language, page composition и reusable UI pieces должны сходиться в `web_ui/` или в явно временном current web layer, но не смешиваться с hardware-specific runtime files.
+
+При этом cleanup language не должен закреплять ложную модель:
+
+- полный Smart Platform может быть опубликован и просмотрен с разных устройств одновременно;
+- `Windows laptop`, bare `Raspberry Pi` с экраном и камерой, и `ESP32` могут быть частью одной topology в один и тот же момент;
+- repo-folder name не равен ни owner-role, ни viewer-role, ни runtime-host identity.
+
+### Guardrails After Top-Level Folder Rename
+
+Top-level rename выполнен как staged refactor и не должен читаться как попытка одним переименованием “починить” topology truth.
+
+После top-level rename всё еще должны удерживаться условия:
+
+- shell уже показывает раздельно `shell surface`, `runtime host`, `current viewer`, список `viewers` и physical `nodes` в bar, `Settings`, `Laboratory` и `Display Laboratory`;
+- dual-viewer pass с `Windows laptop` и bare `Raspberry Pi` с экраном и камерой подтверждает, что участники не схлопываются в один ярлык;
+- entrypoints, import paths и build scripts не должны зависеть от старых top-level names.
+
+Следующая staged trajectory после top-level rename такая:
+
+- shared shell pages и reusable frontend logic постепенно вытягиваются в `web_ui/`;
+- board-specific adapters должны жить глубже `host_runtime/`, а не снова вытаскиваться в top-level folder name;
+- embedded build, upload и asset-flow должны оставаться собранными вокруг `io_firmware/`, а не тащить назад board-name top-level layout;
+- board/profile-specific код должен жить глубже role-oriented top-level folders и не маскироваться под полную product ontology.
 
 Что нельзя считать допустимым target state:
 
@@ -126,58 +156,58 @@ Default modular chat flow:
 
 `ESP32 / firmware baseline`:
 
-- `firmware_esp32/src/`
-- `firmware_esp32/include/`
-- `firmware_esp32/lib/`
-- `firmware_esp32/data/` для current shell/static assets on firmware side.
+- `io_firmware/src/`
+- `io_firmware/include/`
+- `io_firmware/lib/`
+- `io_firmware/data/` для current shell/static assets on firmware side.
 
 Practical `ESP32` shell deployment note:
 
-- current shell pages on firmware side are served `LittleFS`-first from `firmware_esp32/data/`;
+- current shell pages on firmware side are served `LittleFS`-first from `io_firmware/data/`;
 - firmware keeps only safe fallback pages and startup/runtime logic, not the full shell HTML as giant string literals;
 - for a truthful shell pass on device, baseline cycle is `pio run -t upload` plus `pio run -t uploadfs`.
 
 `Raspberry Pi / runtime and shell`:
 
-- `raspberry_pi/app.py`
-- `raspberry_pi/server.py`
-- `raspberry_pi/bridge_state.py`
-- `raspberry_pi/sync_client.py`
-- `raspberry_pi/shell_snapshot_facade.py`
-- `raspberry_pi/shell_viewer_presence.py`
+- `host_runtime/app.py`
+- `host_runtime/server.py`
+- `host_runtime/bridge_state.py`
+- `host_runtime/sync_client.py`
+- `host_runtime/shell_snapshot_facade.py`
+- `host_runtime/shell_viewer_presence.py`
 
 `Registry, settings, reports, storage`:
 
-- `raspberry_pi/platform_registry_store.py`
-- `raspberry_pi/settings_store.py`
-- `raspberry_pi/report_feed.py`
-- `raspberry_pi/report_archive.py`
-- `raspberry_pi/storage_status.py`
+- `host_runtime/platform_registry_store.py`
+- `host_runtime/settings_store.py`
+- `host_runtime/report_feed.py`
+- `host_runtime/report_archive.py`
+- `host_runtime/storage_status.py`
 
 `Laboratory`:
 
-- `raspberry_pi/laboratory_readiness.py`
-- `raspberry_pi/laboratory_session.py`
-- `raspberry_pi/web/service.html`
-- `raspberry_pi/web/service_displays.html`
-- `raspberry_pi/web/service_turret.html`
+- `host_runtime/laboratory_readiness.py`
+- `host_runtime/laboratory_session.py`
+- `host_runtime/web/service.html`
+- `host_runtime/web/service_displays.html`
+- `host_runtime/web/service_turret.html`
 
 `Turret`:
 
-- `raspberry_pi/turret_runtime.py`
-- `raspberry_pi/turret_driver_layer.py`
-- `raspberry_pi/turret_service_scenarios.py`
-- `raspberry_pi/turret_event_log.py`
-- `raspberry_pi/turret_capture_store.py`
-- `raspberry_pi/web/turret.html`
+- `host_runtime/turret_runtime.py`
+- `host_runtime/turret_driver_layer.py`
+- `host_runtime/turret_service_scenarios.py`
+- `host_runtime/turret_event_log.py`
+- `host_runtime/turret_capture_store.py`
+- `host_runtime/web/turret.html`
 
 `Shared shell and current web surfaces`:
 
-- `raspberry_pi/web/index.html`
-- `raspberry_pi/web/gallery.html`
-- `raspberry_pi/web/settings.html`
-- `raspberry_pi/web/content.html`
-- `raspberry_pi/web/static/`
+- `host_runtime/web/index.html`
+- `host_runtime/web/gallery.html`
+- `host_runtime/web/settings.html`
+- `host_runtime/web/content.html`
+- `host_runtime/web/static/`
 
 `Contracts`:
 
@@ -243,10 +273,10 @@ Skeleton entrypoints этого этапа:
 1. понять продуктовый и архитектурный canon через `knowledge_base/README.md` и `knowledge_base/01-08`;
 2. открыть этот файл и понять, где лежит active code для нужного среза;
 3. при необходимости подключить нужный модульный prompt из `chat_prompts/`;
-4. только потом уходить в legacy donor residue, если в active canon еще остались пробелы;
+4. только потом подключать migration ledger и historical migration context, если в active canon еще остались пробелы;
 5. после этого открывать code anchor, а не делать широкий repo tour без цели.
 
-Если нужен только current implementation baseline, а не вся история проекта, legacy donor residue можно вообще не открывать до первого реального knowledge gap.
+Если нужен только current implementation baseline, а не вся история проекта, historical migration context можно вообще не открывать до первого реального knowledge gap.
 
 ## Open Questions
 

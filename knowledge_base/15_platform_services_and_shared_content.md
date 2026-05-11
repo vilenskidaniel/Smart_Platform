@@ -7,14 +7,14 @@
 ## Статус
 
 - текущий статус: `active draft`
-- этот файл задает новый active canon для platform services, shell snapshot vocabulary и shared content boundary; donor docs ниже остаются contract/detail residue
+- этот файл задает новый активный канон для platform services, shell snapshot vocabulary и shared content boundary; историческое состояние переноса держим в `knowledge_base/17_open_questions_and_migration.md`
 
-## Donor Источники Для Первого Переноса
+## Донорские Источники Для Первого Переноса
 
 - donor mapping для этого файла зафиксирован в `knowledge_base/17_open_questions_and_migration.md`;
-- `shared_contracts/shell_snapshot_contract.md` остается active companion contract for shell snapshot vocabulary.
+- `shared_contracts/shell_snapshot_contract.md` остается companion contract для shell snapshot vocabulary.
 
-## Settled Truths
+## Установленные Истины
 
 - platform services не должны маскироваться под product modules
 - shared content layer должен быть описан отдельно от raw storage implementation
@@ -41,7 +41,7 @@
 - не должны переименовываться в product modules;
 - не должны прятаться внутри одной owner-page как будто это локальная логика одного модуля.
 
-Current implementation detail may still use names like `ShellSnapshotFacade`, `ShellContentPresenter` or `ShellHttpAdapter`, but active canon here describes the stable service roles, not refactoring class names.
+Текущая реализация может использовать имена вроде `ShellSnapshotFacade`, `ShellContentPresenter` или `ShellHttpAdapter`, но активный канон здесь описывает устойчивые service roles, а не названия refactoring-class names.
 
 ### 2. Shell Snapshot And Shared Runtime Truth
 
@@ -103,6 +103,24 @@ Current implementation detail may still use names like `ShellSnapshotFacade`, `S
 - `unknown`
 
 `Shell Snapshot` does not replace every specialized endpoint. It gives one overview truth, while deeper services remain available where needed.
+
+### 2.1 Минимальная Граница Platform-Core Выходов
+
+Platform-core output здесь не считается отдельным пользовательским модулем, но должен стабильно отдавать минимум такие слои истины:
+
+- `system snapshot`;
+- `node health`;
+- `module registry`;
+- `active mode`;
+- `global fault summary`.
+
+Эта граница нужна, чтобы shell и shared services не склеивали базовую truth-модель из случайных локальных endpoint-ов.
+
+Platform-core слой при этом не должен:
+
+- напрямую управлять GPIO;
+- выполнять module-specific сценарии вместо owner/runtime layers;
+- подменять собой `Irrigation`, `Turret` или другие product modules на пользовательском уровне.
 
 ### Historical `ESP32` Bootstrap Baseline
 
@@ -234,6 +252,19 @@ Boundary rules:
 - shell activity summaries may point to `Gallery > Reports`, but they do not become the full report store;
 - transport adapters remain implementation detail and must not redefine product/service vocabulary.
 
+### 5.1 Реальные Кодовые Опоры Текущего Слоя
+
+Чтобы platform services не оставались только на уровне словаря, ниже фиксируем текущие owning implementation surfaces:
+
+- `host_runtime/shell_snapshot_facade.py` - composes `Shell Snapshot` overview truth для shell surfaces;
+- `host_runtime/platform_registry_store.py` - durable registry для modules, components и services;
+- `host_runtime/platform_event_log.py` - platform-level event journal behind short activity summaries;
+- `host_runtime/sync_client.py` - current cross-node sync service layer;
+- `io_firmware/src/core/ModuleRegistry.cpp` - `ESP32`-side module registry baseline;
+- `io_firmware/src/core/PlatformEventLog.cpp` - `ESP32`-side mirrored platform-log persistence;
+- `io_firmware/data/service/index.html` - current service/diagnostics entry surface на стороне `ESP32`;
+- `host_runtime/tests/test_shell_snapshot_facade.py` - tests shell snapshot composition.
+
 ### 6. Нормативные Форматы И Примеры
 
 Нормативные service endpoints:
@@ -249,6 +280,7 @@ Boundary rules:
   "schema_version": "shell-snapshot.v1",
   "current_shell": {
     "node_id": "rpi-turret",
+    "identity_scope": "shell_surface",
     "runtime_profile": "desktop_smoke"
   },
   "sync": {
@@ -307,7 +339,7 @@ Boundary rules:
 ## TODO
 
 - после стабилизации active draft переаудировать service-layer donor residue в migration ledger и оставить только historical bootstrap/detail reminders
-- проверить, что storage/service residue уже выражено active layer terms and no longer depends on donor-specific file authority
+- проверить, что storage/service residue уже выражено терминами активного слоя и больше не зависит от donor-specific file authority
 - отдельно зафиксировать переход от current mirrored logical paths к реальной automatic sync цепочке между `ESP32 SD` и `Raspberry Pi` content roots
 
 ## TBD

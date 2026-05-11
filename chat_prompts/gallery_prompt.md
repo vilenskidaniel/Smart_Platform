@@ -6,16 +6,16 @@
 
 ## Роль Модуля
 
-Этот prompt отвечает за shared virtual section `Gallery`.
+Этот prompt отвечает за общий виртуальный раздел `Gallery`.
 
 Он покрывает:
 
 - `Plants`;
 - `Media`;
 - `Reports`;
-- mixed feed;
-- provenance и mirrored visibility;
-- связь со storage contract без превращения в storage inspector.
+- смешанную ленту;
+- provenance и видимость зеркальных источников;
+- связь с storage-contract без превращения `Gallery` в storage-inspector.
 
 ## Канонические Источники
 
@@ -27,35 +27,35 @@
 4. `knowledge_base/07_data_registry_storage_and_persistence.md`
 5. `knowledge_base/15_platform_services_and_shared_content.md`
 6. `knowledge_base/08_safety_acceptance_and_field_operations.md`
-7. `knowledge_base/17_open_questions_and_migration.md`, если нужен explicit donor status или unresolved residue map
+7. `knowledge_base/17_open_questions_and_migration.md`, если нужен historical migration status или карта прошлых переносов
 
 Практическое правило:
 
-- legacy donor sources для `Gallery` больше не входят в primary reading order;
-- если active canon still has a concrete gap around report detail, mirrored storage residue or safety wording, сначала смотреть migration ledger и только потом открывать donor residue точечно;
-- если donor detail расходится с active canon, сильнее становятся `knowledge_base/13_gallery_module.md`, `knowledge_base/07_data_registry_storage_and_persistence.md` и `knowledge_base/15_platform_services_and_shared_content.md`.
+- legacy donor sources для `Gallery` больше не входят в active workspace и primary reading order;
+- если в active canon еще есть конкретный пробел вокруг report detail, mirrored storage residue или safety wording, сначала смотреть migration ledger, а затем текущие storage и content contracts;
+- если historical migration note расходится с active canon, сильнее становятся `knowledge_base/13_gallery_module.md`, `knowledge_base/07_data_registry_storage_and_persistence.md` и `knowledge_base/15_platform_services_and_shared_content.md`.
 
 ## Установленные Истины
 
-- `Gallery` — shared virtual section без одного owner на уровне shell-page.
-- User-facing tabs:
+- `Gallery` — общий виртуальный раздел без одного владельца на уровне shell-page.
+- Пользовательские вкладки:
   - `Plants`
   - `Media`
   - `Reports`
-- Весь user-facing сохраняемый контент открывается через `Gallery`.
-- `Gallery > Reports` — канонический viewer автономно и системно зафиксированной пользовательской истории продукта, а не ручных laboratory-записей.
-- При отсутствии peer-owner `Gallery` не исчезает, а честно показывает локальный slice и отсутствие peer-content.
-- `Gallery` не должен превращаться в raw storage inspector.
+- Весь пользовательский сохраняемый контент открывается через `Gallery`.
+- `Gallery > Reports` — канонический обозреватель автономно и системно зафиксированной пользовательской истории продукта, а не ручных laboratory-записей.
+- При отсутствии peer-owner `Gallery` не исчезает, а честно показывает локальный срез и отсутствие peer-content.
+- `Gallery` не должен превращаться в сырой storage-inspector.
 
 ## Активный Опрос Пользователя
 
 Иди от общего к частному:
 
 1. Что человек пытается найти: растение, media artifact, отчет или mixed history.
-2. Что он должен понимать о происхождении записи без чтения сырой технической metadata.
+2. Что он должен понимать о происхождении записи без чтения сырой технической метадаты.
 3. Что делать в single-node и peer-missing состоянии.
 4. Какие типы карточек должны быть самыми понятными на телефоне.
-5. Что является автономно или системно зафиксированным product-level report, а что остается локальной laboratory-записью сессии.
+5. Что является автономно или системно зафиксированным product-level report, а что остается локальной записью сессии `Laboratory`.
 6. Какие части уже хороши и идут в `keep`.
 7. Что оставить как `TODO` или `TBD`.
 
@@ -63,14 +63,14 @@
 
 Сначала удерживать skeleton:
 
-- tab model;
-- provenance model;
-- local vs mirrored visibility;
-- report card hierarchy;
-- plants/media families;
-- degraded and empty states.
+- модель вкладок;
+- модель provenance;
+- локальная и зеркальная видимость;
+- иерархия report-карточек;
+- семейства `Plants` и `Media`;
+- degraded- и empty-состояния.
 
-Затем наращивать filters, detail views, browsing patterns и richer collections.
+Затем наращивать фильтры, detail-view слои, browsing-patterns и более богатые collections.
 
 ## Keep / Adapt / Rewrite
 
@@ -82,8 +82,8 @@
 
 ### TODO
 
-- довести mixed feed до еще более читаемой user-facing ленты;
-- материализовать richer `Plants` и `Media` browsing beyond raw lists;
+- довести mixed feed до еще более читаемой пользовательской ленты;
+- материализовать более богатый browsing для `Plants` и `Media` поверх сырого списка;
 - укрепить provenance wording для mirrored entries.
 
 ### TBD
@@ -95,7 +95,7 @@
 
 Переходить в `cross_module_prompt.md`, если изменение задевает:
 
-- sync and mirrored content contracts;
+- контракты синхронизации и зеркального контента;
 - `Laboratory` export rules;
-- shared settings for media or library behavior;
-- shell summaries and quick links into `Reports`.
+- общие настройки для media или library behavior;
+- shell summaries и быстрые входы в `Reports`.

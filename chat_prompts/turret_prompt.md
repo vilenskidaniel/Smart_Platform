@@ -29,14 +29,13 @@
 4. `knowledge_base/04_runtime_topology_controller_profiles_and_sync.md`
 5. `knowledge_base/08_safety_acceptance_and_field_operations.md`
 6. `knowledge_base/16_hardware_component_profiles.md`
-7. `briefs/turret_bridge_module.md`
-8. `knowledge_base/17_open_questions_and_migration.md`, если нужен explicit donor status или unresolved residue map
+7. `knowledge_base/17_open_questions_and_migration.md`, если нужен historical migration status или карта прошлых переносов
 
 Практическое правило:
 
-- legacy donor sources для `Turret` больше не входят в primary reading order;
-- если в `knowledge_base/11_turret_module.md`, `knowledge_base/16_hardware_component_profiles.md` и brief все еще есть конкретный unresolved gap, только тогда смотреть migration ledger и уже после этого открывать donor residue точечно;
-- если brief расходится с active canon, сильнее становится `knowledge_base/11_turret_module.md` и связанный hardware canon.
+- legacy donor sources для `Turret` больше не входят в active workspace и primary reading order;
+- если в `knowledge_base/11_turret_module.md` и `knowledge_base/16_hardware_component_profiles.md` все еще есть конкретный unresolved gap, сначала смотреть migration ledger, а затем текущий код, тесты и hardware companion sources;
+- если historical migration note расходится с active canon, сильнее становится `knowledge_base/11_turret_module.md` и связанный hardware canon.
 
 ## Установленные Истины
 

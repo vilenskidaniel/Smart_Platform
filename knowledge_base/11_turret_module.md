@@ -7,14 +7,14 @@
 ## Статус
 
 - текущий статус: `active draft`
-- этот файл задает новый модульный active canon для `Turret`; stage-docs ниже остаются donor и implementation/detail residue
+- этот файл задает новый модульный активный канон для `Turret`; историческое состояние переноса держим в `knowledge_base/17_open_questions_and_migration.md`
 
-## Donor Источники Для Первого Переноса
+## Донорские Источники Для Первого Переноса
 
 - donor mapping для этого файла зафиксирован в `knowledge_base/17_open_questions_and_migration.md`;
-- `briefs/turret_bridge_module.md` и `chat_prompts/turret_prompt.md` остаются active companion sources для module framing and working scope.
+- `chat_prompts/turret_prompt.md` остается prompt-layer companion source для рабочего режима чата.
 
-## Settled Truths
+## Установленные Истины
 
 - `Turret` описывается через роли, действия, sensing и safety
 - текущий controller profile — временный implementation baseline
@@ -62,6 +62,19 @@ Product-level action-family truth:
 - `strobe` остается частью turret defense-line `v1`, а не отдельным поздним профилем;
 - turret water path относится к turret family и не должен смешиваться с irrigation-owned drip path;
 - `audio` входит в action family модуля и уже имеет active baseline в модульном и hardware canon, хотя electrical/power closure еще не закрыт полностью.
+
+### 2.1 Два Контура Доступа К `strobe`
+
+Для `strobe` текущий модульный канон различает два неконкурирующих контура:
+
+- product / turret contour на стороне владельца `Raspberry Pi`, который живет внутри `Manual` и `Automatic` как action-family модуля;
+- engineering / bench contour на стороне `ESP32`, который живет в `Laboratory` как `strobe_bench` owner-side profile.
+
+Эти контуры не подменяют друг друга:
+
+- продуктовый доступ остается turret-facing operator path;
+- инженерный доступ остается laboratory-facing service path;
+- параметры, подтвержденные в engineering contour, позже могут сохраняться как рабочий профиль для `Manual`, `Automatic` и повторных laboratory-сценариев.
 
 ### 3. Controller Profiles И Временная Реализация
 
@@ -319,6 +332,19 @@ Human protection rule:
 - `не стрелять в людей` является обязательным product rule уже сейчас;
 - это обязательная часть policy model и settings UX, даже если техническая реализация detection/classification еще не закрыта полностью.
 
+### 8.1 Реальные Кодовые Опоры Текущего Слоя
+
+Чтобы `Turret` не висел отдельно от реального runtime, ниже фиксируем текущие owning files:
+
+- `host_runtime/turret_runtime.py` - current runtime point of truth for modes, readiness, interlock и action gating;
+- `host_runtime/turret_driver_layer.py` - явная driver boundary между runtime и hardware channels `motion`, `strobe`, `water` и `audio`;
+- `host_runtime/turret_event_log.py` - owner-side event journal для смены режима и turret actions;
+- `host_runtime/turret_service_scenarios.py` - service- и laboratory-сценарии для owner-side проверок;
+- `host_runtime/turret_capture_store.py` - metadata и artifact-handling для `Manual FPV` captures;
+- `host_runtime/web/turret.html` - текущая owner-side product page `/turret`;
+- `io_firmware/src/modules/strobe/StrobeBenchController.cpp` - инженерный contour `strobe_bench` на стороне `ESP32`;
+- `host_runtime/tests/test_turret_runtime_and_scenarios.py` - tests runtime state transitions и scenario orchestration.
+
 ### 9. Acceptance Hooks
 
 Минимальные acceptance hooks текущего этапа:
@@ -399,7 +425,12 @@ Human protection rule:
 
 ## TODO
 
-- после стабилизации active draft переаудировать turret donor residue в migration ledger и оставить только implementation/detail reminders without active authority role
+- подключить реальные `IMX219` и `TFmini Plus` driver paths вместо полной software simulation там, где baseline уже зафиксирован;
+- подтвердить real hardware bindings для `MG996R + PCA9685`, `strobe`, `SEAFLO` и `audio` action families;
+- довести `FPV` / media и heavy-content flow до реального owner-side сценария без разрыва между product и engineering слоями;
+- синхронизировать turret service entry points с общим `Laboratory` workspace и не держать их как отдельный скрытый продуктовый слой;
+- к углублению `audio` переходить отдельным этапом после hardware/power closure, не смешивая его с ближайшим `strobe` pass;
+- сохранять `HC-SR04`-class и stepper profiles только как `Laboratory`-пути, а не как product-ready turret controls;
 - после следующего turret pass проверить, можно ли дальше схлопнуть retained context residue без потери useful product detail
 
 ## TBD

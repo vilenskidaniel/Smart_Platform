@@ -1,0 +1,2362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Smart Platform / Laboratory</title>
+  <style>
+    :root {
+      --bg: #e8efe4;
+      --panel: rgba(251, 253, 248, 0.92);
+      --ink: #1f2c23;
+      --muted: #647566;
+      --line: #cad5c7;
+      --accent: #2f5d42;
+      --ok: #2f7d4d;
+      --warn: #9b6a1e;
+      --fault: #9f3434;
+      --locked: #6c7479;
+      --active: #2b5f96;
+      --planned: #5e6775;
+      --partial: #7b5c1f;
+      --shadow: 0 20px 42px rgba(24, 39, 29, 0.1);
+      --radius: 24px;
+      --mono: "Consolas", "SFMono-Regular", monospace;
+      --sans: "Segoe UI", "Trebuchet MS", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: var(--sans);
+      background:
+        radial-gradient(circle at top left, rgba(72, 111, 79, 0.18), transparent 34%),
+        radial-gradient(circle at bottom right, rgba(34, 99, 107, 0.12), transparent 28%),
+        linear-gradient(180deg, #f3f8ef 0%, var(--bg) 100%);
+    }
+
+    body.fullscreen-app {
+      background:
+        radial-gradient(circle at top left, rgba(47, 93, 66, 0.22), transparent 30%),
+        linear-gradient(180deg, #eff5ea 0%, #e2eae0 100%);
+    }
+
+    .shell {
+      max-width: 1480px;
+      margin: 0 auto;
+      padding: 22px 16px 36px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .hero,
+    .category-shell,
+    .module-shell,
+    .work,
+    .card,
+    .box {
+      border-radius: var(--radius);
+      border: 1px solid rgba(47, 93, 66, 0.09);
+      box-shadow: var(--shadow);
+      background: var(--panel);
+      backdrop-filter: blur(14px);
+    }
+
+    .hero {
+      display: grid;
+      gap: 16px;
+      padding: 22px;
+      color: #f4fbf5;
+      background: linear-gradient(135deg, rgba(35, 73, 52, 0.99), rgba(73, 112, 82, 0.9));
+    }
+
+    .hero-top,
+    .row,
+    .category-head,
+    .module-head,
+    .work-top,
+    .tool-top,
+    .segmented,
+    .control-strip {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(32px, 5vw, 46px);
+      line-height: 1;
+    }
+
+    .hero p {
+      margin: 8px 0 0;
+      max-width: 920px;
+      color: rgba(244, 251, 245, 0.84);
+      line-height: 1.55;
+    }
+
+    .device-ribbon,
+    .summary-grid,
+    .category-rail,
+    .module-list,
+    .box-grid,
+    .mini-grid,
+    .detail-grid,
+    .checklist,
+    .step-list {
+      display: grid;
+      gap: 14px;
+    }
+
+    .device-ribbon,
+    .summary-grid,
+    .mini-grid {
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+
+    .category-rail {
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+
+    .module-list {
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+
+    .box-grid,
+    .detail-grid {
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+
+    .device-chip,
+    .card,
+    .box,
+    .check,
+    .mini-card,
+    .category-button,
+    .module-button,
+    .segment-button {
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(243, 247, 240, 0.96));
+      color: var(--ink);
+      border-radius: 18px;
+    }
+
+    .device-chip {
+      padding: 14px 16px;
+      display: grid;
+      gap: 8px;
+      border-color: rgba(255, 255, 255, 0.16);
+      background: rgba(255, 255, 255, 0.11);
+      color: #f4fbf5;
+    }
+
+    .device-chip strong { font-size: 15px; line-height: 1.2; }
+    .device-chip p { margin: 0; color: rgba(244, 251, 245, 0.84); line-height: 1.45; font-size: 13px; }
+
+    .card,
+    .box,
+    .category-shell,
+    .module-shell,
+    .work { padding: 16px; }
+
+    .card h2,
+    .box strong,
+    .side h2,
+    .work h2,
+    .category-shell h2 { margin: 0; line-height: 1.12; }
+
+    .meta { color: var(--muted); font-size: 13px; line-height: 1.5; }
+
+    .category-button,
+    .module-button,
+    .segment-button,
+    a.button,
+    button {
+      appearance: none;
+      border-radius: 18px;
+      padding: 12px 14px;
+      cursor: pointer;
+      font: inherit;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease, border-color 140ms ease;
+    }
+
+    .category-button:hover,
+    .module-button:hover,
+    .segment-button:hover,
+    a.button:hover,
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 24px rgba(25, 39, 29, 0.12);
+    }
+
+    .category-button,
+    .module-button {
+      width: 100%;
+      text-align: left;
+      align-items: stretch;
+      justify-content: flex-start;
+      min-height: 112px;
+    }
+
+    .module-button { min-height: 118px; }
+
+    .category-button.active,
+    .module-button.active {
+      border-color: rgba(43, 95, 150, 0.34);
+      box-shadow: inset 0 0 0 1px rgba(43, 95, 150, 0.18);
+      background: linear-gradient(180deg, rgba(225, 237, 247, 0.96), rgba(238, 244, 246, 0.98));
+    }
+
+    .category-stack,
+    .module-stack { display: grid; gap: 8px; width: 100%; }
+    .category-stack small,
+    .module-stack small { color: var(--muted); font-size: 12px; line-height: 1.4; }
+
+    .layout {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
+    }
+
+    .frame {
+      width: 100%;
+      min-height: 840px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: #eef4ec;
+    }
+
+    .log {
+      margin-top: 18px;
+      min-height: 220px;
+      padding: 16px;
+      border-radius: 20px;
+      overflow: auto;
+      white-space: pre-wrap;
+      background: #172119;
+      color: #e4f1e5;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.45;
+      border: 1px solid rgba(14, 24, 18, 0.46);
+    }
+
+    .pill,
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      border: 1px solid transparent;
+    }
+
+    .pill {
+      color: inherit;
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.18);
+    }
+
+    .state-online { background: rgba(47, 125, 77, 0.12); color: var(--ok); border-color: rgba(47, 125, 77, 0.18); }
+    .state-degraded { background: rgba(155, 106, 30, 0.12); color: var(--warn); border-color: rgba(155, 106, 30, 0.18); }
+    .state-locked, .state-offline { background: rgba(108, 116, 121, 0.12); color: var(--locked); border-color: rgba(108, 116, 121, 0.18); }
+    .state-fault { background: rgba(159, 52, 52, 0.12); color: var(--fault); border-color: rgba(159, 52, 52, 0.18); }
+    .state-service { background: rgba(47, 93, 66, 0.12); color: var(--accent); border-color: rgba(47, 93, 66, 0.18); }
+    .state-active { background: rgba(43, 95, 150, 0.12); color: var(--active); border-color: rgba(43, 95, 150, 0.18); }
+    .state-partial { background: rgba(123, 92, 31, 0.14); color: var(--partial); border-color: rgba(123, 92, 31, 0.18); }
+    .state-planned { background: rgba(94, 103, 117, 0.12); color: var(--planned); border-color: rgba(94, 103, 117, 0.18); }
+
+    .primary {
+      color: #f4fbf5;
+      background: rgba(255, 255, 255, 0.14);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .secondary { color: var(--ink); background: rgba(47, 93, 66, 0.08); }
+    .ghost { color: inherit; background: transparent; border: 1px solid rgba(255, 255, 255, 0.18); }
+
+    .segment-label {
+      color: rgba(244, 251, 245, 0.82);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .segment-button.active {
+      color: #f4fbf5;
+      background: rgba(47, 93, 66, 0.9);
+      border-color: rgba(47, 93, 66, 0.28);
+    }
+
+    .detail-list { margin: 10px 0 0; padding-left: 18px; color: var(--ink); }
+    .detail-list li { margin: 0 0 6px; line-height: 1.45; }
+    .mini-card { padding: 14px; }
+    .check { padding: 14px; }
+    .check p { margin: 8px 0 0; color: var(--muted); line-height: 1.5; }
+    .code { color: var(--ink); font-family: var(--mono); font-size: 12px; }
+
+    .notice {
+      padding: 14px 16px;
+      border-radius: 18px;
+      border: 1px solid rgba(155, 106, 30, 0.22);
+      background: rgba(155, 106, 30, 0.08);
+      color: var(--ink);
+      line-height: 1.5;
+    }
+
+    .field-grid {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .field label {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .field input,
+    .field textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 11px 12px;
+      font: inherit;
+      color: var(--ink);
+      background: rgba(255, 255, 255, 0.9);
+    }
+
+    .field textarea {
+      min-height: 92px;
+      resize: vertical;
+    }
+
+    .status-note {
+      min-height: 18px;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .disabled-link { pointer-events: none; opacity: 0.56; }
+
+    body.fullscreen-app .shell {
+      max-width: none;
+      padding: 12px 12px 20px;
+    }
+
+    body.fullscreen-app .hero {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      border-top-left-radius: 0;
+      border-top-right-radius: 0;
+      padding: 14px 16px;
+      gap: 10px;
+    }
+
+    body.fullscreen-app .hero p,
+    body.fullscreen-app .summary-grid { display: none; }
+
+    body.fullscreen-app .category-shell {
+      position: sticky;
+      top: 78px;
+      z-index: 28;
+    }
+
+    body.fullscreen-app .module-shell {
+      position: sticky;
+      top: 140px;
+      z-index: 24;
+      padding: 12px 14px;
+    }
+
+    body.fullscreen-app .module-list {
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(220px, 280px);
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    body.fullscreen-app .frame { min-height: calc(100vh - 280px); }
+
+    @media (max-width: 1120px) {
+      .frame { min-height: 720px; }
+    }
+
+    @media (max-width: 760px) {
+      .shell { padding: 16px 12px 24px; }
+      .hero,
+      .category-shell,
+      .module-shell,
+      .work,
+      .card,
+      .box { padding: 16px; }
+      .category-rail { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .module-list { grid-template-columns: 1fr; }
+      .frame { min-height: 620px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <section class="hero">
+      <div class="hero-top">
+        <div>
+          <div class="row">
+            <span class="pill" id="shell-pill">shell: loading</span>
+            <span class="pill" id="mode-pill">mode: loading</span>
+            <span class="pill" id="peer-pill">peer: loading</span>
+            <span class="pill" id="view-pill">view: browser</span>
+          </div>
+          <h1>Laboratory</h1>
+          <p>
+            Category-first workspace for phone bring-up. The first rail stays human-friendly,
+            the second rail stays hardware-specific, and the active slice keeps owner, power,
+            readiness, and evidence context on the same page.
+          </p>
+        </div>
+        <div class="row">
+          <button class="primary" id="fullscreen-btn" type="button">Fullscreen</button>
+          <a class="button ghost" href="/">Back To Shell</a>
+        </div>
+      </div>
+      <div class="control-strip">
+        <div class="row">
+          <span class="segment-label">Power Context</span>
+          <div class="segmented" id="power-context"></div>
+        </div>
+        <div class="row">
+          <span class="segment-label">Preset Path</span>
+          <span class="pill">Laboratory -> Review -> Settings -> Manual / FPV</span>
+        </div>
+      </div>
+      <div class="device-ribbon" id="device-ribbon">Loading device status...</div>
+      <div class="summary-grid" id="summary-grid"></div>
+    </section>
+
+    <section class="card">
+      <div class="tool-top">
+        <div>
+          <h2>Session Backbone</h2>
+          <p class="meta" id="session-shell-summary">Laboratory session context is loading...</p>
+        </div>
+        <div class="row" id="session-shell-badges"></div>
+      </div>
+      <div class="detail-grid" style="margin-top: 16px;">
+        <article class="box">
+          <strong>Session Context</strong>
+          <p class="meta">These fields define what this engineering pass is actually testing. On Raspberry Pi they sync into backend session state. On mirrored shells they stay local but still travel with explicit report actions.</p>
+          <div class="field-grid" style="margin-top: 14px;">
+            <div class="field">
+              <label for="session-operator">Operator</label>
+              <input id="session-operator" type="text" placeholder="local-operator">
+            </div>
+            <div class="field">
+              <label for="session-objective">Objective</label>
+              <input id="session-objective" type="text" placeholder="display qualification / owner handoff / smoke pass">
+            </div>
+            <div class="field">
+              <label for="session-hardware">Hardware Profile</label>
+              <input id="session-hardware" type="text" placeholder="rpi5 + 8-inch HDMI touch / bench PSU / phone model">
+            </div>
+            <div class="field">
+              <label for="session-external-module">External Module</label>
+              <input id="session-external-module" type="text" placeholder="optional third-party add-on or bench adapter">
+            </div>
+          </div>
+          <div class="field" style="margin-top: 12px;">
+            <label for="session-finish-note">Finish Note</label>
+            <input id="session-finish-note" type="text" placeholder="short summary when closing the current pass">
+          </div>
+          <div class="row" style="margin-top: 12px; justify-content: flex-start;">
+            <button class="secondary" id="session-start-btn" type="button">Start Session</button>
+            <button class="secondary" id="session-update-btn" type="button">Update Session</button>
+            <button class="secondary" id="session-finish-btn" type="button">Finish Session</button>
+          </div>
+          <div class="status-note" id="session-shell-feedback"></div>
+        </article>
+        <article class="box">
+          <strong>Evidence Capture</strong>
+          <p class="meta" id="evidence-summary">Active slice evidence will be recorded into Gallery &gt; Reports with current power, view, and session context.</p>
+          <div class="field-grid" style="margin-top: 14px;">
+            <div class="field">
+              <label for="evidence-case-id">Case ID</label>
+              <input id="evidence-case-id" type="text" placeholder="module-smoke">
+            </div>
+            <div class="field">
+              <label for="evidence-module">Current Slice</label>
+              <input id="evidence-module" type="text" readonly>
+            </div>
+          </div>
+          <div class="field" style="margin-top: 12px;">
+            <label for="evidence-note">Operator Note</label>
+            <textarea id="evidence-note" placeholder="what was actually observed on the phone / screen / owner handoff / control density"></textarea>
+          </div>
+          <div class="row" style="margin-top: 12px; justify-content: flex-start;">
+            <button class="secondary" id="evidence-pass-btn" type="button">Record Pass</button>
+            <button class="secondary" id="evidence-warn-btn" type="button">Record Warn</button>
+            <button class="secondary" id="evidence-fail-btn" type="button">Record Fail</button>
+            <button class="secondary" id="evidence-note-btn" type="button">Save Note</button>
+          </div>
+          <div class="status-note" id="evidence-feedback"></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="category-shell">
+      <div class="category-head">
+        <div>
+          <h2>Category Rail</h2>
+          <p class="meta" id="category-summary">Loading category model...</p>
+        </div>
+        <span class="meta">Top rail stays broad; the next rail keeps the engineering detail.</span>
+      </div>
+      <div class="category-rail" id="category-rail"></div>
+    </section>
+
+    <section class="module-shell">
+      <div class="module-head">
+        <div>
+          <h2 id="module-rail-title">Module Rail</h2>
+          <p class="meta" id="module-rail-summary">Loading module rail...</p>
+        </div>
+        <span class="meta">Second level stays owner-aware and never hides blocked slices.</span>
+      </div>
+      <div class="module-list" id="module-list"></div>
+    </section>
+
+    <section class="work">
+      <div class="work-top">
+        <div>
+          <div class="row" id="workspace-badges"></div>
+          <h2 id="workspace-title" style="margin-top: 10px;">Laboratory Overview</h2>
+          <p class="meta" id="workspace-summary">Loading workspace...</p>
+        </div>
+        <a class="button secondary" id="open-direct-link" href="/service" target="_blank" rel="noreferrer">Open Direct</a>
+      </div>
+      <div id="workspace-surface"></div>
+      <div class="log" id="platform-log">Waiting for platform log...</div>
+    </section>
+  </div>
+
+  <script>
+    const LAB_SESSION_STORAGE_KEY = "smart-platform.laboratory.session.v1";
+    const VIEWER_STORAGE_KEY = "smart-platform.viewer.id";
+    const POWER_CONTEXTS = {
+      bench_psu: {
+        id: "bench_psu",
+        title: "Bench PSU",
+        summary: "Adjustable bench supply is available. Voltage-dependent hints stay visible."
+      },
+      battery: {
+        id: "battery",
+        title: "LiFePO4 Battery",
+        summary: "Battery-powered session. PSU-dependent calibration stays blocked or advisory-only."
+      }
+    };
+
+    const CATEGORY_ORDER = ["overview", "light", "drives", "water", "audio", "sensors", "camera", "displays", "experimental"];
+
+    const CATEGORY_DEFS = {
+      overview: { title: "Overview", summary: "Readiness, power context, fullscreen behavior, and the current bring-up order." },
+      light: { title: "Light", summary: "Bench strobe, turret strobe, and future LED qualification." },
+      drives: { title: "Drives", summary: "Servo alignment now, stepper experiments later, always with owner awareness." },
+      water: { title: "Water", summary: "Irrigation service, sprayer checks, and water-path qualification without fake ownership." },
+      audio: { title: "Audio", summary: "Audible and ultrasonic emitter families, with laboratory-only honesty where needed." },
+      sensors: { title: "Sensors", summary: "Environment, range, soil, and wake sensors with expected-result guidance." },
+      camera: { title: "Camera", summary: "Camera availability, preview, and bring-up notes without pretending product readiness." },
+      displays: { title: "Displays", summary: "HDMI touch panels, screen patterns, and owner-side display qualification without collapsing into camera UX." },
+      experimental: { title: "Experimental", summary: "Unknown or not-yet-productized modules that still need a clean place in the lab." }
+    };
+
+    const MODULE_DEFS = [
+      {
+        id: "overview",
+        category: "overview",
+        title: "Laboratory Overview",
+        kind: "overview",
+        stage: "live",
+        ownerHint: "shared",
+        summary: "Shared readiness view for board visibility, power context, and bring-up order.",
+        controls: [
+          "Readiness review before touching the next board or module",
+          "Power-context declaration before PSU-sensitive tests",
+          "Fullscreen switch before denser phone work",
+          "Review path from Laboratory to Gallery > Reports"
+        ],
+        expected: [
+          "The operator understands what can be tested now.",
+          "Blocked peer-owned slices stay visible with a reason.",
+          "The next action is explicit instead of implicit operator memory."
+        ],
+        evidence: "Gallery > Reports plus the live platform log",
+        presetPath: "Profiles stay local for now and later graduate through an explicit review/apply flow."
+      },
+      {
+        id: "strobe_bench",
+        category: "light",
+        title: "Bench Strobe",
+        kind: "linked",
+        stage: "live",
+        ownerHint: "ESP32",
+        ownerScope: "esp32",
+        powerGuard: "bench_psu_required",
+        labOnly: true,
+        summary: "ESP32 bench slice for pulses, patterns, cooldown, and presets.",
+        find: (modules) => modules.find((item) => item.id === "strobe_bench") || null,
+        path: () => "/service/strobe",
+        controls: [
+          "Manual PSU voltage note before the run",
+          "Pulse duration and flash cadence",
+          "Burst count plus on/off timing",
+          "Loop and timed continuous patterns",
+          "Safe presets and cooldown awareness"
+        ],
+        expected: [
+          "Short visible flash patterns with honest cooldown and stop reason.",
+          "No owner confusion between bench strobe and turret strobe.",
+          "Preset candidates can later be reviewed for promotion into product settings."
+        ],
+        evidence: "Laboratory event trail and Gallery > Reports",
+        presetPath: "Later candidates may graduate into Settings for Manual / FPV after explicit review.",
+        stageNote: "Dedicated working slice is already available."
+      },
+      {
+        id: "turret_strobe",
+        category: "light",
+        title: "Turret Strobe",
+        kind: "linked",
+        stage: "partial",
+        ownerHint: "Raspberry Pi",
+        ownerScope: "raspberry_pi",
+        summary: "Owner-side strobe state, interlock visibility, and runtime gating.",
+        find: (modules) => modules.find((item) => item.id === "strobe") || modules.find((item) => item.id === "turret_bridge") || null,
+        path: () => "/service/turret?focus=strobe",
+        controls: [
+          "Owner-side readiness and interlock checks",
+          "Blocked-vs-available strobe transitions",
+          "Runtime result visibility inside the turret service lane",
+          "Shared evidence path without pretending local ESP32 ownership"
+        ],
+        expected: [
+          "Strobe remains blocked when interlock or readiness says no.",
+          "The operator sees the turret owner and the block reason.",
+          "This temporary slice can later be extracted into a dedicated light module tab."
+        ],
+        evidence: "Turret event log and Gallery > Reports",
+        presetPath: "Product promotion stays separate until a dedicated turret-light contract exists.",
+        stageNote: "Current implementation reuses the turret runtime slice as a temporary bridge."
+      },
+      {
+        id: "led_outputs",
+        category: "light",
+        title: "LED Outputs",
+        kind: "placeholder",
+        stage: "planned",
+        ownerHint: "shared",
+        summary: "Future qualification surface for indicators, discrete LEDs, and strips.",
+        controls: [
+          "Channel or strip selection",
+          "Polarity and safe wiring note",
+          "Brightness or PWM level",
+          "Blink pattern and repeat timing",
+          "Expected current or battery impact hint"
+        ],
+        expected: [
+          "Selected LED output reacts with predictable brightness or blink behavior.",
+          "The operator can tell whether the problem is wiring, polarity, or control timing.",
+          "This slice stays separate from Strobe so light behaviors do not collapse into one tool."
+        ],
+        evidence: "Placeholder now, later report cards per LED test",
+        presetPath: "Future light profiles may graduate into Settings only by explicit operator action.",
+        stageNote: "Placeholder kept visible so the IA stays stable while implementation catches up."
+      },
+      {
+        id: "servos_lab",
+        category: "drives",
+        title: "Servos",
+        kind: "linked",
+        stage: "partial",
+        ownerHint: "Raspberry Pi",
+        ownerScope: "raspberry_pi",
+        summary: "MG996R + PCA9685 alignment, travel, inversion, and safe range validation.",
+        find: (modules) => modules.find((item) => item.id === "turret_bridge") || null,
+        path: () => "/service/turret?focus=motion",
+        controls: [
+          "Channel selection and center point",
+          "Min / max travel guardrails",
+          "Direction or inversion note",
+          "Sweep test and return-to-center confidence",
+          "Driver binding visibility before motion"
+        ],
+        expected: [
+          "Servo motion stays within safe travel and returns predictably.",
+          "Motion readiness remains owner-aware and interlock-aware.",
+          "The current turret service lane acts as a bridge until a dedicated servo slice exists."
+        ],
+        evidence: "Turret service log and future servo-specific reports",
+        presetPath: "Servo presets can later flow into product motion settings after review.",
+        stageNote: "Current implementation reuses the turret motion runtime as a temporary deep slice."
+      },
+      {
+        id: "stepper_drives",
+        category: "drives",
+        title: "Stepper Drives",
+        kind: "placeholder",
+        stage: "planned",
+        ownerHint: "Laboratory-only",
+        labOnly: true,
+        summary: "Experimental drive lane for stepper bring-up without polluting turret motion UX.",
+        controls: [
+          "Direction, step count, and travel estimate",
+          "Speed and acceleration envelope",
+          "Microstep or driver mode note",
+          "Safe stop and hold behavior",
+          "Bench-only wiring checklist"
+        ],
+        expected: [
+          "Drive response can be checked without pretending stepper is a turret baseline.",
+          "The operator gets a place to qualify unusual hardware and keep notes.",
+          "This slice remains laboratory-only even after deeper support appears."
+        ],
+        evidence: "Laboratory-only report cards and operator notes",
+        presetPath: "No automatic promotion to product settings."
+      },
+      {
+        id: "irrigation_service",
+        category: "water",
+        title: "Irrigation Chain",
+        kind: "linked",
+        stage: "live",
+        ownerHint: "ESP32",
+        ownerScope: "esp32",
+        summary: "Zone pulses, soil simulation, valve checks, and peristaltic path visibility.",
+        find: (modules) => modules.find((item) => item.id === "irrigation_service") || modules.find((item) => item.id === "irrigation") || null,
+        path: () => "/service/irrigation",
+        controls: [
+          "Service pulse per zone",
+          "Dry / wet / fault / restore simulation",
+          "Soil moisture visibility per zone",
+          "Water-path qualification before longer runs",
+          "Owner-aware irrigation evidence trail"
+        ],
+        expected: [
+          "Zones and sensor states stay visible even when degraded.",
+          "Missing or faulty sensing remains honest instead of disappearing.",
+          "This slice later splits into richer water and soil cards without changing the IA."
+        ],
+        evidence: "Irrigation log and Gallery > Reports",
+        presetPath: "Later irrigation profiles can be reviewed for promotion into product settings."
+      },
+      {
+        id: "sprayer_water",
+        category: "water",
+        title: "Sprayer / Turret Water",
+        kind: "linked",
+        stage: "partial",
+        ownerHint: "Raspberry Pi",
+        ownerScope: "raspberry_pi",
+        summary: "Turret water-path readiness, guarded action family, and owner-side visibility.",
+        find: (modules) => modules.find((item) => item.id === "turret_bridge") || null,
+        path: () => "/service/turret?focus=water",
+        controls: [
+          "Water action readiness and block reason",
+          "Turret owner and interlock visibility",
+          "Runtime gating in service mode",
+          "Future pulse / prime / spray duration extraction"
+        ],
+        expected: [
+          "Turret water stays separate from irrigation ownership.",
+          "Unsafe action attempts remain blocked with an explicit reason.",
+          "The operator can later tune spray-specific parameters in a dedicated water slice."
+        ],
+        evidence: "Turret runtime events and Gallery > Reports",
+        presetPath: "Any future spray presets require separate review before product reuse.",
+        stageNote: "Current implementation reuses the turret runtime slice as a temporary bridge."
+      },
+      {
+        id: "ultrasonic_emitters",
+        category: "audio",
+        title: "Ultrasonic Tweeters",
+        kind: "placeholder",
+        stage: "planned",
+        ownerHint: "Raspberry Pi",
+        ownerScope: "raspberry_pi",
+        labOnly: true,
+        summary: "Laboratory slice for emitter families, size variants, and maximum safe frequency tests.",
+        controls: [
+          "Tweeter pair or size selection",
+          "Frequency band and duty-cycle note",
+          "Duration and burst pattern",
+          "Safe operating range hint",
+          "Expected audible or non-audible response guidance"
+        ],
+        expected: [
+          "The operator can compare emitter variants without turning the slice into a product deterrence panel.",
+          "The meaning of Ultrasonic stays emitter-family testing, not range sensing.",
+          "This module remains laboratory-only until a dedicated hardware contract exists."
+        ],
+        evidence: "Future laboratory report cards and operator notes",
+        presetPath: "No automatic product promotion."
+      },
+      {
+        id: "audio_lab",
+        category: "audio",
+        title: "Audible Audio",
+        kind: "linked",
+        stage: "partial",
+        ownerHint: "Raspberry Pi",
+        ownerScope: "raspberry_pi",
+        summary: "Piezo, horn, or voice-path bring-up inside the owner-side turret service lane.",
+        find: (modules) => modules.find((item) => item.id === "turret_bridge") || null,
+        path: () => "/service/turret?focus=audio",
+        controls: [
+          "Audio family readiness and driver binding visibility",
+          "Service-safe enable / disable path",
+          "Future tone, duration, and pattern extraction",
+          "Expected speaker or tweeter response notes"
+        ],
+        expected: [
+          "Audio actions stay owner-aware and never look local on the wrong board.",
+          "The operator can later split audible and ultrasonic profiles without changing categories.",
+          "Current bridge remains honest about still living inside turret runtime."
+        ],
+        evidence: "Turret runtime events and Gallery > Reports",
+        presetPath: "Later audio profiles can graduate to Settings only through explicit review.",
+        stageNote: "Current implementation reuses the turret runtime slice as a temporary bridge."
+      },
+      {
+        id: "air_env",
+        category: "sensors",
+        title: "Air Temperature / Humidity",
+        kind: "placeholder",
+        stage: "planned",
+        ownerHint: "ESP32",
+        ownerScope: "esp32",
+        summary: "Environmental sensing lane for live readings, stale markers, and sanity checks.",
+        controls: [
+          "Live temperature and humidity values",
+          "Stale-reading warning",
+          "Optional trend line or recent reading window",
+          "Sensor fault explanation",
+          "Expected range note for the current room or bench context"
+        ],
+        expected: [
+          "The operator can tell whether the sensor is alive, noisy, or obviously wrong.",
+          "Environmental data remains visible without pretending it already drives product behavior.",
+          "The slice stays ready for later integration into reports and presets."
+        ],
+        evidence: "Future sensor warning and pass reports",
+        presetPath: "Read-only observational slice for now."
+      },
+      {
+        id: "soil_lab",
+        category: "sensors",
+        title: "Soil Moisture",
+        kind: "linked",
+        stage: "partial",
+        ownerHint: "ESP32",
+        ownerScope: "esp32",
+        summary: "Soil sensing visibility stays close to the irrigation chain but remains a first-class lab slice.",
+        find: (modules) => modules.find((item) => item.id === "irrigation_service") || modules.find((item) => item.id === "irrigation") || null,
+        path: () => "/service/irrigation",
+        controls: [
+          "Zone selection and raw moisture visibility",
+          "Dry / wet / fault / restore simulation",
+          "Sensor-fault explanation",
+          "Expected reading interpretation per zone"
+        ],
+        expected: [
+          "The operator can separate sensing problems from water-path problems.",
+          "Soil data stays visible even when one zone is degraded.",
+          "This slice can later split into its own dedicated card without changing the category model."
+        ],
+        evidence: "Irrigation service log and future sensor-specific reports",
+        presetPath: "Future calibration data requires explicit review before product reuse.",
+        stageNote: "Current implementation reuses the irrigation service slice as a temporary bridge."
+      },
+      {
+        id: "lidar_lab",
+        category: "sensors",
+        title: "Lidar / Range",
+        kind: "linked",
+        stage: "partial",
+        ownerHint: "Raspberry Pi",
+        ownerScope: "raspberry_pi",
+        labOnly: true,
+        summary: "Owner-side TFmini Plus baseline with room for HC-SR04-class experimental profiles.",
+        find: (modules) => modules.find((item) => item.id === "turret_bridge") || null,
+        path: () => "/service/turret",
+        controls: [
+          "Profile label visibility for TFmini Plus baseline",
+          "Experimental HC-SR04-class note without pretending owner equivalence",
+          "Range availability and degraded-state explanation",
+          "Expected distance-feedback guidance"
+        ],
+        expected: [
+          "Owner-side range stays distinct from laboratory-only range experiments.",
+          "Missing range hardware changes readiness honestly.",
+          "The slice later grows into live range charts and profile switching."
+        ],
+        evidence: "Turret readiness reports and future range testcards",
+        presetPath: "Experimental profiles remain laboratory-only unless explicitly approved."
+      },
+      {
+        id: "motion_sensor",
+        category: "sensors",
+        title: "Motion Sensor",
+        kind: "placeholder",
+        stage: "planned",
+        ownerHint: "Raspberry Pi",
+        ownerScope: "raspberry_pi",
+        labOnly: true,
+        summary: "Reserved wake-testing slice for turret standby exit and motion-trigger experiments.",
+        controls: [
+          "Trigger visibility and cooldown",
+          "Wake scenario notes for day and night testing",
+          "Detection distance expectation",
+          "Operator notes about false positives or dead zones"
+        ],
+        expected: [
+          "The operator can test wake-path behavior without pretending the sensor is fully productized.",
+          "This slice stays visible even before the final hardware choice is locked.",
+          "Future motion profiles stay separate from product policies until explicitly reviewed."
+        ],
+        evidence: "Future wake-test reports and operator notes",
+        presetPath: "Laboratory-only until a final wake sensor contract exists."
+      },
+      {
+        id: "camera_lab",
+        category: "camera",
+        title: "Camera",
+        kind: "linked",
+        stage: "partial",
+        ownerHint: "Raspberry Pi",
+        ownerScope: "raspberry_pi",
+        summary: "Camera readiness, preview path, and owner-side availability without fake FPV promises.",
+        find: (modules) => modules.find((item) => item.id === "turret_bridge") || null,
+        path: () => "/service/turret",
+        controls: [
+          "Camera readiness and availability",
+          "Preview-path expectation",
+          "Resolution or profile note for IMX219 baseline",
+          "Expected-result hints when the stream is missing or degraded"
+        ],
+        expected: [
+          "Camera absence degrades the slice honestly instead of silently failing later.",
+          "The operator can treat this as bring-up, not as the final FPV screen.",
+          "Later extraction can create a dedicated camera slice without changing the category model."
+        ],
+        evidence: "Turret readiness reports and future camera smoke reports",
+        presetPath: "Future camera settings require explicit promotion into Settings."
+      },
+      {
+        id: "rpi_touch_display",
+        category: "displays",
+        title: "Raspberry Pi Touch Display",
+        kind: "linked",
+        stage: "live",
+        ownerHint: "Raspberry Pi",
+        ownerScope: "raspberry_pi",
+        summary: "8-inch 1280x800 HDMI + USB touch panel qualification for the Raspberry Pi owner side.",
+        path: () => "/service/displays",
+        controls: [
+          "Solid-color and grayscale patterns for pixel and backlight checks",
+          "Grid and checker patterns for geometry and sharpness",
+          "Touch target matrix with resettable hit map",
+          "Fullscreen and standalone opening for real panel qualification",
+          "Operator notes about rotation, brightness, ghost touches, or dead zones"
+        ],
+        expected: [
+          "The panel shows clean 1280x800 output without obvious dead pixels or scaling glitches.",
+          "Touch input reaches the expected zones instead of drifting or dropping edges.",
+          "This slice stays blocked when Raspberry Pi is missing, even if the shell was opened from ESP32."
+        ],
+        evidence: "Display-test notes and Gallery > Reports",
+        presetPath: "Display calibration stays laboratory-local until a dedicated product display contract exists.",
+        stageNote: "Dedicated display-test page is available on the Raspberry Pi owner side."
+      },
+      {
+        id: "custom_module",
+        category: "experimental",
+        title: "Unknown Module Slot",
+        kind: "placeholder",
+        stage: "planned",
+        ownerHint: "shared",
+        labOnly: true,
+        summary: "Stable placeholder for unexpected hardware so the lab can grow without IA breakage.",
+        controls: [
+          "Name, owner guess, and wiring note",
+          "Expected-result note before the first test",
+          "Operator freeform observations",
+          "Future data-contract slot for custom drivers"
+        ],
+        expected: [
+          "Unexpected hardware still has a clean entry point instead of forcing ad-hoc pages.",
+          "The operator can document what was tried and what happened.",
+          "This placeholder lets the system grow without redesigning the main Laboratory IA."
+        ],
+        evidence: "Operator notes first, dedicated reports later",
+        presetPath: "No product promotion path until the hardware contract exists."
+      },
+      {
+        id: "turret_runtime",
+        category: "experimental",
+        title: "Turret Runtime Lane",
+        kind: "linked",
+        stage: "partial",
+        ownerHint: "Raspberry Pi",
+        ownerScope: "raspberry_pi",
+        labOnly: true,
+        summary: "Current deep engineering page for runtime toggles, scenarios, drivers, and raw evidence.",
+        find: (modules) => modules.find((item) => item.id === "turret_bridge") || null,
+        path: () => "/service/turret",
+        controls: [
+          "Service scenarios",
+          "Sensor availability toggles",
+          "Actuator and logic toggles",
+          "Driver bindings and raw event log"
+        ],
+        expected: [
+          "Deep diagnostics remain available without dominating the main Laboratory IA.",
+          "Future user-facing slices can continue to peel out of this lane.",
+          "This stays visible as an advanced bridge, not as the default first stop."
+        ],
+        evidence: "Turret event log and Gallery > Reports",
+        presetPath: "No direct promotion path. This is an engineering bridge surface.",
+        stageNote: "Kept as a visible advanced lane so deep diagnostics do not vanish during IA cleanup."
+      }
+    ];
+
+    let state = {
+      snapshot: null,
+      modules: [],
+      log: null,
+      readiness: null,
+      sessionBackend: null,
+      sessionApiAvailable: false,
+      activeCategory: "overview",
+      activeModule: "overview",
+      powerContext: readPowerContext(),
+      fullscreen: false,
+      workspaceSignature: "",
+      localSession: readLocalSession(),
+      sessionFeedback: "",
+      evidenceFeedback: "",
+      contextSyncSignature: "",
+      sessionControlsBound: false
+    };
+
+    function esc(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function badgeClass(stateValue) {
+      const normalized = String(stateValue || "offline").toLowerCase();
+      if (normalized === "ready" || normalized === "healthy" || normalized === "online") return "badge state-online";
+      if (normalized === "attention" || normalized === "warning" || normalized === "degraded") return "badge state-degraded";
+      if (normalized === "blocked" || normalized === "locked" || normalized === "offline") return "badge state-locked";
+      if (normalized === "fault" || normalized === "module_fault") return "badge state-fault";
+      if (normalized === "active") return "badge state-active";
+      if (normalized === "partial") return "badge state-partial";
+      if (normalized === "planned") return "badge state-planned";
+      return "badge state-service";
+    }
+
+    function statusBadgeClass(stateValue) {
+      return badgeClass(stateValue);
+    }
+
+    function stageBadge(stage) {
+      if (stage === "live") return "badge state-active";
+      if (stage === "partial") return "badge state-partial";
+      return "badge state-planned";
+    }
+
+    function nodeLabel(node) {
+      const type = String(node?.node_type || "").toLowerCase();
+      if (type === "esp32") return "ESP32";
+      if (type === "raspberry_pi") return "Raspberry Pi";
+      const title = String(node?.title || node?.node_id || "Unknown Node");
+      if (/esp32/i.test(title)) return "ESP32";
+      if (/raspberry/i.test(title)) return "Raspberry Pi";
+      return title;
+    }
+
+    function nodeHealth(node) {
+      if (node && node.health) return String(node.health).toLowerCase();
+      if (node && node.reachable === false) return "offline";
+      return "online";
+    }
+
+    function runtimeHost(snapshot) {
+      return ((snapshot || {}).runtime || {}).host || {};
+    }
+
+    function normalizeViewerKind(kind) {
+      const normalized = String(kind || "desktop").toLowerCase();
+      if (["phone", "tablet", "display", "desktop"].includes(normalized)) return normalized;
+      return "desktop";
+    }
+
+    function viewerKindLabel(kind) {
+      const normalized = normalizeViewerKind(kind);
+      if (normalized === "phone") return "phone";
+      if (normalized === "tablet") return "tablet";
+      if (normalized === "display") return "Raspberry Pi display";
+      return "desktop";
+    }
+
+    function snapshotViewers(snapshot) {
+      const provided = Array.isArray((snapshot || {}).viewers) ? snapshot.viewers : [];
+      return provided.map((viewer) => {
+        const kind = normalizeViewerKind(viewer.viewer_kind);
+        return {
+          viewer_id: String(viewer.viewer_id || ""),
+          viewer_kind: kind,
+          title: String(viewer.title || viewerKindLabel(kind)),
+          page: String(viewer.page || "/")
+        };
+      });
+    }
+
+    function currentViewer(snapshot) {
+      const viewers = snapshotViewers(snapshot);
+      let viewerId = "";
+      try {
+        viewerId = String(localStorage.getItem(VIEWER_STORAGE_KEY) || "");
+      } catch (_error) {
+        viewerId = "";
+      }
+      return viewers.find((viewer) => viewerId && viewer.viewer_id === viewerId) || viewers[0] || null;
+    }
+
+    function currentViewerLabel(snapshot) {
+      const viewer = currentViewer(snapshot);
+      if (!viewer) return "unknown viewer";
+      const kindLabel = viewerKindLabel(viewer.viewer_kind);
+      const title = viewer.title && viewer.title !== kindLabel ? `${kindLabel} / ${viewer.title}` : kindLabel;
+      const page = viewer.page && viewer.page !== "/" ? ` / ${viewer.page}` : "";
+      return `${title}${page}`;
+    }
+
+    function shellSurfaceTitle(snapshot) {
+      const shell = (snapshot || {}).current_shell || {};
+      const nodeType = String(shell.node_type || "").toLowerCase();
+      if (nodeType === "raspberry_pi") return "Raspberry Pi shell surface";
+      if (nodeType === "esp32") return "ESP32 shell surface";
+      return "Smart Platform shell surface";
+    }
+
+    function connectedBoardCount(current, peer) {
+      let count = current ? 1 : 0;
+      if (peer && peer.reachable) count += 1;
+      return count;
+    }
+
+    function defaultLocalSession() {
+      return {
+        status: "idle",
+        sessionId: "",
+        operator: "",
+        objective: "",
+        hardwareProfile: "",
+        externalModule: "",
+        powerContext: "bench_psu",
+        viewMode: "browser",
+        activeTool: "overview",
+        moduleId: "overview",
+        startedAtMs: 0,
+        backendSynced: false
+      };
+    }
+
+    function readLocalSession() {
+      try {
+        const raw = localStorage.getItem(LAB_SESSION_STORAGE_KEY);
+        if (!raw) return defaultLocalSession();
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== "object") return defaultLocalSession();
+        return { ...defaultLocalSession(), ...parsed };
+      } catch (_error) {
+        return defaultLocalSession();
+      }
+    }
+
+    function writeLocalSession() {
+      try {
+        localStorage.setItem(LAB_SESSION_STORAGE_KEY, JSON.stringify(state.localSession));
+      } catch (_error) {
+      }
+    }
+
+    function readTool() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get("tool");
+    }
+
+    function writeTool(id) {
+      const url = new URL(window.location.href);
+      url.searchParams.set("tool", id);
+      window.history.replaceState({}, "", url);
+    }
+
+    function readPowerContext() {
+      try {
+        return localStorage.getItem("smart-platform.laboratory.power") || "bench_psu";
+      } catch (_error) {
+        return "bench_psu";
+      }
+    }
+
+    function writePowerContext(value) {
+      try {
+        localStorage.setItem("smart-platform.laboratory.power", value);
+      } catch (_error) {
+      }
+    }
+
+    function currentViewMode() {
+      return state.fullscreen ? "fullscreen" : "browser";
+    }
+
+    function syncLocalSessionContext() {
+      state.localSession = {
+        ...defaultLocalSession(),
+        ...state.localSession,
+        powerContext: state.powerContext,
+        viewMode: currentViewMode(),
+        activeTool: state.activeModule,
+        moduleId: state.activeModule
+      };
+      writeLocalSession();
+    }
+
+    function fillSessionInputs(force = false) {
+      const bindings = [
+        ["session-operator", "operator"],
+        ["session-objective", "objective"],
+        ["session-hardware", "hardwareProfile"],
+        ["session-external-module", "externalModule"]
+      ];
+      for (const [id, key] of bindings) {
+        const input = document.getElementById(id);
+        if (!input) continue;
+        if (force || (!input.value && document.activeElement !== input)) {
+          input.value = state.localSession[key] || "";
+        }
+      }
+    }
+
+    function readSessionForm() {
+      return {
+        operator: document.getElementById("session-operator").value.trim(),
+        objective: document.getElementById("session-objective").value.trim(),
+        hardwareProfile: document.getElementById("session-hardware").value.trim(),
+        externalModule: document.getElementById("session-external-module").value.trim(),
+        finishNote: document.getElementById("session-finish-note").value.trim()
+      };
+    }
+
+    function currentShellNode() {
+      const snapshot = state.snapshot || {};
+      const nodes = snapshot.nodes || {};
+      return nodes.current || {};
+    }
+
+    function buildLaboratoryMetadataParams() {
+      const form = readSessionForm();
+      const currentNode = currentShellNode();
+      const payload = {
+        lab_session_status: state.localSession.status || "idle",
+        lab_operator: form.operator || state.localSession.operator || "",
+        lab_objective: form.objective || state.localSession.objective || "",
+        lab_hardware_profile: form.hardwareProfile || state.localSession.hardwareProfile || "",
+        lab_external_module: form.externalModule || state.localSession.externalModule || "",
+        lab_power_context: state.powerContext,
+        lab_view_mode: currentViewMode(),
+        lab_active_tool: state.activeModule,
+        lab_context_module: state.activeModule,
+        lab_owner_node_id: currentNode.node_id || "",
+        lab_owner_node_type: currentShellType() || String(currentNode.node_type || "")
+      };
+      if (state.localSession.sessionId) payload.lab_session_id = state.localSession.sessionId;
+      return payload;
+    }
+
+    function defaultCaseIdForModule(moduleId) {
+      if (!moduleId || moduleId === "overview") return "laboratory-overview-smoke";
+      return `${moduleId}-smoke`;
+    }
+
+    function syncEvidenceCaseId(force = false) {
+      const input = document.getElementById("evidence-case-id");
+      if (!input) return;
+      const nextDefault = defaultCaseIdForModule(state.activeModule);
+      if (force || !input.value || input.dataset.auto === "1") {
+        input.value = nextDefault;
+        input.dataset.auto = "1";
+      }
+      document.getElementById("evidence-module").value = moduleById(state.activeModule).title;
+    }
+
+    function sessionStatusLine() {
+      if (state.localSession.status === "active") {
+        const objective = state.localSession.objective ? ` / ${state.localSession.objective}` : "";
+        return `Active session ${state.localSession.sessionId || "(local draft)"} / ${state.localSession.operator || "local-operator"}${objective}`;
+      }
+      return "No active laboratory session. You can keep fields as a draft or start a tracked pass now.";
+    }
+
+    function backendSyncLine() {
+      if (state.sessionApiAvailable) return "Raspberry Pi backend session sync is available on this shell.";
+      if (currentShellType() === "raspberry_pi") return "Raspberry Pi backend session sync is currently unavailable, so the page falls back to local draft state.";
+      return "This mirrored shell keeps the session draft locally. Explicit report actions still carry the session fields.";
+    }
+
+    function applyBackendSessionSnapshot(payload) {
+      if (!payload || typeof payload !== "object") return;
+      const context = payload.context || {};
+      const active = payload.active_session || null;
+      const completed = payload.last_completed_session || null;
+      if (active) {
+        state.localSession = {
+          ...defaultLocalSession(),
+          ...state.localSession,
+          status: "active",
+          sessionId: active.session_id || state.localSession.sessionId,
+          operator: active.operator || "",
+          objective: active.objective || "",
+          hardwareProfile: active.hardware_profile || "",
+          externalModule: active.external_module || "",
+          powerContext: context.power_context || state.powerContext,
+          viewMode: context.view_mode || currentViewMode(),
+          activeTool: context.active_tool || state.activeModule,
+          moduleId: context.module_id || state.activeModule,
+          startedAtMs: Number(active.started_at_ms || 0),
+          backendSynced: true
+        };
+      } else if (completed) {
+        state.localSession = {
+          ...defaultLocalSession(),
+          ...state.localSession,
+          status: "idle",
+          sessionId: "",
+          operator: completed.operator || state.localSession.operator,
+          objective: completed.objective || state.localSession.objective,
+          hardwareProfile: completed.hardware_profile || state.localSession.hardwareProfile,
+          externalModule: completed.external_module || state.localSession.externalModule,
+          powerContext: context.power_context || state.powerContext,
+          viewMode: context.view_mode || currentViewMode(),
+          activeTool: context.active_tool || state.activeModule,
+          moduleId: context.module_id || state.activeModule,
+          startedAtMs: 0,
+          backendSynced: true
+        };
+      }
+      writeLocalSession();
+      fillSessionInputs(true);
+    }
+
+    async function postCommand(path, payload) {
+      const url = new URL(path, window.location.origin);
+      Object.entries(payload || {}).forEach(([key, value]) => {
+        if (value === undefined || value === null) return;
+        const text = String(value);
+        if (!text && text !== "0") return;
+        url.searchParams.set(key, text);
+      });
+      const response = await fetch(url, { method: "POST" });
+      if (!response.ok) throw new Error(`status ${response.status}`);
+      return await response.json();
+    }
+
+    async function loadLaboratorySessionBackend() {
+      if (currentShellType() !== "raspberry_pi") {
+        state.sessionApiAvailable = false;
+        state.sessionBackend = null;
+        return null;
+      }
+
+      try {
+        const response = await fetch("/api/v1/laboratory/session");
+        if (!response.ok) throw new Error(`status ${response.status}`);
+        const payload = await response.json();
+        state.sessionApiAvailable = true;
+        state.sessionBackend = payload;
+        applyBackendSessionSnapshot(payload);
+        return payload;
+      } catch (_error) {
+        state.sessionApiAvailable = false;
+        state.sessionBackend = null;
+        return null;
+      }
+    }
+
+    async function syncContextToBackend(force = false) {
+      syncLocalSessionContext();
+      const signature = [state.powerContext, currentViewMode(), state.activeModule, currentShellType()].join("|");
+      if (!force && signature === state.contextSyncSignature) return;
+      state.contextSyncSignature = signature;
+      if (currentShellType() !== "raspberry_pi") return;
+
+      try {
+        const payload = await postCommand("/api/v1/laboratory/session/context", {
+          power_context: state.powerContext,
+          view_mode: currentViewMode(),
+          active_tool: state.activeModule,
+          module_id: state.activeModule
+        });
+        if (payload.session) {
+          state.sessionApiAvailable = true;
+          state.sessionBackend = payload.session;
+          applyBackendSessionSnapshot(payload.session);
+        }
+      } catch (_error) {
+        state.sessionApiAvailable = false;
+      }
+    }
+
+    async function handleSessionStart() {
+      const form = readSessionForm();
+      if (currentShellType() === "raspberry_pi") {
+        try {
+          const payload = await postCommand("/api/v1/laboratory/session/start", {
+            operator: form.operator,
+            objective: form.objective,
+            hardware_profile: form.hardwareProfile,
+            external_module: form.externalModule,
+            power_context: state.powerContext,
+            view_mode: currentViewMode(),
+            active_tool: state.activeModule,
+            module_id: state.activeModule
+          });
+          state.sessionFeedback = payload.message || "laboratory session started";
+          if (payload.accepted && payload.session) {
+            state.sessionApiAvailable = true;
+            state.sessionBackend = payload.session;
+            applyBackendSessionSnapshot(payload.session);
+          }
+        } catch (error) {
+          state.sessionFeedback = `session start failed: ${String(error)}`;
+        }
+      } else {
+        state.localSession = {
+          ...state.localSession,
+          status: "active",
+          sessionId: state.localSession.sessionId || `local-${Date.now()}`,
+          operator: form.operator || "local-operator",
+          objective: form.objective,
+          hardwareProfile: form.hardwareProfile,
+          externalModule: form.externalModule,
+          powerContext: state.powerContext,
+          viewMode: currentViewMode(),
+          activeTool: state.activeModule,
+          moduleId: state.activeModule,
+          startedAtMs: Date.now(),
+          backendSynced: false
+        };
+        writeLocalSession();
+        state.sessionFeedback = "local-only session started for this mirrored shell";
+      }
+      renderSessionShell();
+      refresh().catch(() => {});
+    }
+
+    async function handleSessionUpdate() {
+      const form = readSessionForm();
+      if (currentShellType() === "raspberry_pi" && state.localSession.status === "active") {
+        try {
+          const payload = await postCommand("/api/v1/laboratory/session/update", {
+            operator: form.operator,
+            objective: form.objective,
+            hardware_profile: form.hardwareProfile,
+            external_module: form.externalModule
+          });
+          state.sessionFeedback = payload.message || "laboratory session updated";
+          if (payload.accepted && payload.session) {
+            state.sessionBackend = payload.session;
+            state.sessionApiAvailable = true;
+            applyBackendSessionSnapshot(payload.session);
+          }
+        } catch (error) {
+          state.sessionFeedback = `session update failed: ${String(error)}`;
+        }
+      } else {
+        state.localSession = {
+          ...state.localSession,
+          operator: form.operator,
+          objective: form.objective,
+          hardwareProfile: form.hardwareProfile,
+          externalModule: form.externalModule,
+          powerContext: state.powerContext,
+          viewMode: currentViewMode(),
+          activeTool: state.activeModule,
+          moduleId: state.activeModule
+        };
+        writeLocalSession();
+        state.sessionFeedback = state.localSession.status === "active" ? "local session details updated" : "draft session fields saved locally";
+      }
+      renderSessionShell();
+    }
+
+    async function handleSessionFinish() {
+      const finishNote = readSessionForm().finishNote;
+      if (currentShellType() === "raspberry_pi" && state.localSession.status === "active") {
+        try {
+          const payload = await postCommand("/api/v1/laboratory/session/finish", {
+            summary_note: finishNote
+          });
+          state.sessionFeedback = payload.message || "laboratory session finished";
+          if (payload.accepted && payload.session) {
+            state.sessionBackend = payload.session;
+            state.sessionApiAvailable = true;
+            applyBackendSessionSnapshot(payload.session);
+          }
+        } catch (error) {
+          state.sessionFeedback = `session finish failed: ${String(error)}`;
+        }
+      } else {
+        state.localSession = {
+          ...state.localSession,
+          status: "idle",
+          sessionId: "",
+          startedAtMs: 0,
+          backendSynced: false
+        };
+        writeLocalSession();
+        state.sessionFeedback = finishNote ? `local session closed: ${finishNote}` : "local session closed";
+      }
+      document.getElementById("session-finish-note").value = "";
+      renderSessionShell();
+      refresh().catch(() => {});
+    }
+
+    async function handleEvidenceCapture(kind) {
+      const caseId = document.getElementById("evidence-case-id").value.trim();
+      const note = document.getElementById("evidence-note").value.trim();
+      const moduleId = state.activeModule;
+      const board = currentShellType() || String(currentShellNode().node_type || "unknown");
+      const metadata = buildLaboratoryMetadataParams();
+
+      if (kind !== "note" && !caseId) {
+        state.evidenceFeedback = "case_id is required for pass / warn / fail";
+        renderSessionShell();
+        return;
+      }
+      if (kind === "note" && !note) {
+        state.evidenceFeedback = "note is required for note-only evidence";
+        renderSessionShell();
+        return;
+      }
+
+      try {
+        let payload;
+        if (kind === "note") {
+          payload = await postCommand("/api/v1/reports/note", {
+            note,
+            module_id: moduleId,
+            board,
+            case_id: caseId,
+            ...metadata
+          });
+        } else {
+          payload = await postCommand("/api/v1/reports/testcase", {
+            case_id: caseId,
+            module_id: moduleId,
+            result: kind,
+            note,
+            board,
+            ...metadata
+          });
+        }
+        state.evidenceFeedback = payload.message || "evidence recorded";
+        document.getElementById("evidence-note").value = "";
+        refresh().catch(() => {});
+      } catch (error) {
+        state.evidenceFeedback = `evidence recording failed: ${String(error)}`;
+      }
+      renderSessionShell();
+    }
+
+    function bindSessionControls() {
+      if (state.sessionControlsBound) return;
+      state.sessionControlsBound = true;
+      document.getElementById("session-start-btn").addEventListener("click", () => {
+        handleSessionStart().catch(() => {});
+      });
+      document.getElementById("session-update-btn").addEventListener("click", () => {
+        handleSessionUpdate().catch(() => {});
+      });
+      document.getElementById("session-finish-btn").addEventListener("click", () => {
+        handleSessionFinish().catch(() => {});
+      });
+      document.getElementById("evidence-pass-btn").addEventListener("click", () => {
+        handleEvidenceCapture("pass").catch(() => {});
+      });
+      document.getElementById("evidence-warn-btn").addEventListener("click", () => {
+        handleEvidenceCapture("warn").catch(() => {});
+      });
+      document.getElementById("evidence-fail-btn").addEventListener("click", () => {
+        handleEvidenceCapture("fail").catch(() => {});
+      });
+      document.getElementById("evidence-note-btn").addEventListener("click", () => {
+        handleEvidenceCapture("note").catch(() => {});
+      });
+      document.getElementById("evidence-case-id").addEventListener("input", (event) => {
+        event.target.dataset.auto = event.target.value.trim() ? "0" : "1";
+      });
+    }
+
+    function currentShellType() {
+      return String(((state.snapshot || {}).current_shell || {}).node_type || "").toLowerCase();
+    }
+
+    function ownerTitleForScope(scope) {
+      if (scope === "esp32") return "ESP32";
+      if (scope === "raspberry_pi") return "Raspberry Pi";
+      return "shared";
+    }
+
+    function resolveOwnerScope(moduleDef, module) {
+      if (moduleDef.ownerScope) return moduleDef.ownerScope;
+      const snapshot = state.snapshot || {};
+      const currentShell = snapshot.current_shell || {};
+      const peerNode = ((snapshot.nodes || {}).peer) || {};
+      const currentType = String(currentShell.node_type || "").toLowerCase();
+      const currentNodeId = currentShell.node_id || "";
+      if (module && module.owner_node_id) {
+        if (module.owner_node_id === currentNodeId) return currentType || "shared";
+        if (module.owner_node_id === peerNode.node_id) {
+          if (currentType === "esp32") return "raspberry_pi";
+          if (currentType === "raspberry_pi") return "esp32";
+        }
+      }
+      return "shared";
+    }
+
+    function ownerStatus(moduleDef, module) {
+      const snapshot = state.snapshot || {};
+      const currentShell = snapshot.current_shell || {};
+      const currentNode = ((snapshot.nodes || {}).current) || {};
+      const peerNode = ((snapshot.nodes || {}).peer) || {};
+      const scope = resolveOwnerScope(moduleDef, module);
+      const currentType = currentShellType();
+
+      if (!scope || scope === "shared") {
+        return {
+          scope: "shared",
+          title: "shared",
+          nodeId: "shared",
+          available: true,
+          local: true,
+          baseUrl: "",
+          blockReason: module?.block_reason || "none"
+        };
+      }
+
+      if (scope === currentType) {
+        return {
+          scope,
+          title: ownerTitleForScope(scope),
+          nodeId: currentShell.node_id || currentNode.node_id || ownerTitleForScope(scope),
+          available: true,
+          local: true,
+          baseUrl: "",
+          blockReason: module?.block_reason || "none"
+        };
+      }
+
+      const available = Boolean(peerNode.reachable && peerNode.shell_ready && peerNode.sync_ready && peerNode.shell_base_url);
+      return {
+        scope,
+        title: ownerTitleForScope(scope),
+        nodeId: peerNode.node_id || ownerTitleForScope(scope),
+        available,
+        local: false,
+        baseUrl: peerNode.shell_base_url || "",
+        blockReason: available ? (module?.block_reason || "peer_owner_available") : (module?.block_reason || "owner_unavailable")
+      };
+    }
+
+    function moduleById(id) {
+      return MODULE_DEFS.find((module) => module.id === id) || MODULE_DEFS[0];
+    }
+
+    function modulesInCategory(categoryId) {
+      return MODULE_DEFS.filter((module) => module.category === categoryId);
+    }
+
+    function firstModuleInCategory(categoryId) {
+      return modulesInCategory(categoryId)[0] || MODULE_DEFS[0];
+    }
+
+    function initSelection() {
+      const requested = readTool();
+      const active = moduleById(requested || "overview");
+      state.activeCategory = active.category;
+      state.activeModule = active.id;
+      writeTool(active.id);
+    }
+
+    function runtime(moduleDef) {
+      const module = typeof moduleDef.find === "function" ? moduleDef.find(state.modules) : null;
+      const owner = ownerStatus(moduleDef, module);
+      const servicePath = typeof moduleDef.path === "function" ? moduleDef.path(module) : "";
+      const url = serviceUrl(module, servicePath, owner);
+      const powerBlock = powerGuard(moduleDef);
+      return { def: moduleDef, module, owner, servicePath, url, powerBlock };
+    }
+
+    function serviceUrl(module, path, owner) {
+      if (!path || module?.id === "service_mode") return "";
+      if (owner.local) return path;
+      if (owner.available && owner.baseUrl) return `${owner.baseUrl}${path}`;
+      if (module.owner_available && module.canonical_url && module.canonical_path) {
+        return module.canonical_url.replace(module.canonical_path, path);
+      }
+      return "";
+    }
+
+    function powerGuard(moduleDef) {
+      if (moduleDef.powerGuard === "bench_psu_required" && state.powerContext === "battery") {
+        return {
+          blocked: true,
+          title: "Battery context blocks this bench slice",
+          summary: "This module depends on adjustable bench-supply guidance. Battery mode cannot truthfully provide that yet.",
+          action: "Switch power context back to Bench PSU before opening the voltage-sensitive calibration flow."
+        };
+      }
+      return {
+        blocked: false,
+        title: "",
+        summary: POWER_CONTEXTS[state.powerContext].summary,
+        action: state.powerContext === "battery"
+          ? "Battery mode stays advisory-only for slices that do not explicitly depend on adjustable PSU control."
+          : "Bench PSU mode keeps calibration hints visible but does not claim hardware enforcement by itself."
+      };
+    }
+
+    function moduleDisplayState(runtimeState) {
+      if (runtimeState.powerBlock.blocked) return { label: "blocked", className: "badge state-locked" };
+      if (runtimeState.def.kind !== "overview" && !runtimeState.owner.available) {
+        return { label: "blocked", className: "badge state-locked" };
+      }
+      if (runtimeState.module) {
+        const currentState = runtimeState.module.state || runtimeState.def.stage || "service";
+        return { label: currentState, className: badgeClass(currentState) };
+      }
+      if (runtimeState.def.kind === "overview") return { label: "service", className: "badge state-service" };
+      if (runtimeState.def.stage === "live") return { label: "ready", className: "badge state-online" };
+      if (runtimeState.def.stage === "partial") return { label: "partial", className: "badge state-partial" };
+      return { label: "planned", className: "badge state-planned" };
+    }
+
+    function categoryStats(categoryId) {
+      const modules = modulesInCategory(categoryId);
+      let available = 0;
+      let blocked = 0;
+      let planned = 0;
+      for (const moduleDef of modules) {
+        const currentRuntime = runtime(moduleDef);
+        if (moduleDef.kind !== "overview" && !currentRuntime.owner.available) {
+          blocked += 1;
+          continue;
+        }
+        if (currentRuntime.powerBlock.blocked) {
+          blocked += 1;
+          continue;
+        }
+        if (moduleDef.kind === "placeholder") {
+          planned += 1;
+          continue;
+        }
+        available += 1;
+      }
+      return { total: modules.length, available, blocked, planned };
+    }
+
+    function setActiveCategory(categoryId) {
+      const current = moduleById(state.activeModule);
+      state.activeCategory = categoryId;
+      if (current.category !== categoryId) state.activeModule = firstModuleInCategory(categoryId).id;
+      writeTool(state.activeModule);
+      renderCategoryRail();
+      renderModuleRail();
+      renderWorkspace();
+      syncEvidenceCaseId();
+      syncLocalSessionContext();
+      renderSessionShell();
+      syncContextToBackend().catch(() => {});
+    }
+
+    function setActiveModule(moduleId) {
+      const moduleDef = moduleById(moduleId);
+      state.activeModule = moduleDef.id;
+      state.activeCategory = moduleDef.category;
+      writeTool(moduleDef.id);
+      renderCategoryRail();
+      renderModuleRail();
+      renderWorkspace();
+      syncEvidenceCaseId();
+      syncLocalSessionContext();
+      renderSessionShell();
+      syncContextToBackend().catch(() => {});
+    }
+
+    function renderPowerContext() {
+      const target = document.getElementById("power-context");
+      target.innerHTML = Object.values(POWER_CONTEXTS).map((option) => {
+        const active = option.id === state.powerContext ? " active" : "";
+        return `<button type="button" class="segment-button${active}" data-power="${esc(option.id)}">${esc(option.title)}</button>`;
+      }).join("");
+      for (const button of target.querySelectorAll("button[data-power]")) {
+        button.addEventListener("click", () => {
+          state.powerContext = button.dataset.power;
+          writePowerContext(state.powerContext);
+          state.workspaceSignature = "";
+          renderPowerContext();
+          renderSummary();
+          renderCategoryRail();
+          renderModuleRail();
+          renderWorkspace();
+          syncLocalSessionContext();
+          renderSessionShell();
+          syncContextToBackend().catch(() => {});
+        });
+      }
+    }
+
+    function renderSessionShell() {
+      syncLocalSessionContext();
+      fillSessionInputs();
+      syncEvidenceCaseId();
+      const host = runtimeHost(state.snapshot || {});
+      const viewer = currentViewerLabel(state.snapshot || {});
+      const hostTitle = String(host.title || host.kind || "unknown host");
+      const badges = [
+        `<span class="${state.localSession.status === "active" ? "badge state-active" : "badge state-service"}">${esc(state.localSession.status === "active" ? "session active" : "session idle")}</span>`,
+        `<span class="${state.sessionApiAvailable ? "badge state-online" : "badge state-degraded"}">${esc(state.sessionApiAvailable ? "backend sync ready" : "local draft mode")}</span>`,
+        `<span class="badge state-service">${esc(POWER_CONTEXTS[state.powerContext].title)}</span>`,
+        `<span class="badge state-service">${esc(currentViewMode())}</span>`
+      ];
+      document.getElementById("session-shell-badges").innerHTML = badges.join("");
+      document.getElementById("session-shell-summary").textContent = `${sessionStatusLine()} ${backendSyncLine()} Host: ${hostTitle}. Viewer: ${viewer}.`;
+      document.getElementById("session-shell-feedback").textContent = state.sessionFeedback;
+      document.getElementById("evidence-summary").textContent = `Current slice: ${moduleById(state.activeModule).title} / shell: ${shellSurfaceTitle(state.snapshot || {})} / host: ${hostTitle} / viewer: ${viewer} / power: ${POWER_CONTEXTS[state.powerContext].title} / view: ${currentViewMode()}`;
+      document.getElementById("evidence-feedback").textContent = state.evidenceFeedback;
+    }
+
+    function renderDeviceRibbon() {
+      const snapshot = state.snapshot || {};
+      const shell = snapshot.current_shell || {};
+      const host = runtimeHost(snapshot);
+      const nodes = snapshot.nodes || {};
+      const current = nodes.current || {};
+      const peer = nodes.peer || {};
+      const viewers = snapshotViewers(snapshot);
+      const count = connectedBoardCount(current, peer);
+      const clusterState = count === 2 ? "ready" : "attention";
+      const powerSummary = state.powerContext === "battery"
+        ? "Battery context is selected. PSU-dependent bench flows stay blocked until bench power is declared."
+        : "Bench PSU context is selected. Voltage-dependent hints stay visible for qualifying slices.";
+      const viewerList = viewers.length
+        ? viewers.map((viewer) => viewer.title || viewerKindLabel(viewer.viewer_kind)).join(" / ")
+        : "No viewer list received yet.";
+
+      document.getElementById("device-ribbon").innerHTML = `
+        <article class="device-chip">
+          <div class="tool-top">
+            <strong>Shell Surface</strong>
+            <span class="${statusBadgeClass(shell.identity_scope === "shell_surface" ? "service" : "attention")}">${esc(shell.node_type || "unknown")}</span>
+          </div>
+          <p>title: ${esc(shellSurfaceTitle(snapshot))}</p>
+          <p>runtime_profile: ${esc(shell.runtime_profile || "unknown")} / mode: ${esc(shell.active_mode || current.reported_mode || "unknown")}</p>
+          <p>current_node: ${esc(nodeLabel(current))} / peer_node: ${esc(nodeLabel(peer))}</p>
+        </article>
+        <article class="device-chip">
+          <div class="tool-top">
+            <strong>Runtime Host</strong>
+            <span class="${statusBadgeClass(host.is_owner_device ? "online" : "service")}">${esc(host.kind || "unknown")}</span>
+          </div>
+          <p>title: ${esc(host.title || "unknown host")}</p>
+          <p>platform: ${esc(host.platform || "-")} / owner_device: ${esc(host.is_owner_device)}</p>
+          <p>${esc(host.summary || powerSummary)}</p>
+        </article>
+        <article class="device-chip">
+          <div class="tool-top">
+            <strong>Viewer Participants</strong>
+            <span class="${statusBadgeClass(viewers.length > 1 ? "ready" : viewers.length ? "active" : "attention")}">${esc(String(viewers.length || 0))}</span>
+          </div>
+          <p>current_viewer: ${esc(currentViewerLabel(snapshot))}</p>
+          <p>view_mode: ${esc(state.fullscreen ? "fullscreen" : "browser")}</p>
+          <p>${esc(viewerList)}</p>
+        </article>
+      `;
+    }
+
+    function renderSummary() {
+      const snapshot = state.snapshot || {};
+      const shell = snapshot.current_shell || {};
+      const host = runtimeHost(snapshot);
+      const nodes = snapshot.nodes || {};
+      const current = nodes.current || {};
+      const peer = nodes.peer || {};
+      const viewers = snapshotViewers(snapshot);
+      const summaries = snapshot.summaries || {};
+      const faults = summaries.faults || {};
+      const content = summaries.content || {};
+
+      document.getElementById("shell-pill").textContent = `shell: ${shellSurfaceTitle(snapshot)}`;
+      document.getElementById("mode-pill").textContent = `host: ${host.title || host.kind || "unknown"}`;
+      document.getElementById("peer-pill").textContent = `peer: ${(peer.title || "peer")} / ${peer.health || "offline"}`;
+      document.getElementById("view-pill").textContent = `viewer: ${currentViewerLabel(snapshot)} / ${state.fullscreen ? "fullscreen" : "browser"}`;
+
+      const cards = [
+        { title: "Shell Surface", lines: [`title: ${shellSurfaceTitle(snapshot)}`, `identity_scope: ${shell.identity_scope || "-"}`, `mode: ${shell.active_mode || "unknown"}`] },
+        { title: "Runtime Host", lines: [`host: ${host.title || "unknown"}`, `kind: ${host.kind || "-"}`, `platform: ${host.platform || "-"}`] },
+        { title: "Current Viewer", lines: [`viewer: ${currentViewerLabel(snapshot)}`, `viewer_count: ${viewers.length}`, `view_mode: ${state.fullscreen ? "fullscreen" : "browser"}`] },
+        { title: "Physical Nodes", lines: [`current: ${current.title || "unknown"} (${current.health || "offline"})`, `peer: ${peer.title || "unknown"} (${peer.health || "offline"})`, `connected_boards: ${count} / 2`] },
+        { title: "Shell State", lines: [`fault: ${faults.has_fault}`, `degraded: ${faults.has_degraded}`, `reports_ready: ${content.ready}`] }
+      ];
+
+      document.getElementById("summary-grid").innerHTML = cards.map((card) => `
+        <article class="card">
+          <h2>${esc(card.title)}</h2>
+          <p class="meta">${card.lines.map(esc).join("<br>")}</p>
+        </article>
+      `).join("");
+    }
+
+    function renderCategoryRail() {
+      const target = document.getElementById("category-rail");
+      document.getElementById("category-summary").textContent = CATEGORY_DEFS[state.activeCategory].summary;
+      target.innerHTML = CATEGORY_ORDER.map((categoryId) => {
+        const category = CATEGORY_DEFS[categoryId];
+        const active = state.activeCategory === categoryId ? " active" : "";
+        const stats = categoryStats(categoryId);
+        const moduleCountLabel = `${stats.total} slices / ${stats.available} ready / ${stats.blocked} blocked / ${stats.planned} planned`;
+        return `
+          <button type="button" class="category-button${active}" data-category="${esc(categoryId)}">
+            <div class="category-stack">
+              <div class="tool-top">
+                <strong>${esc(category.title)}</strong>
+                <span class="badge state-service">${esc(categoryId)}</span>
+              </div>
+              <small>${esc(category.summary)}</small>
+              <small>${esc(moduleCountLabel)}</small>
+            </div>
+          </button>
+        `;
+      }).join("");
+      for (const button of target.querySelectorAll("button[data-category]")) {
+        button.addEventListener("click", () => setActiveCategory(button.dataset.category));
+      }
+    }
+
+    function renderModuleRail() {
+      const target = document.getElementById("module-list");
+      const modules = modulesInCategory(state.activeCategory);
+      const category = CATEGORY_DEFS[state.activeCategory];
+      document.getElementById("module-rail-title").textContent = `${category.title} Modules`;
+      document.getElementById("module-rail-summary").textContent = category.summary;
+      target.innerHTML = modules.map((moduleDef) => {
+        const currentRuntime = runtime(moduleDef);
+        const displayState = moduleDisplayState(currentRuntime);
+        const active = state.activeModule === moduleDef.id ? " active" : "";
+        const owner = currentRuntime.owner.title;
+        const stage = moduleDef.stage === "live" ? "working slice" : moduleDef.stage === "partial" ? "temporary bridge" : "visible placeholder";
+        const labOnly = moduleDef.labOnly ? `<span class="badge state-service">lab-only</span>` : "";
+        const blockNote = !currentRuntime.owner.available ? ` / block: ${currentRuntime.owner.blockReason}` : "";
+        return `
+          <button type="button" class="module-button${active}" data-module="${esc(moduleDef.id)}">
+            <div class="module-stack">
+              <div class="tool-top">
+                <strong>${esc(moduleDef.title)}</strong>
+                <span class="${displayState.className}">${esc(displayState.label)}</span>
+              </div>
+              <small>${esc(moduleDef.summary)}</small>
+              <small>owner: ${esc(owner)} / stage: ${esc(stage)}${esc(blockNote)}</small>
+              <div class="row">
+                ${labOnly}
+                <span class="${stageBadge(moduleDef.stage)}">${esc(moduleDef.stage)}</span>
+              </div>
+            </div>
+          </button>
+        `;
+      }).join("");
+      for (const button of target.querySelectorAll("button[data-module]")) {
+        button.addEventListener("click", () => setActiveModule(button.dataset.module));
+      }
+    }
+
+    function buildReadinessChecks(items) {
+      return (items || []).map((item) => `
+        <article class="check">
+          <div class="tool-top">
+            <strong>${esc(item.title || item.id || "Check")}</strong>
+            <span class="${statusBadgeClass(item.status)}">${esc(item.status || "unknown")}</span>
+          </div>
+          <p>${esc(item.summary || "")}</p>
+          <p>${esc(item.action || "")}</p>
+        </article>
+      `).join("");
+    }
+
+    function buildReadinessSteps(items) {
+      return (items || []).map((item) => `
+        <article class="check">
+          <div class="tool-top">
+            <strong>${esc(item.title || item.id || "Step")}</strong>
+            <span class="${statusBadgeClass(item.status)}">${esc(item.status || "unknown")}</span>
+          </div>
+          <p>${esc(item.summary || "")}</p>
+          <p>${esc(item.action || "")}</p>
+          <p class="code">route: ${esc(item.route || "-")} / owner: ${esc(item.owner_scope || "shared")}</p>
+        </article>
+      `).join("");
+    }
+
+    function listMarkup(items) {
+      return `<ul class="detail-list">${(items || []).map((item) => `<li>${esc(item)}</li>`).join("")}</ul>`;
+    }
+
+    function categoryMapMarkup() {
+      return CATEGORY_ORDER.filter((categoryId) => categoryId !== "overview").map((categoryId) => {
+        const category = CATEGORY_DEFS[categoryId];
+        const names = modulesInCategory(categoryId).map((module) => module.title).join(", ");
+        const stats = categoryStats(categoryId);
+        return `
+          <article class="mini-card">
+            <div class="tool-top">
+              <strong>${esc(category.title)}</strong>
+              <span class="badge state-service">${esc(stats.total)} slices</span>
+            </div>
+            <p class="meta">${esc(category.summary)}</p>
+            <p class="meta">${esc(names)}</p>
+          </article>
+        `;
+      }).join("");
+    }
+
+    function renderOverviewSurface() {
+      const readiness = state.readiness || {};
+      const nextAction = readiness.next_action || {};
+      const powerContext = POWER_CONTEXTS[state.powerContext];
+      return `
+        <div class="box-grid">
+          <article class="box">
+            <strong>Testing Readiness</strong>
+            <p class="meta">${esc(readiness.summary || "Loading readiness summary...")}</p>
+            <p class="meta">next_action: ${esc(nextAction.title || nextAction.id || "waiting")}</p>
+            <p class="meta">${esc(nextAction.action || "Waiting for the next recommended action...")}</p>
+          </article>
+          <article class="box">
+            <strong>Power Context</strong>
+            <p class="meta">${esc(powerContext.title)}</p>
+            <p class="meta">${esc(powerContext.summary)}</p>
+            <p class="meta">${state.powerContext === "battery" ? "Default guard right now: only explicitly PSU-dependent bench slices are blocked." : "Bench-sensitive slices can surface voltage notes and calibration hints."}</p>
+          </article>
+          <article class="box">
+            <strong>Preset Promotion Path</strong>
+            <p class="meta">Laboratory settings stay local by default.</p>
+            <p class="meta">Later flow: select candidate -> review -> apply in Settings -> reuse in Manual / FPV.</p>
+            <p class="meta">This keeps experimentation and product behavior separated.</p>
+          </article>
+        </div>
+        <div class="box" style="margin-top: 16px;">
+          <strong>Category Map</strong>
+          <p class="meta">Top rail stays broad for phone UX; second rail keeps the real hardware slices visible.</p>
+          <div class="mini-grid" style="margin-top: 14px;">${categoryMapMarkup()}</div>
+        </div>
+        <div class="box" style="margin-top: 16px;">
+          <strong>Preflight Checklist</strong>
+          <div class="checklist" style="margin-top: 14px;">${buildReadinessChecks(readiness.preflight)}</div>
+        </div>
+        <div class="box" style="margin-top: 16px;">
+          <strong>Bring-Up Order</strong>
+          <div class="step-list" style="margin-top: 14px;">${buildReadinessSteps(readiness.bringup_sequence)}</div>
+        </div>
+      `;
+    }
+
+    function ownerUnavailableMarkup(moduleDef, currentRuntime) {
+      return `
+        <div class="notice">
+          <strong>Owner side is not ready.</strong><br>
+          ${esc(moduleDef.title)} belongs to ${esc(currentRuntime.owner.title)}, so the slice stays visible but locked until that board is connected and synchronized.<br>
+          block_reason: ${esc(currentRuntime.owner.blockReason)}<br>
+          action: connect ${esc(currentRuntime.owner.title)}, wait for shell + sync readiness, then reopen this slice.
+        </div>
+      `;
+    }
+
+    function powerBlockedMarkup(currentRuntime) {
+      return `
+        <div class="notice">
+          <strong>${esc(currentRuntime.powerBlock.title)}</strong><br>
+          ${esc(currentRuntime.powerBlock.summary)}<br>
+          action: ${esc(currentRuntime.powerBlock.action)}
+        </div>
+      `;
+    }
+
+    function placeholderMarkup(moduleDef) {
+      return `
+        <div class="notice">
+          <strong>Visible placeholder.</strong><br>
+          ${esc(moduleDef.stageNote || "This slice is intentionally visible before the deep implementation exists.")}<br>
+          You can return later and fill in the real controls without breaking the category model.
+        </div>
+      `;
+    }
+
+    function renderModuleSurface(currentRuntime) {
+      const moduleDef = currentRuntime.def;
+      const owner = currentRuntime.owner.title;
+      const stageText = moduleDef.stage === "live" ? "Dedicated working slice" : moduleDef.stage === "partial" ? "Temporary bridge into an existing deep page" : "Planned placeholder kept visible on purpose";
+      const powerTitle = POWER_CONTEXTS[state.powerContext].title;
+      const powerDetail = currentRuntime.powerBlock.blocked ? currentRuntime.powerBlock.summary : currentRuntime.powerBlock.action;
+      let surface = "";
+      if (!currentRuntime.owner.available) {
+        surface = ownerUnavailableMarkup(moduleDef, currentRuntime);
+      } else if (currentRuntime.powerBlock.blocked) {
+        surface = powerBlockedMarkup(currentRuntime);
+      } else if (moduleDef.kind === "placeholder") {
+        surface = placeholderMarkup(moduleDef);
+      } else if (!currentRuntime.url) {
+        surface = ownerUnavailableMarkup(moduleDef, currentRuntime);
+      } else {
+        surface = `
+          <iframe class="frame" title="${esc(moduleDef.title)}" src="${esc(currentRuntime.url)}" loading="eager" referrerpolicy="no-referrer" allowfullscreen></iframe>
+        `;
+      }
+
+      return `
+        <div class="detail-grid">
+          <article class="box">
+            <strong>Current Slice Stage</strong>
+            <p class="meta">owner: ${esc(owner)}</p>
+            <p class="meta">stage: ${esc(stageText)}</p>
+            <p class="meta">${esc(moduleDef.stageNote || "")}</p>
+          </article>
+          <article class="box">
+            <strong>What You Can Tune</strong>
+            ${listMarkup(moduleDef.controls)}
+          </article>
+          <article class="box">
+            <strong>Expected Feedback</strong>
+            ${listMarkup(moduleDef.expected)}
+          </article>
+          <article class="box">
+            <strong>Power And Preset Path</strong>
+            <p class="meta">power_context: ${esc(powerTitle)}</p>
+            <p class="meta">${esc(powerDetail)}</p>
+            <p class="meta">preset_path: ${esc(moduleDef.presetPath || "No preset path yet.")}</p>
+            <p class="meta">evidence: ${esc(moduleDef.evidence || "Gallery > Reports")}</p>
+          </article>
+        </div>
+        <div style="margin-top: 16px;">${surface}</div>
+      `;
+    }
+
+    function updateOpenDirect(currentRuntime) {
+      const link = document.getElementById("open-direct-link");
+      const enabled = Boolean(currentRuntime.owner.available && !currentRuntime.powerBlock.blocked && currentRuntime.url);
+      link.classList.toggle("disabled-link", !enabled);
+      link.setAttribute("aria-disabled", enabled ? "false" : "true");
+      link.textContent = enabled ? "Open Direct" : "Direct page unavailable";
+      link.href = enabled ? currentRuntime.url : "#";
+    }
+
+    function renderWorkspace() {
+      const moduleDef = moduleById(state.activeModule);
+      const currentRuntime = runtime(moduleDef);
+      const displayState = moduleDisplayState(currentRuntime);
+      const owner = currentRuntime.owner.title;
+      const badges = [
+        `<span class="${displayState.className}">${esc(displayState.label)}</span>`,
+        `<span class="badge state-service">${esc(owner)}</span>`,
+        `<span class="badge state-active">${esc(state.activeCategory)}</span>`,
+        `<span class="badge state-service">${esc(POWER_CONTEXTS[state.powerContext].title)}</span>`
+      ];
+      if (moduleDef.labOnly) badges.push('<span class="badge state-service">lab-only</span>');
+
+      document.getElementById("workspace-badges").innerHTML = badges.join("");
+      document.getElementById("workspace-title").textContent = moduleDef.title;
+      document.getElementById("workspace-summary").textContent = moduleDef.summary;
+      updateOpenDirect(currentRuntime);
+
+      const surface = document.getElementById("workspace-surface");
+      const nextActionId = (state.readiness || {}).next_action ? `${state.readiness.next_action.id || ""}:${state.readiness.next_action.status || ""}` : "no-next-action";
+      const signature = [
+        moduleDef.id,
+        state.activeCategory,
+        state.powerContext,
+        currentRuntime.owner.scope,
+        currentRuntime.owner.available,
+        currentRuntime.owner.blockReason,
+        currentRuntime.module?.state || "no-module",
+        currentRuntime.url,
+        nextActionId,
+        (state.readiness || {}).overall_status || "no-readiness"
+      ].join("|");
+
+      if (surface.dataset.signature === signature) return;
+      surface.dataset.signature = signature;
+      surface.innerHTML = moduleDef.kind === "overview" ? renderOverviewSurface() : renderModuleSurface(currentRuntime);
+    }
+
+    function renderLog() {
+      const entries = (state.log || {}).entries || [];
+      const target = document.getElementById("platform-log");
+      if (!entries.length) {
+        target.textContent = "No platform log entries yet.";
+        return;
+      }
+      target.textContent = entries.map((entry) => {
+        const origin = entry.origin_node || "unknown";
+        const mirrored = entry.mirrored ? " mirrored" : "";
+        const details = entry.details && Object.keys(entry.details).length ? ` ${JSON.stringify(entry.details)}` : "";
+        return `[${entry.timestamp_ms} ms] ${origin}${mirrored} ${entry.source} ${String(entry.level || "").toUpperCase()} ${entry.type}: ${entry.message}${details}`;
+      }).join("\n");
+    }
+
+    function fallbackReadiness() {
+      const snapshot = state.snapshot || {};
+      const current = ((snapshot.nodes || {}).current) || {};
+      const peer = ((snapshot.nodes || {}).peer) || {};
+      const count = connectedBoardCount(current, peer);
+      const overall = count === 2 ? "ready" : "attention";
+      return {
+        overall_status: overall,
+        summary: count === 2 ? "Both boards are visible, so coordinated laboratory bring-up can start." : "Direct shell is working in single-board mode. Peer-owned slices stay blocked until the second board appears.",
+        next_action: {
+          id: "power_context_first",
+          title: "Confirm power context and choose the next local slice",
+          status: overall,
+          action: state.powerContext === "battery" ? "Battery mode is selected. Bench PSU dependent slices stay blocked until the operator switches back to Bench PSU." : "Bench PSU mode is selected. Continue with the next available local slice and collect notes."
+        },
+        preflight: [
+          { id: "local_shell_ready", title: "Coordinator shell is reachable", status: "ready", summary: "Current laboratory page is available on this shell.", action: "Use the current board for the first isolated test step." },
+          { id: "power_context_visible", title: "Power context is explicit", status: "ready", summary: POWER_CONTEXTS[state.powerContext].summary, action: state.powerContext === "battery" ? "Keep battery context visible and avoid PSU-dependent calibration slices." : "Keep bench PSU context visible before opening voltage-sensitive slices." },
+          { id: "peer_owner_link", title: "Peer owner link is ready for peer-owned tests", status: count === 2 ? "ready" : "attention", summary: count === 2 ? "Peer owner is visible from this shell." : "Peer board is still offline or not connected to this shell.", action: count === 2 ? "Peer-owned laboratory slices can be opened when needed." : "Continue with local-only checks and keep blocked peer slices visible." }
+        ],
+        bringup_sequence: [
+          { id: "home_shell_smoke", title: "Home -> Laboratory Path", owner_scope: "shared", route: "/", status: "ready", summary: "Verify the phone can reach Home, see board statuses, and enter Laboratory.", action: "Start each session by checking the top bar, then confirm power context before module work." },
+          { id: "local_owner_slice", title: `Local Owner Slice / ${nodeLabel(current)}`, owner_scope: String(current.node_type || "local"), route: "/service", status: "ready", summary: "Use the currently connected board for the first isolated hardware pass.", action: "Collect interface pain points, control density notes, and expected-result gaps while staying local first." },
+          { id: "peer_owner_slice", title: `Peer Owner Slice / ${nodeLabel(peer)}`, owner_scope: String(peer.node_type || "peer"), route: "/service", status: count === 2 ? "ready" : "blocked", summary: count === 2 ? "The peer board is available for owner-aware handoff." : "This slice should stay visibly blocked until the peer board appears.", action: count === 2 ? "Open the peer-owned slice after local smoke checks." : "Do not fake peer control; keep the blocked state visible in the UI." }
+        ]
+      };
+    }
+
+    async function loadReadiness() {
+      try {
+        const response = await fetch("/api/v1/laboratory/readiness");
+        if (!response.ok) throw new Error(`status ${response.status}`);
+        return await response.json();
+      } catch (_error) {
+        return fallbackReadiness();
+      }
+    }
+
+    function syncFullscreenState() {
+      state.fullscreen = Boolean(document.fullscreenElement);
+      document.body.classList.toggle("fullscreen-app", state.fullscreen);
+      renderSummary();
+    }
+
+    async function toggleFullscreen() {
+      const root = document.documentElement;
+      if (!document.fullscreenElement && root.requestFullscreen) {
+        await root.requestFullscreen();
+        return;
+      }
+      if (document.fullscreenElement && document.exitFullscreen) {
+        await document.exitFullscreen();
+      }
+    }
+
+    async function refresh() {
+      const [snapshotResponse, logResponse] = await Promise.all([
+        fetch("/api/v1/shell/snapshot"),
+        fetch("/api/v1/logs?limit=24")
+      ]);
+      state.snapshot = await snapshotResponse.json();
+      state.modules = state.snapshot.module_cards || [];
+      state.log = await logResponse.json();
+      state.readiness = await loadReadiness();
+      await loadLaboratorySessionBackend();
+      renderPowerContext();
+      renderDeviceRibbon();
+      renderSummary();
+      renderSessionShell();
+      renderCategoryRail();
+      renderModuleRail();
+      renderWorkspace();
+      renderLog();
+      syncContextToBackend().catch(() => {});
+    }
+
+    document.getElementById("fullscreen-btn").addEventListener("click", () => {
+      toggleFullscreen().catch(() => {});
+    });
+
+    document.addEventListener("fullscreenchange", () => {
+      state.workspaceSignature = "";
+      syncFullscreenState();
+      renderWorkspace();
+      syncLocalSessionContext();
+      renderSessionShell();
+      syncContextToBackend().catch(() => {});
+    });
+
+    initSelection();
+    syncFullscreenState();
+    bindSessionControls();
+    fillSessionInputs(true);
+    syncEvidenceCaseId(true);
+    syncLocalSessionContext();
+    renderSessionShell();
+    refresh().catch((error) => {
+      document.getElementById("workspace-surface").innerHTML = `
+        <div class="notice">
+          <strong>Laboratory load error</strong><br>
+          ${esc(String(error))}
+        </div>
+      `;
+    });
+    setInterval(() => refresh().catch(() => {}), 2500);
+  </script>
+</body>
+</html>

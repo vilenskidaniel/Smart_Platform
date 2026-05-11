@@ -46,7 +46,7 @@ Legacy-поля `profile`, `visible`, `service_page`, `manual_page`,
 
 Рабочий файл host-side реестра:
 
-`raspberry_pi/content/.system/platform_registry.v1.json`
+`host_runtime/content/.system/platform_registry.v1.json`
 
 Backend обслуживает его через:
 

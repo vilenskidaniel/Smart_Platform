@@ -43,7 +43,7 @@
 6. `knowledge_base/07_data_registry_storage_and_persistence.md`
 7. `knowledge_base/08_safety_acceptance_and_field_operations.md`
 8. нужные модульные файлы `knowledge_base/10-16`
-9. legacy donor sources только как transfer-source
+9. historical migration notes только как transfer-source
 10. соответствующие модульные prompt-ы
 
 ## Модель Работы
@@ -114,7 +114,7 @@ Cross-module чат особенно обязан вычищать старые 
 
 - старый prompt со старой логикой;
 - старый workflow-файл со старым reading order;
-- старый brief как скрытый более сильный источник истины;
+- старый summary-layer файл как скрытый более сильный источник истины;
 - старую compatibility-формулировку без явной границы.
 
 Нужно:

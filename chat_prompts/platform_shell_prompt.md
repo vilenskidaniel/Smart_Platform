@@ -27,13 +27,12 @@
 4. `knowledge_base/06_shared_ui_contract.md`
 5. `knowledge_base/04_runtime_topology_controller_profiles_and_sync.md`
 6. `shared_contracts/shell_snapshot_contract.md`
-7. `briefs/platform_shell_ui.md`
-8. `knowledge_base/17_open_questions_and_migration.md`, если нужен explicit donor status или unresolved shell residue map
+7. `knowledge_base/17_open_questions_and_migration.md`, если нужен historical migration status или карта прошлых shell-переносов
 
 Практическое правило:
 
-- legacy donor sources для `Platform Shell` больше не входят в primary reading order;
-- если active canon still has a concrete gap around shell alignment, compatibility routes or implementation residue, сначала смотреть migration ledger и только потом открывать donor residue точечно;
+- legacy donor sources для `Platform Shell` больше не входят в active workspace и основной порядок чтения;
+- если в active canon еще есть конкретный пробел вокруг shell alignment, compatibility routes или implementation residue, сначала смотреть migration ledger, а затем текущий shell contract и реальные code anchors;
 - если donor detail расходится с active canon, сильнее становятся `knowledge_base/05_shell_navigation_and_screen_map.md`, `knowledge_base/06_shared_ui_contract.md`, `knowledge_base/04_runtime_topology_controller_profiles_and_sync.md` и `shared_contracts/shell_snapshot_contract.md`.
 
 ## Установленные Истины
@@ -53,7 +52,7 @@
 - Недоступные модули не скрываются, а остаются видимыми и объяснимыми.
 - Bar-панель должна быть общей инфраструктурой для нескольких страниц, а не частным декором home screen.
 - Кнопка `Home` в bar-панели остается всегда доступной как экстренный возврат на главную страницу и переход к дефолтному состоянию оболочки, заданному в `Settings`.
-- Shared preferences `fullscreen` и `input helpers` живут и в `Settings`, и в bar-панели, а deep-pages должны читать их как одну истину.
+- Общие настройки `fullscreen` и `input helpers` живут и в `Settings`, и в bar-панели, а deep-pages должны читать их как одну истину.
 
 ## Активный Опрос Пользователя
 
@@ -78,8 +77,8 @@
 - home return contract;
 - launcher hierarchy;
 - статусные группы;
-- tooltip/fullscreen behavior;
-- shared input-helper behavior;
+- поведение tooltip и fullscreen;
+- общее поведение input-helper;
 - continuity между страницами.
 
 Затем наращивать детализацию.
@@ -96,7 +95,7 @@
 
 - зафиксировать окончательный каркас launcher-card hierarchy;
 - довести единый bar contract до всех deep-pages;
-- зафиксировать clean wording для laptop/local launch states.
+- зафиксировать чистые формулировки для laptop/local launch states.
 
 ### TBD
 

@@ -8,12 +8,12 @@
 
 - текущий статус: `active draft`
 
-## Donor Источники Для Первого Переноса
+## Донорские Источники Для Первого Переноса
 
 - donor mapping для этого файла зафиксирован в `knowledge_base/17_open_questions_and_migration.md`;
 - `shared_contracts/shell_snapshot_contract.md` остается active companion contract для shell-visible storage/runtime truth.
 
-## Settled Truths
+## Установленные Истины
 
 - временное состояние, session notes, persistent profiles и reports не смешиваются
 - registry и storage должны иметь читаемые и устойчивые идентификаторы
@@ -83,6 +83,7 @@
 
 - shell не должен зависеть от наличия тяжелого content для самого факта запуска;
 - обе стороны должны понимать одну и ту же logical structure путей, даже если физический storage backend различается.
+- `ESP32 SD` может использоваться как резервная точка приема mirrored peer-owned файлов, включая turret-side bundles, но не становится источником authority для них.
 
 ## 4. Save, Apply, Draft And Default Profile
 
@@ -175,6 +176,13 @@
 - `Gallery` как user-facing section открывает одну logical tree;
 - physical storage может быть локальным, mirrored или временно unavailable;
 - при потере peer-side storage пользователь видит локальный slice и честную маркировку недоступных peer-sources.
+
+### 6.1 Практические Guardrails Для Storage И Sync
+
+- нельзя молча терять журналы при local write, mirror или merge flow;
+- удаленный узел не должен снимать local fault или переписывать owner-local storage truth без явного policy-contract;
+- mirrored files и records обязаны сохранять `origin_node`, `source_owner` или эквивалентную provenance-метку;
+- резервный прием файлов на `ESP32 SD` не должен стирать происхождение peer-side content и не должен маскировать, где лежит активный owner-root.
 
 ## 7. Нормативные Форматы И Примеры
 

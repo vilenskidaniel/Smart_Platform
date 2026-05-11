@@ -98,8 +98,8 @@
 
 Практически это значит:
 
-- `ESP32`-сторону собирать и развивать из `firmware_esp32/`;
-- `Raspberry Pi`-сторону развивать из `raspberry_pi/`;
+- `ESP32`-сторону собирать и развивать из `io_firmware/`;
+- `Raspberry Pi`-сторону развивать из `host_runtime/`;
 - legacy bench/donor-слой теперь живет вне этого репозитория и должен подтягиваться только осознанной выборочной миграцией, а не как основной рабочий корень.
 
 ## Быстрый Host Launch На Windows
@@ -112,10 +112,10 @@
 
 Что он делает:
 
-- поднимает `raspberry_pi/app.py` с правильными env-переменными;
+- поднимает `host_runtime/app.py` с правильными env-переменными;
 - по умолчанию запускает shell в `LAN`-режиме на `8091`;
 - держит host-side server скрытым, без постоянного терминала на рабочем столе;
-- открывает shell в app-like окне браузера;
+- открывает shell в полнооконном browser-app окне без видимого ручного разворачивания;
 - может быть использован как основная точка входа для тестирования на `Windows PC`.
 
 Практическая модель входа для всех устройств описана в [knowledge_base/04_runtime_topology_controller_profiles_and_sync.md](knowledge_base/04_runtime_topology_controller_profiles_and_sync.md) и [knowledge_base/05_shell_navigation_and_screen_map.md](knowledge_base/05_shell_navigation_and_screen_map.md).
@@ -160,7 +160,7 @@
 - [knowledge_base/17_open_questions_and_migration.md](knowledge_base/17_open_questions_and_migration.md)
 - [knowledge_base/10_irrigation_module.md](knowledge_base/10_irrigation_module.md)
 - [knowledge_base/11_turret_module.md](knowledge_base/11_turret_module.md)
-- [briefs/README.md](briefs/README.md)
+- [chat_prompts/README.md](chat_prompts/README.md)
 - [WORKFLOW_FOR_OTHER_CHATS.md](WORKFLOW_FOR_OTHER_CHATS.md)
 
 ## Напоминание по контексту

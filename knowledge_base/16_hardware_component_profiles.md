@@ -7,14 +7,14 @@
 ## Статус
 
 - текущий статус: `active draft`
-- этот файл задает active canon для hardware component language, replaceability и current temporary board profiles; donor docs ниже остаются wiring/electrical residue
+- этот файл задает активный канон для языка hardware components, заменяемости и текущих временных профилей плат; историческое состояние переноса держим в `knowledge_base/17_open_questions_and_migration.md`
 
-## Donor Источники Для Первого Переноса
+## Донорские Источники Для Первого Переноса
 
 - donor mapping для этого файла зафиксирован в `knowledge_base/17_open_questions_and_migration.md`;
-- `knowledge_base/resources/smart_platform_workshop_inventory.xlsx` остается active companion source of hardware truth.
+- `knowledge_base/resources/smart_platform_workshop_inventory.xlsx` остается companion source для hardware truth.
 
-## Settled Truths
+## Установленные Истины
 
 - controller nodes рассматриваются как hardware/component profiles текущей системы
 - sensor, actuator, controller board и auxiliary device описываются на одном общем языке компонентов
@@ -53,7 +53,7 @@
 
 ### 2. Controller Boards Как Component Profiles
 
-`ESP32` и `Raspberry Pi` в активном каноне рассматриваются как current temporary board profiles и controller-side component profiles, а не как вечная архитектурная судьба модулей.
+`ESP32` и `Raspberry Pi` в активном каноне рассматриваются как текущие временные профили плат и controller-side component profiles, а не как вечная архитектурная судьба модулей.
 
 `ESP32` current profile:
 
@@ -78,7 +78,7 @@ Canonical rule:
 
 ### 3. Sensors, Actuators, Displays, Power And Auxiliary Devices
 
-`Sensors` current baseline families:
+Текущие baseline-families `Sensors`:
 
 - soil moisture zone sensing;
 - environment sensing pack;
@@ -86,7 +86,7 @@ Canonical rule:
 - motion wake input family;
 - laboratory-only experimental range profiles such as `HC-SR04` class.
 
-`Actuators` current baseline families:
+Текущие baseline-families `Actuators`:
 
 - peristaltic irrigation pump;
 - irrigation valve cascade;
@@ -127,7 +127,7 @@ Canonical rule:
 - bench-only strobe path;
 - qualification-only devices that do not become product baselines automatically.
 
-### 4. Current Temporary Board Profiles
+### 4. Текущие Временные Профили Плат
 
 Current confirmed hardware baseline from donor docs and repo hardware memory:
 
@@ -202,7 +202,7 @@ Retained board-closure rules for current hardware profiles:
 - current power closure must distinguish `ESP32` logic / valves / peristaltic path / `strobe_bench` and turret-side logic / camera / servos / audio / `strobe` / water rails even before exact board wiring is fully closed;
 - physical emergency interlock readback belongs to active hardware truth even while exact final wiring is still being verified.
 
-Important active canon boundary:
+Важная граница активного канона:
 
 - `HC-SR04`-class sensors and stepper drives remain laboratory-only or experimental profiles unless explicitly promoted;
 - they do not silently replace `TFmini Plus` or `MG996R + PCA9685` as product baselines.
@@ -213,7 +213,7 @@ Primary hardware source of truth for stocked and workshop-level detail:
 
 - `knowledge_base/resources/smart_platform_workshop_inventory.xlsx`
 
-Markdown active canon should keep only human-readable, stable profile truth:
+Markdown-канон должен держать только читаемую и устойчивую profile truth:
 
 - what the family is;
 - what role it serves;
@@ -249,6 +249,19 @@ Board-centric donor docs remain useful for:
 - bring-up hints for current controller profiles.
 
 But those docs should no longer act as the primary human-facing hardware canon.
+
+### 6.1 Реальные Кодовые Опоры Текущего Слоя
+
+Чтобы hardware canon был привязан к живым board profiles и runtime baselines, ниже фиксируем текущие implementation anchors:
+
+- `host_runtime/bridge_config.py` - runtime bridge/hardware configuration для owner-side paths и content roots;
+- `io_firmware/platformio.ini` - current `ESP32` board profile, filesystem baseline и build-time hardware selection;
+- `io_firmware/src/core/SystemCore.cpp` - hardware/bootstrap initialization для текущего `ESP32` profile;
+- `io_firmware/src/storage/StorageManager.cpp` - storage bootstrap для `LittleFS` / `SD` baseline;
+- `io_firmware/src/net/WiFiBootstrap.cpp` - network/bootstrap layer, который держит `ESP32` как current always-on sentinel path;
+- `host_runtime/content/.system/platform_registry.v1.json` - runtime registry с current board и component records.
+
+Отдельного long-lived hardware test layer в репозитории пока нет, поэтому текущий hardware baseline удобнее читать через эти board/runtime surfaces вместе со spreadsheet и модульными canon files.
 
 ### 7. Нормативные Таблицы И Примеры
 
@@ -314,11 +327,11 @@ But those docs should no longer act as the primary human-facing hardware canon.
 - какой power-module split фиксируем для `ESP32` logic, valves, peristaltic path и `strobe_bench`
 - как именно публикуется physical emergency interlock readback и power-group readiness в shell snapshot и `Laboratory`
 - какая точная board-level topology нужна для turret `audio`, motion wake line и protected switch boundaries у `SEAFLO` и turret `strobe`
-- насколько глубоко power-rail taxonomy должна входить в active canon, а не только в donor electrical residue
+- насколько глубоко power-rail taxonomy должна входить в активный канон, а не только в historical electrical residue
 
 ## TODO
 
-- после стабилизации active draft переаудировать board-level donor residue в migration ledger и оставить только wiring/electrical reminders without active authority role
+- после стабилизации active draft переаудировать board-level migration residue в ledger и оставить только wiring/electrical reminders без роли active authority source
 - позже сверить markdown taxonomy с registry/spreadsheet naming
 
 ## TBD

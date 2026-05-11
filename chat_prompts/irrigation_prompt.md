@@ -29,14 +29,13 @@
 4. `knowledge_base/04_runtime_topology_controller_profiles_and_sync.md`
 5. `knowledge_base/08_safety_acceptance_and_field_operations.md`
 6. `knowledge_base/16_hardware_component_profiles.md`
-7. `briefs/irrigation_module.md`
-8. `knowledge_base/17_open_questions_and_migration.md`, если нужен explicit donor status или unresolved residue map
+7. `knowledge_base/17_open_questions_and_migration.md`, если нужен historical migration status или карта прошлых переносов
 
 Практическое правило:
 
-- legacy donor sources для `Irrigation` больше не входят в primary reading order;
-- если active canon still has a concrete gap around stage behavior, software baseline or current electrical residue, сначала смотреть migration ledger и только потом открывать donor residue точечно;
-- если brief или donor detail расходится с active canon, сильнее становятся `knowledge_base/10_irrigation_module.md`, `knowledge_base/08_safety_acceptance_and_field_operations.md` и `knowledge_base/16_hardware_component_profiles.md`.
+- legacy donor sources для `Irrigation` больше не входят в active workspace и primary reading order;
+- если в active canon еще есть конкретный пробел вокруг stage behavior, software baseline или current electrical residue, сначала смотреть migration ledger, а затем текущий код, тесты и hardware companion sources;
+- если historical migration note расходится с active canon, сильнее становятся `knowledge_base/10_irrigation_module.md`, `knowledge_base/08_safety_acceptance_and_field_operations.md` и `knowledge_base/16_hardware_component_profiles.md`.
 
 ## Установленные Истины
 
