@@ -380,7 +380,7 @@
 
     .fpv-stage[data-mode="automatic"] .joystick-zone,
     .fpv-stage[data-mode="automatic"] .irrigation-cluster,
-    .fpv-stage[data-mode="automatic"] .weapon-button {
+    .fpv-stage[data-mode="automatic"] .weapon-button:not([data-control-kind="voice"]) {
       opacity: 0;
       pointer-events: none;
     }
@@ -522,6 +522,7 @@
     }
 
     .weapon-button[data-slot="left"] { left: 0; bottom: 6%; }
+    .weapon-button[data-slot="top"] { left: 10%; top: 2%; }
     .weapon-button[data-slot="middle"] { left: 24%; top: 25%; }
     .weapon-button[data-slot="right"] { right: 10%; top: 8%; }
 
@@ -676,7 +677,7 @@
     const activeKeyboardActions = new Set();
     const joystickPointer = { active: false, id: null };
     const capturePress = { timer: null, recording: false, stopping: false, id: '', startedAt: 0, startPromise: null, stopTimer: null, power: 0 };
-    const sessionStats = { audio: 0, strobe: 0, water: 0, photos: 0, videos: 0 };
+    const sessionStats = { attack_audio: 0, voice_fx: 0, strobe: 0, water: 0, photos: 0, videos: 0 };
     let turretKeyboardSettings = null;
     let latestRangeText = '-';
     let latestRangeValue = null;
@@ -688,7 +689,8 @@
     let toastTimer = null;
 
     const WEAPON_DEFS = [
-      { id: 'audio', slot: 'left', label: 'Piezo', key: 'Q' },
+      { id: 'attack_audio', slot: 'left', label: 'Attack', key: 'Q' },
+      { id: 'voice_fx', slot: 'top', label: 'Talk', key: 'V', controlKind: 'voice' },
       { id: 'strobe', slot: 'middle', label: 'Strobe', key: 'W' },
       { id: 'water', slot: 'right', label: 'Spray', key: 'E' }
     ];
@@ -739,6 +741,8 @@
 
     function currentBindings() {
       const settings = turretKeyboardSettings || {};
+      const configured = (settings.bindings) || {};
+      const attackAudio = configured.attack_audio || configured.piezo || 'KeyQ';
       return {
         aim_up: 'ArrowUp',
         aim_down: 'ArrowDown',
@@ -749,12 +753,14 @@
         irrigation_zone_3: 'Digit3',
         irrigation_zone_4: 'Digit4',
         irrigation_zone_5: 'Digit5',
-        piezo: 'KeyQ',
+        attack_audio: attackAudio,
+        piezo: attackAudio,
         strobe: 'KeyW',
         water: 'KeyE',
+        voice_fx_talk: 'KeyV',
         capture: 'Space',
         power_modifier: 'Shift',
-        ...((settings.bindings) || {})
+        ...configured
       };
     }
 
@@ -766,6 +772,16 @@
 
     function manualControlsAllowed() {
       return isManualMode() && keyboardControlsAllowed();
+    }
+
+    function actionControlAllowed(actionId) {
+      if (!keyboardControlsAllowed()) {
+        return false;
+      }
+      if (actionId === 'voice_fx') {
+        return true;
+      }
+      return isManualMode();
     }
 
     function autoCaptureAllowed() {
@@ -809,6 +825,29 @@
       rerenderTelemetry();
     }
 
+    function compactAudioLabel(value, maxLength = 12) {
+      const normalized = String(value || '--').replace(/_/g, ' ').trim();
+      if (!normalized) return '--';
+      if (normalized.length <= maxLength) return normalized.toUpperCase();
+      return `${normalized.slice(0, Math.max(1, maxLength - 1)).toUpperCase()}…`;
+    }
+
+    function audioTelemetryRows(productView) {
+      const audio = productView.audio || {};
+      const attack = audio.attack_audio || {};
+      const voice = audio.voice_fx || {};
+      const attackLevels = Number.isFinite(Number(attack.channel_a_power_percent)) && Number.isFinite(Number(attack.channel_b_power_percent))
+        ? `${Number(attack.channel_a_power_percent)}/${Number(attack.channel_b_power_percent)}`
+        : '--';
+      const voiceRoute = `${String(voice.transport || 'route').slice(0, 2).toUpperCase()} ${voice.talkback_enabled === false ? 'PLAY' : 'TALK'}`;
+      return [
+        ['ATK SCN', compactAudioLabel(attack.default_scenario_id || '--')],
+        ['ATK OUT', attackLevels],
+        ['VOICE FX', compactAudioLabel(voice.effect_profile || '--')],
+        ['VOICE IO', compactAudioLabel(voiceRoute, 10)]
+      ];
+    }
+
     async function loadKeyboardSettings() {
       try {
         const settings = await fetchJson('/api/v1/settings', { cache: 'no-store' });
@@ -844,14 +883,17 @@
       latestRangeText = rangeIsReal ? `${latestRangeValue} mm` : '--';
       const vision = sensing.find((item) => item.id === 'vision') || {};
       const visionActive = vision.enabled && vision.simulated !== true && (status.vision_tracking || status.target_locked);
+      const bindings = currentBindings();
       stage.dataset.visionActive = String(Boolean(visionActive));
       document.getElementById('telemetry-panel').innerHTML = [
         ['INPUT', keyboardControlsAllowed() ? 'ON' : 'OFF'],
         ['SHIFT', shiftActive ? 'BOOST' : 'BASE'],
         ['LIDAR', latestRangeText],
-        ['PIEZO Q', sessionStats.audio],
-        ['STROBE W', sessionStats.strobe],
-        ['SPRAY E', sessionStats.water],
+        ...audioTelemetryRows(productView),
+        [`ATK ${bindingLabel(bindings.attack_audio)}`, sessionStats.attack_audio],
+        [`TALK ${bindingLabel(bindings.voice_fx_talk)}`, sessionStats.voice_fx],
+        [`STROBE ${bindingLabel(bindings.strobe)}`, sessionStats.strobe],
+        [`SPRAY ${bindingLabel(bindings.water)}`, sessionStats.water],
         ['PHOTO', sessionStats.photos],
         ['VIDEO', sessionStats.videos]
       ].map(([label, value]) => `
@@ -900,13 +942,15 @@
             data-state="${esc(action.state || 'locked')}"
             data-enabled="${action.enabled ? '1' : '0'}"
             data-slot="${esc(def.slot)}"
+            data-control-kind="${esc(def.controlKind || 'engagement')}"
             aria-label="${esc(action.title || def.label)} ${esc(action.state || 'locked')}">
             <span>${esc(def.label)}<small>${esc(def.key)}</small></span>
           </button>
         `;
       }).join('');
 
-      const camera = byId.get('camera') || {};
+      const sensing = productView.sensing || [];
+      const camera = sensing.find((item) => item.id === 'camera') || {};
       captureButton.dataset.state = camera.state || 'online';
       captureButton.dataset.cameraBlocked = ['locked', 'fault'].includes(camera.state || '') ? '1' : '0';
       captureButton.dataset.cameraTitle = camera.state ? `Camera: ${camera.state}` : 'Photo tap, video hold';
@@ -1005,7 +1049,7 @@
       const { stopCapture = true } = options;
       const actionIdsToRelease = [...new Set([...activeKeyboardActions]
         .map((key) => key.split(':')[0])
-        .filter((id) => ['audio', 'strobe', 'water'].includes(id)))];
+        .filter((id) => ['attack_audio', 'voice_fx', 'strobe', 'water'].includes(id)))];
       movementCodes.clear();
       activeKeyboardActions.clear();
       applyJoystickVector(0, 0);
@@ -1065,10 +1109,21 @@
       return '';
     }
 
+    function bindingLabel(code) {
+      const text = String(code || '').trim();
+      if (!text) return '--';
+      if (text.startsWith('Key')) return text.slice(3).toUpperCase();
+      if (text.startsWith('Digit')) return text.slice(5);
+      if (text === 'Space') return 'SPACE';
+      if (text.startsWith('Arrow')) return text.slice(5).toUpperCase();
+      return text.toUpperCase();
+    }
+
     function actionForCode(code, bindings) {
-      if (code === bindings.piezo) return { id: 'audio', title: 'Piezo' };
+      if (code === bindings.attack_audio || code === bindings.piezo) return { id: 'attack_audio', title: 'Attack audio' };
       if (code === bindings.strobe) return { id: 'strobe', title: 'Strobe' };
       if (code === bindings.water) return { id: 'water', title: 'Water spray' };
+      if (code === bindings.voice_fx_talk) return { id: 'voice_fx', title: 'Voice FX' };
       return null;
     }
 
@@ -1230,7 +1285,7 @@
       const control = event.target.closest('.round-control');
       if (control && (control !== captureButton || captureControlsAllowed())) control.classList.add('is-pressed');
       const actionButton = event.target.closest('[data-action-toggle]');
-      if (actionButton && manualControlsAllowed()) {
+      if (actionButton && actionControlAllowed(actionButton.dataset.actionToggle)) {
         event.preventDefault();
         if (['locked', 'fault'].includes(actionButton.dataset.state || '')) {
           showToast(`${actionButton.textContent.trim()} unavailable`);
@@ -1285,11 +1340,10 @@
         return;
       }
 
-      if (!isManualMode()) {
-        return;
-      }
-
       if (movementCode(event.code, bindings)) {
+        if (!isManualMode()) {
+          return;
+        }
         event.preventDefault();
         if (pressed) {
           movementCodes.add(event.code);
@@ -1302,6 +1356,9 @@
 
       const valve = valveForCode(event.code, bindings);
       if (valve) {
+        if (!isManualMode()) {
+          return;
+        }
         event.preventDefault();
         const button = document.querySelector(`[data-valve="${valve}"]`);
         const valveKey = `valve:${valve}`;
@@ -1318,6 +1375,9 @@
 
       const action = actionForCode(event.code, bindings);
       if (!action) {
+        return;
+      }
+      if (!actionControlAllowed(action.id)) {
         return;
       }
       const key = `${action.id}:${event.code}`;

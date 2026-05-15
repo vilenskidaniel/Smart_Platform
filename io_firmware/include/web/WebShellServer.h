@@ -41,6 +41,7 @@ private:
     void handleStrobeServicePage();
     void handleSystemSnapshot();
     void handleShellSnapshot();
+    void handleShellViewerHeartbeat();
     void handleModules();
     void handleFederatedRouteInfo();
     void handleLogs();

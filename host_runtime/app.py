@@ -18,7 +18,8 @@ def main() -> None:
     sync_client = SyncClient(config=config, state=state)
     server = build_server(config=config, state=state, sync_client=sync_client)
 
-    print("=== Smart Platform / Raspberry Pi turret bridge ===")
+    print("=== Smart Platform / Host Runtime ===")
+    print(f"Shell node ID: {config.node_id}")
     print(f"Listen: http://{config.bind_host}:{config.bind_port}/")
     print(f"Public shell URL: {config.public_base_url}")
     print(f"Turret: http://{config.bind_host}:{config.bind_port}/turret")

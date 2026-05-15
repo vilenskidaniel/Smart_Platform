@@ -63,6 +63,33 @@ class SettingsPageStaticTests(unittest.TestCase):
         self.assertIn("faults.active_failures", script)
         self.assertIn('id: "system-failures"', script)
 
+    def test_smart_bar_consumes_audio_summary_from_shell_snapshot(self) -> None:
+        script = (PROJECT_ROOT / "web" / "static" / "smart_bar.js").read_text(encoding="utf-8")
+
+        self.assertIn('const audioSummary = (((snapshot || {}).summaries || {}).audio || {});', script)
+        self.assertIn('id: "system-volume"', script)
+        self.assertIn('title: "Audio"', script)
+        self.assertIn('function ensureAudioPanel()', script)
+        self.assertIn('data-audio-setting="volume"', script)
+        self.assertIn('Open shared audio in Settings', script)
+
+    def test_settings_page_contains_split_turret_audio_controls(self) -> None:
+        page = (PROJECT_ROOT / "web" / "settings.html").read_text(encoding="utf-8")
+
+        self.assertIn('attack_audio: "KeyQ"', page)
+        self.assertIn('voice_fx_talk: "KeyV"', page)
+        self.assertIn('turret_audio.attack_audio.default_scenario_id', page)
+        self.assertIn('turret_audio.voice_fx.talkback_enabled', page)
+
+    def test_settings_page_contains_shared_audio_interface_controls(self) -> None:
+        page = (PROJECT_ROOT / "web" / "settings.html").read_text(encoding="utf-8")
+
+        self.assertIn('volume_percent: 60', page)
+        self.assertIn('interface.audio.volume_percent', page)
+        self.assertIn('interface.audio.muted', page)
+        self.assertIn('interface.audio.silent_mode', page)
+        self.assertIn('sharedAudioBarLink', page)
+
 
 if __name__ == "__main__":
     unittest.main()

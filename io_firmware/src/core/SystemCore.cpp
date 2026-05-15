@@ -587,6 +587,9 @@ void SystemCore::configurePeerNode() {
 void SystemCore::seedDefaultModules() {
     // Здесь задается системная карта модулей для shell и синхронизации.
     // Это не "список экранов", а единый реестр возможностей платформы.
+    // Product modules остаются видимыми в shell module cards,
+    // а laboratory/action slices остаются маршрутизируемыми, но не маскируются
+    // под отдельные top-level модули для owner-модели.
     registry_.add(makeModule("system_shell", "System Shell", "shared", "core", "system",
                              ModuleState::Online, BlockReason::None,
                              CapabilityStatusPage | CapabilityDiagnostics, true, true, true));
@@ -606,23 +609,23 @@ void SystemCore::seedDefaultModules() {
                              CapabilityStatusPage | CapabilityManualPage | CapabilityDiagnostics,
                              true, true, false));
 
-    registry_.add(makeModule("strobe", "Strobe", "rpi", "turret", "turret",
+    registry_.add(makeModule("strobe", "Turret / Strobe", "rpi", "turret", "turret",
                              ModuleState::Locked, BlockReason::OwnerUnavailable,
                              CapabilityStatusPage | CapabilityManualPage | CapabilityServicePage |
                                  CapabilityCommandable | CapabilityDiagnostics,
-                             true, true, true));
+                             false, true, true));
 
-    registry_.add(makeModule("strobe_bench", "Strobe Bench", "esp32", "bench_service", "service",
+    registry_.add(makeModule("strobe_bench", "Laboratory / Strobe", "esp32", "bench_service", "service",
                              ModuleState::Locked, BlockReason::ServiceModeRequired,
                              CapabilityStatusPage | CapabilityManualPage | CapabilityServicePage |
                                  CapabilityCommandable | CapabilityDiagnostics | CapabilityLogs,
-                             true, true, true));
+                             false, true, true));
 
-    registry_.add(makeModule("irrigation_service", "Irrigation Service", "esp32", "plant_care", "service",
+    registry_.add(makeModule("irrigation_service", "Laboratory / Irrigation", "esp32", "plant_care", "service",
                              ModuleState::Locked, BlockReason::ServiceModeRequired,
                              CapabilityStatusPage | CapabilityManualPage | CapabilityServicePage |
                                  CapabilityCommandable | CapabilityDiagnostics | CapabilityLogs,
-                             true, true, true));
+                             false, true, true));
 
     registry_.add(makeModule("logs", "Logs", "shared", "core", "logs",
                              ModuleState::Online, BlockReason::None,
@@ -638,10 +641,10 @@ void SystemCore::seedDefaultModules() {
                              ModuleState::Online, BlockReason::None,
                              CapabilityStatusPage | CapabilityDiagnostics, true, false, true));
 
-    registry_.add(makeModule("service_mode", "Service Mode", "shared", "core", "service",
+    registry_.add(makeModule("service_mode", "Laboratory", "shared", "core", "service",
                              ModuleState::Online, BlockReason::None,
                              CapabilityStatusPage | CapabilityServicePage | CapabilityDiagnostics,
-                             true, false, true));
+                             false, false, true));
 }
 
 void SystemCore::applyModeRules() {

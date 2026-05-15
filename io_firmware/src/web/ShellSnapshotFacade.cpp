@@ -1,5 +1,7 @@
 #include "web/ShellSnapshotFacade.h"
 
+#include <cstring>
+
 #ifndef SMART_PLATFORM_UI_VERSION
 #define SMART_PLATFORM_UI_VERSION "0.1.0"
 #endif
@@ -45,11 +47,12 @@ ShellSnapshotFacade::ShellSnapshotFacade(core::SystemCore& systemCore,
     : systemCore_(systemCore),
       platformLog_(platformLog),
       storageManager_(storageManager) {
+    memset(viewers_, 0, sizeof(viewers_));
 }
 
 String ShellSnapshotFacade::buildShellSnapshotJson() const {
     String json;
-    json.reserve(4096);
+    json.reserve(6144);
     json += "{";
     json += "\"schema_version\":\"shell-snapshot.v1\",";
     json += "\"generated_by\":";
@@ -58,14 +61,81 @@ String ShellSnapshotFacade::buildShellSnapshotJson() const {
     json += String(millis());
     json += ",\"current_shell\":";
     json += buildCurrentShellJson();
+    json += ",\"runtime\":";
+    json += buildRuntimeJson();
+    json += ",\"viewers\":";
+    json += buildViewersJson();
     json += ",\"nodes\":";
     json += buildNodesJson();
+    json += ",\"sync\":";
+    json += buildSyncJson();
+    json += ",\"storage\":";
+    json += buildStorageJson();
     json += ",\"module_cards\":";
     json += buildModuleCardsJson();
     json += ",\"navigation\":";
     json += buildNavigationJson();
     json += ",\"summaries\":";
     json += buildSummariesJson();
+    json += "}";
+    return json;
+}
+
+void ShellSnapshotFacade::recordViewerHeartbeat(const char* viewerId,
+                                                const char* viewerKind,
+                                                const char* title,
+                                                const char* value,
+                                                const char* page,
+                                                const char* address) {
+    if (viewerId == nullptr || viewerId[0] == '\0') {
+        return;
+    }
+
+    const uint32_t nowMs = millis();
+    size_t targetIndex = kMaxViewerEntries;
+    size_t oldestIndex = 0;
+
+    for (size_t index = 0; index < kMaxViewerEntries; ++index) {
+        ViewerPresenceEntry& entry = viewers_[index];
+        const bool active = entry.active && static_cast<uint32_t>(nowMs - entry.lastSeenMs) <= kViewerTtlMs;
+        if (active && strcmp(entry.viewerId, viewerId) == 0) {
+            targetIndex = index;
+            break;
+        }
+
+        if (!active) {
+            targetIndex = index;
+            break;
+        }
+
+        if (entry.lastSeenMs < viewers_[oldestIndex].lastSeenMs) {
+            oldestIndex = index;
+        }
+    }
+
+    if (targetIndex == kMaxViewerEntries) {
+        targetIndex = oldestIndex;
+    }
+
+    ViewerPresenceEntry& entry = viewers_[targetIndex];
+    entry.active = true;
+    entry.lastSeenMs = nowMs;
+    copyText(entry.viewerId, sizeof(entry.viewerId), viewerId);
+    copyText(entry.viewerKind, sizeof(entry.viewerKind),
+             viewerKind != nullptr && viewerKind[0] != '\0' ? viewerKind : "viewer");
+    copyText(entry.title, sizeof(entry.title), title != nullptr && title[0] != '\0' ? title : entry.viewerKind);
+    copyText(entry.value, sizeof(entry.value), value != nullptr ? value : "");
+    copyText(entry.page, sizeof(entry.page), page != nullptr && page[0] != '\0' ? page : "/");
+    copyText(entry.address, sizeof(entry.address), address != nullptr ? address : "");
+}
+
+String ShellSnapshotFacade::buildViewerHeartbeatJson() const {
+    String json;
+    json.reserve(640);
+    json += "{";
+    json += "\"runtime_profile\":\"owner_device\",";
+    json += "\"viewers\":";
+    json += buildViewersJson();
     json += "}";
     return json;
 }
@@ -88,7 +158,76 @@ String ShellSnapshotFacade::buildCurrentShellJson() const {
     appendJsonEscaped(json, core::activeModeToString(systemCore_.activeMode()));
     json += ",\"service_mode\":";
     json += systemCore_.activeMode() == core::ActiveMode::ServiceTest ? "true" : "false";
+    json += ",\"runtime_profile\":\"owner_device\"";
     json += "}";
+    return json;
+}
+
+String ShellSnapshotFacade::buildRuntimeJson() const {
+    const core::NodeHealth& localNode = systemCore_.localNode();
+    const size_t viewerCount = activeViewerCount();
+
+    String json;
+    json.reserve(768);
+    json += "{";
+    json += "\"profile\":\"owner_device\",";
+    json += "\"host\":{";
+    json += "\"kind\":\"esp32_fallback\",";
+    json += "\"title\":\"ESP32 fallback shell\",";
+    json += "\"platform\":\"ESP32\",";
+    json += "\"is_owner_device\":true,";
+    json += "\"server_status\":\"online\",";
+    json += "\"server_url\":";
+    appendJsonEscaped(json, localNode.shellBaseUrl);
+    json += ",\"summary\":\"The Smart Platform shell is currently hosted by the ESP32 fallback surface.\",";
+    json += "\"paths\":[],";
+    json += "\"viewer_count\":";
+    json += String(static_cast<unsigned long>(viewerCount));
+    json += ",\"open_supported\":false},";
+    json += "\"viewer_count\":";
+    json += String(static_cast<unsigned long>(viewerCount));
+    json += ",\"viewer_hint\":\"Resolve the current viewer by matching the local viewer_id against viewers[].\"";
+    json += "}";
+    return json;
+}
+
+String ShellSnapshotFacade::buildViewersJson() const {
+    const uint32_t nowMs = millis();
+
+    String json;
+    json.reserve(960);
+    json += "[";
+
+    bool first = true;
+    for (size_t index = 0; index < kMaxViewerEntries; ++index) {
+        const ViewerPresenceEntry& entry = viewers_[index];
+        const bool active = entry.active && static_cast<uint32_t>(nowMs - entry.lastSeenMs) <= kViewerTtlMs;
+        if (!active) {
+            continue;
+        }
+
+        if (!first) {
+            json += ",";
+        }
+
+        json += "{";
+        json += "\"viewer_id\":";
+        appendJsonEscaped(json, entry.viewerId);
+        json += ",\"viewer_kind\":";
+        appendJsonEscaped(json, entry.viewerKind);
+        json += ",\"title\":";
+        appendJsonEscaped(json, entry.title);
+        json += ",\"value\":";
+        appendJsonEscaped(json, entry.value);
+        json += ",\"page\":";
+        appendJsonEscaped(json, entry.page);
+        json += ",\"address\":";
+        appendJsonEscaped(json, entry.address);
+        json += "}";
+        first = false;
+    }
+
+    json += "]";
     return json;
 }
 
@@ -141,6 +280,68 @@ String ShellSnapshotFacade::buildNodesJson() const {
         appendJsonEscaped(json, "Peer owner is offline");
     }
     json += "}";
+    json += "}";
+    return json;
+}
+
+String ShellSnapshotFacade::buildSyncJson() const {
+    const core::NodeHealth& peerNode = systemCore_.peerNode();
+    const char* syncState = syncSummaryState();
+
+    String json;
+    json.reserve(416);
+    json += "{";
+    json += "\"enabled\":true,";
+    json += "\"state\":";
+    appendJsonEscaped(json, syncState);
+    json += ",\"peer_reachable\":";
+    json += peerNode.reachable ? "true" : "false";
+    json += ",\"peer_sync_ready\":";
+    json += peerNode.syncReady ? "true" : "false";
+    json += ",\"last_sync_ms\":";
+    json += String(peerNode.lastSeenMs);
+    json += ",\"last_error\":\"\",";
+    json += "\"summary\":";
+    if (!peerNode.reachable) {
+        appendJsonEscaped(json, "Base node connectivity is unavailable because the remote node is offline.");
+    } else if (!peerNode.syncReady) {
+        appendJsonEscaped(json, "Background sync is enabled, but the remote node is still pending.");
+    } else {
+        appendJsonEscaped(json, "Background sync is ready and the remote node is reachable.");
+    }
+    json += ",\"domains\":[\"modules\",\"logs\"]";
+    json += "}";
+    return json;
+}
+
+String ShellSnapshotFacade::buildStorageJson() const {
+    const bool ready = storageManager_.sdReady();
+
+    String json;
+    json.reserve(512);
+    json += "{";
+    json += "\"storage\":\"sd\",";
+    json += "\"storage_kind\":\"sd\",";
+    json += "\"content_root\":\"sd:/\",";
+    json += "\"content_root_exists\":";
+    json += ready ? "true" : "false";
+    json += ",\"content_root_state\":";
+    appendJsonEscaped(json, ready ? "ready" : "missing");
+    json += ",\"assets_ready\":";
+    json += storageManager_.assetsReady() ? "true" : "false";
+    json += ",\"audio_ready\":";
+    json += storageManager_.audioReady() ? "true" : "false";
+    json += ",\"animations_ready\":";
+    json += storageManager_.animationsReady() ? "true" : "false";
+    json += ",\"libraries_ready\":";
+    json += storageManager_.librariesReady() ? "true" : "false";
+    json += ",\"video_ready\":false,";
+    json += "\"total_bytes\":0,";
+    json += "\"paths\":[],";
+    json += "\"summary\":";
+    appendJsonEscaped(json,
+                      ready ? "SD-backed storage is available for shell content and libraries."
+                            : "SD-backed storage is not available on the current host.");
     json += "}";
     return json;
 }
@@ -519,7 +720,7 @@ const char* ShellSnapshotFacade::canonicalPath(const core::ModuleDescriptor& mod
 const char* ShellSnapshotFacade::syncSummaryState() const {
     const core::NodeHealth& peerNode = systemCore_.peerNode();
     if (!peerNode.reachable) {
-        return "peer_offline";
+        return "remote_unavailable";
     }
     if (!peerNode.syncReady) {
         return "pending";
@@ -527,10 +728,59 @@ const char* ShellSnapshotFacade::syncSummaryState() const {
     return "ready";
 }
 
+size_t ShellSnapshotFacade::activeViewerCount() const {
+    const uint32_t nowMs = millis();
+    size_t count = 0;
+
+    for (size_t index = 0; index < kMaxViewerEntries; ++index) {
+        const ViewerPresenceEntry& entry = viewers_[index];
+        if (entry.active && static_cast<uint32_t>(nowMs - entry.lastSeenMs) <= kViewerTtlMs) {
+            count += 1;
+        }
+    }
+
+    return count;
+}
+
+void ShellSnapshotFacade::copyText(char* target, size_t size, const char* text) const {
+    if (target == nullptr || size == 0) {
+        return;
+    }
+
+    if (text == nullptr) {
+        target[0] = '\0';
+        return;
+    }
+
+    strncpy(target, text, size - 1);
+    target[size - 1] = '\0';
+}
+
 void ShellSnapshotFacade::appendJsonEscaped(String& target, const char* text) const {
     target += "\"";
     if (text != nullptr) {
-        target += text;
+        for (const char* cursor = text; *cursor != '\0'; ++cursor) {
+            switch (*cursor) {
+                case '\\':
+                    target += "\\\\";
+                    break;
+                case '"':
+                    target += "\\\"";
+                    break;
+                case '\n':
+                    target += "\\n";
+                    break;
+                case '\r':
+                    target += "\\r";
+                    break;
+                case '\t':
+                    target += "\\t";
+                    break;
+                default:
+                    target += *cursor;
+                    break;
+            }
+        }
     }
     target += "\"";
 }

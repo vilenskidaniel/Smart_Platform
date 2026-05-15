@@ -13,6 +13,7 @@
 - `Gallery` и `Settings` одновременно;
 - `Laboratory` и `Settings` одновременно;
 - `Laboratory` и `Gallery > Reports` одновременно;
+- split turret audio task одновременно трогает `Turret`, `Laboratory`, `Settings` или shared shell audio summary;
 - sync, mirrored content, provenance или shared preferences;
 - общие blocked-state, owner-state или acceptance contracts;
 - саму архитектуру prompt-системы или docs reading order.

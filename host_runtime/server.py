@@ -94,8 +94,8 @@ def build_federated_handoff_html() -> bytes:
         return;
       }
 
-      if (payload.canonical_url) {
-        summary.textContent = `Переход к owner page модуля ${payload.module_id}. Если переход не сработает автоматически, открой ссылку вручную.`;
+            if (payload.canonical_url) {
+                summary.textContent = `Owner runtime для ${payload.module_id} доступен, но reachability текущего viewer к canonical URL еще не подтверждена. Если переход не сработает автоматически, открой ссылку вручную.`;
         actions.innerHTML = `<a href="${payload.canonical_url}">Открыть owner page</a><a href="/">Вернуться в shell</a>`;
         setTimeout(() => { window.location.href = payload.canonical_url; }, 1200);
         return;
@@ -143,6 +143,7 @@ def build_server(config: BridgeConfig, state: BridgeState, sync_client: SyncClie
     runtime_profile = _detect_runtime_profile(config)
     viewer_presence = ShellViewerPresence()
     settings_store = SettingsStore(content_root / ".system" / "settings_state.json")
+    state.apply_settings(settings_store.load())
     platform_registry_store = PlatformRegistryStore(content_root / ".system" / "platform_registry.v1.json")
     shell_snapshot_facade = ShellSnapshotFacade(
         state,
@@ -467,9 +468,9 @@ def build_server(config: BridgeConfig, state: BridgeState, sync_client: SyncClie
                     )
                     return
 
-                self._json_response(
-                    settings_store.update(settings_payload)
-                )
+                updated_settings = settings_store.update(settings_payload)
+                state.apply_settings(updated_settings)
+                self._json_response(updated_settings)
                 return
 
             if parsed.path == "/api/v1/platform/registry/constructor":
@@ -805,12 +806,15 @@ def build_server(config: BridgeConfig, state: BridgeState, sync_client: SyncClie
             content_type: str,
             status: HTTPStatus = HTTPStatus.OK,
         ) -> None:
-            self.send_response(status)
-            self.send_header("Content-Type", content_type)
-            self.send_header("Content-Length", str(len(raw)))
-            self._send_no_cache_headers()
-            self.end_headers()
-            self.wfile.write(raw)
+            try:
+                self.send_response(status)
+                self.send_header("Content-Type", content_type)
+                self.send_header("Content-Length", str(len(raw)))
+                self._send_no_cache_headers()
+                self.end_headers()
+                self.wfile.write(raw)
+            except (BrokenPipeError, ConnectionAbortedError, ConnectionResetError):
+                return
 
         def _send_no_cache_headers(self) -> None:
             self.send_header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")

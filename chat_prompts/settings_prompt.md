@@ -52,6 +52,8 @@
 - Constructor — не декоративная заглушка: он должен вести к реальному registry/config flow.
 - Shared preference `fullscreen` живет в `Settings`, но отражается и в bar-панели как та же самая истина.
 - `Input helpers` или `ARM`-подобный режим тоже живут в `Settings` и bar-панели как общее состояние, но функционально относятся только к FPV- и operator-поверхностям и не должны отключать `Laboratory`.
+- Shared shell audio preference `volume / mute / silent mode` живет в `Settings` и speaker token bar-панели как одна и та же сохраненная истина.
+- Эти shell audio controls не должны смешиваться с module-level `turret_audio.attack_audio` и `turret_audio.voice_fx` baselines.
 - Новый constructor scaffold по умолчанию остается `simulated` или неподтвержденным, пока он не прошел явный путь подтверждения и применения.
 - `Sync` управляется через `selected_domains`, `Auto` и `Manual review`.
 - Storage actions идут только через preview/confirm и backend root-boundary checks.

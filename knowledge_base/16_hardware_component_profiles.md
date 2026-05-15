@@ -92,7 +92,8 @@ Canonical rule:
 - irrigation valve cascade;
 - turret water path with `SEAFLO 12V`;
 - turret `strobe` family;
-- turret `audio` family;
+- turret `attack_audio` family;
+- turret `voice_fx` family;
 - turret motion baseline with `MG996R + PCA9685`;
 - service-only outputs such as `strobe_bench`.
 
@@ -169,11 +170,14 @@ Current board-family map for `Raspberry Pi` profile:
 | `8-inch Raspberry Pi 5 4 Monitor LCD` | `Laboratory / Displays` | `HDMI` video + `USB` touch path | display power path | confirmed laboratory display baseline |
 | `SEAFLO 12V` | `Turret`, `Laboratory / Sprayer` | protected switch / driver boundary | `12V` turret water rail | confirmed baseline |
 | Turret `strobe` | `Turret`, `Laboratory / Strobe` | protected switch / driver boundary | dedicated strobe rail | family confirmed, exact channel wiring still open |
-| Turret `audio` | `Turret`, `Laboratory / Audio` | dual-channel driver path plus Bluetooth audio for `voice_fx` | separate audio path | family confirmed, exact board wiring still open |
+| Turret `attack_audio` + `voice_fx` | `Turret`, `Laboratory / Audio` | dual-channel directed driver path for `attack_audio` plus Bluetooth duplex audio for `voice_fx` | separate audio path | family confirmed, exact board wiring still open |
 | Motion wake input | shell, `Laboratory / Motion Sensor` | sensor trigger path | low-power wake path | role confirmed, exact sensor still open |
 
 Current turret-audio hardware baseline:
 
+- `attack_audio_driver`:
+  - `1 x TPA3116D2 XH-M543, 12V/24V, 120W x 2`
+  - current role baseline: dual-channel directed attack-audio driver
 - `ultrasonic_pair`:
   - `2 x 5140 Ultrasonic Speaker Horn`
   - current mounting baseline: turret head
@@ -181,11 +185,13 @@ Current turret-audio hardware baseline:
   - `2 x 4 inch 110x110 mm square horn tweeter / piezo stage speaker`
   - current mounting baseline: turret head
   - current note: passive horn/waveguide path without its own smart controller
+- current attack-audio topology assumption:
+  - channel `A` and channel `B` are separate software-controlled outputs;
+  - each channel may drive parallel pairs from `ultrasonic_pair / horn_pair` families until final wiring is closed in board-level truth;
 - `voice_fx`:
   - `1 x Soundcore Motion 300`
   - current mounting baseline: inside turret body
-  - current interface expectation: Bluetooth audio path plus `Type-C` power path
-- current experimental/high-power baseline for `horn_pair / ultrasonic_pair` is `TPA3116D2 XH-M543` dual-channel amplifier board;
+  - current interface expectation: Bluetooth audio path plus `Type-C` power path and built-in microphone path
 - exact electrical closure for turret audio still remains open around voltage, power budget, final wiring and Bluetooth stability.
 
 Current board-profile summary:
@@ -197,7 +203,7 @@ Current board-profile summary:
 Retained board-closure rules for current hardware profiles:
 
 - `ESP32` keeps sensor families, irrigation actuator families, service bench outputs and local storage contour as different closure groups rather than one undifferentiated GPIO map;
-- `Raspberry Pi` keeps `camera`, `range`, `motion`, `water`, `strobe` and `audio` as separate readiness families instead of collapsing them into one generic turret-ready flag;
+- `Raspberry Pi` keeps `camera`, `range`, `motion`, `water`, `strobe`, `attack_audio` and `voice_fx` as separate readiness families instead of collapsing them into one generic turret-ready flag;
 - logic ownership does not imply direct high-load GPIO driving: water, `strobe`, audio and other sensitive loads stay behind protected switch or driver boundaries;
 - current power closure must distinguish `ESP32` logic / valves / peristaltic path / `strobe_bench` and turret-side logic / camera / servos / audio / `strobe` / water rails even before exact board wiring is fully closed;
 - physical emergency interlock readback belongs to active hardware truth even while exact final wiring is still being verified.

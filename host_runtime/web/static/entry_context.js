@@ -145,6 +145,10 @@
     return shell.shell_base_url || "";
   }
 
+  function runtimeHost(snapshot) {
+    return ((snapshot && snapshot.runtime) || {}).host || {};
+  }
+
   function resolveLoopbackRuntime(snapshot) {
     if (isLoopbackHost(window.location.hostname)) {
       return true;
@@ -160,6 +164,37 @@
     } catch (_error) {
       return false;
     }
+  }
+
+  function resolveRuntimeProfile(snapshot) {
+    const runtime = (snapshot && snapshot.runtime) || {};
+    const currentShell = (snapshot && snapshot.current_shell) || {};
+    const profile = String(runtime.profile || currentShell.runtime_profile || "").toLowerCase();
+    if (profile) {
+      return profile;
+    }
+    return resolveLoopbackRuntime(snapshot) ? "desktop_smoke" : "owner_device";
+  }
+
+  function resolveHostKind(snapshot, shellFamily) {
+    const hostKind = String(runtimeHost(snapshot).kind || "").toLowerCase();
+    if (hostKind) {
+      return hostKind;
+    }
+
+    if (resolveRuntimeProfile(snapshot) === "desktop_smoke") {
+      return "desktop_host";
+    }
+
+    if (shellFamily === "raspberry_pi") {
+      return "raspberry_pi_owner";
+    }
+
+    if (shellFamily === "esp32") {
+      return "esp32_fallback";
+    }
+
+    return "unknown_host";
   }
 
   async function fetchShellSnapshot() {
@@ -184,19 +219,14 @@
     const mobilePhone = /iphone|ipod|android.+mobile|windows phone|mobile/.test(userAgent);
     const tabletDevice = /ipad|tablet/.test(userAgent) || (!mobilePhone && touchCapable && width <= 1366 && !hasFinePointer);
     const armLinuxBrowser = /linux arm|linux aarch64|armv7l|armv8l|raspbian/.test(userAgent);
-    const hostType = String(currentShell.node_type || "unknown");
-    const runtime = resolveLoopbackRuntime(snapshot)
-      ? "laptop_smoke"
-      : hostType === "esp32"
-      ? "esp32_shell"
-      : hostType === "raspberry_pi"
-      ? "raspberry_pi_shell"
-      : "browser_shell";
+    const shellFamily = String(currentShell.node_type || "unknown").toLowerCase();
+    const runtimeProfile = resolveRuntimeProfile(snapshot);
+    const hostKind = resolveHostKind(snapshot, shellFamily);
 
     let clientProfile = "desktop";
     if (mobilePhone) {
       clientProfile = "phone";
-    } else if (hostType === "raspberry_pi" && armLinuxBrowser) {
+    } else if ((shellFamily === "raspberry_pi" || hostKind === "raspberry_pi_owner") && armLinuxBrowser) {
       clientProfile = "embedded_display";
     } else if (tabletDevice) {
       clientProfile = "tablet";
@@ -205,8 +235,8 @@
     const peerReachable = Boolean(peerNode.reachable);
     const topology = peerReachable
       ? "dual_board"
-      : runtime === "laptop_smoke"
-      ? "laptop_only"
+      : runtimeProfile === "desktop_smoke"
+      ? "smoke_review"
       : "single_board";
     const keyboardMouse = hasFinePointer || hasHover;
     const inputProfile = keyboardMouse ? (touchCapable ? "touch_keyboard_mouse" : "keyboard_mouse") : "touch";
@@ -219,8 +249,9 @@
     );
 
     return {
-      runtime,
-      hostType,
+      runtimeProfile,
+      hostKind,
+      shellFamily,
       clientProfile,
       topology,
       inputProfile,
@@ -261,30 +292,30 @@
   }
 
   function runtimeItem(context) {
-    if (context.runtime === "laptop_smoke") {
+    if (context.runtimeProfile === "desktop_smoke" || context.hostKind === "desktop_host") {
       return {
         id: "runtime",
         icon: "desktop",
-        label: "Laptop Smoke Runtime",
-        detail: "Loopback shell detected. This browser session is being served by the local smoke runtime. It helps test UI and routing, but it does not replace physical host, viewer, or node truth.",
+        label: "Desktop Smoke Runtime",
+        detail: "The shell is currently served by a desktop smoke host. This path is meant for local UI review, route checks, and launcher validation. It does not mean the Raspberry Pi owner or the ESP32 peer is online.",
       };
     }
 
-    if (context.hostType === "esp32") {
+    if (context.hostKind === "esp32_fallback") {
       return {
         id: "runtime",
         icon: "board",
-        label: "ESP32 Runtime Host",
-        detail: "This shell surface is currently served by the ESP32 runtime host. Browser viewers can still be phones, tablets, desktops, or attached displays. Irrigation and local service slices stay local here, while turret-owned routes hand off to Raspberry Pi when it is present.",
+        label: "ESP32 Fallback Host",
+        detail: "The shell is currently being served by the ESP32 fallback surface. That describes the current backend host, not the viewer device. Irrigation stays local here, while compute-owned routes must hand off or explain why the peer is missing.",
       };
     }
 
-    if (context.hostType === "raspberry_pi") {
+    if (context.hostKind === "raspberry_pi_owner") {
       return {
         id: "runtime",
         icon: "board",
-        label: "Raspberry Pi Runtime Host",
-        detail: "This shell surface is currently served by the Raspberry Pi runtime host. Browser viewers can still be separate participants from the host itself. Turret, display qualification, Gallery, Laboratory, and Settings stay local here, while ESP32-owned irrigation routes should hand off or explain the missing owner.",
+        label: "Raspberry Pi Owner Host",
+        detail: "The shell is currently served by the Raspberry Pi owner host. Viewers can still be separate phones, tablets, desktops, or attached displays. Turret, Gallery, Laboratory, and Settings stay local here, while ESP32-owned irrigation routes should hand off or explain the missing owner.",
       };
     }
 
@@ -292,7 +323,7 @@
       id: "runtime",
       icon: "board",
       label: "Shell Runtime Host",
-      detail: "The shell surface is active, but the runtime host could not be identified precisely.",
+      detail: "The shell surface is active, but the current backend host could not be identified precisely. In this case the UI should avoid overclaiming which device is actually serving the shell.",
     };
   }
 
@@ -342,12 +373,12 @@
       };
     }
 
-    if (context.topology === "laptop_only") {
+    if (context.topology === "smoke_review") {
       return {
         id: "topology",
         icon: "topology",
-        label: "Laptop Only",
-        detail: "Single-node laptop review is active. This path is meant for local smoke, route discovery, and UI review without pretending the missing board is online.",
+        label: "Desktop Smoke",
+        detail: "Desktop smoke review is active. This path is meant for local shell review, route discovery, and UX checks without pretending the missing board is online.",
       };
     }
 
@@ -448,7 +479,7 @@
 
   function updateBodyClasses(context) {
     removeManagedBodyClasses();
-    document.body.classList.add(`sp-runtime-${context.runtime}`);
+    document.body.classList.add(`sp-runtime-${context.runtimeProfile}`);
     document.body.classList.add(`sp-client-${context.clientProfile}`);
     document.body.classList.add(`sp-topology-${context.topology}`);
     document.body.classList.add(`sp-input-${context.inputProfile}`);

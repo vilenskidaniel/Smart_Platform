@@ -2,6 +2,7 @@
   const STYLE_ID = "smart-platform-compact-bar-style";
   const HOST_ID = "smart-platform-compact-bar-host";
   const TOOLTIP_ID = "smart-platform-compact-bar-tooltip";
+  const AUDIO_PANEL_ID = "smart-platform-compact-bar-audio-panel";
   const STORAGE_KEY = "smart-platform.desktop-controls.enabled";
   const SETTINGS_CACHE_KEY = "smart-platform.settings.cache";
   const SETTINGS_LANGUAGE_KEY = "smart-platform.settings.language";
@@ -15,6 +16,7 @@
   const TOOLTIP_HIDE_MS = 6000;
   const TOOLTIP_SHOW_DELAY_MS = 500;
   const TOOLTIP_MOVE_TOLERANCE_PX = 3;
+  const AUDIO_SAVE_DEBOUNCE_MS = 180;
   const REFRESH_MS = 5000;
   const VIEWER_HEARTBEAT_MS = 5000;
   const CLOCK_MS = 30000;
@@ -46,6 +48,10 @@
   let viewerHeartbeatInFlight = false;
   let refreshTimer = 0;
   let clockTimer = 0;
+  let audioPanelVisible = false;
+  let audioSaveTimer = 0;
+  let audioSaveRevision = 0;
+  let audioSaveInFlight = false;
   let fullscreenToggleIntent = null;
   let fullscreenResumeListenersInstalled = false;
   let fullscreenPendingHintPage = "";
@@ -56,6 +62,9 @@
     density: "comfortable",
     fullscreenEnabled: false,
     desktopControlsEnabled: desktopControlsEnabled,
+    audioVolumePercent: 60,
+    audioMuted: false,
+    audioSilentMode: false,
     preferPeerContinuity: true,
     pollIntervalSeconds: 30
   };
@@ -110,6 +119,23 @@
     return Math.min(max, Math.max(min, Math.round(parsed)));
   }
 
+  function mergeSettingsPayload(base, patch) {
+    const source = base && typeof base === "object" ? base : {};
+    const overlay = patch && typeof patch === "object" ? patch : {};
+    const merged = Array.isArray(source) ? [...source] : { ...source };
+
+    Object.keys(overlay).forEach((key) => {
+      const nextValue = overlay[key];
+      if (nextValue && typeof nextValue === "object" && !Array.isArray(nextValue)) {
+        merged[key] = mergeSettingsPayload(merged[key], nextValue);
+        return;
+      }
+      merged[key] = nextValue;
+    });
+
+    return merged;
+  }
+
   function readCachedSettings() {
     const raw = readStorage(SETTINGS_CACHE_KEY);
     if (!raw) {
@@ -136,6 +162,7 @@
   function normalizeBarSettings(raw) {
     const payload = raw && typeof raw === "object" ? raw : {};
     const interfaceSettings = payload.interface && typeof payload.interface === "object" ? payload.interface : payload;
+    const audioSettings = interfaceSettings.audio && typeof interfaceSettings.audio === "object" ? interfaceSettings.audio : interfaceSettings;
     const styleSettings = payload.style && typeof payload.style === "object" ? payload.style : payload;
     const syncSettings = payload.synchronization && typeof payload.synchronization === "object" ? payload.synchronization : payload;
     const storedLanguage = normalizeBarLanguage(readStorage(SETTINGS_LANGUAGE_KEY));
@@ -153,6 +180,9 @@
       desktopControlsEnabled: storedDesktopControls === null
         ? boolPreference(interfaceSettings.desktop_controls_enabled, desktopControlsEnabled)
         : storedDesktopControls !== "0",
+      audioVolumePercent: clampInt(audioSettings.volume_percent, 60, 0, 100),
+      audioMuted: boolPreference(audioSettings.muted, false),
+      audioSilentMode: boolPreference(audioSettings.silent_mode, false),
       preferPeerContinuity: boolPreference(syncSettings.prefer_peer_continuity, true),
       pollIntervalSeconds: clampInt(syncSettings.poll_interval_seconds, 30, 5, 300)
     };
@@ -257,17 +287,11 @@
     }
   }
 
-  async function persistFullscreenPreference(enabled) {
+  async function persistSettingsPatch(patch, fallbackEventName, fallbackDetail) {
     try {
       const current = await fetch(SETTINGS_ENDPOINT, { cache: "no-store" });
-      const payload = current.ok ? await current.json() : {};
-      const next = {
-        ...(payload && typeof payload === "object" ? payload : {}),
-        interface: {
-          ...(((payload || {}).interface) || {}),
-          fullscreen_enabled: Boolean(enabled)
-        }
-      };
+      const payload = current.ok ? await current.json() : (readCachedSettings() || {});
+      const next = mergeSettingsPayload(payload, patch);
       const saved = await fetch(SETTINGS_ENDPOINT, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -276,11 +300,90 @@
       const savedPayload = saved.ok ? await saved.json() : next;
       writeStorage(SETTINGS_CACHE_KEY, JSON.stringify(savedPayload));
       window.dispatchEvent(new CustomEvent("smart-platform:settings-updated", { detail: savedPayload }));
+      return savedPayload;
     } catch (_error) {
-      window.dispatchEvent(new CustomEvent("smart-platform:fullscreen-updated", {
-        detail: { fullscreen_enabled: Boolean(enabled) }
-      }));
+      if (fallbackEventName) {
+        window.dispatchEvent(new CustomEvent(fallbackEventName, { detail: fallbackDetail }));
+      }
+      return null;
     }
+  }
+
+  async function persistFullscreenPreference(enabled) {
+    await persistSettingsPatch({
+      interface: {
+        fullscreen_enabled: Boolean(enabled)
+      }
+    }, "smart-platform:fullscreen-updated", {
+      fullscreen_enabled: Boolean(enabled)
+    });
+  }
+
+  function currentAudioSettingsPatch() {
+    return {
+      interface: {
+        audio: {
+          volume_percent: clampInt(barSettings.audioVolumePercent, 60, 0, 100),
+          muted: Boolean(barSettings.audioMuted),
+          silent_mode: Boolean(barSettings.audioSilentMode)
+        }
+      }
+    };
+  }
+
+  function scheduleAudioSettingsSave() {
+    audioSaveRevision += 1;
+    if (audioSaveTimer) {
+      window.clearTimeout(audioSaveTimer);
+    }
+    audioSaveTimer = window.setTimeout(() => {
+      audioSaveTimer = 0;
+      flushAudioSettingsSave().catch(() => {});
+    }, AUDIO_SAVE_DEBOUNCE_MS);
+  }
+
+  async function flushAudioSettingsSave() {
+    if (audioSaveInFlight) {
+      return;
+    }
+
+    const revision = audioSaveRevision;
+    audioSaveInFlight = true;
+    try {
+      await persistSettingsPatch(currentAudioSettingsPatch());
+    } finally {
+      audioSaveInFlight = false;
+    }
+
+    if (audioSaveRevision !== revision) {
+      scheduleAudioSettingsSave();
+    }
+  }
+
+  function updateAudioPreferences(patch) {
+    const next = patch && typeof patch === "object" ? patch : {};
+    const nextVolumePercent = Object.prototype.hasOwnProperty.call(next, "volumePercent")
+      ? clampInt(next.volumePercent, barSettings.audioVolumePercent, 0, 100)
+      : barSettings.audioVolumePercent;
+    const nextMuted = Object.prototype.hasOwnProperty.call(next, "muted")
+      ? Boolean(next.muted)
+      : barSettings.audioMuted;
+    const nextSilentMode = Object.prototype.hasOwnProperty.call(next, "silentMode")
+      ? Boolean(next.silentMode)
+      : barSettings.audioSilentMode;
+    const optimisticPayload = mergeSettingsPayload(readCachedSettings() || {}, {
+      interface: {
+        audio: {
+          volume_percent: nextVolumePercent,
+          muted: nextMuted,
+          silent_mode: nextSilentMode
+        }
+      }
+    });
+
+    writeStorage(SETTINGS_CACHE_KEY, JSON.stringify(optimisticPayload));
+    applyBarSettings(optimisticPayload);
+    scheduleAudioSettingsSave();
   }
 
   function fullscreenNavigationPending() {
@@ -1344,6 +1447,130 @@
         font-weight: 700;
       }
 
+      .sp-audio-panel {
+        position: fixed;
+        z-index: 82;
+        width: min(320px, calc(100vw - 20px));
+        padding: 12px;
+        border-radius: 18px;
+        border: 1px solid var(--line, rgba(53, 88, 63, 0.14));
+        background: color-mix(in srgb, var(--panel-strong, #fbfcf8) 92%, white);
+        color: var(--ink, #243329);
+        box-shadow: var(--shadow, 0 18px 38px rgba(16, 26, 20, 0.22));
+        font: 13px/1.45 "Segoe UI", "Trebuchet MS", sans-serif;
+        display: grid;
+        gap: 12px;
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(6px) scale(0.98);
+        transition: opacity 120ms ease, transform 120ms ease;
+        backdrop-filter: blur(18px);
+      }
+
+      .sp-audio-panel[data-visible="true"] {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateY(0) scale(1);
+      }
+
+      .sp-audio-panel-head {
+        display: flex;
+        align-items: start;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .sp-audio-panel-title {
+        display: block;
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .sp-audio-panel-subtitle {
+        display: block;
+        margin-top: 2px;
+        font-size: 12px;
+        color: var(--muted, #607164);
+      }
+
+      .sp-audio-panel-value {
+        font-size: 18px;
+        font-weight: 700;
+        line-height: 1;
+      }
+
+      .sp-audio-slider-wrap {
+        display: grid;
+        gap: 8px;
+      }
+
+      .sp-audio-slider-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        font-weight: 600;
+      }
+
+      .sp-audio-slider {
+        width: 100%;
+        margin: 0;
+        accent-color: var(--accent, #2f5d43);
+      }
+
+      .sp-audio-toggle-grid {
+        display: grid;
+        gap: 8px;
+      }
+
+      .sp-audio-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 12px;
+        border-radius: 14px;
+        background: rgba(45, 93, 67, 0.08);
+        border: 1px solid rgba(45, 93, 67, 0.12);
+      }
+
+      .sp-audio-toggle-copy {
+        display: grid;
+        gap: 2px;
+      }
+
+      .sp-audio-toggle-copy strong {
+        font-size: 13px;
+      }
+
+      .sp-audio-toggle-copy span {
+        font-size: 12px;
+        color: var(--muted, #607164);
+      }
+
+      .sp-audio-toggle input {
+        width: 16px;
+        height: 16px;
+        accent-color: var(--accent, #2f5d43);
+      }
+
+      .sp-audio-panel-note {
+        font-size: 12px;
+        color: var(--muted, #607164);
+      }
+
+      .sp-audio-panel-link {
+        color: var(--accent, #2f5d43);
+        font-weight: 700;
+        text-decoration: none;
+      }
+
+      .sp-audio-panel-link:hover,
+      .sp-audio-panel-link:focus-visible {
+        text-decoration: underline;
+        outline: none;
+      }
+
       @media (max-width: 760px) {
         .sp-bar-host {
           width: calc(100% - 12px);
@@ -1419,6 +1646,43 @@
     tooltip.setAttribute("data-visible", "false");
     document.body.appendChild(tooltip);
     return tooltip;
+  }
+
+  function ensureAudioPanel() {
+    let panel = document.getElementById(AUDIO_PANEL_ID);
+    if (panel) {
+      return panel;
+    }
+
+    panel = document.createElement("div");
+    panel.id = AUDIO_PANEL_ID;
+    panel.className = "sp-audio-panel";
+    panel.setAttribute("data-visible", "false");
+    panel.addEventListener("input", (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement) || target.dataset.audioSetting !== "volume") {
+        return;
+      }
+      const nextVolume = clampInt(target.value, barSettings.audioVolumePercent, 0, 100);
+      updateAudioPreferences({
+        volumePercent: nextVolume,
+        muted: nextVolume === 0 ? true : false
+      });
+    });
+    panel.addEventListener("change", (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement)) {
+        return;
+      }
+      if (target.dataset.audioSetting === "muted") {
+        updateAudioPreferences({ muted: target.checked });
+      }
+      if (target.dataset.audioSetting === "silent-mode") {
+        updateAudioPreferences({ silentMode: target.checked });
+      }
+    });
+    document.body.appendChild(panel);
+    return panel;
   }
 
   function icon(name, options) {
@@ -1522,7 +1786,8 @@
   }
 
   function runtimeProfile(snapshot) {
-    return String(currentShell(snapshot).runtime_profile || "").toLowerCase();
+    const runtime = (snapshot && snapshot.runtime) || {};
+    return String(runtime.profile || currentShell(snapshot).runtime_profile || "").toLowerCase();
   }
 
   function isSmokeRuntime(snapshot) {
@@ -2051,10 +2316,190 @@
     };
   }
 
+  function audioPreferenceSnapshot() {
+    const volumePercent = clampInt(barSettings.audioVolumePercent, 60, 0, 100);
+    const muted = Boolean(barSettings.audioMuted);
+    const silentMode = Boolean(barSettings.audioSilentMode);
+    return {
+      volumePercent,
+      muted,
+      silentMode,
+      iconLevel: muted || silentMode ? 0 : (volumePercent / 100),
+      value: muted ? "MUTE" : silentMode ? "SIL" : `${volumePercent}%`
+    };
+  }
+
+  function audioRuntimeStateLabel(value) {
+    const state = String(value || "neutral").trim().toLowerCase();
+    if (state === "active") {
+      return "Active";
+    }
+    if (state === "online") {
+      return "Ready";
+    }
+    if (state === "attention") {
+      return "Attention";
+    }
+    if (state === "fault") {
+      return "Fault";
+    }
+    return "Preview";
+  }
+
+  function audioTokenState(runtimeState, preference) {
+    const state = String(runtimeState || "neutral").trim().toLowerCase();
+    if (state === "fault") {
+      return "fault";
+    }
+    if (state === "attention") {
+      return "attention";
+    }
+    if (preference.muted) {
+      return "neutral";
+    }
+    if (preference.silentMode) {
+      return "attention";
+    }
+    if (state === "active") {
+      return "active";
+    }
+    if (state === "online") {
+      return "online";
+    }
+    if (preference.volumePercent >= 75) {
+      return "active";
+    }
+    if (preference.volumePercent > 0) {
+      return "online";
+    }
+    return "neutral";
+  }
+
+  function audioPanelMarkup(snapshot) {
+    const preference = audioPreferenceSnapshot();
+    const audioSummary = (((snapshot || {}).summaries || {}).audio || {});
+    const runtimeSummary = String(audioSummary.summary || "Shell snapshot is not publishing a concise audio summary yet.");
+    const runtimeValue = String(audioSummary.value || "--");
+    const runtimeState = audioRuntimeStateLabel(audioSummary.state);
+    const subtitle = preference.muted
+      ? "Shared audio is muted."
+      : preference.silentMode
+      ? "Silent mode keeps shell pages quiet until you turn it off."
+      : "Smart Bar and Settings use the same shared audio preference.";
+
+    return `
+      <div class="sp-audio-panel-head">
+        <div>
+          <span class="sp-audio-panel-title">Shared audio</span>
+          <span class="sp-audio-panel-subtitle">${esc(subtitle)}</span>
+        </div>
+        <span class="sp-audio-panel-value">${esc(preference.value)}</span>
+      </div>
+      <div class="sp-audio-slider-wrap">
+        <div class="sp-audio-slider-row">
+          <span>Volume</span>
+          <span>${esc(`${preference.volumePercent}%`)}</span>
+        </div>
+        <input
+          class="sp-audio-slider"
+          type="range"
+          min="0"
+          max="100"
+          step="1"
+          value="${esc(preference.volumePercent)}"
+          data-audio-setting="volume"
+          aria-label="Shared audio volume">
+      </div>
+      <div class="sp-audio-toggle-grid">
+        <label class="sp-audio-toggle">
+          <span class="sp-audio-toggle-copy">
+            <strong>Mute</strong>
+            <span>Cut shell audio immediately without losing the saved volume.</span>
+          </span>
+          <input type="checkbox" data-audio-setting="muted" ${preference.muted ? "checked" : ""}>
+        </label>
+        <label class="sp-audio-toggle">
+          <span class="sp-audio-toggle-copy">
+            <strong>Silent mode</strong>
+            <span>Keep the interface in quiet mode while preserving the current routing context.</span>
+          </span>
+          <input type="checkbox" data-audio-setting="silent-mode" ${preference.silentMode ? "checked" : ""}>
+        </label>
+      </div>
+      <div class="sp-audio-panel-note">Runtime audio: <strong>${esc(runtimeValue)}</strong> · ${esc(runtimeState)}. ${esc(runtimeSummary)}</div>
+      <a class="sp-audio-panel-link" href="/settings#appearance">Open shared audio in Settings</a>
+    `;
+  }
+
+  function positionAudioPanel(panel, anchor) {
+    requestAnimationFrame(() => {
+      const panelRect = panel.getBoundingClientRect();
+      const rect = anchor.getBoundingClientRect();
+      const gap = 12;
+      const preferredLeft = rect.right - panelRect.width;
+      const left = Math.min(Math.max(12, preferredLeft), window.innerWidth - panelRect.width - 12);
+      const preferredTop = rect.bottom + gap;
+      const top = preferredTop + panelRect.height + 12 > window.innerHeight
+        ? rect.top - panelRect.height - gap
+        : preferredTop;
+      panel.style.left = `${left}px`;
+      panel.style.top = `${Math.min(Math.max(12, top), window.innerHeight - panelRect.height - 12)}px`;
+    });
+  }
+
+  function hideAudioPanel() {
+    audioPanelVisible = false;
+    const panel = document.getElementById(AUDIO_PANEL_ID);
+    if (!panel) {
+      return;
+    }
+    panel.setAttribute("data-visible", "false");
+  }
+
+  function syncAudioPanel(snapshot) {
+    const panel = ensureAudioPanel();
+    if (!audioPanelVisible) {
+      panel.setAttribute("data-visible", "false");
+      return;
+    }
+
+    const anchor = document.querySelector('.sp-token[data-token-id="system-volume"]');
+    if (!(anchor instanceof HTMLElement)) {
+      hideAudioPanel();
+      return;
+    }
+
+    panel.innerHTML = audioPanelMarkup(snapshot);
+    panel.setAttribute("data-visible", "true");
+    positionAudioPanel(panel, anchor);
+  }
+
+  function showAudioPanel(anchor) {
+    if (!(anchor instanceof HTMLElement)) {
+      return;
+    }
+    hideTooltip(true);
+    audioPanelVisible = true;
+    const panel = ensureAudioPanel();
+    panel.innerHTML = audioPanelMarkup(currentSnapshot);
+    panel.setAttribute("data-visible", "true");
+    positionAudioPanel(panel, anchor);
+  }
+
+  function toggleAudioPanel(anchor) {
+    if (audioPanelVisible) {
+      hideAudioPanel();
+      return;
+    }
+    showAudioPanel(anchor);
+  }
+
   function systemTokens(snapshot) {
     const smokeRuntime = isSmokeRuntime(snapshot);
     const current = ((snapshot || {}).nodes || {}).current || {};
     const diagnostics = (((snapshot || {}).summaries || {}).diagnostics || {});
+    const audioSummary = (((snapshot || {}).summaries || {}).audio || {});
+    const audioPreference = audioPreferenceSnapshot();
     const failuresToken = shellFailuresToken(snapshot);
     const syncState = String(diagnostics.sync_state || "unknown");
     const locale = preferredLocale();
@@ -2121,11 +2566,43 @@
       {
         id: "system-volume",
         icon: "volume",
-        iconOptions: { level: null },
-        value: "--",
-        title: "Volume",
-        state: "neutral",
-        detail: "System volume is not exposed as a truthful browser-side signal yet, so the compact bar keeps it neutral instead of inventing a level."
+        iconOptions: {
+          level: audioPreference.iconLevel
+        },
+        value: audioPreference.value,
+        title: "Audio",
+        state: audioTokenState(audioSummary.state, audioPreference),
+        detail: audioPreference.muted
+          ? "Shared audio is muted. Open the speaker token to restore output or adjust the saved volume baseline."
+          : audioPreference.silentMode
+          ? "Silent mode is active. Open the speaker token to resume shell audio without losing the current volume baseline."
+          : String(audioSummary.summary || "Shell snapshot is not publishing a concise audio summary yet."),
+        tooltip: {
+          title: "Audio",
+          subtitle: audioPreference.muted
+            ? "Shared audio muted"
+            : audioPreference.silentMode
+            ? "Shared audio silent mode"
+            : `${audioPreference.volumePercent}% shared volume`,
+          description: String(audioSummary.summary || "Shell snapshot is not publishing a concise audio summary yet."),
+          sections: [
+            {
+              title: "Preferences",
+              rows: [
+                { label: "Volume", value: `${audioPreference.volumePercent}%` },
+                { label: "Muted", value: audioPreference.muted ? "On" : "Off" },
+                { label: "Silent mode", value: audioPreference.silentMode ? "On" : "Off" }
+              ]
+            },
+            {
+              title: "Runtime",
+              rows: [
+                { label: "Summary", value: String(audioSummary.value || "--") },
+                { label: "State", value: audioRuntimeStateLabel(audioSummary.state) }
+              ]
+            }
+          ]
+        }
       },
       batteryToken(),
       {
@@ -2479,6 +2956,7 @@
     bindInteractions();
     maybeShowFullscreenRestoreHint();
     applyPageOffset(bar.parentElement || undefined);
+    syncAudioPanel(snapshot);
   }
 
   function maybeShowFullscreenRestoreHint() {
@@ -2641,11 +3119,20 @@
   function bindInteractions() {
     const tokens = document.querySelectorAll(".sp-token, .sp-control");
     for (const token of tokens) {
+      const itemId = token.getAttribute("data-token-id") || token.getAttribute("data-control-id") || "";
       token.onpointerdown = () => {
         tooltipFocusSuppressedUntil = Date.now() + 700;
         hideTooltip(true);
+        if (itemId !== "system-volume") {
+          hideAudioPanel();
+        }
       };
-      token.onmouseenter = (event) => scheduleTooltipShow(token, tooltipPinned && tooltipOwnerId === (token.getAttribute("data-token-id") || token.getAttribute("data-control-id") || ""), event);
+      token.onmouseenter = (event) => {
+        if (itemId === "system-volume" && audioPanelVisible) {
+          return;
+        }
+        scheduleTooltipShow(token, tooltipPinned && tooltipOwnerId === itemId, event);
+      };
       token.onmousemove = (event) => {
         if (!tooltipHoverTarget && !tooltipOwnerId) {
           return;
@@ -2655,10 +3142,13 @@
         }
       };
       token.onfocus = () => {
+        if (itemId === "system-volume" && audioPanelVisible) {
+          return;
+        }
         if (Date.now() < tooltipFocusSuppressedUntil) {
           return;
         }
-        showTooltip(token, tooltipPinned && tooltipOwnerId === (token.getAttribute("data-token-id") || token.getAttribute("data-control-id") || ""));
+        showTooltip(token, tooltipPinned && tooltipOwnerId === itemId);
       };
       token.onmouseleave = () => hideTooltip(true);
       token.onblur = () => hideTooltip(true);
@@ -2669,6 +3159,12 @@
       token.onclick = (event) => {
         event.preventDefault();
         const tokenId = token.getAttribute("data-token-id") || "";
+        if (tokenId === "system-volume") {
+          setTooltipPointerOrigin(event);
+          toggleAudioPanel(token);
+          return;
+        }
+        hideAudioPanel();
         if (tooltipPinned && tooltipOwnerId === tokenId) {
           hideTooltip(true);
           return;
@@ -2685,6 +3181,7 @@
       inputToggle.onclick = (event) => {
         event.preventDefault();
         setTooltipPointerOrigin(event);
+        hideAudioPanel();
         desktopControlsEnabled = !desktopControlsEnabled;
         writeStorage(STORAGE_KEY, desktopControlsEnabled ? "1" : "0");
         window.dispatchEvent(new CustomEvent("smart-platform:desktop-controls-updated", {
@@ -2702,6 +3199,7 @@
       fullscreenToggle.onclick = async (event) => {
         event.preventDefault();
         setTooltipPointerOrigin(event);
+        hideAudioPanel();
         const wantsFullscreen = !document.fullscreenElement;
         fullscreenToggleIntent = wantsFullscreen ? "enter" : "exit";
         setFullscreenPreference(wantsFullscreen);
@@ -2751,6 +3249,10 @@
         if (target instanceof HTMLElement && target.closest(".sp-token, .sp-control, .sp-tooltip")) {
           return;
         }
+        if (target instanceof HTMLElement && target.closest(".sp-audio-panel")) {
+          return;
+        }
+        hideAudioPanel();
         hideTooltip(true);
       });
 
@@ -2764,6 +3266,11 @@
       });
 
       document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          hideAudioPanel();
+          hideTooltip(true);
+          return;
+        }
         if (!desktopControlsEnabled || event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) {
           return;
         }

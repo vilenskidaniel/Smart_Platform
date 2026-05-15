@@ -1542,7 +1542,12 @@
         language: "en",
         desktop_controls_enabled: true,
         fullscreen_enabled: false,
-        show_advanced_diagnostics: false
+        show_advanced_diagnostics: false,
+        audio: {
+          volume_percent: 60,
+          muted: false,
+          silent_mode: false
+        }
       },
       style: {
         theme: "meadow",
@@ -1586,11 +1591,28 @@
           irrigation_zone_3: "Digit3",
           irrigation_zone_4: "Digit4",
           irrigation_zone_5: "Digit5",
+          attack_audio: "KeyQ",
           piezo: "KeyQ",
           strobe: "KeyW",
           water: "KeyE",
+          voice_fx_talk: "KeyV",
           capture: "Space",
           power_modifier: "Shift"
+        }
+      },
+      turret_audio: {
+        attack_audio: {
+          driver_profile: "tpa3116d2_xh_m543",
+          default_scenario_id: "dual_channel_deterrence",
+          channel_a_power_percent: 60,
+          channel_b_power_percent: 60
+        },
+        voice_fx: {
+          device_name: "Soundcore Motion 300",
+          transport: "bluetooth",
+          talkback_enabled: true,
+          microphone_expected: true,
+          effect_profile: "natural"
         }
       },
       turret_policies: {
@@ -1678,6 +1700,11 @@
         fullscreen: "Fullscreen",
         desktopControls: "Desktop controls",
         advancedDiagnostics: "Advanced diagnostics",
+        sharedAudio: "Shared audio",
+        sharedAudioVolume: "Volume",
+        sharedAudioMuted: "Mute shared audio",
+        sharedAudioSilentMode: "Silent mode",
+        sharedAudioBarLink: "Smart Bar speaker",
         preferredMode: "Preferred mode",
         preferPeerContinuity: "Prefer peer continuity",
         localLaunchBoardsOffline: "Local launch, boards offline",
@@ -1712,7 +1739,7 @@
         shellReady: "Shell ready",
         wifiReady: "Wi-Fi ready",
         syncReady: "Sync ready",
-        appearanceLead: "Language, fullscreen, theme, and density.",
+        appearanceLead: "Language, fullscreen, shared audio, theme, and density.",
         runtimeLead: "Host, viewer, launch paths, and server URL.",
         nodesLead: "Physical boards and their module ownership.",
         syncLead: "Connectivity, sync domains, and continuity preferences.",
@@ -1832,6 +1859,11 @@
         fullscreenTip: "Shared fullscreen preference for shell surfaces.",
         desktopControlsTip: "Shared keyboard and hover helper preference used by Smart Bar.",
         advancedDiagnosticsTip: "Keep raw payloads available without forcing them into the main overview.",
+        sharedAudioTip: "One shared audio preference for the Smart Bar speaker token and this interface card.",
+        sharedAudioVolumeTip: "Shared shell audio volume, from 0 to 100 percent.",
+        sharedAudioMutedTip: "Mute shell audio without losing the saved volume baseline.",
+        sharedAudioSilentModeTip: "Keep shell pages in a quiet mode until audio is needed again.",
+        sharedAudioBarLinkTip: "Click the speaker token in the bar for the same quick volume, mute, and silent-mode controls.",
         themeDensityTip: "Theme and density are shared page-level appearance preferences.",
         meadowTip: "Neutral green shell baseline.",
         dawnTip: "Warm amber workspace tone.",
@@ -1858,11 +1890,22 @@
         irrigationZone3: "Irrigation zone 3",
         irrigationZone4: "Irrigation zone 4",
         irrigationZone5: "Irrigation zone 5",
+        attackAudioAction: "Attack audio",
         piezoAction: "Piezo tweeter",
         strobeAction: "Strobe",
         waterAction: "Water spray",
+        voiceFxTalkAction: "Voice FX talkback",
         captureAction: "Video capture",
         powerModifier: "Power modifier",
+        turretAudioProfiles: "Turret audio",
+        attackAudioScenario: "Attack scenario",
+        attackAudioChannelA: "Channel A power",
+        attackAudioChannelB: "Channel B power",
+        attackAudioDriver: "Attack driver",
+        voiceFxDevice: "Voice FX device",
+        voiceFxTransport: "Voice transport",
+        voiceFxTalkback: "Enable talkback",
+        voiceFxEffect: "Effect preset",
         keyboardScopeTip: "Keyboard controls are global as a preference, but action keys only control Turret Manual. In text fields they remain normal typing keys.",
         enableDesktopControlsTip: "Enable Desktop controls before changing key bindings.",
         manualTurretKeys: "Turret manual keys",
@@ -1958,6 +2001,12 @@
         autoCaptureTip: "Keep photo/video capture available in Automatic FPV while weapon and valve controls stay hidden.",
         warmStandbyTip: "Return the turret to warm standby after action sequences.",
         maxRecordingSecondsTip: "Maximum Manual FPV video length in seconds. Range: 5 seconds to 10 hours.",
+        attackAudioProfileTip: "Persistent default scenario and channel power baseline for the directed attack-audio contour.",
+        attackAudioScenarioTip: "Default attack-audio scenario used by Manual, Automatic, and Laboratory as a saved baseline.",
+        attackAudioChannelTip: "Default owner-side power baseline for this attack-audio channel. Laboratory may override it locally before explicit save.",
+        voiceFxProfileTip: "Persistent Bluetooth, talkback, microphone, and effect baseline for Soundcore Motion 300.",
+        voiceFxTalkbackTip: "Keep talkback available in FPV through the Voice FX contour.",
+        voiceFxEffectTip: "Default effect preset applied to operator voice before playback through the external speaker.",
         safetyBaselineTip: "This safety baseline remains always on in the current settings contract.",
         driestZoneTip: "Bias automatic irrigation toward the driest known zone.",
         serviceBlockTip: "Keep irrigation automatic mode blocked while service workflows are active.",
@@ -2019,6 +2068,11 @@
         fullscreen: "Полноэкранный режим",
         desktopControls: "Управление с клавиатуры",
         advancedDiagnostics: "Расширенная диагностика",
+        sharedAudio: "Общее аудио",
+        sharedAudioVolume: "Громкость",
+        sharedAudioMuted: "Отключить общий звук",
+        sharedAudioSilentMode: "Беззвучный режим",
+        sharedAudioBarLink: "Динамик бар-панели",
         preferredMode: "Предпочитаемый режим",
         preferPeerContinuity: "Сохранять непрерывность со вторым узлом",
         localLaunchBoardsOffline: "Локальный запуск, платы офлайн",
@@ -2053,7 +2107,7 @@
         shellReady: "Оболочка готова",
         wifiReady: "Wi-Fi готов",
         syncReady: "Синхронизация готова",
-        appearanceLead: "Язык, полноэкранный режим, тема и плотность.",
+        appearanceLead: "Язык, полноэкранный режим, общее аудио, тема и плотность.",
         runtimeLead: "Устройство запуска, текущий просмотр, пути и URL сервера.",
         nodesLead: "Физические платы и владение модулями.",
         syncLead: "Связь, домены синхронизации и настройки непрерывности.",
@@ -2173,6 +2227,11 @@
         fullscreenTip: "Общая настройка полноэкранного режима для страниц оболочки.",
         desktopControlsTip: "Общая настройка клавиатуры и подсказок по наведению, которую использует бар-панель.",
         advancedDiagnosticsTip: "Оставить сырые данные доступными, не вынося их в основной интерфейс.",
+        sharedAudioTip: "Одна общая аудионастройка для токена динамика в бар-панели и этой карточки интерфейса.",
+        sharedAudioVolumeTip: "Общая громкость аудио оболочки в диапазоне от 0 до 100 процентов.",
+        sharedAudioMutedTip: "Полностью приглушить звук оболочки, не теряя сохранённую базовую громкость.",
+        sharedAudioSilentModeTip: "Перевести оболочку в тихий режим, пока звук снова не понадобится.",
+        sharedAudioBarLinkTip: "Нажмите на токен динамика в бар-панели, чтобы открыть те же быстрые элементы громкости, mute и беззвучного режима.",
         themeDensityTip: "Тема и плотность являются общими настройками внешнего вида страницы.",
         meadowTip: "Нейтральная зелёная базовая тема оболочки.",
         dawnTip: "Тёплый янтарный тон рабочего пространства.",
@@ -2199,11 +2258,22 @@
         irrigationZone3: "Зона полива 3",
         irrigationZone4: "Зона полива 4",
         irrigationZone5: "Зона полива 5",
+        attackAudioAction: "Атакующий звук",
         piezoAction: "Пьезотвиттер",
         strobeAction: "Стробоскоп",
         waterAction: "Распылитель воды",
+        voiceFxTalkAction: "Голосовой talkback",
         captureAction: "Видеозахват",
         powerModifier: "Модификатор мощности",
+        turretAudioProfiles: "Аудиопрофили турели",
+        attackAudioScenario: "Сценарий атаки",
+        attackAudioChannelA: "Мощность канала A",
+        attackAudioChannelB: "Мощность канала B",
+        attackAudioDriver: "Драйвер атаки",
+        voiceFxDevice: "Устройство Voice FX",
+        voiceFxTransport: "Транспорт Voice FX",
+        voiceFxTalkback: "Разрешить talkback",
+        voiceFxEffect: "Пресет эффекта",
         keyboardScopeTip: "Клавиатурное управление включается глобально как настройка, но управляющие клавиши действуют только на странице ручной турели. В полях ввода они остаются обычным текстом.",
         enableDesktopControlsTip: "Включите управление с клавиатуры, чтобы менять назначение клавиш.",
         manualTurretKeys: "Клавиши ручной турели",
@@ -2299,6 +2369,12 @@
         autoCaptureTip: "Оставлять фото/видеозахват доступным в Automatic FPV, пока вооружение и клапаны скрыты.",
         warmStandbyTip: "Возвращать турель в тёплое ожидание после последовательностей действий.",
         maxRecordingSecondsTip: "Максимальная длительность видеозаписи Manual FPV в секундах. Диапазон: от 5 секунд до 10 часов.",
+        attackAudioProfileTip: "Постоянный baseline сценария и мощности каналов для направленного атакующего аудиоконтура.",
+        attackAudioScenarioTip: "Сценарий атакующего звука по умолчанию для Manual, Automatic и Laboratory после явного сохранения.",
+        attackAudioChannelTip: "Owner-side baseline мощности этого канала. В Laboratory его можно временно переопределить до явного сохранения.",
+        voiceFxProfileTip: "Постоянный baseline Bluetooth, talkback, микрофона и эффекта для Soundcore Motion 300.",
+        voiceFxTalkbackTip: "Оставить talkback доступным в FPV через контур Voice FX.",
+        voiceFxEffectTip: "Эффект по умолчанию, который накладывается на голос оператора перед воспроизведением через внешнюю колонку.",
         safetyBaselineTip: "Это базовое правило безопасности всегда включено в текущем контракте настроек.",
         driestZoneTip: "Смещать автоматический полив к самой сухой известной зоне.",
         serviceBlockTip: "Блокировать автоматический полив, пока активны сценарии обслуживания.",
@@ -2460,6 +2536,7 @@
     function normalizeSettings(raw) {
       const payload = raw && typeof raw === "object" ? raw : {};
       const interfaceSettings = payload.interface && typeof payload.interface === "object" ? payload.interface : {};
+      const interfaceAudioSettings = interfaceSettings.audio && typeof interfaceSettings.audio === "object" ? interfaceSettings.audio : {};
       const styleSettings = payload.style && typeof payload.style === "object" ? payload.style : {};
       const syncSettings = payload.synchronization && typeof payload.synchronization === "object" ? payload.synchronization : {};
       const syncSelection = syncSettings.selected_domains && typeof syncSettings.selected_domains === "object" ? syncSettings.selected_domains : {};
@@ -2472,11 +2549,15 @@
       const nodeRoleOptions = Array.isArray(componentOptions.node_role)
         ? componentOptions.node_role
         : [];
+      const turretAudioSettings = payload.turret_audio && typeof payload.turret_audio === "object" ? payload.turret_audio : {};
+      const attackAudioSettings = turretAudioSettings.attack_audio && typeof turretAudioSettings.attack_audio === "object" ? turretAudioSettings.attack_audio : {};
+      const voiceFxSettings = turretAudioSettings.voice_fx && typeof turretAudioSettings.voice_fx === "object" ? turretAudioSettings.voice_fx : {};
       const turretPolicies = payload.turret_policies && typeof payload.turret_policies === "object" ? payload.turret_policies : {};
       const irrigationSettings = payload.irrigation && typeof payload.irrigation === "object" ? payload.irrigation : {};
       const languages = ["en", "ru", "he", "de", "fr", "es", "zh", "ar"];
       const themes = ["meadow", "dawn", "studio", "midnight", "sunlit", "night", "minimal", "contrast"];
       const preferredSyncMode = choiceValue(syncSettings.preferred_mode, ["auto", "manual_review"], "auto");
+      const attackAudioBinding = String(keyboardBindings.attack_audio || keyboardBindings.piezo || "KeyQ");
       const selectedDomains = Object.fromEntries(Object.keys(DEFAULT_SETTINGS.synchronization.selected_domains).map((id) => [
         id,
         preferredSyncMode === "auto" ? true : boolValue(syncSelection[id], true)
@@ -2489,7 +2570,12 @@
           language: choiceValue(interfaceSettings.language, languages, "en"),
           desktop_controls_enabled: boolValue(interfaceSettings.desktop_controls_enabled, true),
           fullscreen_enabled: boolValue(interfaceSettings.fullscreen_enabled, false),
-          show_advanced_diagnostics: boolValue(interfaceSettings.show_advanced_diagnostics, false)
+          show_advanced_diagnostics: boolValue(interfaceSettings.show_advanced_diagnostics, false),
+          audio: {
+            volume_percent: Math.max(0, Math.min(100, numberValue(interfaceAudioSettings.volume_percent, 60))),
+            muted: boolValue(interfaceAudioSettings.muted, false),
+            silent_mode: boolValue(interfaceAudioSettings.silent_mode, false)
+          }
         },
         style: {
           theme: choiceValue(styleSettings.theme, themes, "meadow"),
@@ -2524,11 +2610,28 @@
             irrigation_zone_3: String(keyboardBindings.irrigation_zone_3 || "Digit3"),
             irrigation_zone_4: String(keyboardBindings.irrigation_zone_4 || "Digit4"),
             irrigation_zone_5: String(keyboardBindings.irrigation_zone_5 || "Digit5"),
-            piezo: String(keyboardBindings.piezo || "KeyQ"),
+            attack_audio: attackAudioBinding,
+            piezo: attackAudioBinding,
             strobe: String(keyboardBindings.strobe || "KeyW"),
             water: String(keyboardBindings.water || "KeyE"),
+            voice_fx_talk: String(keyboardBindings.voice_fx_talk || "KeyV"),
             capture: String(keyboardBindings.capture || "Space"),
             power_modifier: String(keyboardBindings.power_modifier || "Shift")
+          }
+        },
+        turret_audio: {
+          attack_audio: {
+            driver_profile: choiceValue(attackAudioSettings.driver_profile, ["tpa3116d2_xh_m543"], "tpa3116d2_xh_m543"),
+            default_scenario_id: String(attackAudioSettings.default_scenario_id || "dual_channel_deterrence"),
+            channel_a_power_percent: Math.max(0, Math.min(100, numberValue(attackAudioSettings.channel_a_power_percent, 60))),
+            channel_b_power_percent: Math.max(0, Math.min(100, numberValue(attackAudioSettings.channel_b_power_percent, 60)))
+          },
+          voice_fx: {
+            device_name: String(voiceFxSettings.device_name || "Soundcore Motion 300"),
+            transport: choiceValue(voiceFxSettings.transport, ["bluetooth"], "bluetooth"),
+            talkback_enabled: boolValue(voiceFxSettings.talkback_enabled, true),
+            microphone_expected: boolValue(voiceFxSettings.microphone_expected, true),
+            effect_profile: choiceValue(voiceFxSettings.effect_profile, ["natural", "filtered", "robotic", "pitch_shift"], "natural")
           }
         },
         turret_policies: {
@@ -3795,7 +3898,7 @@
           owner: "compute_node",
           state: moduleConnectionState(turretSource),
           source: turretSource,
-          components: ["camera", "strobe", "piezo", "water_pump", "servo_pan_tilt", "lidar"]
+          components: ["camera", "strobe", "ultrasonic_pair", "horn_pair", "attack_audio_driver", "voice_fx", "water_pump", "servo_pan_tilt", "lidar"]
         },
         {
           id: "irrigation",
@@ -3835,7 +3938,10 @@
       return [
         { id: "camera", title: ru ? "Камера Raspberry Pi" : "Raspberry Pi Camera", kind: "sensor", module: "turret", power: "5V / CSI", pinout: "CSI ribbon", tolerance: ru ? "Проверка потока" : "stream check", modes: "preview, capture, evidence", state: componentConnectionState("turret") },
         { id: "strobe", title: ru ? "Стробоскоп" : "Strobe", kind: "actuator", module: "turret", power: "12V driver", pinout: "ESP32 GPIO TBD", tolerance: "50-100%", modes: "pulse, deterrence", state: componentConnectionState("turret") },
-        { id: "piezo", title: ru ? "Пьезотвиттер" : "Piezo tweeter", kind: "actuator", module: "turret", power: "PWM", pinout: "ESP32 GPIO TBD", tolerance: "50-100%", modes: "tone, sweep", state: componentConnectionState("turret") },
+        { id: "ultrasonic_pair", title: ru ? "Ультразвуковая пара" : "Ultrasonic pair", kind: "actuator", module: "turret", power: "TPA3116D2 channel output", pinout: "audio amp output TBD", tolerance: ru ? "Частота и мощность" : "frequency and power profile", modes: "tone, sweep, deterrence", state: componentConnectionState("turret") },
+        { id: "horn_pair", title: ru ? "Рупорная пара / пьезокаскад" : "Horn pair / piezo stage", kind: "actuator", module: "turret", power: "TPA3116D2 channel output", pinout: "audio amp output TBD", tolerance: ru ? "Громкость и частотный профиль" : "volume and frequency profile", modes: "tone, sweep, deterrence", state: componentConnectionState("turret") },
+        { id: "attack_audio_driver", title: ru ? "Драйвер атакующего звука" : "Attack audio driver", kind: "controller", module: "turret", power: "12V/24V amplifier rail", pinout: "TPA3116D2 XH-M543", tolerance: ru ? "Тепло и бюджет мощности" : "thermal and power budget", modes: "dual-channel attack contour", state: componentConnectionState("turret") },
+        { id: "voice_fx", title: "Soundcore Motion 300", kind: "actuator", module: "turret", power: "Bluetooth / USB-C charging", pinout: "wireless duplex audio path", tolerance: ru ? "Переподключение и микрофон" : "reconnect and microphone health", modes: "voice playback, talkback, effects", state: componentConnectionState("turret") },
         { id: "water_pump", title: ru ? "Насос водной пушки" : "Water cannon pump", kind: "actuator", module: "turret", power: "12V pump", pinout: "relay/MOSFET TBD", tolerance: "50-100%", modes: "short burst", state: componentConnectionState("turret") },
         { id: "servo_pan_tilt", title: ru ? "Сервоприводы наведения" : "Pan/tilt servos", kind: "actuator", module: "turret", power: "5-6V", pinout: "PWM TBD", tolerance: "angle limits TBD", modes: "manual aim", state: componentConnectionState("turret") },
         { id: "lidar", title: ru ? "Лидар / дальномер" : "Lidar / range sensor", kind: "sensor", module: "turret", power: "5V UART/I2C", pinout: "TBD", tolerance: "range sanity", modes: "distance gate", state: componentConnectionState("turret") },
@@ -3938,9 +4044,10 @@
         ["irrigation_zone_3", t("irrigationZone3")],
         ["irrigation_zone_4", t("irrigationZone4")],
         ["irrigation_zone_5", t("irrigationZone5")],
-        ["piezo", t("piezoAction")],
+        ["attack_audio", t("attackAudioAction")],
         ["strobe", t("strobeAction")],
         ["water", t("waterAction")],
+        ["voice_fx_talk", t("voiceFxTalkAction")],
         ["capture", t("captureAction")],
         ["power_modifier", t("powerModifier")]
       ].map(([key, label]) => {
@@ -4068,6 +4175,7 @@
       const snapshot = state.snapshot || {};
       const host = runtimeHost();
       const viewer = state.currentViewer || resolveCurrentViewer(snapshot);
+      const runtimeProfile = String((((snapshot || {}).runtime || {}).profile) || (((snapshot || {}).current_shell || {}).runtime_profile || "-"));
       const sync = state.sync || normalizeSync({});
       const storage = state.storage || normalizeStorage({});
       const runtimePaths = runtimeHostPaths();
@@ -4095,7 +4203,7 @@
           id: "appearance",
           title: t("appearance"),
           summary: t("appearanceLead"),
-          searchText: `${t("appearance")} ${t("language")} ${t("theme")} ${t("density")} ${t("fullscreen")} ${t("desktopControls")} ${t("advancedDiagnostics")} ${t("keyboardMap")} ${t("basePower")} ${t("shiftPower")} arrows digits q w e space shift стрелки цифры й ц у пробел шифт`.toLowerCase(),
+          searchText: `${t("appearance")} ${t("language")} ${t("theme")} ${t("density")} ${t("fullscreen")} ${t("desktopControls")} ${t("advancedDiagnostics")} ${t("sharedAudio")} ${t("sharedAudioVolume")} ${t("sharedAudioMuted")} ${t("sharedAudioSilentMode")} ${t("keyboardMap")} ${t("basePower")} ${t("shiftPower")} speaker volume mute silent audio громкость беззвучный динамик звук arrows digits q w e v space shift attack voice talkback стрелки цифры й ц у м пробел шифт`.toLowerCase(),
           html: `
             <section class="card section-panel" id="appearance" data-section-id="appearance">
               <div class="section-head"${tooltipAttrs(tooltipPayload(t("appearance"), t("appearanceLead"), [], t("interfaceDefaults")))}>
@@ -4121,6 +4229,22 @@
                     <summary>${esc(t("manualTurretKeys"))}</summary>
                     <div class="field-grid">${keyboardRows(!keyboardControlsEnabled)}</div>
                   </details>
+                `)}
+                ${detailCard(t("appearance"), t("sharedAudio"), tooltipPayload(t("sharedAudio"), t("sharedAudioTip")), `
+                  <div class="field-grid">
+                    ${fieldInput("interface.audio.volume_percent", t("sharedAudioVolume"), state.settings.interface.audio.volume_percent, "number", tooltipPayload(t("sharedAudioVolume"), t("sharedAudioVolumeTip")), false)}
+                  </div>
+                  <div class="note-stack">
+                    ${toggleControl("interface.audio.muted", state.settings.interface.audio.muted, t("sharedAudioMuted"), t("sharedAudioMutedTip"), false)}
+                    ${toggleControl("interface.audio.silent_mode", state.settings.interface.audio.silent_mode, t("sharedAudioSilentMode"), t("sharedAudioSilentModeTip"), false)}
+                    <div class="readonly-row"${tooltipAttrs(tooltipPayload(t("sharedAudioBarLink"), t("sharedAudioBarLinkTip")))}>
+                      <div>
+                        <strong>${esc(t("sharedAudioBarLink"))}</strong>
+                        <span class="detail-copy">${esc(t("sharedAudioBarLinkTip"))}</span>
+                      </div>
+                      <span class="inline-chip" data-tone="ok">BAR</span>
+                    </div>
+                  </div>
                 `)}
                 ${detailCard(t("theme"), t("theme"), tooltipPayload(t("theme"), t("themeDensityTip")), `
                   <div class="theme-grid">
@@ -4148,9 +4272,9 @@
                 </div>
               </div>
               <div class="detail-grid">
-                ${detailCard(t("runtimeEnvironment"), t("currentRuntime"), tooltipPayload(t("currentRuntime"), String(host.summary || ""), [{ title: t("runtimeTooltipSection"), rows: [{ label: t("launchContext"), value: `${formatHostKind(host.kind)} · ${formatViewerKind(viewer.viewer_kind)} · ${String((((snapshot || {}).current_shell || {}).runtime_profile || "-"))}` }, { label: t("serverUrl"), value: String(host.server_url || "-") }] }], t("runtimeEnvironmentTip")), `
+                ${detailCard(t("runtimeEnvironment"), t("currentRuntime"), tooltipPayload(t("currentRuntime"), String(host.summary || ""), [{ title: t("runtimeTooltipSection"), rows: [{ label: t("launchContext"), value: `${formatHostKind(host.kind)} · ${formatViewerKind(viewer.viewer_kind)} · ${runtimeProfile}` }, { label: t("serverUrl"), value: String(host.server_url || "-") }] }], t("runtimeEnvironmentTip")), `
                   <div class="info-stack">
-                    ${infoRow(t("launchContext"), `${formatHostKind(host.kind)} · ${formatViewerKind(viewer.viewer_kind)} · ${String((((snapshot || {}).current_shell || {}).runtime_profile || "-"))}`)}
+                    ${infoRow(t("launchContext"), `${formatHostKind(host.kind)} · ${formatViewerKind(viewer.viewer_kind)} · ${runtimeProfile}`)}
                     ${infoRow(t("serverUrl"), String(host.server_url || "-"))}
                     ${infoRow(t("connectivity"), viewerLikelyOnHost() ? t("sameDevice") : t("differentDevice"))}
                   </div>
@@ -4250,7 +4374,7 @@
           id: "components",
           title: t("components"),
           summary: t("componentsLead"),
-          searchText: `${t("components")} camera strobe piezo audio pump valve lidar sensor servo solar converter pinout gpio камера стробоскоп пьезо насос клапан датчик сервопривод солнечная ${componentSearch}`.toLowerCase(),
+          searchText: `${t("components")} camera strobe ultrasonic horn soundcore voice audio pump valve lidar sensor servo solar converter pinout gpio камера стробоскоп ультразвук рупор soundcore голос насос клапан датчик сервопривод солнечная ${componentSearch}`.toLowerCase(),
           html: `
             <section class="card section-panel" id="components" data-section-id="components">
               <div class="section-head"${tooltipAttrs(tooltipPayload(t("components"), t("componentsLead"), [], t("componentKind")))}>
@@ -4286,7 +4410,7 @@
           id: "policies",
           title: t("policies"),
           summary: t("policiesLead"),
-          searchText: `${t("policies")} ${t("turretPolicies")} ${t("irrigationDefaults")} ${t("silentObservation")} ${t("animalDeterrence")} ${t("autoCapture")} ${t("preferDriestZone")}`.toLowerCase(),
+          searchText: `${t("policies")} ${t("turretPolicies")} ${t("turretAudioProfiles")} ${t("attackAudioScenario")} ${t("voiceFxEffect")} ${t("irrigationDefaults")} ${t("silentObservation")} ${t("animalDeterrence")} ${t("autoCapture")} ${t("preferDriestZone")}`.toLowerCase(),
           html: `
             <section class="card section-panel" id="policies" data-section-id="policies">
               <div class="section-head"${tooltipAttrs(tooltipPayload(t("policies"), t("policiesLead"), [], t("sharedPreferences")))}>
@@ -4310,6 +4434,34 @@
                       </div>
                       <span class="inline-chip" data-tone="ok">${esc(t("ready"))}</span>
                     </div>
+                  </div>
+                `)}
+                ${detailCard(t("turretAudioProfiles"), t("turretAudioProfiles"), tooltipPayload(t("turretAudioProfiles"), t("attackAudioProfileTip")), `
+                  <div class="field-grid">
+                    ${fieldInput("turret_audio.attack_audio.default_scenario_id", t("attackAudioScenario"), state.settings.turret_audio.attack_audio.default_scenario_id, "text", tooltipPayload(t("attackAudioScenario"), t("attackAudioScenarioTip")), false)}
+                    ${fieldInput("turret_audio.attack_audio.channel_a_power_percent", t("attackAudioChannelA"), state.settings.turret_audio.attack_audio.channel_a_power_percent, "number", tooltipPayload(t("attackAudioChannelA"), t("attackAudioChannelTip")), false)}
+                    ${fieldInput("turret_audio.attack_audio.channel_b_power_percent", t("attackAudioChannelB"), state.settings.turret_audio.attack_audio.channel_b_power_percent, "number", tooltipPayload(t("attackAudioChannelB"), t("attackAudioChannelTip")), false)}
+                  </div>
+                  <div class="readonly-row"${tooltipAttrs(tooltipPayload(t("attackAudioDriver"), t("attackAudioProfileTip")))}>
+                    <div>
+                      <strong>${esc(t("attackAudioDriver"))}</strong>
+                      <span class="detail-copy">${esc(state.settings.turret_audio.attack_audio.driver_profile)}</span>
+                    </div>
+                    <span class="inline-chip" data-tone="warn">TPA3116D2</span>
+                  </div>
+                  <div class="field-grid">
+                    ${fieldInput("turret_audio.voice_fx.device_name", t("voiceFxDevice"), state.settings.turret_audio.voice_fx.device_name, "text", tooltipPayload(t("voiceFxDevice"), t("voiceFxProfileTip")), false)}
+                    ${fieldInput("turret_audio.voice_fx.effect_profile", t("voiceFxEffect"), state.settings.turret_audio.voice_fx.effect_profile, "text", tooltipPayload(t("voiceFxEffect"), t("voiceFxEffectTip")), false)}
+                  </div>
+                  <div class="readonly-row"${tooltipAttrs(tooltipPayload(t("voiceFxTransport"), t("voiceFxProfileTip")))}>
+                    <div>
+                      <strong>${esc(t("voiceFxTransport"))}</strong>
+                      <span class="detail-copy">${esc(state.settings.turret_audio.voice_fx.transport)}</span>
+                    </div>
+                    <span class="inline-chip" data-tone="ok">BT</span>
+                  </div>
+                  <div class="note-stack">
+                    ${toggleControl("turret_audio.voice_fx.talkback_enabled", state.settings.turret_audio.voice_fx.talkback_enabled, t("voiceFxTalkback"), t("voiceFxTalkbackTip"), false)}
                   </div>
                 `)}
                 ${detailCard(t("irrigationDefaults"), t("irrigationDefaults"), tooltipPayload(t("irrigationDefaults"), t("policiesLead")), `

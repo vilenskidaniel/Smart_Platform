@@ -129,6 +129,8 @@ class BridgeState:
         # Каркас модулей должен повторять общую карту платформы.
         # Даже если часть логики здесь пока остается заглушкой, shell обязан видеть
         # те же сущности, что и на ESP32.
+        # Product modules остаются top-level shell cards,
+        # а laboratory/action slices остаются маршрутизируемыми внутренними контурами.
         self._modules = {
             "system_shell": self._module(
                 "system_shell",
@@ -184,40 +186,40 @@ class BridgeState:
             ),
             "strobe": self._module(
                 "strobe",
-                "Strobe",
+                "Turret / Strobe",
                 "rpi",
                 "turret",
                 "turret",
                 "online",
                 "none",
                 ["status_page", "manual_page", "service_page", "commandable", "diagnostics", "logs"],
-                True,
+                False,
                 True,
                 True,
             ),
             "strobe_bench": self._module(
                 "strobe_bench",
-                "Strobe Bench",
+                "Laboratory / Strobe",
                 "esp32",
                 "bench_service",
                 "service",
                 "locked",
                 "owner_unavailable",
                 ["status_page", "manual_page", "service_page", "commandable", "diagnostics", "logs"],
-                True,
+                False,
                 True,
                 True,
             ),
             "irrigation_service": self._module(
                 "irrigation_service",
-                "Irrigation Service",
+                "Laboratory / Irrigation",
                 "esp32",
                 "plant_care",
                 "service",
                 "locked",
                 "owner_unavailable",
                 ["status_page", "manual_page", "service_page", "commandable", "diagnostics", "logs"],
-                True,
+                False,
                 True,
                 True,
             ),
@@ -262,14 +264,14 @@ class BridgeState:
             ),
             "service_mode": self._module(
                 "service_mode",
-                "Service Mode",
+                "Laboratory",
                 "shared",
                 "core",
                 "service",
                 "online",
                 "none",
                 ["status_page", "service_page", "diagnostics", "logs"],
-                True,
+                False,
                 False,
                 True,
             ),
@@ -716,6 +718,8 @@ class BridgeState:
                 "canonical_path": enriched["canonical_path"],
                 "canonical_url": enriched["canonical_url"],
                 "federated_access": enriched["federated_access"],
+                "viewer_canonical_url_reachability": "not_verified",
+                "viewer_reachability_summary": "Current shell can prove owner availability, but not whether this viewer can reach the canonical URL from its network.",
                 "current_shell_node_id": self._local_node["node_id"],
                 "current_shell_base_url": self._local_node["shell_base_url"],
             }
@@ -741,6 +745,11 @@ class BridgeState:
     def build_turret_runtime(self) -> dict[str, Any]:
         with self._lock:
             return self._turret_runtime.snapshot()
+
+    def apply_settings(self, settings: dict[str, Any] | None) -> None:
+        with self._lock:
+            self._turret_runtime.apply_settings_profile(settings)
+            self._refresh_runtime_state()
 
     def build_turret_events(self, limit: int = 40) -> dict[str, Any]:
         with self._lock:

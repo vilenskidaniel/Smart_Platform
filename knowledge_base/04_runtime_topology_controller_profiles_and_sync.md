@@ -49,6 +49,79 @@
 - на втором этапе тестирования голый `Raspberry Pi` с экраном и камерой должен оставаться отдельным physical node и одновременно давать отдельный `display` viewer, не стирая различие между этим экраном и Windows laptop viewer;
 - bar, `Settings`, `Laboratory` и другие shared shell surfaces не должны показывать `current_shell.node_type` как будто это “текущее устройство пользователя”.
 
+### Короткая Truth Matrix
+
+Эта матрица нужна не для красоты, а как быстрый sanity-check против ложных UX-выводов.
+
+`Desktop smoke review`:
+
+- `current_shell` может оставаться `raspberry_pi` family, если тестируется именно Raspberry Pi shell surface;
+- `runtime.profile = desktop_smoke`;
+- `runtime.host.kind = desktop_host`;
+- `viewers[]` может содержать текущий `desktop` browser;
+- `nodes.current` и `nodes.peer` при этом могут оставаться `offline`.
+
+Что должен понять пользователь:
+
+- shell сейчас открыт с desktop smoke-host;
+- это полезно для проверки launcher, navigation, fullscreen и route behavior;
+- это не доказывает, что `Raspberry Pi` owner или `ESP32` peer уже в сети.
+
+`Raspberry Pi owner-local runtime`:
+
+- `current_shell` публикует `raspberry_pi` shell surface;
+- `runtime.profile = owner_device`;
+- `runtime.host.kind = raspberry_pi_owner`;
+- viewer при этом все равно может быть отдельным `desktop`, `phone`, `tablet` или attached `display`.
+
+Что должен понять пользователь:
+
+- backend реально крутится на `Raspberry Pi` owner host;
+- viewer и host не обязаны быть одним и тем же устройством;
+- `Turret`, `Gallery`, `Laboratory` и `Settings` могут оставаться local slices этого owner host.
+
+`ESP32 fallback host`:
+
+- `current_shell` публикует `esp32` family fallback surface;
+- `runtime.host.kind = esp32_fallback`;
+- viewer по-прежнему читается отдельно через `viewers[]`;
+- `Irrigation` может работать локально, а compute-owned routes должны уходить в `handoff` или `blocked`.
+
+Что должен понять пользователь:
+
+- сейчас shell отдается с `ESP32` fallback host;
+- это описание текущего backend host, а не вечного owner-языка всей платформы;
+- `compute_node` и `io_node` остаются role-language, а не привязкой к бренду платы.
+
+`Display qualification`:
+
+- отдельный `Raspberry Pi` с экраном может одновременно оставаться physical node в topology;
+- тот же экран может давать отдельный `display` viewer в `viewers[]`;
+- этот viewer не заменяет `runtime.host` и не стирает различие между attached display и desktop browser.
+
+Что должен понять пользователь:
+
+- экран — это способ просмотра и взаимодействия;
+- owner host и physical node truth читаются отдельно;
+- fullscreen, touch-density и display hints должны адаптироваться к viewer profile, а не ломать topology language.
+
+### Запрещенные Смешения
+
+- нельзя читать `current_shell.node_type` как будто это синоним текущего viewer-device;
+- нельзя читать `runtime.host.kind` как будто это вечный owner-язык модуля;
+- нельзя показывать `Raspberry Pi` или `ESP32` как user-facing owner vocabulary там, где нужен `compute_node` или `io_node`;
+- нельзя использовать `desktop_smoke` как доказательство board readiness;
+- нельзя прятать peer-owned module только потому, что peer сейчас offline: честный исход — `handoff`, `blocked` или `degraded`, а не исчезновение;
+- нельзя выпускать в user-facing слой старые имена вроде `service_test` как будто это каноническое имя раздела вместо `Laboratory`.
+- нельзя считать `strobe`, `strobe_bench`, `irrigation_service` и `service_mode` top-level product inventory: это action/laboratory slices и compatibility routes, а не отдельные пользовательские модули рядом с `Irrigation` и `Turret`.
+- нельзя трактовать `owner_available` или наличие `canonical_url` как доказанный reachability текущего viewer: без отдельной проверки это только owner-side routing truth, а reachability viewer-side остается `not_verified`.
+
+### Минимальная Route-Mode Matrix
+
+- `local`: текущий host или shared layer действительно может открыть и обслужить модуль локально;
+- `handoff`: модуль видим в shell, owner доступен на peer-side runtime, и shell обязан вести пользователя по owner-aware route;
+- `blocked`: модуль видим в shell, но owner сейчас недоступен, и пользователь должен получить короткую честную причину вместо silent failure.
+
 ### Host launch, browser entry и viewer detection
 
 - `host launch` означает только то, что один runtime-host или smoke-host поднял shell-server и опубликовал shell URL;
@@ -237,14 +310,10 @@ Transport baseline этого этапа:
 - текущие launcher flows для `Windows` smoke-host entry;
 - конкретные route endpoints и handoff pages, которые могут развиваться без смены общей topology language.
 
-## Open Questions
+## Carry-Forward Backlog For Chapter 2
 
-- когда controller profile должен повышаться из temporary в stable
+Эти пункты больше не считаются блокерами для chapter-1 topology baseline. Базовый язык `host / viewer / owner-side runtime / peer`, shell routing truth и controlled degradation уже зафиксированы; ниже остаются вопросы следующего этапа.
 
-## TODO
-
-- собрать topology language без старых brand-based owner shortcuts
-
-## TBD
-
-- будущая multi-controller модель для модулей с распределенным управлением
+- определить, когда controller profile повышается из temporary в stable;
+- дочистить topology language от старых brand-based owner shortcuts в остаточных формулировках и secondary surfaces;
+- спроектировать будущую multi-controller модель для модулей с распределенным управлением.

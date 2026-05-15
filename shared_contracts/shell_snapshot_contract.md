@@ -302,7 +302,6 @@ Legacy alias для совместимости:
   "faults": {
     "has_fault": false,
     "has_degraded": true,
-    "message": "Some modules are degraded or blocked"
     "message": "Some modules are degraded or blocked",
     "active_failures": [
       {
@@ -322,6 +321,14 @@ Legacy alias для совместимости:
     "warning_count": 1,
     "error_count": 0,
     "primary_viewer": "gallery.reports"
+  },
+  "audio": {
+    "state": "online",
+    "value": "BT",
+    "attack_audio_ready": true,
+    "voice_fx_ready": true,
+    "voice_fx_active": false,
+    "summary": "Voice FX is ready via Bluetooth and attack audio contour is available."
   },
   "content": {
     "storage_kind": "filesystem",
@@ -362,6 +369,9 @@ Legacy alias для совместимости:
 10. `summaries.faults` должен содержать не только общие флаги, но и краткий
   список shell-visible active failures, достаточный для bar-layer и `Home`
   без ухода в deep diagnostics.
+11. `summaries.audio` может давать только короткий shell-visible truth для bar-layer
+  и shared HUD continuity; raw gains, full scenarios и detailed runtime tuning
+  остаются за специализированными `Turret` / `Laboratory` surfaces.
 
 ## Связанные документы
 

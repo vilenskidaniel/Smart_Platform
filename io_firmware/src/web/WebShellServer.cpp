@@ -193,8 +193,8 @@ const char kFallbackFederatedHandoffHtml[] PROGMEM = R"HTML(
         return;
       }
 
-      if (payload.canonical_url) {
-        summary.textContent = `Переход к owner page модуля ${payload.module_id}. Если переход не сработает автоматически, открой ссылку вручную.`;
+            if (payload.canonical_url) {
+                summary.textContent = `Owner runtime для ${payload.module_id} доступен, но reachability текущего viewer к canonical URL еще не подтверждена. Если переход не сработает автоматически, открой ссылку вручную.`;
         actions.innerHTML = `<a href="${payload.canonical_url}">Открыть owner page</a><a href="/">Вернуться в shell</a>`;
         setTimeout(() => { window.location.href = payload.canonical_url; }, 1200);
         return;
@@ -908,6 +908,7 @@ void WebShellServer::registerRoutes() {
 
     server_.on("/api/v1/system", HTTP_GET, [this]() { handleSystemSnapshot(); });
     server_.on("/api/v1/shell/snapshot", HTTP_GET, [this]() { handleShellSnapshot(); });
+    server_.on("/api/v1/shell/viewer-heartbeat", HTTP_POST, [this]() { handleShellViewerHeartbeat(); });
     server_.on("/api/v1/modules", HTTP_GET, [this]() { handleModules(); });
     server_.on("/api/v1/federation/route", HTTP_GET, [this]() { handleFederatedRouteInfo(); });
     server_.on("/api/v1/logs", HTTP_GET, [this]() { handleLogs(); });
@@ -1006,6 +1007,19 @@ void WebShellServer::handleShellSnapshot() {
     // Этот endpoint не заменяет продуктовые API.
     // Он нужен как короткая и понятная сводка для shell-страниц.
     server_.send(200, "application/json; charset=utf-8", shellSnapshotFacade_.buildShellSnapshotJson());
+}
+
+void WebShellServer::handleShellViewerHeartbeat() {
+    const String remoteAddress = server_.client().remoteIP().toString();
+    shellSnapshotFacade_.recordViewerHeartbeat(server_.arg("viewer_id").c_str(),
+                                               server_.arg("viewer_kind").c_str(),
+                                               server_.arg("title").c_str(),
+                                               server_.arg("value").c_str(),
+                                               server_.arg("page").c_str(),
+                                               remoteAddress.c_str());
+    server_.send(200,
+                 "application/json; charset=utf-8",
+                 shellSnapshotFacade_.buildViewerHeartbeatJson());
 }
 
 void WebShellServer::handleModules() {
@@ -1709,7 +1723,7 @@ String WebShellServer::buildFederatedRouteInfoJson(const char* moduleId) const {
     const core::NodeHealth& peerNode = systemCore_.peerNode();
 
     String json;
-    json.reserve(720);
+    json.reserve(960);
     json += "{";
     json += "\"module_id\":\"";
     json += moduleId != nullptr ? moduleId : "";
@@ -1735,6 +1749,8 @@ String WebShellServer::buildFederatedRouteInfoJson(const char* moduleId) const {
         json += canonicalUrlForModule(*module, localNode, peerNode);
         json += "\",\"federated_access\":\"";
         json += federatedAccessForModule(*module, localNode, peerNode);
+        json += "\",\"viewer_canonical_url_reachability\":\"not_verified\"";
+        json += ",\"viewer_reachability_summary\":\"Current shell can prove owner availability, but not whether this viewer can reach the canonical URL from its network.\"";
         json += "\",\"current_shell_node_id\":\"";
         json += localNode.nodeId;
         json += "\",\"current_shell_base_url\":\"";

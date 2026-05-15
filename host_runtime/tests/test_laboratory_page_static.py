@@ -49,6 +49,18 @@ class LaboratoryPageStaticTests(unittest.TestCase):
         self.assertIn("<h3>Готовность</h3>", html)
         self.assertIn('data-evidence-result="pass">Пройдено</button>', html)
 
+    def test_laboratory_page_exposes_audio_baseline_and_local_draft(self) -> None:
+        html = (PROJECT_ROOT / "web" / "service.html").read_text(encoding="utf-8")
+
+        self.assertIn('fetchJson("/api/v1/settings", { cache: "no-store" })', html)
+        self.assertIn('function renderAttackAudioWorkspace()', html)
+        self.assertIn('function renderVoiceFxWorkspace()', html)
+        self.assertIn('Saved baseline', html)
+        self.assertIn('Local draft', html)
+        self.assertIn('data-audio-slice="attack_audio"', html)
+        self.assertIn('data-audio-slice="voice_fx"', html)
+        self.assertIn('Взять baseline', html)
+
 
 if __name__ == "__main__":
     unittest.main()

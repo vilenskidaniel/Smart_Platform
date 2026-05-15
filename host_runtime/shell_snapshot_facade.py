@@ -32,6 +32,7 @@ class ShellSnapshotFacade:
 
     def build_snapshot(self) -> dict[str, Any]:
         system_snapshot = self._state.build_system_snapshot()
+        turret_runtime = self._state.build_turret_runtime()
         sync_status = self._state.build_sync_status()
         platform_log = self._state.build_platform_log(limit=20)
         storage_status = build_content_status(self._content_root, project_root=self._project_root)
@@ -79,7 +80,7 @@ class ShellSnapshotFacade:
                 "domains": list(sync_status.get("domains", [])),
             },
             "storage": storage_status,
-            "module_cards": [self._module_card(module) for module in modules if module.get("visible", True)],
+            "module_cards": [self._module_card(module) for module in modules],
             "navigation": {
                 "home": "/",
                 "gallery": {
@@ -116,6 +117,7 @@ class ShellSnapshotFacade:
                 },
                 "activity": self._activity_summary(platform_log),
                 "logs": dict(self._activity_summary(platform_log)),
+                "audio": self._audio_summary(turret_runtime),
                 "content": {
                     "storage_kind": storage_status.get("storage_kind", "filesystem"),
                     "ready": bool(storage_status["content_root_exists"]),
@@ -223,6 +225,55 @@ class ShellSnapshotFacade:
             "warning_count": warning_count,
             "error_count": error_count,
             "primary_viewer": "gallery.reports",
+        }
+
+    def _audio_summary(self, runtime_snapshot: dict[str, Any]) -> dict[str, Any]:
+        subsystems = {
+            str(item.get("id", "")): item
+            for item in runtime_snapshot.get("subsystems", [])
+            if isinstance(item, dict)
+        }
+        attack = subsystems.get("attack_audio", {})
+        voice = subsystems.get("voice_fx", {})
+
+        attack_ready = attack.get("state") in {"online", "service", "active"} and attack.get("block_reason") == "none"
+        voice_ready = voice.get("state") in {"online", "service", "active"} and voice.get("block_reason") == "none"
+        attack_active = bool(attack.get("enabled")) and attack.get("state") == "active"
+        voice_active = bool(voice.get("enabled")) and voice.get("state") == "active"
+
+        if attack.get("state") == "fault" or voice.get("state") == "fault":
+            state = "fault"
+        elif attack.get("state") == "locked" and voice.get("state") == "locked":
+            state = "attention"
+        elif attack_active or voice_active:
+            state = "active"
+        elif attack_ready or voice_ready:
+            state = "online"
+        else:
+            state = "neutral"
+
+        if voice_active:
+            value = "MIC"
+            summary = "Voice FX talkback is active and the directed attack-audio contour remains available."
+        elif voice_ready:
+            value = "BT"
+            summary = "Voice FX is ready via Bluetooth and attack audio contour is available." if attack_ready else "Voice FX is ready via Bluetooth."
+        elif attack_ready:
+            value = "ATK"
+            summary = "Directed attack-audio contour is available, but Voice FX is not ready yet."
+        else:
+            value = "--"
+            summary = "Shell snapshot does not currently confirm attack-audio or Voice FX readiness."
+
+        return {
+            "state": state,
+            "value": value,
+            "attack_audio_ready": bool(attack_ready),
+            "attack_audio_active": bool(attack_active),
+            "voice_fx_ready": bool(voice_ready),
+            "voice_fx_active": bool(voice_active),
+            "microphone_expected": bool(voice.get("microphone_expected", False)),
+            "summary": summary,
         }
 
     def _node_title(self, node: dict[str, Any]) -> str:

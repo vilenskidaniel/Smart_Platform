@@ -22,6 +22,7 @@
 - `platform_shell_prompt.md` — prompt для `Platform Shell` и bar/home/navigation слоя;
 - `irrigation_prompt.md` — prompt для `Irrigation`;
 - `turret_prompt.md` — prompt для `Turret`;
+- `turret_audio_prompt.md` — focused companion prompt для split audio contour внутри `Turret`, `Laboratory` и `Settings`;
 - `gallery_prompt.md` — prompt для `Gallery`;
 - `settings_prompt.md` — prompt для `Settings`;
 - `cross_module_prompt.md` — prompt для синтеза, связности идей, sync и межмодульных решений.
@@ -31,6 +32,7 @@
 - каждый новый специализированный чат должен сначала принять `foundation_prompt.md`;
 - `laboratory_prompt.md` полезен как сильный пример глубокой модульной проработки, но не как обязательный шаблон того, что все модули должны стать похожими на `Laboratory`;
 - остальные prompt-файлы наследуют дисциплину этого эталона, но сохраняют свой продуктовый характер;
+- focused companion prompt вроде `turret_audio_prompt.md` читается только после соответствующего модульного prompt-а и не заменяет его;
 - для `Laboratory` пользовательский слой называется `Записи сессии`, а `Gallery > Reports` остается только для автономно и системно зафиксированных product-level событий;
 - если задача реально задевает несколько продуктовых блоков, не пытаться решать все внутри одного модульного prompt-а: перейти в `cross_module_prompt.md`.
 
@@ -106,7 +108,8 @@
 1. `foundation_prompt.md`
 2. `laboratory_prompt.md`, если нужен эталон структуры и глубины
 3. один модульный prompt по целевому блоку
-4. `cross_module_prompt.md`, если решение затрагивает несколько модулей, синхронизацию, общие правила, prompt-слой или канонические docs
+4. focused companion prompt по целевому подблоку, если он существует и уже опирается на модульный канон
+5. `cross_module_prompt.md`, если решение затрагивает несколько модулей, синхронизацию, общие правила, prompt-слой или канонические docs
 
 Если задача уже ушла в другой product-level блок, лучше открыть новый чат или перейти в cross-module режим, чем продолжать смешивать несколько больших поверхностей в одном модульном потоке.
 

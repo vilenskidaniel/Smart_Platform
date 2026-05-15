@@ -577,15 +577,25 @@
       return hostname === '127.0.0.1' || hostname === 'localhost';
     }
 
-    function isLaptopSmoke(snapshot) {
+    function runtimeProfile(snapshot) {
+      const runtime = (snapshot && snapshot.runtime) || {};
       const shell = (snapshot && snapshot.current_shell) || {};
-      const runtimeProfile = String(shell.runtime_profile || '').toLowerCase();
-      if (runtimeProfile) {
-        return runtimeProfile !== 'owner_device';
+      const explicitProfile = String(runtime.profile || '').toLowerCase();
+      if (explicitProfile) {
+        return explicitProfile;
+      }
+      return String(shell.runtime_profile || '').toLowerCase();
+    }
+
+    function isRuntimePreview(snapshot) {
+      const profile = runtimeProfile(snapshot);
+      if (profile) {
+        return profile === 'desktop_smoke' || profile === 'smoke_review';
       }
       if (isLoopbackHost(window.location.hostname)) {
         return true;
       }
+      const shell = (snapshot && snapshot.current_shell) || {};
       if (!shell.shell_base_url) {
         return false;
       }
@@ -637,7 +647,7 @@
     }
 
     function renderLauncher(snapshot) {
-      const runtimePreview = isLaptopSmoke(snapshot);
+      const runtimePreview = isRuntimePreview(snapshot);
       const irrigation = resolveModule(snapshot, 'irrigation');
       const turret = resolveModule(snapshot, 'turret_bridge');
       const irrigationState = cardState(irrigation, runtimePreview);

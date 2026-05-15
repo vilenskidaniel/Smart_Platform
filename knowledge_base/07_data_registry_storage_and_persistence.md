@@ -42,7 +42,8 @@
 - module descriptors и component bindings;
 - confirmed profiles;
 - constructor scaffolds;
-- shared preferences и settings-derived defaults.
+- shared preferences и settings-derived defaults;
+- turret audio profile defaults для `attack_audio` и `voice_fx`.
 
 Правила идентификаторов:
 
@@ -108,6 +109,12 @@
 - связь с модулем или компонентом;
 - возможность дальнейшего редактирования системного поведения;
 - новый default selection для следующего входа в соответствующую laboratory-card.
+
+Для audio this means explicitly:
+
+- channel `A/B` values и scenario id для `attack_audio` остаются laboratory draft truth, пока оператор не подтвердил перенос;
+- talkback / microphone / effect preset для `voice_fx` также не становятся persistent baseline автоматически от самого факта лабораторного теста;
+- persistent registry/profile id для audio должен различать `attack_audio` и `voice_fx`, а не хранить их как один общий `audio` blob.
 
 Интерактивные настройки `Settings` применяются optimistic-first, но это не должно маскировать truth:
 

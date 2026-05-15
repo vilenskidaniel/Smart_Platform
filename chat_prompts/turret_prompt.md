@@ -51,8 +51,12 @@
 - Базовые action families:
   - motion
   - strobe
-  - sound / piezo / audio
+  - attack_audio
+  - voice_fx
   - water
+
+- `attack_audio` и `voice_fx` являются раздельными contour-ами, а не одним плоским `audio` actuator.
+- legacy alias `piezo` допустим только как compatibility binding name для `attack_audio`, а не как отдельная active family.
 
 ## Активный Опрос Пользователя
 
@@ -79,6 +83,16 @@
 
 Затем наращивать UX, HUD, policies и детализацию состояний.
 
+## Focused Audio Trigger
+
+Если задача уходит в один из следующих срезов, после этого prompt-а переходить в `turret_audio_prompt.md`:
+
+- split contract `attack_audio / voice_fx`;
+- saved baseline vs local draft для audio внутри `Laboratory`;
+- `Settings` truth для attack scenario, channel levels, talkback и effect baseline;
+- FPV talkback/effect UX, operator HUD audio summaries или shell audio token;
+- detailed audio scenario matrix, transport closure или storage/source contract для turret audio assets.
+
 ## Keep / Adapt / Rewrite
 
 - `keep`: то, что уже держит truthful turret ownership, safety и mode semantics;
@@ -92,6 +106,7 @@
 - довести product-ready объяснение readiness и blocked reasons;
 - укрепить связь capture -> `Gallery > Media` -> `Gallery > Reports`;
 - довести unified mode-switch contract между `Manual` и `Automatic`.
+- не возвращаться к flat `sound / piezo / audio` wording в docs, prompts и коде; split audio truth углублять через `turret_audio_prompt.md`.
 
 ### TBD
 

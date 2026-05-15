@@ -13,9 +13,16 @@
 1. `chat_prompts/foundation_prompt.md`
 2. `chat_prompts/laboratory_prompt.md` как структурный эталон
 3. нужный модульный prompt
-4. `chat_prompts/cross_module_prompt.md`, если задача задевает несколько модулей, sync, общие контракты, docs или prompt-слой
+4. focused companion prompt по подблоку, если он уже существует для этого модуля
+5. `chat_prompts/cross_module_prompt.md`, если задача задевает несколько модулей, sync, общие контракты, docs или prompt-слой
 
 Если координационный чат создает новый prompt для отдельного продуктового блока, он должен попадать именно туда, а не смешиваться с постоянными product summaries или вторыми точками входа.
+
+Если создается focused companion prompt, он должен:
+
+- жить рядом с модульным prompt-ом в `chat_prompts/`;
+- ссылаться на соответствующий модульный prompt, а не заменять его;
+- удерживать только глубину и handoff по узкому подблоку, не создавая отдельный product canon.
 
 ## Что читать в первую очередь
 

@@ -51,6 +51,56 @@ class SettingsStoreTests(unittest.TestCase):
         self.assertEqual(["custom_module", "turret", "irrigation", "power"], payload["component_field_options"]["assigned_module"])
         self.assertEqual(["compute_node", "io_node", "shared"], payload["component_field_options"]["node_role"])
 
+    def test_attack_audio_binding_accepts_legacy_piezo_alias(self) -> None:
+        payload = normalize_settings({"keyboard": {"bindings": {"piezo": "KeyZ"}}})
+
+        self.assertEqual("KeyZ", payload["keyboard"]["bindings"]["attack_audio"])
+        self.assertEqual("KeyZ", payload["keyboard"]["bindings"]["piezo"])
+        self.assertEqual("KeyV", payload["keyboard"]["bindings"]["voice_fx_talk"])
+
+    def test_turret_audio_defaults_are_normalized(self) -> None:
+        payload = normalize_settings(
+            {
+                "turret_audio": {
+                    "attack_audio": {
+                        "channel_a_power_percent": 999,
+                        "channel_b_power_percent": -5,
+                    },
+                    "voice_fx": {
+                        "effect_profile": "robotic",
+                    },
+                }
+            }
+        )
+
+        self.assertEqual(100, payload["turret_audio"]["attack_audio"]["channel_a_power_percent"])
+        self.assertEqual(0, payload["turret_audio"]["attack_audio"]["channel_b_power_percent"])
+        self.assertEqual("tpa3116d2_xh_m543", payload["turret_audio"]["attack_audio"]["driver_profile"])
+        self.assertEqual("robotic", payload["turret_audio"]["voice_fx"]["effect_profile"])
+        self.assertTrue(payload["turret_audio"]["voice_fx"]["talkback_enabled"])
+
+    def test_interface_audio_defaults_are_normalized(self) -> None:
+        payload = normalize_settings(
+            {
+                "interface": {
+                    "audio": {
+                        "volume_percent": 999,
+                        "muted": True,
+                        "silent_mode": "yes",
+                    }
+                }
+            }
+        )
+
+        self.assertEqual(100, payload["interface"]["audio"]["volume_percent"])
+        self.assertTrue(payload["interface"]["audio"]["muted"])
+        self.assertTrue(payload["interface"]["audio"]["silent_mode"])
+
+        default_payload = normalize_settings({})
+        self.assertEqual(60, default_payload["interface"]["audio"]["volume_percent"])
+        self.assertFalse(default_payload["interface"]["audio"]["muted"])
+        self.assertFalse(default_payload["interface"]["audio"]["silent_mode"])
+
     def test_turret_recording_limit_is_clamped(self) -> None:
         default_payload = normalize_settings({})
         low_payload = normalize_settings({"turret_policies": {"max_recording_seconds": 1}})

@@ -52,6 +52,9 @@ class ShellSnapshotFacadeTests(unittest.TestCase):
             snapshot["summaries"]["diagnostics"]["ownership_summary"],
         )
         self.assertEqual("gallery.reports", snapshot["summaries"]["activity"]["primary_viewer"])
+        self.assertEqual("BT", snapshot["summaries"]["audio"]["value"])
+        self.assertTrue(snapshot["summaries"]["audio"]["attack_audio_ready"])
+        self.assertTrue(snapshot["summaries"]["audio"]["voice_fx_ready"])
         self.assertTrue(
             any(
                 item["reason"] == "owner_unavailable" and item["shell_state"] == "locked"

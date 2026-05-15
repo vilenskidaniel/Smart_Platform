@@ -884,6 +884,7 @@
         shellSnapshot = snapshot;
         const shell = snapshot.current_shell || {};
         const host = runtimeHost(snapshot);
+        const runtimeProfile = String(((snapshot.runtime || {}).profile) || shell.runtime_profile || "unknown");
         const current = (snapshot.nodes || {}).current || {};
         const peer = (snapshot.nodes || {}).peer || {};
         const viewers = snapshotViewers(snapshot);
@@ -892,15 +893,15 @@
         document.getElementById("viewer-badge").textContent = `viewer: ${currentViewerLabel(snapshot)}`;
         document.getElementById("peer-badge").textContent = `peer: ${(peer.title || "peer")} / ${peer.health || "offline"}`;
         document.getElementById("shell-title").textContent = `${shellSurfaceTitle(snapshot)} / ${host.title || host.kind || "unknown host"}`;
-        document.getElementById("shell-summary").textContent = `runtime_profile: ${shell.runtime_profile || "unknown"} / viewer: ${currentViewerLabel(snapshot)} / viewers: ${viewers.length} / current_node: ${current.title || "unknown"} / peer: ${(peer.title || "unknown")} (${peer.health || "offline"})`;
+        document.getElementById("shell-summary").textContent = `runtime_profile: ${runtimeProfile} / viewer: ${currentViewerLabel(snapshot)} / viewers: ${viewers.length} / current_node: ${current.title || "unknown"} / peer: ${(peer.title || "unknown")} (${peer.health || "offline"})`;
         renderSessionPanel(null);
       } catch (_error) {
         shellSnapshot = null;
-        document.getElementById("shell-badge").textContent = "shell: Raspberry Pi shell surface";
+        document.getElementById("shell-badge").textContent = "shell: unknown shell surface";
         document.getElementById("host-badge").textContent = "host: unknown";
         document.getElementById("viewer-badge").textContent = "viewer: unknown";
         document.getElementById("peer-badge").textContent = "peer: unknown";
-        document.getElementById("shell-title").textContent = "Raspberry Pi shell surface / unknown host";
+        document.getElementById("shell-title").textContent = "Unknown shell surface / unknown host";
         document.getElementById("shell-summary").textContent = "Shell snapshot was not available, so the page stays in local-only display test mode without resolved host/viewer participants.";
         renderSessionPanel(null);
       }

@@ -18,7 +18,10 @@
       "component_ids": [
         "camera",
         "strobe",
-        "piezo",
+        "ultrasonic_pair",
+        "horn_pair",
+        "attack_audio_driver",
+        "voice_fx",
         "water_pump",
         "servo_pan_tilt",
         "lidar"
@@ -114,17 +117,59 @@
       "state": "not_detected"
     },
     {
-      "id": "piezo",
+      "id": "ultrasonic_pair",
       "title": {
-        "en": "Piezo tweeter",
-        "ru": "Пьезотвиттер"
+        "en": "Ultrasonic pair",
+        "ru": "Ультразвуковая пара"
       },
       "kind": "actuator",
       "assigned_module": "turret",
-      "power_profile": "PWM",
-      "pinout": "ESP32 GPIO TBD",
-      "tolerance": "50-100%",
-      "operating_modes": "tone, sweep",
+      "power_profile": "TPA3116D2 channel output",
+      "pinout": "audio amp output TBD",
+      "tolerance": "frequency and power profile",
+      "operating_modes": "tone, sweep, deterrence",
+      "state": "not_detected"
+    },
+    {
+      "id": "horn_pair",
+      "title": {
+        "en": "Horn pair / piezo stage",
+        "ru": "Рупорная пара / пьезокаскад"
+      },
+      "kind": "actuator",
+      "assigned_module": "turret",
+      "power_profile": "TPA3116D2 channel output",
+      "pinout": "audio amp output TBD",
+      "tolerance": "volume and frequency profile",
+      "operating_modes": "tone, sweep, deterrence",
+      "state": "not_detected"
+    },
+    {
+      "id": "attack_audio_driver",
+      "title": {
+        "en": "Attack audio driver",
+        "ru": "Драйвер атакующего звука"
+      },
+      "kind": "controller",
+      "assigned_module": "turret",
+      "power_profile": "12V/24V amplifier rail",
+      "pinout": "TPA3116D2 XH-M543 dual-channel board",
+      "tolerance": "thermal and power budget verification",
+      "operating_modes": "dual-channel attack contour",
+      "state": "not_detected"
+    },
+    {
+      "id": "voice_fx",
+      "title": {
+        "en": "Soundcore Motion 300",
+        "ru": "Soundcore Motion 300"
+      },
+      "kind": "actuator",
+      "assigned_module": "turret",
+      "power_profile": "Bluetooth / USB-C charging",
+      "pinout": "wireless duplex audio path",
+      "tolerance": "reconnect, battery, microphone health",
+      "operating_modes": "voice playback, talkback, effects",
       "state": "not_detected"
     },
     {
@@ -338,10 +383,16 @@
       "role": "actuator"
     },
     {
-      "id": "turret_piezo",
+      "id": "turret_ultrasonic_pair",
       "module_id": "turret",
-      "component_id": "piezo",
+      "component_id": "ultrasonic_pair",
       "role": "actuator"
+    },
+    {
+      "id": "turret_attack_audio_driver",
+      "module_id": "turret",
+      "component_id": "attack_audio_driver",
+      "role": "controller"
     },
     {
       "id": "turret_water_pump",
@@ -426,6 +477,18 @@
       "module_id": "cat_feeder",
       "component_id": "cat_feeder_camera",
       "role": "sensor"
+    },
+    {
+      "id": "turret_horn_pair",
+      "module_id": "turret",
+      "component_id": "horn_pair",
+      "role": "actuator"
+    },
+    {
+      "id": "turret_voice_fx",
+      "module_id": "turret",
+      "component_id": "voice_fx",
+      "role": "actuator"
     }
   ],
   "templates": {

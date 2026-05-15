@@ -88,12 +88,14 @@
 - density;
 - fullscreen preference;
 - desktop controls / keyboard enablement;
+- shared shell audio preference: `volume`, `mute`, `silent mode`;
 - advanced diagnostics visibility.
 
 Правила coupling:
 
 - fullscreen preference shared between `Settings` and shell controls;
 - global keyboard enablement is shared preference, but its effect applies only on relevant operator surfaces;
+- shared shell audio preference lives in `Settings` and the speaker token in the bar-panel as the same stored truth;
 - language choice applies to user-facing copy across the shell;
 - bar-panel and page-level controls must reflect the same stored truth rather than separate local toggles.
 
@@ -116,7 +118,8 @@ Theme and operator-input semantics for the current baseline:
 - module records;
 - component records;
 - service records;
-- system profiles and module-facing baselines.
+- system profiles and module-facing baselines;
+- turret audio profiles для `attack_audio` и `voice_fx`.
 
 Эти сущности не должны смешиваться в один undifferentiated registry list.
 
@@ -133,6 +136,7 @@ Constructor-scaffold entries по умолчанию считаются staged, 
 
 - `Laboratory` may emit reviewed candidates or profile updates into `Settings`;
 - they do not silently become durable product settings just because they were observed in a session;
+- split turret audio profiles могут показываться в `Laboratory` и `Turret` как applied baseline, но любые локальные правки остаются draft до явного save/apply в `Settings`;
 - `Settings` must show origin, related module/component and current apply state;
 - once a profile is confirmed as the active baseline, the corresponding module/component can use it as the default on the next entry.
 
@@ -232,13 +236,26 @@ Example: an irrigation baseline stored on an `ESP32` owner remains a truthful ow
 
 - turret safety preferences;
 - irrigation automatic-behavior preferences;
-- scenario constraints and fallback rules.
+- scenario constraints and fallback rules;
+- persistent audio baselines для `attack_audio` и `voice_fx`.
+
+Turret audio persistent truth на текущем этапе:
+
+- `attack_audio` хранит default scenario id, channel `A/B` power baselines и driver-profile reference;
+- `voice_fx` хранит expected Bluetooth device, talkback enablement, microphone expectation и effect preset;
+- `Laboratory` может предложить другие working profiles, но их promotion в product truth остается явным `Laboratory -> Settings` flow.
 
 Representative persistent policy families at the current stage:
 
 - turret action constraints вроде `do not fire on humans` или `silent observation only`;
 - capture policy вроде `allow_auto_capture` и `max_recording_seconds`;
 - operator input/power baselines, которые влияют на `Manual`, не превращая `Settings` в live control page.
+
+Shared shell audio truth на текущем этапе:
+
+- `Settings.interface.audio` держит только operator-facing shell preference: `volume_percent`, `muted`, `silent_mode`;
+- speaker token в shared bar открывает ту же самую persistent truth через quick panel и не создает второй локальный store;
+- эта shell audio preference не заменяет и не размывает module-level baselines `turret_audio.attack_audio` и `turret_audio.voice_fx`.
 
 Unavailable policies stay visible with a short reason and the next step, rather than being hidden.
 
@@ -248,7 +265,9 @@ Unavailable policies stay visible with a short reason and the next step, rather 
 
 - `host_runtime/settings_store.py` - persistent JSON-backed `SettingsStore` для owner-side system settings;
 - `host_runtime/web/settings.html` - current `/settings` page на стороне `Raspberry Pi`;
+- `host_runtime/web/static/smart_bar.js` - shared shell speaker token, quick audio panel и bar-level shared preference wiring;
 - `io_firmware/data/settings/index.html` - mirror `/settings` page на стороне `ESP32`;
+- `io_firmware/data/static/smart_bar.js` - generated mirror shared shell asset для `ESP32` fallback shell;
 - `host_runtime/server.py` - HTTP-entry для `GET/POST /api/v1/settings`;
 - `host_runtime/tests/test_settings_store.py` - tests persistence и validation для settings layer;
 - `host_runtime/content/.system/settings_state.json` - фактический persisted state, который использует текущий store.
@@ -260,12 +279,14 @@ Unavailable policies stay visible with a short reason and the next step, rather 
 1. `/settings` exists on current shells as a persistent settings surface;
 2. canonical rail order remains `Appearance -> Runtime -> Sync -> Storage -> Modules -> Components -> Services -> Policies -> Constructor -> Diagnostics`;
 3. shared preferences remain one truth between `Settings` and shell-level controls;
-4. `Storage` allows safe path actions and guarded cleanup without replacing `Gallery`;
-5. `Sync` stores mode and domains without turning into a transport log page;
-6. `Modules`, `Components` and `Services` stay separate registry families;
-7. promotion from `Laboratory` into `Settings` remains explicit and origin-tracked;
-8. browser fallback persistence, when used, is visible as fallback rather than pretending server-backed save succeeded;
-9. diagnostics stay secondary and do not redefine the whole page tone.
+4. speaker token volume/mute/silent controls and the `Appearance` card use one stored shared audio truth;
+5. `Storage` allows safe path actions and guarded cleanup without replacing `Gallery`;
+6. `Sync` stores mode and domains without turning into a transport log page;
+7. `Modules`, `Components` and `Services` stay separate registry families;
+8. promotion from `Laboratory` into `Settings` remains explicit and origin-tracked;
+9. browser fallback persistence, when used, is visible as fallback rather than pretending server-backed save succeeded;
+10. diagnostics stay secondary and do not redefine the whole page tone.
+11. `attack_audio` и `voice_fx` defaults остаются отдельной persistent truth, а не растворяются внутри общего `turret_policies` without origin tracking.
 
 ### 9. Нормативные Примеры И Форматы
 
@@ -283,7 +304,12 @@ Unavailable policies stay visible with a short reason and the next step, rather 
     "language": "en",
     "desktop_controls_enabled": true,
     "fullscreen_enabled": false,
-    "show_advanced_diagnostics": false
+    "show_advanced_diagnostics": false,
+    "audio": {
+      "volume_percent": 60,
+      "muted": false,
+      "silent_mode": false
+    }
   },
   "style": {
     "theme": "meadow",

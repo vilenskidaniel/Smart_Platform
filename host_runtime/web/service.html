@@ -714,7 +714,7 @@
       { id: "light", title: "Свет", summary: "Строб, светодиод и проверки светового выхода" },
       { id: "drives", title: "Приводы", summary: "Сервоприводы, движение, экспериментальные приводы" },
       { id: "water", title: "Вода", summary: "Распыление, полив, клапаны, насосы" },
-      { id: "audio", title: "Аудио", summary: "Пьезо, ультразвук, голосовой тракт" },
+      { id: "audio", title: "Аудио", summary: "Атакующий контур, ультразвук и голосовой тракт" },
       { id: "sensors", title: "Датчики", summary: "Дальность, движение, окружение" },
       { id: "camera", title: "Камера", summary: "Камера и контур зрения" },
       { id: "displays", title: "Дисплеи", summary: "Проверка дисплея Raspberry Pi" },
@@ -734,8 +734,8 @@
       { id: "sprayer", category: "water", title: "Распыление / вода", owner: "rpi", moduleId: "turret_bridge", kind: "turret-subsystem", subsystemId: "water", status: "online" },
       { id: "irrigation", category: "water", title: "Инженерный срез полива", owner: "esp32", moduleId: "irrigation_service", kind: "peer", status: "blocked", route: "/federated/handoff?module_id=irrigation_service" },
       { id: "soil", category: "water", title: "Влажность почвы + клапаны + перистальтика", owner: "esp32", moduleId: "irrigation", kind: "peer", status: "blocked", route: "/federated/handoff?module_id=irrigation" },
-      { id: "piezo", category: "audio", title: "Пьезо / ультразвук", owner: "rpi", moduleId: "turret_bridge", kind: "turret-subsystem", subsystemId: "audio", status: "online" },
-      { id: "voice", category: "audio", title: "Голос / динамик", owner: "lab", moduleId: "audio_lab", kind: "experimental", status: "planned" },
+      { id: "attack_audio", category: "audio", title: "Атакующий звук / каналы A-B", owner: "rpi", moduleId: "turret_bridge", kind: "turret-subsystem", subsystemId: "attack_audio", status: "online" },
+      { id: "voice_fx", category: "audio", title: "Голос / Soundcore Motion 300", owner: "rpi", moduleId: "turret_bridge", kind: "turret-subsystem", subsystemId: "voice_fx", status: "online" },
       { id: "lidar", category: "sensors", title: "Лидар", owner: "rpi", moduleId: "turret_bridge", kind: "turret-subsystem", subsystemId: "range", status: "online" },
       { id: "motion_sensor", category: "sensors", title: "Датчик движения", owner: "lab", moduleId: "motion_sensor_lab", kind: "experimental", status: "planned" },
       { id: "environment", category: "sensors", title: "Температура и влажность воздуха", owner: "esp32", moduleId: "environment_lab", kind: "peer", status: "blocked" },
@@ -763,6 +763,7 @@
       snapshot: null,
       readiness: null,
       session: null,
+      settings: null,
       turret: null,
       scenarios: null,
       reports: null,
@@ -788,7 +789,10 @@
           power: ["bench_psu", "battery"].includes(payload.power) ? payload.power : "bench_psu",
           view: ["browser", "fullscreen"].includes(payload.view) ? payload.view : "browser",
           note: String(payload.note || ""),
-          caseId: String(payload.caseId || "laboratory-smoke")
+          caseId: String(payload.caseId || "laboratory-smoke"),
+          audio: payload.audio && typeof payload.audio === "object"
+            ? payload.audio
+            : { attack_audio: {}, voice_fx: {} }
         };
       } catch (_error) {
         return {
@@ -799,7 +803,8 @@
           power: "bench_psu",
           view: "browser",
           note: "",
-          caseId: "laboratory-smoke"
+          caseId: "laboratory-smoke",
+          audio: { attack_audio: {}, voice_fx: {} }
         };
       }
     }
@@ -880,6 +885,191 @@
       if (owner === "esp32") return "ESP32";
       if (owner === "lab") return "Локально в Лаборатории";
       return "Общий";
+    }
+
+    function clampPercent(value, fallback = 0) {
+      const numeric = Number(value);
+      if (!Number.isFinite(numeric)) return fallback;
+      return Math.max(0, Math.min(100, Math.round(numeric)));
+    }
+
+    function driverProfileLabel(profile) {
+      if (profile === "tpa3116d2_xh_m543") return "TPA3116D2 XH-M543";
+      return String(profile || "runtime").replace(/_/g, " ");
+    }
+
+    function savedAttackAudioProfile() {
+      const runtimeAudio = (((((state.turret || {}).runtime || {}).product_view || {}).audio || {}).attack_audio || {});
+      const settingsAudio = ((((state.settings || {}).turret_audio || {}).attack_audio) || {});
+      return {
+        driver_profile: String(settingsAudio.driver_profile || runtimeAudio.driver_profile || "tpa3116d2_xh_m543"),
+        default_scenario_id: String(settingsAudio.default_scenario_id || runtimeAudio.default_scenario_id || "dual_channel_deterrence"),
+        channel_a_power_percent: clampPercent(
+          settingsAudio.channel_a_power_percent,
+          clampPercent(runtimeAudio.channel_a_power_percent, 60)
+        ),
+        channel_b_power_percent: clampPercent(
+          settingsAudio.channel_b_power_percent,
+          clampPercent(runtimeAudio.channel_b_power_percent, 60)
+        )
+      };
+    }
+
+    function savedVoiceFxProfile() {
+      const runtimeAudio = (((((state.turret || {}).runtime || {}).product_view || {}).audio || {}).voice_fx || {});
+      const settingsAudio = ((((state.settings || {}).turret_audio || {}).voice_fx) || {});
+      return {
+        device_name: String(settingsAudio.device_name || runtimeAudio.device_name || "Soundcore Motion 300"),
+        transport: String(settingsAudio.transport || runtimeAudio.transport || "bluetooth"),
+        talkback_enabled: settingsAudio.talkback_enabled !== undefined
+          ? Boolean(settingsAudio.talkback_enabled)
+          : Boolean(runtimeAudio.talkback_enabled !== false),
+        microphone_expected: settingsAudio.microphone_expected !== undefined
+          ? Boolean(settingsAudio.microphone_expected)
+          : Boolean(runtimeAudio.microphone_expected !== false),
+        effect_profile: String(settingsAudio.effect_profile || runtimeAudio.effect_profile || "natural")
+      };
+    }
+
+    function normalizeAttackAudioDraft(profile, fallback) {
+      const payload = profile && typeof profile === "object" ? profile : {};
+      return {
+        default_scenario_id: String(payload.default_scenario_id || fallback.default_scenario_id || "dual_channel_deterrence"),
+        channel_a_power_percent: clampPercent(payload.channel_a_power_percent, fallback.channel_a_power_percent),
+        channel_b_power_percent: clampPercent(payload.channel_b_power_percent, fallback.channel_b_power_percent)
+      };
+    }
+
+    function normalizeVoiceFxDraft(profile, fallback) {
+      const payload = profile && typeof profile === "object" ? profile : {};
+      return {
+        device_name: String(payload.device_name || fallback.device_name || "Soundcore Motion 300"),
+        talkback_enabled: payload.talkback_enabled !== undefined
+          ? Boolean(payload.talkback_enabled)
+          : Boolean(fallback.talkback_enabled),
+        effect_profile: String(payload.effect_profile || fallback.effect_profile || "natural")
+      };
+    }
+
+    function ensureAudioDrafts() {
+      const savedAttack = savedAttackAudioProfile();
+      const savedVoice = savedVoiceFxProfile();
+      const draftAudio = state.draft.audio && typeof state.draft.audio === "object" ? state.draft.audio : {};
+      state.draft.audio = {
+        attack_audio: normalizeAttackAudioDraft(draftAudio.attack_audio, savedAttack),
+        voice_fx: normalizeVoiceFxDraft(draftAudio.voice_fx, savedVoice)
+      };
+    }
+
+    function audioDraftDirty(subsystemId) {
+      ensureAudioDrafts();
+      if (subsystemId === "attack_audio") {
+        const saved = savedAttackAudioProfile();
+        const draft = state.draft.audio.attack_audio;
+        return saved.default_scenario_id !== draft.default_scenario_id
+          || saved.channel_a_power_percent !== draft.channel_a_power_percent
+          || saved.channel_b_power_percent !== draft.channel_b_power_percent;
+      }
+      if (subsystemId === "voice_fx") {
+        const saved = savedVoiceFxProfile();
+        const draft = state.draft.audio.voice_fx;
+        return saved.device_name !== draft.device_name
+          || saved.talkback_enabled !== draft.talkback_enabled
+          || saved.effect_profile !== draft.effect_profile;
+      }
+      return false;
+    }
+
+    function applySavedAudioBaseline(subsystemId) {
+      ensureAudioDrafts();
+      if (subsystemId === "attack_audio") {
+        state.draft.audio.attack_audio = normalizeAttackAudioDraft(savedAttackAudioProfile(), savedAttackAudioProfile());
+      } else if (subsystemId === "voice_fx") {
+        state.draft.audio.voice_fx = normalizeVoiceFxDraft(savedVoiceFxProfile(), savedVoiceFxProfile());
+      }
+      state.draftTouched = true;
+      saveDraft();
+    }
+
+    function renderAttackAudioWorkspace() {
+      ensureAudioDrafts();
+      const saved = savedAttackAudioProfile();
+      const draft = state.draft.audio.attack_audio;
+      const dirty = audioDraftDirty("attack_audio");
+      return `
+        <div class="grid-2">
+          <article class="tile">
+            <h3>Saved baseline</h3>
+            ${renderKv({
+              Драйвер: driverProfileLabel(saved.driver_profile),
+              "Default scenario": saved.default_scenario_id,
+              "Канал A": `${saved.channel_a_power_percent}%`,
+              "Канал B": `${saved.channel_b_power_percent}%`
+            })}
+            <p class="meta">Источник истины для persisted baseline - Settings. Laboratory только читает и сравнивает.</p>
+          </article>
+          <article class="tile">
+            <div class="row" style="justify-content:space-between;align-items:center;">
+              <h3>Local draft</h3>
+              <span class="status-chip ${statusClass(dirty ? "attention" : "ready")}">${esc(dirty ? "Черновик" : "Совпадает")}</span>
+            </div>
+            <div class="field-grid">
+              <label>Default scenario<input class="field" data-audio-slice="attack_audio" data-audio-field="default_scenario_id" value="${esc(draft.default_scenario_id)}"></label>
+              <label>Канал A, %<input class="field" type="number" min="0" max="100" data-audio-slice="attack_audio" data-audio-field="channel_a_power_percent" value="${esc(draft.channel_a_power_percent)}"></label>
+              <label>Канал B, %<input class="field" type="number" min="0" max="100" data-audio-slice="attack_audio" data-audio-field="channel_b_power_percent" value="${esc(draft.channel_b_power_percent)}"></label>
+            </div>
+            <div class="action-row">
+              <button type="button" class="action-button ghost" data-audio-baseline="attack_audio">Взять baseline</button>
+              <button type="button" class="action-button ghost" data-audio-reset="attack_audio">Сбросить черновик</button>
+            </div>
+            <p class="footer-note">Черновик живет только локально в Laboratory и не меняет persistent truth без явного перехода в Settings.</p>
+          </article>
+        </div>
+      `;
+    }
+
+    function renderVoiceFxWorkspace() {
+      ensureAudioDrafts();
+      const saved = savedVoiceFxProfile();
+      const draft = state.draft.audio.voice_fx;
+      const dirty = audioDraftDirty("voice_fx");
+      return `
+        <div class="grid-2">
+          <article class="tile">
+            <h3>Saved baseline</h3>
+            ${renderKv({
+              Устройство: saved.device_name,
+              Transport: saved.transport,
+              Talkback: saved.talkback_enabled ? "включен" : "выключен",
+              Микрофон: saved.microphone_expected ? "ожидается" : "не обязателен",
+              Effect: saved.effect_profile
+            })}
+            <p class="meta">Этот baseline задает talkback/effect truth для FPV и shared audio summary.</p>
+          </article>
+          <article class="tile">
+            <div class="row" style="justify-content:space-between;align-items:center;">
+              <h3>Local draft</h3>
+              <span class="status-chip ${statusClass(dirty ? "attention" : "ready")}">${esc(dirty ? "Черновик" : "Совпадает")}</span>
+            </div>
+            <div class="field-grid">
+              <label>Устройство<input class="field" data-audio-slice="voice_fx" data-audio-field="device_name" value="${esc(draft.device_name)}"></label>
+              <label>Effect<input class="field" data-audio-slice="voice_fx" data-audio-field="effect_profile" value="${esc(draft.effect_profile)}"></label>
+              <label class="check-row"><input type="checkbox" data-audio-slice="voice_fx" data-audio-field="talkback_enabled" ${draft.talkback_enabled ? "checked" : ""}> Talkback draft</label>
+            </div>
+            <div class="action-row">
+              <button type="button" class="action-button ghost" data-audio-baseline="voice_fx">Взять baseline</button>
+              <button type="button" class="action-button ghost" data-audio-reset="voice_fx">Сбросить черновик</button>
+            </div>
+            <p class="footer-note">Local draft нужен для проверки reconnect, effect и talkback path до явного применения через Settings.</p>
+          </article>
+        </div>
+      `;
+    }
+
+    function renderAudioWorkspace(subsystemId) {
+      if (subsystemId === "attack_audio") return renderAttackAudioWorkspace();
+      if (subsystemId === "voice_fx") return renderVoiceFxWorkspace();
+      return "";
     }
 
     function runtimeHost(snapshot) {
@@ -1055,11 +1245,12 @@
         fetchJson("/api/v1/shell/snapshot"),
         fetchJson("/api/v1/laboratory/readiness"),
         fetchJson("/api/v1/laboratory/session"),
+        fetchJson("/api/v1/settings", { cache: "no-store" }),
         fetchJson("/api/v1/turret/status"),
         fetchJson("/api/v1/turret/scenarios"),
         fetchJson("/api/v1/reports?limit=8")
       ]);
-      const keys = ["snapshot", "readiness", "session", "turret", "scenarios", "reports"];
+      const keys = ["snapshot", "readiness", "session", "settings", "turret", "scenarios", "reports"];
       results.forEach((result, index) => {
         if (result.status === "fulfilled") {
           state[keys[index]] = result.value;
@@ -1259,6 +1450,8 @@
       const subsystem = findSubsystem(slice.subsystemId) || {};
       const runtime = state.turret?.runtime || {};
       const product = runtime.product_view || {};
+      const audioWorkspace = renderAudioWorkspace(slice.subsystemId);
+      const sliceScenarios = scenariosForSlice(slice);
       document.getElementById("main-panel").innerHTML = `
         <div class="workspace">
           ${workspaceHeader(slice, subsystem.summary || "Контур турели на стороне владельца с честными interlock и без скрытых обходов.")}
@@ -1304,7 +1497,7 @@
             <article class="tile">
               <h3>Инженерные сценарии</h3>
               <div class="grid-auto">
-                ${(state.scenarios?.scenarios || []).map((scenario) => `
+                ${sliceScenarios.map((scenario) => `
                   <article class="tile compact">
                     <div class="eyebrow">${esc(scenario.category)}</div>
                     <strong>${esc(scenario.title)}</strong>
@@ -1324,6 +1517,7 @@
               })}
             </article>
           </div>
+          ${audioWorkspace}
           <div class="terminal">${esc(JSON.stringify(state.lastPayload || state.turret?.runtime || {}, null, 2))}</div>
         </div>
       `;
@@ -1609,6 +1803,16 @@
       return (state.turret?.runtime?.subsystems || []).find((item) => item.id === id);
     }
 
+    function scenariosForSlice(slice) {
+      const all = state.scenarios?.scenarios || [];
+      if (slice.kind !== "turret-subsystem") {
+        return all;
+      }
+      const generic = all.filter((scenario) => !Array.isArray(scenario.subsystem_ids) || !scenario.subsystem_ids.length);
+      const targeted = all.filter((scenario) => Array.isArray(scenario.subsystem_ids) && scenario.subsystem_ids.includes(slice.subsystemId));
+      return targeted.length ? [...generic, ...targeted] : all;
+    }
+
     function renderSessionPanel() {
       const session = state.session || {};
       const active = session.active_session || {};
@@ -1748,6 +1952,34 @@
       });
       document.querySelectorAll("[data-scenario]").forEach((button) => {
         button.addEventListener("click", async () => runCommand(`/api/v1/turret/scenarios/run?id=${qs(button.dataset.scenario)}`));
+      });
+      document.querySelectorAll("[data-audio-baseline]").forEach((button) => {
+        button.addEventListener("click", () => {
+          applySavedAudioBaseline(button.dataset.audioBaseline);
+          render();
+        });
+      });
+      document.querySelectorAll("[data-audio-reset]").forEach((button) => {
+        button.addEventListener("click", () => {
+          applySavedAudioBaseline(button.dataset.audioReset);
+          render();
+        });
+      });
+      document.querySelectorAll("[data-audio-field]").forEach((input) => {
+        input.addEventListener("change", () => {
+          ensureAudioDrafts();
+          const sliceId = input.dataset.audioSlice;
+          const field = input.dataset.audioField;
+          if (!sliceId || !field || !state.draft.audio[sliceId]) return;
+          let value = input.type === "checkbox" ? input.checked : input.value;
+          if (field.endsWith("_percent")) {
+            value = clampPercent(value, state.draft.audio[sliceId][field] || 0);
+          }
+          state.draft.audio[sliceId][field] = value;
+          state.draftTouched = true;
+          saveDraft();
+          render();
+        });
       });
       document.querySelectorAll("[data-pattern]").forEach((button) => {
         button.addEventListener("click", async () => {

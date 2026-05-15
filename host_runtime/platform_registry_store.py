@@ -31,7 +31,7 @@ DEFAULT_REGISTRY: dict[str, Any] = {
             "owner_role": "compute_node",
             "runtime_module_id": "turret_bridge",
             "state": "disconnected",
-            "component_ids": ["camera", "strobe", "piezo", "water_pump", "servo_pan_tilt", "lidar"],
+            "component_ids": ["camera", "strobe", "ultrasonic_pair", "horn_pair", "attack_audio_driver", "voice_fx", "water_pump", "servo_pan_tilt", "lidar"],
         },
         {
             "id": "irrigation",
@@ -67,7 +67,10 @@ DEFAULT_REGISTRY: dict[str, Any] = {
     "components": [
         {"id": "camera", "title": _localized("Raspberry Pi Camera", "Камера Raspberry Pi"), "kind": "sensor", "assigned_module": "turret", "power_profile": "5V / CSI", "pinout": "CSI ribbon", "tolerance": "stream check", "operating_modes": "preview, capture, evidence", "state": "not_detected"},
         {"id": "strobe", "title": _localized("Strobe", "Стробоскоп"), "kind": "actuator", "assigned_module": "turret", "power_profile": "12V driver", "pinout": "ESP32 GPIO TBD", "tolerance": "50-100%", "operating_modes": "pulse, deterrence", "state": "not_detected"},
-        {"id": "piezo", "title": _localized("Piezo tweeter", "Пьезотвиттер"), "kind": "actuator", "assigned_module": "turret", "power_profile": "PWM", "pinout": "ESP32 GPIO TBD", "tolerance": "50-100%", "operating_modes": "tone, sweep", "state": "not_detected"},
+        {"id": "ultrasonic_pair", "title": _localized("Ultrasonic pair", "Ультразвуковая пара"), "kind": "actuator", "assigned_module": "turret", "power_profile": "TPA3116D2 channel output", "pinout": "audio amp output TBD", "tolerance": "frequency and power profile", "operating_modes": "tone, sweep, deterrence", "state": "not_detected"},
+        {"id": "horn_pair", "title": _localized("Horn pair / piezo stage", "Рупорная пара / пьезокаскад"), "kind": "actuator", "assigned_module": "turret", "power_profile": "TPA3116D2 channel output", "pinout": "audio amp output TBD", "tolerance": "volume and frequency profile", "operating_modes": "tone, sweep, deterrence", "state": "not_detected"},
+        {"id": "attack_audio_driver", "title": _localized("Attack audio driver", "Драйвер атакующего звука"), "kind": "controller", "assigned_module": "turret", "power_profile": "12V/24V amplifier rail", "pinout": "TPA3116D2 XH-M543 dual-channel board", "tolerance": "thermal and power budget verification", "operating_modes": "dual-channel attack contour", "state": "not_detected"},
+        {"id": "voice_fx", "title": _localized("Soundcore Motion 300", "Soundcore Motion 300"), "kind": "actuator", "assigned_module": "turret", "power_profile": "Bluetooth / USB-C charging", "pinout": "wireless duplex audio path", "tolerance": "reconnect, battery, microphone health", "operating_modes": "voice playback, talkback, effects", "state": "not_detected"},
         {"id": "water_pump", "title": _localized("Water cannon pump", "Насос водной пушки"), "kind": "actuator", "assigned_module": "turret", "power_profile": "12V pump", "pinout": "relay/MOSFET TBD", "tolerance": "50-100%", "operating_modes": "short burst", "state": "not_detected"},
         {"id": "servo_pan_tilt", "title": _localized("Pan/tilt servos", "Сервоприводы наведения"), "kind": "actuator", "assigned_module": "turret", "power_profile": "5-6V", "pinout": "PWM TBD", "tolerance": "angle limits TBD", "operating_modes": "manual aim", "state": "not_detected"},
         {"id": "lidar", "title": _localized("Lidar / range sensor", "Лидар / дальномер"), "kind": "sensor", "assigned_module": "turret", "power_profile": "5V UART/I2C", "pinout": "TBD", "tolerance": "range sanity", "operating_modes": "distance gate", "state": "not_detected"},

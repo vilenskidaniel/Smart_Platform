@@ -30,6 +30,20 @@ class TurretServiceScenarioRunner:
                 "description": "Переводит turret runtime в безопасный сервисный idle и очищает interlock.",
             },
             {
+                "id": "dual_channel_deterrence",
+                "title": "Dual Channel Deterrence",
+                "category": "audio",
+                "description": "Проверяет attack_audio contour в service lane с dual-channel baseline без перехода к real hardware power closure.",
+                "subsystem_ids": ["attack_audio"],
+            },
+            {
+                "id": "voice_fx_talkback_check",
+                "title": "Voice FX Talkback Check",
+                "category": "audio",
+                "description": "Проверяет, что voice_fx path можно кратко активировать даже в automatic до target lock.",
+                "subsystem_ids": ["voice_fx"],
+            },
+            {
                 "id": "auto_target_gate_probe",
                 "title": "Auto Target Gate Probe",
                 "category": "diagnostic",
@@ -74,6 +88,10 @@ class TurretServiceScenarioRunner:
         steps: list[dict[str, Any]] = []
         if scenario_id == "service_safe_idle":
             self._scenario_service_safe_idle(steps)
+        elif scenario_id == "dual_channel_deterrence":
+            self._scenario_dual_channel_deterrence(steps)
+        elif scenario_id == "voice_fx_talkback_check":
+            self._scenario_voice_fx_talkback_check(steps)
         elif scenario_id == "auto_target_gate_probe":
             self._scenario_auto_target_gate_probe(steps)
         elif scenario_id == "emergency_recovery_probe":
@@ -105,9 +123,31 @@ class TurretServiceScenarioRunner:
         self._step(steps, "disable_motion", "Disable motion", self._runtime.set_subsystem_enabled, "motion", False, expected=True)
         self._step(steps, "disable_strobe", "Disable strobe", self._runtime.set_subsystem_enabled, "strobe", False, expected=True)
         self._step(steps, "disable_water", "Disable water", self._runtime.set_subsystem_enabled, "water", False, expected=True)
-        self._step(steps, "disable_audio", "Disable audio", self._runtime.set_subsystem_enabled, "audio", False, expected=True)
+        self._step(steps, "disable_attack_audio", "Disable attack audio", self._runtime.set_subsystem_enabled, "attack_audio", False, expected=True)
+        self._step(steps, "disable_voice_fx", "Disable voice fx", self._runtime.set_subsystem_enabled, "voice_fx", False, expected=True)
         self._step(steps, "enable_vision", "Enable vision", self._runtime.set_subsystem_enabled, "vision", True, expected=True)
         self._step(steps, "stop_tracking", "Disable vision tracking", self._runtime.set_flag, "vision_tracking", False, expected=True)
+
+    def _scenario_dual_channel_deterrence(self, steps: list[dict[str, Any]]) -> None:
+        self._step(steps, "clear_interlock", "Clear interlock", self._runtime.set_interlock, "clear", expected=True)
+        self._step(steps, "mode_service", "Switch to service_test", self._runtime.set_mode, "service_test", expected=True)
+        self._step(steps, "disable_voice_fx", "Disable voice fx", self._runtime.set_subsystem_enabled, "voice_fx", False, expected=True)
+        self._step(steps, "enable_attack_audio", "Enable attack audio contour", self._runtime.set_subsystem_enabled, "attack_audio", True, expected=True)
+        self._step(steps, "disable_attack_audio", "Disable attack audio contour", self._runtime.set_subsystem_enabled, "attack_audio", False, expected=True)
+
+    def _scenario_voice_fx_talkback_check(self, steps: list[dict[str, Any]]) -> None:
+        self._step(steps, "clear_interlock", "Clear interlock", self._runtime.set_interlock, "clear", expected=True)
+        self._step(steps, "mode_auto", "Switch to automatic", self._runtime.set_mode, "automatic", expected=True)
+        self._step(
+            steps,
+            "enable_voice_fx_without_target",
+            "Enable voice fx before target lock",
+            self._runtime.set_subsystem_enabled,
+            "voice_fx",
+            True,
+            expected=True,
+        )
+        self._step(steps, "disable_voice_fx", "Disable voice fx", self._runtime.set_subsystem_enabled, "voice_fx", False, expected=True)
 
     def _scenario_auto_target_gate_probe(self, steps: list[dict[str, Any]]) -> None:
         self._step(steps, "clear_interlock", "Clear interlock", self._runtime.set_interlock, "clear", expected=True)

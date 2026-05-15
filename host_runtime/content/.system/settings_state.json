@@ -1,6 +1,6 @@
 {
   "schema_version": "settings.v1",
-  "updated_at_ms": 1778455492568,
+  "updated_at_ms": 1778625205252,
   "interface": {
     "language": "ru",
     "desktop_controls_enabled": true,
@@ -89,11 +89,28 @@
       "irrigation_zone_3": "Digit3",
       "irrigation_zone_4": "Digit4",
       "irrigation_zone_5": "Digit5",
+      "attack_audio": "KeyQ",
       "piezo": "KeyQ",
       "strobe": "KeyW",
       "water": "KeyE",
+      "voice_fx_talk": "KeyV",
       "capture": "Space",
       "power_modifier": "Shift"
+    }
+  },
+  "turret_audio": {
+    "attack_audio": {
+      "driver_profile": "tpa3116d2_xh_m543",
+      "default_scenario_id": "dual_channel_deterrence",
+      "channel_a_power_percent": 60,
+      "channel_b_power_percent": 60
+    },
+    "voice_fx": {
+      "device_name": "Soundcore Motion 300",
+      "transport": "bluetooth",
+      "talkback_enabled": true,
+      "microphone_expected": true,
+      "effect_profile": "natural"
     }
   },
   "turret_policies": {

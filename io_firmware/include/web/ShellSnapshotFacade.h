@@ -15,10 +15,35 @@ public:
                         storage::StorageManager& storageManager);
 
     String buildShellSnapshotJson() const;
+    void recordViewerHeartbeat(const char* viewerId,
+                               const char* viewerKind,
+                               const char* title,
+                               const char* value,
+                               const char* page,
+                               const char* address);
+    String buildViewerHeartbeatJson() const;
 
 private:
+    struct ViewerPresenceEntry {
+        bool active;
+        uint32_t lastSeenMs;
+        char viewerId[40];
+        char viewerKind[16];
+        char title[32];
+        char value[24];
+        char page[96];
+        char address[48];
+    };
+
+    static constexpr size_t kMaxViewerEntries = 6;
+    static constexpr uint32_t kViewerTtlMs = 15000;
+
     String buildCurrentShellJson() const;
+    String buildRuntimeJson() const;
+    String buildViewersJson() const;
     String buildNodesJson() const;
+    String buildSyncJson() const;
+    String buildStorageJson() const;
     String buildModuleCardsJson() const;
     String buildNavigationJson() const;
     String buildSummariesJson() const;
@@ -42,11 +67,14 @@ private:
     const char* routeMode(const core::ModuleDescriptor& module) const;
     const char* canonicalPath(const core::ModuleDescriptor& module) const;
     const char* syncSummaryState() const;
+    size_t activeViewerCount() const;
+    void copyText(char* target, size_t size, const char* text) const;
     void appendJsonEscaped(String& target, const char* text) const;
 
     core::SystemCore& systemCore_;
     core::PlatformEventLog& platformLog_;
     storage::StorageManager& storageManager_;
+    ViewerPresenceEntry viewers_[kMaxViewerEntries];
 };
 
 }  // namespace smart_platform::web

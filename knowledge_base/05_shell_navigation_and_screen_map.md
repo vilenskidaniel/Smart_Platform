@@ -143,6 +143,7 @@ Launcher rules for the current baseline:
 - `federated_access`;
 - `active mode`;
 - `fault summary`;
+- `audio summary` with concise `attack_audio / voice_fx` state;
 - `gallery source availability`;
 - `recent activity summary`;
 - `emergency power interlock state`.
@@ -157,11 +158,14 @@ Launcher rules for the current baseline:
 
 - слева: компактный `Home / Smart Platform` logomark, desktop interaction toggle, fullscreen toggle и current viewer/client indicator;
 - в центре: постоянные node-presence labels для `Raspberry Pi` и `ESP32`, mode-chips только для реально доступных owner modules и moisture strip по `5` irrigation groups;
-- справа: `Wi-Fi`, `Sync`, environmental/system indicators, language, time и date.
+- справа: `Wi-Fi`, `Sync`, compact audio token для `voice_fx / attack_audio`, environmental/system indicators, language, time и date.
 
 Дополнительные правила этого shell-visible слоя:
 
 - safety interlocks, active failures и locked/degraded states должны быть видимы через shell-level summaries, а не жить только в deep diagnostics;
+- audio token не должен притворяться точным live-mixer или raw gain meter: его задача - честно показывать availability, talkback activity и наличие directed-audio contour;
+- click по speaker/audio token должен открывать короткую on-demand panel наподобие desktop speaker sheet, где живут только shared `volume / mute / silent mode` controls;
+- эти `volume / mute / silent mode` controls принадлежат shell/interface preference layer и должны читать/писать ту же persistent truth, что и `Settings`, не смешиваясь с turret baselines `attack_audio / voice_fx`;
 - если для slot нет truth-data, место не исчезает, а переходит в честное серое состояние `no data`;
 - bar не должен вываливать raw transport detail вроде `node_id`, `base_url` или низкоуровневые booleans как будто это пользовательский язык оболочки;
 - desktop baseline держит global bar в одной строке с симметричным внешним padding, а не раскладывает ее на постоянный detail-strip;
